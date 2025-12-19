@@ -1,5 +1,6 @@
 package io.mindspice.jhf.layout;
 
+import io.mindspice.jhf.core.Attribute;
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
 
@@ -52,7 +53,22 @@ public class Grid extends HtmlTag {
 
     @Override
     public String render() {
-        this.withAttribute("class", "grid grid-cols-" + columns + " gap-" + gap);
+        children.clear();
+        String currentClass = attributes.stream()
+                .filter(attr -> "class".equals(attr.getName()))
+                .map(Attribute::getValue)
+                .findFirst()
+                .orElse("grid");
+
+        // Ensure base grid class is present and add layout classes
+        if (!currentClass.contains("grid")) {
+            currentClass = "grid " + currentClass;
+        }
+
+        // Remove old grid-cols/gap classes to prevent accumulation if re-rendered
+        currentClass = currentClass.replaceAll("grid-cols-\\d+", "").replaceAll("gap-\\w+", "").trim();
+
+        this.withAttribute("class", currentClass + " grid-cols-" + columns + " gap-" + gap);
         items.forEach(item -> super.withChild(item));
         return super.render();
     }

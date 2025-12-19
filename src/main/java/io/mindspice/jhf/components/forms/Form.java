@@ -43,7 +43,18 @@ public class Form extends HtmlTag {
     }
 
     public Form withMethod(Method method) {
-        this.withAttribute("method", method.name());
+        if (method == Method.GET || method == Method.POST) {
+            this.withAttribute("method", method.name());
+        } else {
+            // For PUT, DELETE, PATCH, use POST and add hidden _method field
+            this.withAttribute("method", "POST");
+            withChild(
+                new HtmlTag("input", true)
+                    .withAttribute("type", "hidden")
+                    .withAttribute("name", "_method")
+                    .withAttribute("value", method.name())
+            );
+        }
         return this;
     }
 

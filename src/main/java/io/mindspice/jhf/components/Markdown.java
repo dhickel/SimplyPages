@@ -11,7 +11,7 @@ public class Markdown implements Component {
 
     private final String markdownText;
     private static final Parser parser = Parser.builder().build();
-    private static final HtmlRenderer renderer = HtmlRenderer.builder().build();
+    private static final HtmlRenderer renderer = HtmlRenderer.builder().escapeHtml(true).build();
 
     public Markdown(String markdownText) {
         this.markdownText = markdownText;

@@ -49,6 +49,7 @@ public class RadioGroup extends Div {
 
     @Override
     public String render() {
+        children.clear();
         for (RadioOption option : options) {
             Div optionWrapper = new Div().withClass("radio-option");
 
