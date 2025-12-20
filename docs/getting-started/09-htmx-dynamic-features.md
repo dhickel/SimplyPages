@@ -128,6 +128,343 @@ Does the user action require server data?
          └─ NO → Use HTMX for partial update
 ```
 
+## Understanding HTMX Targeting (CSS Selectors)
+
+Before diving into HTMX attributes, you need to understand **how HTMX finds elements** on your page to update them.
+
+### What Are CSS Selectors?
+
+**CSS Selectors** are patterns that identify HTML elements. When you write `hx-target="#items-list"`, you're telling HTMX "find the element with id='items-list' and put the response there."
+
+Think of CSS selectors as **addresses** for elements on your page:
+- `#items-list` → "The element with ID 'items-list'"
+- `.card` → "Elements with class 'card'"
+- `this` → "This element itself"
+
+### The Java → HTML → HTMX Flow
+
+**1. Java Code**: Set ID/class on component
+
+```java
+Div itemsList = new Div()
+    .withAttribute("id", "items-list");  // ← Set ID in Java
+```
+
+**2. Generated HTML**: Component renders with ID
+
+```html
+<div id="items-list">
+    <!-- content here -->
+</div>
+```
+
+**3. HTMX Targeting**: Reference the ID in hx-target
+
+```java
+Button.create("Load More")
+    .withAttribute("hx-get", "/api/items")
+    .withAttribute("hx-target", "#items-list");  // ← Target the ID
+//                              ^ # means "ID"
+```
+
+### Setting IDs and Classes in Java
+
+#### Setting an ID
+
+**Use `withAttribute("id", "your-id-here")`:**
+
+```java
+// Set ID on any component
+Div container = new Div()
+    .withAttribute("id", "results-container");
+
+// Now HTMX can target it with "#results-container"
+Button.create("Refresh")
+    .withAttribute("hx-get", "/api/results")
+    .withAttribute("hx-target", "#results-container");
+```
+
+#### Setting a Class
+
+**Use `withClass("your-class-name")`:**
+
+```java
+// Set class on component
+Card card = Card.create()
+    .withClass("user-card");
+
+// Target by class (affects all .user-card elements)
+Button.create("Refresh All")
+    .withAttribute("hx-get", "/api/cards")
+    .withAttribute("hx-target", ".user-card");  // ← . means "class"
+```
+
+#### Setting Both ID and Class
+
+```java
+Div stats = new Div()
+    .withAttribute("id", "live-stats")  // Unique ID
+    .withClass("dashboard-widget");     // Shared class
+```
+
+### Common CSS Selector Patterns
+
+| Selector | Meaning | Java Example | HTMX Target |
+|----------|---------|--------------|-------------|
+| `#id` | Element with specific ID | `.withAttribute("id", "posts")` | `"#posts"` |
+| `.class` | Elements with class | `.withClass("card")` | `".card"` |
+| `this` | The element itself | N/A | `"this"` |
+| `closest .class` | Nearest parent with class | `.withClass("parent")` | `"closest .parent"` |
+
+### Complete Example: Setting Up Targets
+
+**Java Code (initial page load):**
+
+```java
+// 1. Create container with ID so HTMX can find it
+Div itemsList = new Div()
+    .withAttribute("id", "items-list")  // ← HTMX will target this
+    .withClass("grid");
+
+// 2. Add initial items
+for (Item item : firstPage) {
+    itemsList.withChild(createItemCard(item));
+}
+
+// 3. Create button that targets the container
+Button loadMore = Button.create("Load More")
+    .withAttribute("hx-get", "/api/items?page=2")
+    .withAttribute("hx-target", "#items-list")  // ← Targets the ID above
+    .withAttribute("hx-swap", "beforeend");     // ← Append to end
+
+// 4. Add to page
+Page.create()
+    .addComponents(itemsList, loadMore)
+    .render();
+```
+
+**Generated HTML:**
+
+```html
+<!-- The container HTMX will update -->
+<div id="items-list" class="grid">
+    <div class="card">Item 1</div>
+    <div class="card">Item 2</div>
+    <div class="card">Item 3</div>
+</div>
+
+<!-- Button that triggers update -->
+<button hx-get="/api/items?page=2"
+        hx-target="#items-list"
+        hx-swap="beforeend">
+    Load More
+</button>
+```
+
+**What Happens When Clicked:**
+
+1. HTMX sends GET request to `/api/items?page=2`
+2. Server returns HTML: `<div class="card">Item 4</div>...`
+3. HTMX **finds element with id="items-list"** (the div)
+4. HTMX **appends** new items to end of that div (because swap="beforeend")
+
+### Finding Your Targets: Common Mistakes
+
+#### ❌ WRONG: Forgetting to Set ID
+
+```java
+// Created container but forgot to set ID
+Div container = new Div();  // No ID!
+
+// HTMX can't find it
+Button.create("Load")
+    .withAttribute("hx-target", "#results");  // What is #results???
+```
+
+**Error**: HTMX won't find `#results` because no element has that ID.
+
+#### ✅ CORRECT: Set ID First
+
+```java
+// Set ID on container
+Div container = new Div()
+    .withAttribute("id", "results");  // ← Set ID!
+
+// HTMX can find it
+Button.create("Load")
+    .withAttribute("hx-target", "#results");  // ← Matches ID above
+```
+
+#### ❌ WRONG: Typo in ID
+
+```java
+Div container = new Div()
+    .withAttribute("id", "results-list");  // ← "results-list"
+
+Button.create("Load")
+    .withAttribute("hx-target", "#results");  // ← "results" (no match!)
+```
+
+**Error**: `#results` doesn't match `id="results-list"` - IDs must match **exactly**.
+
+#### ✅ CORRECT: Matching IDs
+
+```java
+String containerId = "results-list";  // Use variable to avoid typos
+
+Div container = new Div()
+    .withAttribute("id", containerId);
+
+Button.create("Load")
+    .withAttribute("hx-target", "#" + containerId);  // Same ID
+```
+
+### Target Selection Examples
+
+#### Example 1: Target by ID (Most Common)
+
+```java
+// Create element with unique ID
+Div stats = new Div()
+    .withAttribute("id", "live-stats");
+
+// Target that specific element
+stats.withAttribute("hx-get", "/api/stats")
+     .withAttribute("hx-trigger", "every 30s")
+     .withAttribute("hx-target", "this");  // "this" = update myself
+```
+
+#### Example 2: Target Parent Element
+
+```java
+// Card with nested content
+Card card = Card.create()
+    .withClass("user-card")  // ← Set class
+    .withChild(new Div()
+        .withAttribute("id", "user-name")
+        .withInnerText("John Doe"))
+    .withChild(Button.create("Edit")
+        .withAttribute("hx-get", "/api/edit-form")
+        .withAttribute("hx-target", "closest .user-card")  // ← Target parent
+        .withAttribute("hx-swap", "outerHTML"));  // Replace entire card
+```
+
+**What happens**: Button replaces the entire `.user-card` (its parent) with edit form.
+
+#### Example 3: Target Multiple Elements
+
+```java
+// Multiple cards with same class
+for (User user : users) {
+    Card card = Card.create()
+        .withClass("user-status")  // ← All have same class
+        .withAttribute("id", "user-" + user.getId())  // ← Each has unique ID
+        .withInnerText("Status: " + user.getStatus());
+}
+
+// Refresh all at once (target by class)
+Button.create("Refresh All")
+    .withAttribute("hx-get", "/api/statuses")
+    .withAttribute("hx-target", ".user-status");  // ← Updates ALL .user-status
+```
+
+### Module IDs and HTMX
+
+**All modules have `withModuleId()` method** which sets the ID:
+
+```java
+ContentModule module = ContentModule.create()
+    .withModuleId("about-section")  // ← Sets id="about-section"
+    .withTitle("About Us")
+    .withContent("...");
+
+// Target the module
+Button.create("Refresh")
+    .withAttribute("hx-get", "/api/about")
+    .withAttribute("hx-target", "#about-section");  // ← Targets the module
+```
+
+**Generated HTML:**
+
+```html
+<div id="about-section" class="content-module">
+    <h2>About Us</h2>
+    <div class="content">...</div>
+</div>
+
+<button hx-get="/api/about" hx-target="#about-section">
+    Refresh
+</button>
+```
+
+### Self-Updating Elements
+
+**Use `hx-target="this"`** to update the element itself:
+
+```java
+// Button that updates its own text
+Button voteBtn = Button.create("Vote (0)")
+    .withAttribute("id", "vote-btn")
+    .withAttribute("hx-post", "/api/vote")
+    .withAttribute("hx-target", "this")  // ← Update the button itself
+    .withAttribute("hx-swap", "outerHTML");
+```
+
+**Server returns new button:**
+
+```java
+@PostMapping("/api/vote")
+@ResponseBody
+public String vote() {
+    int newCount = voteService.increment();
+    return Button.create("Vote (" + newCount + ")")
+        .withAttribute("id", "vote-btn")
+        .withAttribute("hx-post", "/api/vote")
+        .withAttribute("hx-target", "this")
+        .withAttribute("hx-swap", "outerHTML")
+        .render();
+}
+```
+
+### Quick Reference: ID vs Class
+
+| Feature | ID (`#`) | Class (`.`) |
+|---------|----------|-------------|
+| **Purpose** | Unique identifier | Group elements |
+| **Uniqueness** | One per page | Many per page |
+| **Java Method** | `.withAttribute("id", "name")` | `.withClass("name")` |
+| **HTMX Syntax** | `#name` | `.name` |
+| **Use Case** | Target specific element | Target multiple elements |
+| **Example** | `#user-profile` | `.card` |
+
+### Debugging Tips
+
+**If HTMX isn't working:**
+
+1. **Check browser console** - HTMX logs errors
+2. **Inspect HTML** - View source to see if ID exists
+3. **Verify selector** - Does `#your-id` match `id="your-id"`?
+4. **Check spelling** - IDs are case-sensitive
+5. **Use browser DevTools** - Type `document.querySelector('#your-id')` in console
+
+**Browser Console Test:**
+
+```javascript
+// Test if selector works
+document.querySelector('#items-list');  // Should return element, not null
+```
+
+### Key Takeaways
+
+1. **Set IDs in Java**: Use `.withAttribute("id", "unique-name")`
+2. **Target with #**: Use `hx-target="#unique-name"` to find that element
+3. **Match exactly**: `#results` only matches `id="results"` (case-sensitive)
+4. **Use classes for groups**: `.withClass("card")` + `hx-target=".card"` for multiple
+5. **Modules have IDs**: Use `.withModuleId("name")` for modules
+6. **Debug with DevTools**: Inspect HTML and test selectors in console
+
+---
+
 ## Core HTMX Attributes
 
 ### hx-get, hx-post, hx-put, hx-delete, hx-patch
