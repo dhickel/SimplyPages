@@ -76,6 +76,7 @@ public class DemoController {
     private final PageLayoutsPage pageLayoutsPage;
     private final ScrollingDemoPage scrollingDemoPage;
     private final StickySidebarDemoPage stickySidebarDemoPage;
+    private final DynamicModulesPage dynamicModulesPage;
 
     @Autowired
     public DemoController(
@@ -99,7 +100,8 @@ public class DemoController {
             NewModulesPage newModulesPage,
             PageLayoutsPage pageLayoutsPage,
             ScrollingDemoPage scrollingDemoPage,
-            StickySidebarDemoPage stickySidebarDemoPage
+            StickySidebarDemoPage stickySidebarDemoPage,
+            DynamicModulesPage dynamicModulesPage
     ) {
         this.homePage = homePage;
         this.componentsPage = componentsPage;
@@ -122,6 +124,7 @@ public class DemoController {
         this.pageLayoutsPage = pageLayoutsPage;
         this.scrollingDemoPage = scrollingDemoPage;
         this.stickySidebarDemoPage = stickySidebarDemoPage;
+        this.dynamicModulesPage = dynamicModulesPage;
     }
 
     /**
@@ -190,6 +193,7 @@ public class DemoController {
                                 .addLink("New Components", "/new-components", "✨")
                                 .addSection("Modules")
                                 .addLink("Modules", "/modules", "📦")
+                                .addLink("Dynamic Modules", "/dynamic-modules", "⚡")
                                 .addLink("Module Layouts", "/module-layouts", "🏗️")
                                 .addLink("New Modules", "/new-modules", "🆕")
                                 .addSection("Advanced")
@@ -418,6 +422,15 @@ public class DemoController {
             HttpServletResponse response
     ) {
         return renderWithShellIfNeeded(hxRequest, stickySidebarDemoPage, response);
+    }
+
+    @GetMapping("/dynamic-modules")
+    @ResponseBody
+    public String dynamicModules(
+            @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+            HttpServletResponse response
+    ) {
+        return renderWithShellIfNeeded(hxRequest, dynamicModulesPage, response);
     }
 
     // HTMX API endpoints (simple responses for demo purposes)
