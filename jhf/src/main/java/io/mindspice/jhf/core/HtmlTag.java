@@ -215,14 +215,6 @@ public class HtmlTag implements Component {
     }
 
     /**
-     * Clears all child components from this tag.
-     * Useful for resetting state before re-rendering or when reusing components.
-     */
-    public void clearChildren() {
-        children.clear();
-    }
-
-    /**
      * Adds a child component to this tag.
      *
      * <p>Children are rendered in the order they are added, after any inner text.</p>
@@ -497,6 +489,17 @@ public class HtmlTag implements Component {
     }
 
     /**
+     * Gets the stream of child components to be rendered.
+     * <p>Subclasses can override this to provide a custom list of children,
+     * such as filtering empty components or enforcing a specific order.</p>
+     *
+     * @return stream of components to render
+     */
+    protected java.util.stream.Stream<Component> getChildrenStream() {
+        return children.stream();
+    }
+
+    /**
      * Renders this tag and all its contents to an HTML string.
      *
      * <p>The rendering process:</p>
@@ -546,7 +549,7 @@ public class HtmlTag implements Component {
             }
         }
 
-        sb.append(children.stream().map(child -> child.render(context)).collect(Collectors.joining()));
+        sb.append(getChildrenStream().map(child -> child.render(context)).collect(Collectors.joining()));
         sb.append("</").append(tagName).append(">");
         return sb.toString();
     }

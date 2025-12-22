@@ -3,6 +3,9 @@ package io.mindspice.jhf.components.display;
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
 
+import java.util.Objects;
+import java.util.stream.Stream;
+
 /**
  * Card component for displaying content in a contained, styled box.
  * Common for displaying items in a grid or list.
@@ -21,17 +24,6 @@ public class Card extends HtmlTag {
     public Card() {
         super("div");
         this.withAttribute("class", "card");
-        // We defer adding children until we know what we have,
-        // OR we add them now and control visibility via emptiness or null?
-        // But Card enforces order: Image, Header, Body, Footer.
-        // If we add them to children now, they are in children list.
-        // If we construct them but don't add, we need to add them in render().
-
-        // Option A (from review): Clear children in render().
-        // Option B: Add immediately but manage order carefully? Hard if user calls methods in random order.
-
-        // Let's go with Option A as it is robust for this specific component structure
-        // where we have fixed slots.
     }
 
     public static Card create() {
@@ -39,42 +31,36 @@ public class Card extends HtmlTag {
     }
 
     public Card withHeader(String headerText) {
-        headerContainer.clearChildren(); // Clear previous content if any
         headerContainer.withInnerText(headerText);
         hasHeader = true;
         return this;
     }
 
     public Card withHeader(Component headerComponent) {
-        headerContainer.clearChildren();
         headerContainer.withChild(headerComponent);
         hasHeader = true;
         return this;
     }
 
     public Card withBody(String bodyText) {
-        bodyContainer.clearChildren();
         bodyContainer.withInnerText(bodyText);
         hasBody = true;
         return this;
     }
 
     public Card withBody(Component bodyComponent) {
-        bodyContainer.clearChildren();
         bodyContainer.withChild(bodyComponent);
         hasBody = true;
         return this;
     }
 
     public Card withFooter(String footerText) {
-        footerContainer.clearChildren();
         footerContainer.withInnerText(footerText);
         hasFooter = true;
         return this;
     }
 
     public Card withFooter(Component footerComponent) {
-        footerContainer.clearChildren();
         footerContainer.withChild(footerComponent);
         hasFooter = true;
         return this;
@@ -95,16 +81,22 @@ public class Card extends HtmlTag {
     }
 
     @Override
-    public String render() {
-        // Clear children to avoid duplication on re-render
-        // Note: children is protected in HtmlTag
-        children.clear();
+    protected Stream<Component> getChildrenStream() {
+        // Construct the stream of components in the enforced order.
+        // We include explicit slots first, then any other children added via withChild (if any).
+        // Since Card logic usually doesn't involve generic withChild, we could ignore super.children,
+        // but it's safer to include them at the end or begin depending on policy.
+        // Given Card structure is rigid, let's put them after footer or not at all?
+        // Let's assume standard children go into the body if we wanted to be smart, but here
+        // let's just append them to the end of the card to support custom overlays etc.
 
-        if (imageComponent != null) children.add(imageComponent);
-        if (hasHeader) children.add(headerContainer);
-        if (hasBody) children.add(bodyContainer);
-        if (hasFooter) children.add(footerContainer);
+        Stream<Component> slotStream = Stream.of(
+                imageComponent,
+                hasHeader ? headerContainer : null,
+                hasBody ? bodyContainer : null,
+                hasFooter ? footerContainer : null
+        ).filter(Objects::nonNull).map(c -> (Component) c);
 
-        return super.render();
+        return Stream.concat(slotStream, super.getChildrenStream());
     }
 }
