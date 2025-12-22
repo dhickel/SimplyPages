@@ -1,48 +1,35 @@
 package io.mindspice.jhf.components.display;
 
-import io.mindspice.jhf.core.Component;
-import io.mindspice.jhf.core.HtmlTag;
-
-import java.util.ArrayList;
-import java.util.List;
+import io.mindspice.jhf.layout.Grid;
 
 /**
  * Grid container for displaying multiple cards.
  */
-public class CardGrid extends HtmlTag {
-
-    private final List<Card> cards = new ArrayList<>();
-    private int columns = 3; // default 3 columns
+public class CardGrid extends Grid {
 
     public CardGrid() {
-        super("div");
-        this.withAttribute("class", "card-grid");
+        super("card-grid");
+        // Default columns are 3, inherited from Grid
     }
 
     public static CardGrid create() {
         return new CardGrid();
     }
 
+    @Override
     public CardGrid withColumns(int columns) {
-        this.columns = columns;
+        super.withColumns(columns);
         return this;
     }
 
     public CardGrid addCard(Card card) {
-        cards.add(card);
-        return this;
-    }
-
-    public CardGrid withClass(String className) {
-        String currentClass = "card-grid";
-        this.withAttribute("class", currentClass + " " + className);
+        super.addItem(card);
         return this;
     }
 
     @Override
-    public String render() {
-        this.withAttribute("class", "card-grid grid-cols-" + columns);
-        cards.forEach(card -> super.withChild(card));
-        return super.render();
+    public CardGrid withClass(String className) {
+        super.withClass(className);
+        return this;
     }
 }

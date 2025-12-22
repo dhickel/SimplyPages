@@ -9,14 +9,29 @@ import io.mindspice.jhf.core.HtmlTag;
  */
 public class Card extends HtmlTag {
 
-    private Component header;
-    private Component body;
-    private Component footer;
-    private Component image;
+    private final HtmlTag headerContainer = new HtmlTag("div").addClass("card-header");
+    private final HtmlTag bodyContainer = new HtmlTag("div").addClass("card-body");
+    private final HtmlTag footerContainer = new HtmlTag("div").addClass("card-footer");
+    private HtmlTag imageComponent;
+
+    private boolean hasHeader = false;
+    private boolean hasBody = false;
+    private boolean hasFooter = false;
 
     public Card() {
         super("div");
         this.withAttribute("class", "card");
+        // We defer adding children until we know what we have,
+        // OR we add them now and control visibility via emptiness or null?
+        // But Card enforces order: Image, Header, Body, Footer.
+        // If we add them to children now, they are in children list.
+        // If we construct them but don't add, we need to add them in render().
+
+        // Option A (from review): Clear children in render().
+        // Option B: Add immediately but manage order carefully? Hard if user calls methods in random order.
+
+        // Let's go with Option A as it is robust for this specific component structure
+        // where we have fixed slots.
     }
 
     public static Card create() {
@@ -24,67 +39,72 @@ public class Card extends HtmlTag {
     }
 
     public Card withHeader(String headerText) {
-        this.header = new HtmlTag("div")
-            .withAttribute("class", "card-header")
-            .withInnerText(headerText);
+        headerContainer.clearChildren(); // Clear previous content if any
+        headerContainer.withInnerText(headerText);
+        hasHeader = true;
         return this;
     }
 
     public Card withHeader(Component headerComponent) {
-        HtmlTag headerDiv = new HtmlTag("div").withAttribute("class", "card-header");
-        headerDiv.withChild(headerComponent);
-        this.header = headerDiv;
+        headerContainer.clearChildren();
+        headerContainer.withChild(headerComponent);
+        hasHeader = true;
         return this;
     }
 
     public Card withBody(String bodyText) {
-        this.body = new HtmlTag("div")
-            .withAttribute("class", "card-body")
-            .withInnerText(bodyText);
+        bodyContainer.clearChildren();
+        bodyContainer.withInnerText(bodyText);
+        hasBody = true;
         return this;
     }
 
     public Card withBody(Component bodyComponent) {
-        HtmlTag bodyDiv = new HtmlTag("div").withAttribute("class", "card-body");
-        bodyDiv.withChild(bodyComponent);
-        this.body = bodyDiv;
+        bodyContainer.clearChildren();
+        bodyContainer.withChild(bodyComponent);
+        hasBody = true;
         return this;
     }
 
     public Card withFooter(String footerText) {
-        this.footer = new HtmlTag("div")
-            .withAttribute("class", "card-footer")
-            .withInnerText(footerText);
+        footerContainer.clearChildren();
+        footerContainer.withInnerText(footerText);
+        hasFooter = true;
         return this;
     }
 
     public Card withFooter(Component footerComponent) {
-        HtmlTag footerDiv = new HtmlTag("div").withAttribute("class", "card-footer");
-        footerDiv.withChild(footerComponent);
-        this.footer = footerDiv;
+        footerContainer.clearChildren();
+        footerContainer.withChild(footerComponent);
+        hasFooter = true;
         return this;
     }
 
     public Card withImage(String src, String alt) {
-        this.image = new HtmlTag("img", true)
+        this.imageComponent = new HtmlTag("img", true)
             .withAttribute("src", src)
             .withAttribute("alt", alt)
-            .withAttribute("class", "card-img-top");
+            .addClass("card-img-top");
         return this;
     }
 
+    @Override
     public Card withClass(String className) {
-        String currentClass = "card";
-        this.withAttribute("class", currentClass + " " + className);
+        super.withClass(className);
         return this;
     }
 
     @Override
     public String render() {
-        if (image != null) super.withChild(image);
-        if (header != null) super.withChild(header);
-        if (body != null) super.withChild(body);
-        if (footer != null) super.withChild(footer);
+        // Clear children to avoid duplication on re-render
+        // Note: children is protected in HtmlTag
+        children.clear();
+
+        if (imageComponent != null) children.add(imageComponent);
+        if (hasHeader) children.add(headerContainer);
+        if (hasBody) children.add(bodyContainer);
+        if (hasFooter) children.add(footerContainer);
+
         return super.render();
     }
 }

@@ -1,85 +1,55 @@
 package io.mindspice.jhf.components.media;
 
-import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
-
-import java.util.ArrayList;
-import java.util.List;
+import io.mindspice.jhf.layout.Grid;
 
 /**
  * Gallery component for displaying a grid of images.
  */
-public class Gallery extends HtmlTag {
-
-    private final List<GalleryImage> images = new ArrayList<>();
-    private int columns = 3;
+public class Gallery extends Grid {
 
     public Gallery() {
-        super("div");
-        this.withAttribute("class", "gallery");
+        super("gallery");
     }
 
     public static Gallery create() {
         return new Gallery();
     }
 
+    @Override
     public Gallery withColumns(int columns) {
-        this.columns = columns;
+        super.withColumns(columns);
         return this;
     }
 
     public Gallery addImage(String src, String alt) {
-        images.add(new GalleryImage(src, alt, null));
-        return this;
+        return addImage(src, alt, null);
     }
 
     public Gallery addImage(String src, String alt, String caption) {
-        images.add(new GalleryImage(src, alt, caption));
-        return this;
-    }
+        HtmlTag imgWrapper = new HtmlTag("div").addClass("gallery-item");
 
-    public Gallery withClass(String className) {
-        String currentClass = "gallery";
-        this.withAttribute("class", currentClass + " " + className);
+        HtmlTag img = new HtmlTag("img", true)
+            .withAttribute("src", src)
+            .withAttribute("alt", alt)
+            .addClass("gallery-img");
+
+        imgWrapper.withChild(img);
+
+        if (caption != null && !caption.isEmpty()) {
+            HtmlTag captionTag = new HtmlTag("div")
+                .addClass("gallery-caption")
+                .withInnerText(caption);
+            imgWrapper.withChild(captionTag);
+        }
+
+        super.addItem(imgWrapper);
         return this;
     }
 
     @Override
-    public String render() {
-        this.withAttribute("class", "gallery grid-cols-" + columns);
-
-        images.forEach(image -> {
-            HtmlTag imgWrapper = new HtmlTag("div").withAttribute("class", "gallery-item");
-
-            HtmlTag img = new HtmlTag("img", true)
-                .withAttribute("src", image.src)
-                .withAttribute("alt", image.alt)
-                .withAttribute("class", "gallery-img");
-
-            imgWrapper.withChild(img);
-
-            if (image.caption != null && !image.caption.isEmpty()) {
-                HtmlTag caption = new HtmlTag("div")
-                    .withAttribute("class", "gallery-caption")
-                    .withInnerText(image.caption);
-                imgWrapper.withChild(caption);
-            }
-
-            super.withChild(imgWrapper);
-        });
-
-        return super.render();
-    }
-
-    private static class GalleryImage {
-        final String src;
-        final String alt;
-        final String caption;
-
-        GalleryImage(String src, String alt, String caption) {
-            this.src = src;
-            this.alt = alt;
-            this.caption = caption;
-        }
+    public Gallery withClass(String className) {
+        super.withClass(className);
+        return this;
     }
 }

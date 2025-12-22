@@ -4,7 +4,6 @@ import io.mindspice.jhf.core.Attribute;
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -12,13 +11,18 @@ import java.util.List;
  */
 public class Grid extends HtmlTag {
 
-    private int columns = 3;
-    private String gap = "medium";
-    private final List<Component> items = new ArrayList<>();
+    protected int columns = 3;
+    protected String gap = "medium";
+    protected final String baseClass;
 
     public Grid() {
+        this("grid");
+    }
+
+    protected Grid(String baseClass) {
         super("div");
-        this.withAttribute("class", "grid");
+        this.baseClass = baseClass;
+        this.addClass(baseClass);
     }
 
     public static Grid create() {
@@ -36,39 +40,41 @@ public class Grid extends HtmlTag {
     }
 
     public Grid addItem(Component component) {
-        items.add(component);
+        super.withChild(component);
         return this;
     }
 
     public Grid addItems(Component... components) {
-        items.addAll(List.of(components));
-        return this;
-    }
-
-    public Grid withClass(String className) {
-        String currentClass = "grid";
-        this.withAttribute("class", currentClass + " " + className);
+        for (Component c : components) {
+            super.withChild(c);
+        }
         return this;
     }
 
     @Override
     public String render() {
+        // Logic to update grid classes based on state
+        // We need to remove old grid-cols/gap classes to prevent accumulation if re-rendered
+        // But we can't easily find "old" classes without regex on the current class string.
+
         String currentClass = attributes.stream()
                 .filter(attr -> "class".equals(attr.getName()))
                 .map(Attribute::getValue)
                 .findFirst()
-                .orElse("grid");
+                .orElse("");
 
-        // Ensure base grid class is present and add layout classes
-        if (!currentClass.contains("grid")) {
-            currentClass = "grid " + currentClass;
-        }
-
-        // Remove old grid-cols/gap classes to prevent accumulation if re-rendered
+        // Clean up old grid layout classes
         currentClass = currentClass.replaceAll("grid-cols-\\d+", "").replaceAll("gap-\\w+", "").trim();
 
-        this.withAttribute("class", currentClass + " grid-cols-" + columns + " gap-" + gap);
-        items.forEach(item -> super.withChild(item));
+        // Ensure base class is present if it was somehow removed (unlikely but safe)
+        // Actually, we trust baseClass is there or user removed it intentionally.
+        // But let's follow the pattern of adding layout classes.
+
+        String newClass = currentClass + " grid-cols-" + columns + " gap-" + gap;
+
+        // Update the attribute directly to replace the cleaned string
+        this.withAttribute("class", newClass);
+
         return super.render();
     }
 }

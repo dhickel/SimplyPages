@@ -271,10 +271,43 @@ public abstract class Module extends HtmlTag {
      * @param className additional CSS class name(s) to add
      * @return this Module instance for method chaining
      */
+    @Override
     public Module withClass(String className) {
-        String currentClass = "module";
-        this.withAttribute("class", currentClass + " " + className);
+        super.addClass(className);
         return this;
+    }
+
+    // Hide HtmlTag width methods to prevent confusion as Modules should not be sized directly
+    // but rather controlled by their container or layout.
+
+    /**
+     * @deprecated Modules should not set width directly. Use a container or layout to control module width.
+     * @throws UnsupportedOperationException always
+     */
+    @Override
+    @Deprecated
+    public Module withWidth(String width) {
+        throw new UnsupportedOperationException("Modules should not set width directly. Use a container or layout to control module width.");
+    }
+
+    /**
+     * @deprecated Modules should not set width directly. Use a container or layout to control module width.
+     * @throws UnsupportedOperationException always
+     */
+    @Override
+    @Deprecated
+    public Module withMaxWidth(String maxWidth) {
+        throw new UnsupportedOperationException("Modules should not set width directly. Use a container or layout to control module width.");
+    }
+
+    /**
+     * @deprecated Modules should not set width directly. Use a container or layout to control module width.
+     * @throws UnsupportedOperationException always
+     */
+    @Override
+    @Deprecated
+    public Module withMinWidth(String minWidth) {
+        throw new UnsupportedOperationException("Modules should not set width directly. Use a container or layout to control module width.");
     }
 
     /**
@@ -362,11 +395,7 @@ public abstract class Module extends HtmlTag {
      * {@link #withClass(String)} or {@link #withAttribute(String, String)}.</p>
      */
     private void ensureModuleClass() {
-        // Use existing withClass() method which handles class attribute correctly
-        String currentClass = getAttributeValue("class").orElse("");
-        if (!currentClass.contains("module")) {
-            withClass("module");
-        }
+        addClass("module");
     }
 
     /**

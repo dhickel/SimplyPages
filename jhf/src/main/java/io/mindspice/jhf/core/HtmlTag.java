@@ -215,6 +215,14 @@ public class HtmlTag implements Component {
     }
 
     /**
+     * Clears all child components from this tag.
+     * Useful for resetting state before re-rendering or when reusing components.
+     */
+    public void clearChildren() {
+        children.clear();
+    }
+
+    /**
      * Adds a child component to this tag.
      *
      * <p>Children are rendered in the order they are added, after any inner text.</p>
@@ -327,6 +335,50 @@ public class HtmlTag implements Component {
         }
         // Allow common CSS units: px, %, em, rem, vw, vh, vmin, vmax, ch, auto
         return value.matches("^(auto|0|\\d+(\\.\\d+)?(px|%|em|rem|vw|vh|vmin|vmax|ch))$");
+    }
+
+    /**
+     * Adds a CSS class to this tag.
+     * Appends to existing classes rather than replacing them.
+     *
+     * @param className the CSS class to add
+     * @return this HtmlTag instance for method chaining
+     */
+    public HtmlTag addClass(String className) {
+        Optional<Attribute> classAttr = attributes.stream()
+                .filter(attr -> "class".equals(attr.getName()))
+                .findFirst();
+
+        if (classAttr.isPresent()) {
+            Attribute attr = classAttr.get();
+            String current = attr.getValue();
+            // Check if class already exists to avoid duplicates
+            boolean exists = false;
+            for (String c : current.split("\\s+")) {
+                if (c.equals(className)) {
+                    exists = true;
+                    break;
+                }
+            }
+
+            if (!exists) {
+                attributes.remove(attr);
+                attributes.add(new Attribute("class", current + " " + className));
+            }
+        } else {
+            attributes.add(new Attribute("class", className));
+        }
+        return this;
+    }
+
+    /**
+     * Alias for {@link #addClass(String)}.
+     *
+     * @param className the CSS class to add
+     * @return this HtmlTag instance for method chaining
+     */
+    public HtmlTag withClass(String className) {
+        return addClass(className);
     }
 
     /**
