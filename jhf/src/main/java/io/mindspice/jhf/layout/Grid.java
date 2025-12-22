@@ -53,7 +53,6 @@ public class Grid extends HtmlTag {
 
     @Override
     public String render() {
-        children.clear();
         String currentClass = attributes.stream()
                 .filter(attr -> "class".equals(attr.getName()))
                 .map(Attribute::getValue)

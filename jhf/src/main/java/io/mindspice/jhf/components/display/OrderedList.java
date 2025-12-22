@@ -50,7 +50,6 @@ public class OrderedList extends HtmlTag {
 
     @Override
     public String render() {
-        children.clear();
         items.forEach(item -> super.withChild(item));
         return super.render();
     }

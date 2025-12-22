@@ -72,7 +72,6 @@ public class DataTable<T> extends HtmlTag {
 
     @Override
     public String render() {
-        children.clear();
         // Build table class
         StringBuilder classBuilder = new StringBuilder("table data-table");
         if (striped) classBuilder.append(" table-striped");

@@ -45,7 +45,6 @@ public class InfoBox extends HtmlTag {
 
     @Override
     public String render() {
-        children.clear();
         if (icon != null) {
             HtmlTag iconDiv = new HtmlTag("div")
                 .withAttribute("class", "info-box-icon")

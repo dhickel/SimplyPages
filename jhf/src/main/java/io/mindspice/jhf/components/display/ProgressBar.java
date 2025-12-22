@@ -154,7 +154,6 @@ public class ProgressBar extends HtmlTag {
 
     @Override
     public String render() {
-        children.clear();
         // Apply height if specified
         if (height != null) {
             this.withAttribute("style", "height: " + height + ";");
