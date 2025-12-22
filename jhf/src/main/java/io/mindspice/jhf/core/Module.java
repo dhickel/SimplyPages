@@ -1,8 +1,4 @@
-package io.mindspice.jhf.modules;
-
-import io.mindspice.jhf.core.Attribute;
-import io.mindspice.jhf.core.Component;
-import io.mindspice.jhf.core.HtmlTag;
+package io.mindspice.jhf.core;
 
 import java.util.Optional;
 
@@ -200,6 +196,8 @@ public abstract class Module extends HtmlTag {
     /** Optional title displayed at the top of the module */
     protected String title;
 
+    private boolean built = false;
+
     /**
      * Creates a new module with the specified HTML tag name.
      *
@@ -319,35 +317,41 @@ public abstract class Module extends HtmlTag {
     protected abstract void buildContent();
 
     /**
-     * Renders this module to an HTML string.
+     * Ensures the module content is built.
      *
-     * <p>This method orchestrates the rendering process:</p>
-     * <ol>
-     *   <li>Clears any previously built content</li>
-     *   <li>Calls {@link #buildContent()} to assemble components (lazy initialization)</li>
-     *   <li>Delegates to {@link HtmlTag#render()} for actual HTML generation</li>
-     * </ol>
+     * <p>This method is idempotent. If the module is already built, it does nothing.
+     * Otherwise, it calls {@link #buildContent()}.</p>
      *
-     * <p>This method clears any previously built content and rebuilds it fresh on each call.
-     * This ensures that calling {@code render()} multiple times produces consistent output
-     * and prevents child element accumulation. Modules can safely be rendered multiple times
-     * or reused across multiple pages.</p>
+     * @return this module
+     */
+    public Module build() {
+        if (!built) {
+            // Ensure module class is set before building content
+            ensureModuleClass();
+            buildContent();
+            built = true;
+        }
+        return this;
+    }
+
+    /**
+     * Renders this module to an HTML string using the provided context.
      *
-     * <p><strong>Note:</strong> The {@link #buildContent()} method is called each time this module
-     * is rendered. Implementations should use {@link #withChild(Component)} and related methods
-     * to add content. The children are automatically cleared before each call to ensure consistent
-     * output.</p>
+     * <p>This method ensures the module content is built (if not already),
+     * and then delegates to {@link HtmlTag#render(RenderContext)}.</p>
      *
+     * @param context the context containing values for dynamic slots
      * @return complete HTML string representation of this module
      */
     @Override
+    public String render(RenderContext context) {
+        build();
+        return super.render(context);
+    }
+
+    @Override
     public String render() {
-        // Clear previous content to prevent duplication
-        children.clear();
-        // Ensure module class is set before rendering
-        ensureModuleClass();
-        buildContent();
-        return super.render();
+        return render(RenderContext.empty());
     }
 
     /**

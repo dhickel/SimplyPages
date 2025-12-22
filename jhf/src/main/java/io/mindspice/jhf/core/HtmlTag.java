@@ -151,6 +151,9 @@ public class HtmlTag implements Component {
     /** Simple text content (alternative to child components) */
     protected String innerText = "";
 
+    /** Dynamic text content key */
+    protected SlotKey<String> innerTextSlot = null;
+
     /** Whether the innerText contains trusted HTML that should not be escaped */
     protected boolean trustedHtml = false;
 
@@ -259,7 +262,21 @@ public class HtmlTag implements Component {
      */
     public HtmlTag withInnerText(String text) {
         this.innerText = text;
+        this.innerTextSlot = null;
         this.trustedHtml = false;  // Mark as needs escaping
+        return this;
+    }
+
+    /**
+     * Sets a slot key for dynamic inner text content.
+     *
+     * @param slotKey the slot key to resolve at render time
+     * @return this HtmlTag instance for method chaining
+     */
+    public HtmlTag withInnerText(SlotKey<String> slotKey) {
+        this.innerTextSlot = slotKey;
+        this.innerText = "";
+        this.trustedHtml = false;
         return this;
     }
 
@@ -449,10 +466,11 @@ public class HtmlTag implements Component {
      * </div>
      * }</pre>
      *
+     * @param context the context containing values for dynamic slots
      * @return complete HTML string representation of this tag and its contents
      */
     @Override
-    public String render() {
+    public String render(RenderContext context) {
         StringBuilder sb = new StringBuilder("<").append(tagName);
         sb.append(attributes.stream().map(Attribute::render).collect(Collectors.joining()));
 
@@ -462,7 +480,13 @@ public class HtmlTag implements Component {
             sb.append(">");
         }
 
-        if (!innerText.isEmpty()) {
+        if (innerTextSlot != null) {
+            String val = context.get(innerTextSlot).orElse("");
+            // If the slot value is used, we assume it might need escaping unless we have a way to specify otherwise.
+            // For now, always escape dynamic text in withInnerText to be safe, unless trustedHtml is set (which applies to static text usually).
+            // Let's assume dynamic text slots are untrusted by default.
+            sb.append(Encode.forHtml(val));
+        } else if (!innerText.isEmpty()) {
             if (trustedHtml) {
                 sb.append(innerText);  // Already safe - trusted HTML
             } else {
@@ -470,7 +494,7 @@ public class HtmlTag implements Component {
             }
         }
 
-        sb.append(children.stream().map(Component::render).collect(Collectors.joining()));
+        sb.append(children.stream().map(child -> child.render(context)).collect(Collectors.joining()));
         sb.append("</").append(tagName).append(">");
         return sb.toString();
     }

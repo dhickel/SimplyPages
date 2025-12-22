@@ -1,5 +1,7 @@
 package io.mindspice.jhf.modules;
 
+import io.mindspice.jhf.core.Module;
+
 import io.mindspice.jhf.components.Header;
 import io.mindspice.jhf.components.media.Gallery;
 import io.mindspice.jhf.core.HtmlTag;

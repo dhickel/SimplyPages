@@ -1,5 +1,7 @@
 package io.mindspice.jhf.modules;
 
+import io.mindspice.jhf.core.Module;
+
 import io.mindspice.jhf.components.Header;
 import io.mindspice.jhf.components.forms.Form;
 import io.mindspice.jhf.core.Component;
