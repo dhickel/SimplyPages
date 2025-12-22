@@ -1,6 +1,7 @@
 package io.mindspice.jhf.components;
 
 import io.mindspice.jhf.core.Component;
+import org.owasp.encoder.Encode;
 
 /**
  * TextNode component for rendering plain text without any HTML tags.
@@ -20,6 +21,6 @@ public class TextNode implements Component {
 
     @Override
     public String render() {
-        return text;
+        return Encode.forHtml(text);
     }
 }

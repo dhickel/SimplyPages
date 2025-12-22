@@ -2,6 +2,7 @@ package io.mindspice.jhf.components.display;
 
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
+import org.owasp.encoder.Encode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +66,8 @@ public class Table extends HtmlTag {
 
     @Override
     public String render() {
+        children.clear(); // Fix re-rendering bug
+
         // Build class string
         StringBuilder classBuilder = new StringBuilder("table");
         if (striped) classBuilder.append(" table-striped");
@@ -134,7 +137,7 @@ public class Table extends HtmlTag {
 
         @Override
         public String render() {
-            String content = textValue != null ? textValue : componentValue.render();
+            String content = textValue != null ? Encode.forHtml(textValue) : componentValue.render();
             return "<td>" + content + "</td>";
         }
     }

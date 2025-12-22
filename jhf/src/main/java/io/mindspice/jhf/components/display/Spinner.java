@@ -100,6 +100,7 @@ public class Spinner extends HtmlTag {
 
     @Override
     public String render() {
+        children.clear();
         String classes = "spinner " + size.getCssClass();
         if (color != null) {
             classes += " spinner-" + color;
