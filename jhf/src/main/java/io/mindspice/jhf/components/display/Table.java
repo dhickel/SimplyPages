@@ -66,8 +66,6 @@ public class Table extends HtmlTag {
 
     @Override
     public String render() {
-        children.clear(); // Fix re-rendering bug
-
         // Build class string
         StringBuilder classBuilder = new StringBuilder("table");
         if (striped) classBuilder.append(" table-striped");

@@ -81,7 +81,6 @@ public class Card extends HtmlTag {
 
     @Override
     public String render() {
-        children.clear();
         if (image != null) super.withChild(image);
         if (header != null) super.withChild(header);
         if (body != null) super.withChild(body);
