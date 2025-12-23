@@ -3,6 +3,7 @@ package io.mindspice.jhf.components.forms;
 import io.mindspice.jhf.components.Div;
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
+import java.util.stream.Stream;
 
 /**
  * Checkbox input component.
@@ -60,11 +61,12 @@ public class Checkbox extends Div {
     }
 
     @Override
-    public String render() {
-        super.withChild(input);
+    protected Stream<Component> getChildrenStream() {
+        Stream.Builder<Component> builder = Stream.builder();
+        builder.add(input);
         if (label != null) {
-            super.withChild(label);
+            builder.add(label);
         }
-        return super.render();
+        return Stream.concat(builder.build(), super.getChildrenStream());
     }
 }

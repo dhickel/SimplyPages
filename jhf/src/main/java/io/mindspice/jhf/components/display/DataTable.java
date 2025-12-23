@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * DataTable component for displaying structured data from objects.
@@ -71,7 +72,7 @@ public class DataTable<T> extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    protected Stream<Component> getChildrenStream() {
         // Build table class
         StringBuilder classBuilder = new StringBuilder("table data-table");
         if (striped) classBuilder.append(" table-striped");
@@ -113,8 +114,8 @@ public class DataTable<T> extends HtmlTag {
         });
         table.withChild(tbody);
 
-        super.withChild(table);
-        return super.render();
+        // Return stream containing the built table followed by any other children
+        return Stream.concat(Stream.of(table), super.getChildrenStream());
     }
 
     private static class Column<T> {

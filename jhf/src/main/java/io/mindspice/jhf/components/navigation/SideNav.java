@@ -2,6 +2,7 @@ package io.mindspice.jhf.components.navigation;
 
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
+import io.mindspice.jhf.core.RenderContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,20 +45,21 @@ public class SideNav extends HtmlTag {
         return this;
     }
 
+    @Override
     public SideNav withClass(String className) {
-        String currentClass = "sidenav";
-        this.withAttribute("class", currentClass + " " + className);
+        super.addClass(className);
         return this;
     }
 
     @Override
     protected Stream<Component> getChildrenStream() {
-        return Stream.concat(
-                super.getChildrenStream(),
-                items.stream()
-                        .filter(item -> item instanceof Component)
-                        .map(item -> (Component) item)
-        );
+        // Items are stored in 'items' list, separate from super.children
+        // We concatenate them
+        Stream<Component> itemsStream = items.stream()
+                .filter(item -> item instanceof Component)
+                .map(item -> (Component) item);
+
+        return Stream.concat(super.getChildrenStream(), itemsStream);
     }
 
     public static class NavItem implements Component {
@@ -96,7 +98,7 @@ public class SideNav extends HtmlTag {
         }
 
         @Override
-        public String render() {
+        public String render(RenderContext context) {
             StringBuilder sb = new StringBuilder("<a href=\"").append(href).append("\"");
             sb.append(" class=\"sidenav-item");
             if (active) {
@@ -123,6 +125,11 @@ public class SideNav extends HtmlTag {
             sb.append(text).append("</a>");
             return sb.toString();
         }
+
+        @Override
+        public String render() {
+            return render(RenderContext.empty());
+        }
     }
 
     public static class Section implements Component {
@@ -133,8 +140,13 @@ public class SideNav extends HtmlTag {
         }
 
         @Override
-        public String render() {
+        public String render(RenderContext context) {
             return "<div class=\"sidenav-section\">" + title + "</div>";
+        }
+
+        @Override
+        public String render() {
+            return render(RenderContext.empty());
         }
     }
 }

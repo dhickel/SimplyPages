@@ -2,9 +2,11 @@ package io.mindspice.jhf.components.navigation;
 
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
+import io.mindspice.jhf.core.RenderContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Breadcrumb navigation component for showing hierarchical navigation.
@@ -33,18 +35,18 @@ public class Breadcrumb extends HtmlTag {
         return this;
     }
 
+    @Override
     public Breadcrumb withClass(String className) {
-        String currentClass = "breadcrumb";
-        this.withAttribute("class", currentClass + " " + className);
+        super.addClass(className);
         return this;
     }
 
     @Override
-    public String render() {
+    protected Stream<Component> getChildrenStream() {
         HtmlTag ol = new HtmlTag("ol").withAttribute("class", "breadcrumb-list");
-        items.forEach(item -> ol.withChild(item));
-        super.withChild(ol);
-        return super.render();
+        items.forEach(ol::withChild);
+
+        return Stream.concat(Stream.of(ol), super.getChildrenStream());
     }
 
     private static class BreadcrumbItem implements Component {
@@ -59,7 +61,7 @@ public class Breadcrumb extends HtmlTag {
         }
 
         @Override
-        public String render() {
+        public String render(RenderContext context) {
             StringBuilder sb = new StringBuilder("<li class=\"breadcrumb-item");
             if (active) {
                 sb.append(" active\" aria-current=\"page");
@@ -74,6 +76,11 @@ public class Breadcrumb extends HtmlTag {
 
             sb.append("</li>");
             return sb.toString();
+        }
+
+        @Override
+        public String render() {
+            return render(RenderContext.empty());
         }
     }
 }

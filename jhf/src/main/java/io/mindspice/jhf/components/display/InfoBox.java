@@ -2,10 +2,10 @@ package io.mindspice.jhf.components.display;
 
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
+import java.util.stream.Stream;
 
 /**
  * InfoBox component for displaying highlighted information.
- * More structured than an Alert, typically used for displaying metadata or statistics.
  */
 public class InfoBox extends HtmlTag {
 
@@ -37,19 +37,21 @@ public class InfoBox extends HtmlTag {
         return this;
     }
 
+    @Override
     public InfoBox withClass(String className) {
-        String currentClass = "info-box";
-        this.withAttribute("class", currentClass + " " + className);
+        super.addClass(className);
         return this;
     }
 
     @Override
-    public String render() {
+    protected Stream<Component> getChildrenStream() {
+        Stream.Builder<Component> builder = Stream.builder();
+
         if (icon != null) {
             HtmlTag iconDiv = new HtmlTag("div")
                 .withAttribute("class", "info-box-icon")
                 .withInnerText(icon);
-            super.withChild(iconDiv);
+            builder.add(iconDiv);
         }
 
         HtmlTag contentDiv = new HtmlTag("div").withAttribute("class", "info-box-content");
@@ -68,7 +70,8 @@ public class InfoBox extends HtmlTag {
             contentDiv.withChild(valueDiv);
         }
 
-        super.withChild(contentDiv);
-        return super.render();
+        builder.add(contentDiv);
+
+        return Stream.concat(builder.build(), super.getChildrenStream());
     }
 }

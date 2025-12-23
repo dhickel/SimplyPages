@@ -1,26 +1,11 @@
 package io.mindspice.jhf.components.display;
 
+import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
+import java.util.stream.Stream;
 
 /**
  * Spinner component for loading indicators.
- *
- * <p>Spinners provide visual feedback during loading operations.</p>
- *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // Small spinner
- * Spinner.create().small();
- *
- * // Medium spinner (default)
- * Spinner.create();
- *
- * // Large spinner with custom message
- * Spinner.create().large().withMessage("Loading data...");
- *
- * // Spinner with custom color
- * Spinner.create().withColor("primary");
- * }</pre>
  */
 public class Spinner extends HtmlTag {
 
@@ -48,63 +33,53 @@ public class Spinner extends HtmlTag {
         super("div");
         this.withAttribute("class", "spinner");
         this.withAttribute("role", "status");
+        updateClasses();
     }
 
     public static Spinner create() {
         return new Spinner();
     }
 
-    /**
-     * Sets small size.
-     */
     public Spinner small() {
         this.size = Size.SMALL;
+        updateClasses();
         return this;
     }
 
-    /**
-     * Sets medium size (default).
-     */
     public Spinner medium() {
         this.size = Size.MEDIUM;
+        updateClasses();
         return this;
     }
 
-    /**
-     * Sets large size.
-     */
     public Spinner large() {
         this.size = Size.LARGE;
+        updateClasses();
         return this;
     }
 
-    /**
-     * Adds a loading message below the spinner.
-     *
-     * @param message the loading message
-     */
     public Spinner withMessage(String message) {
         this.message = message;
         return this;
     }
 
-    /**
-     * Sets the spinner color.
-     *
-     * @param color color name or CSS class
-     */
     public Spinner withColor(String color) {
         this.color = color;
+        updateClasses();
         return this;
     }
 
-    @Override
-    public String render() {
+    private void updateClasses() {
         String classes = "spinner " + size.getCssClass();
         if (color != null) {
             classes += " spinner-" + color;
         }
         this.withAttribute("class", classes);
+    }
+
+    @Override
+    protected Stream<Component> getChildrenStream() {
+        Stream.Builder<Component> builder = Stream.builder();
 
         // Spinner element
         HtmlTag spinnerElement = new HtmlTag("div")
@@ -116,16 +91,16 @@ public class Spinner extends HtmlTag {
             .withInnerText("Loading...");
         spinnerElement.withChild(srText);
 
-        super.withChild(spinnerElement);
+        builder.add(spinnerElement);
 
         // Optional message
         if (message != null && !message.isEmpty()) {
             HtmlTag messageDiv = new HtmlTag("div")
                 .withAttribute("class", "spinner-message")
                 .withInnerText(message);
-            super.withChild(messageDiv);
+            builder.add(messageDiv);
         }
 
-        return super.render();
+        return Stream.concat(builder.build(), super.getChildrenStream());
     }
 }

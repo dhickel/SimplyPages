@@ -1,29 +1,11 @@
 package io.mindspice.jhf.components.display;
 
+import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
+import java.util.stream.Stream;
 
 /**
  * Progress bar component for showing completion progress.
- *
- * <p>Progress bars visually represent the completion status of a task or operation.</p>
- *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // Basic progress bar at 75%
- * ProgressBar.create(75);
- *
- * // Progress bar with label
- * ProgressBar.create(60).withLabel("60% Complete");
- *
- * // Colored progress bar
- * ProgressBar.create(90).success();
- *
- * // Striped animated progress bar
- * ProgressBar.create(45).striped().animated();
- *
- * // Custom height
- * ProgressBar.create(33).withHeight("30px");
- * }</pre>
  */
 public class ProgressBar extends HtmlTag {
 
@@ -65,100 +47,60 @@ public class ProgressBar extends HtmlTag {
         return new ProgressBar(value);
     }
 
-    /**
-     * Sets a custom label to display on the progress bar.
-     *
-     * @param label the label text
-     */
     public ProgressBar withLabel(String label) {
         this.label = label;
         return this;
     }
 
-    /**
-     * Sets the maximum value (default 100).
-     *
-     * @param max the maximum value
-     */
     public ProgressBar withMax(int max) {
         this.max = max;
         return this;
     }
 
-    /**
-     * Sets primary color style.
-     */
     public ProgressBar primary() {
         this.colorType = ColorType.PRIMARY;
         return this;
     }
 
-    /**
-     * Sets success color style (green).
-     */
     public ProgressBar success() {
         this.colorType = ColorType.SUCCESS;
         return this;
     }
 
-    /**
-     * Sets warning color style (yellow).
-     */
     public ProgressBar warning() {
         this.colorType = ColorType.WARNING;
         return this;
     }
 
-    /**
-     * Sets error color style (red).
-     */
     public ProgressBar error() {
         this.colorType = ColorType.ERROR;
         return this;
     }
 
-    /**
-     * Sets info color style (blue).
-     */
     public ProgressBar info() {
         this.colorType = ColorType.INFO;
         return this;
     }
 
-    /**
-     * Adds striped pattern to the progress bar.
-     */
     public ProgressBar striped() {
         this.striped = true;
         return this;
     }
 
-    /**
-     * Animates the striped pattern.
-     */
     public ProgressBar animated() {
         this.animated = true;
         this.striped = true; // Animated requires striped
         return this;
     }
 
-    /**
-     * Sets custom height for the progress bar.
-     *
-     * @param height CSS height value (e.g., "20px", "2rem")
-     */
     public ProgressBar withHeight(String height) {
         this.height = height;
+        this.withAttribute("style", "height: " + height + ";");
         return this;
     }
 
     @Override
-    public String render() {
-        // Apply height if specified
-        if (height != null) {
-            this.withAttribute("style", "height: " + height + ";");
-        }
-
+    protected Stream<Component> getChildrenStream() {
         // Create progress bar fill
         String barClasses = "progress-bar";
         if (!colorType.getCssClass().isEmpty()) {
@@ -171,7 +113,7 @@ public class ProgressBar extends HtmlTag {
             barClasses += " progress-bar-animated";
         }
 
-        int percentage = (int) ((double) value / max * 100);
+        int percentage = (max > 0) ? (int) ((double) value / max * 100) : 0;
 
         HtmlTag bar = new HtmlTag("div")
             .withAttribute("class", barClasses)
@@ -185,7 +127,6 @@ public class ProgressBar extends HtmlTag {
             bar.withInnerText(label);
         }
 
-        super.withChild(bar);
-        return super.render();
+        return Stream.concat(Stream.of(bar), super.getChildrenStream());
     }
 }

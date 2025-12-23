@@ -2,10 +2,12 @@ package io.mindspice.jhf.components.display;
 
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
+import io.mindspice.jhf.core.RenderContext;
 import org.owasp.encoder.Encode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Table component for displaying tabular data.
@@ -15,13 +17,10 @@ public class Table extends HtmlTag {
 
     private final List<String> headers = new ArrayList<>();
     private final List<Row> rows = new ArrayList<>();
-    private boolean striped = false;
-    private boolean bordered = false;
-    private boolean hoverable = false;
 
     public Table() {
         super("table");
-        this.withAttribute("class", "table");
+        this.addClass("table");
     }
 
     public static Table create() {
@@ -44,34 +43,29 @@ public class Table extends HtmlTag {
     }
 
     public Table striped() {
-        this.striped = true;
+        this.addClass("table-striped");
         return this;
     }
 
     public Table bordered() {
-        this.bordered = true;
+        this.addClass("table-bordered");
         return this;
     }
 
     public Table hoverable() {
-        this.hoverable = true;
-        return this;
-    }
-
-    public Table withClass(String className) {
-        String currentClass = "table";
-        this.withAttribute("class", currentClass + " " + className);
+        this.addClass("table-hover");
         return this;
     }
 
     @Override
-    public String render() {
-        // Build class string
-        StringBuilder classBuilder = new StringBuilder("table");
-        if (striped) classBuilder.append(" table-striped");
-        if (bordered) classBuilder.append(" table-bordered");
-        if (hoverable) classBuilder.append(" table-hover");
-        this.withAttribute("class", classBuilder.toString());
+    public Table withClass(String className) {
+        super.addClass(className);
+        return this;
+    }
+
+    @Override
+    protected Stream<Component> getChildrenStream() {
+        Stream.Builder<Component> builder = Stream.builder();
 
         // Add header if present
         if (!headers.isEmpty()) {
@@ -82,17 +76,17 @@ public class Table extends HtmlTag {
                 headerRow.withChild(th);
             });
             thead.withChild(headerRow);
-            super.withChild(thead);
+            builder.add(thead);
         }
 
         // Add rows
         if (!rows.isEmpty()) {
             HtmlTag tbody = new HtmlTag("tbody");
             rows.forEach(row -> tbody.withChild(row));
-            super.withChild(tbody);
+            builder.add(tbody);
         }
 
-        return super.render();
+        return Stream.concat(builder.build(), super.getChildrenStream());
     }
 
     public static class Row implements Component {
@@ -111,11 +105,16 @@ public class Table extends HtmlTag {
         }
 
         @Override
-        public String render() {
+        public String render(RenderContext context) {
             StringBuilder sb = new StringBuilder("<tr>");
-            cells.forEach(cell -> sb.append(cell.render()));
+            cells.forEach(cell -> sb.append(cell.render(context)));
             sb.append("</tr>");
             return sb.toString();
+        }
+
+        @Override
+        public String render() {
+            return render(RenderContext.empty());
         }
     }
 
@@ -134,9 +133,14 @@ public class Table extends HtmlTag {
         }
 
         @Override
-        public String render() {
-            String content = textValue != null ? Encode.forHtml(textValue) : componentValue.render();
+        public String render(RenderContext context) {
+            String content = textValue != null ? Encode.forHtml(textValue) : componentValue.render(context);
             return "<td>" + content + "</td>";
+        }
+
+        @Override
+        public String render() {
+            return render(RenderContext.empty());
         }
     }
 }

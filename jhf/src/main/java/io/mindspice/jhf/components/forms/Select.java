@@ -2,9 +2,11 @@ package io.mindspice.jhf.components.forms;
 
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
+import io.mindspice.jhf.core.RenderContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Select dropdown component.
@@ -64,17 +66,18 @@ public class Select extends HtmlTag {
         return this;
     }
 
+    @Override
     public Select withClass(String className) {
-        String currentClass = "form-select";
-        this.withAttribute("class", currentClass + " " + className);
+        super.addClass(className);
         return this;
     }
 
     @Override
-    public String render() {
-        // Add all options as children before rendering
-        options.forEach(option -> super.withChild(option));
-        return super.render();
+    protected Stream<Component> getChildrenStream() {
+        return Stream.concat(
+            super.getChildrenStream(),
+            options.stream().map(opt -> (Component) opt)
+        );
     }
 
     @Override
@@ -113,7 +116,7 @@ public class Select extends HtmlTag {
         }
 
         @Override
-        public String render() {
+        public String render(RenderContext context) {
             StringBuilder sb = new StringBuilder("<option value=\"").append(value).append("\"");
             if (selected) {
                 sb.append(" selected");
@@ -123,6 +126,11 @@ public class Select extends HtmlTag {
             }
             sb.append(">").append(label).append("</option>");
             return sb.toString();
+        }
+
+        @Override
+        public String render() {
+            return render(RenderContext.empty());
         }
     }
 }

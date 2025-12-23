@@ -2,9 +2,11 @@ package io.mindspice.jhf.components.navigation;
 
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
+import io.mindspice.jhf.core.RenderContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Navigation bar component.
@@ -49,28 +51,30 @@ public class NavBar extends HtmlTag {
         return this;
     }
 
+    @Override
     public NavBar withClass(String className) {
-        String currentClass = "navbar";
-        this.withAttribute("class", currentClass + " " + className);
+        super.addClass(className);
         return this;
     }
 
     @Override
-    public String render() {
-        // Add brand if present
+    protected Stream<Component> getChildrenStream() {
+        Stream.Builder<Component> builder = Stream.builder();
+
+        // Brand
         if (brand != null) {
             HtmlTag brandDiv = new HtmlTag("div")
                 .withAttribute("class", "navbar-brand")
                 .withInnerText(brand);
-            super.withChild(brandDiv);
+            builder.add(brandDiv);
         }
 
-        // Add items container
+        // Items container
         HtmlTag itemsContainer = new HtmlTag("div").withAttribute("class", "navbar-items");
-        items.forEach(item -> itemsContainer.withChild(item));
-        super.withChild(itemsContainer);
+        items.forEach(itemsContainer::withChild);
+        builder.add(itemsContainer);
 
-        return super.render();
+        return Stream.concat(builder.build(), super.getChildrenStream());
     }
 
     public static class NavItem implements Component {
@@ -107,7 +111,7 @@ public class NavBar extends HtmlTag {
         }
 
         @Override
-        public String render() {
+        public String render(RenderContext context) {
             StringBuilder sb = new StringBuilder("<a href=\"").append(href).append("\"");
             sb.append(" class=\"navbar-item");
             if (active) {
@@ -127,6 +131,11 @@ public class NavBar extends HtmlTag {
 
             sb.append(">").append(text).append("</a>");
             return sb.toString();
+        }
+
+        @Override
+        public String render() {
+            return render(RenderContext.empty());
         }
     }
 }
