@@ -98,6 +98,98 @@ To make the "Composite Pattern" more ergonomic, a new helper component is availa
 page.addComponents(TemplateComponent.of(NoteModule.TEMPLATE, noteContext));
 ```
 
+## Pattern C: HTMX Content Navigation (Documentation Viewer Pattern)
+
+This pattern demonstrates how to build navigation systems where clicking links updates only a specific content area without full page reloads, combining server-side rendering with HTMX for seamless user experience.
+
+* **Use Case**:
+    * Documentation viewers with sidebar navigation
+    * Tabbed content interfaces
+    * Multi-section pages where navigation updates only the main content area
+    * Any interface where the shell/chrome remains constant but content changes
+
+* **Implementation**:
+    1. **Page Structure**: Create a page with a fixed container that has a unique ID for the content area:
+    ```java
+    public String render() {
+        return Page.builder()
+                .withStickySidebar(sidebar, 9, 3)
+                .addComponents(
+                    new Div()
+                        .withAttribute("id", "docs-content")  // Target for HTMX updates
+                        .withChild(Header.H1(title))
+                        .withChild(ContentModule.create()
+                            .withContent(markdownContent))
+                )
+                .build()
+                .render();
+    }
+    ```
+
+    2. **Sidebar Links with HTMX**: Add HTMX attributes to navigation links to target the content area:
+    ```java
+    new Link("/docs/" + filePath, title)
+        .withClass("text-decoration-none text-dark")
+        .withHxGet("/docs/" + filePath)       // Load content via HTMX
+        .withHxTarget("#docs-content")         // Target the content div
+        .withHxSwap("innerHTML")               // Replace inner HTML
+        .withHxPushUrl(true)                   // Update browser URL
+    ```
+
+    3. **Controller Endpoint**: Detect HTMX requests and return partial content:
+    ```java
+    @GetMapping(value = {"/docs/**", "/docs"})
+    @ResponseBody
+    public String docs(
+            HttpServletResponse response,
+            @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+            jakarta.servlet.http.HttpServletRequest request
+    ) {
+        // Load and process content...
+        DocsPage docsPage = new DocsPage(title, markdown, sidebar);
+
+        // Set Vary header for proper caching
+        response.setHeader("Vary", "HX-Request");
+
+        // Return only content for HTMX requests, full page for direct navigation
+        if (hxRequest != null) {
+            return docsPage.renderContent();  // Partial HTML
+        }
+
+        return renderWithShellIfNeeded(null, docsPage, response);  // Full page
+    }
+    ```
+
+    4. **Separate Content Rendering Method**: Create a method to render just the content portion:
+    ```java
+    public String renderContent() {
+        return new Div()
+            .withAttribute("id", "docs-content")
+            .withChild(Header.H1(title))
+            .withChild(ContentModule.create()
+                .withContent(markdownContent))
+            .render();
+    }
+    ```
+
+* **Key Benefits**:
+    * **No Page Reloads**: Navigation feels instant - only content area updates
+    * **Browser History**: `hx-push-url="true"` maintains proper browser back/forward navigation
+    * **SEO Friendly**: Direct navigation (no HX-Request header) returns full page with all content
+    * **Progressive Enhancement**: Falls back to standard links if JavaScript disabled
+
+* **Implementation Example**:
+    The framework's documentation viewer demonstrates this pattern in action:
+    * Visit `/docs/getting-started/01-introduction` directly → full page loads
+    * Click sidebar links → only content area updates via HTMX
+    * Browser back/forward buttons work correctly
+    * URL updates to reflect current page
+
+* **Trade-offs**:
+    * Requires controller logic to detect HTMX requests and return appropriate response
+    * Must maintain both full-page and partial rendering methods
+    * Provides excellent user experience while maintaining server-side rendering benefits
+
 ## Architectural Decision: Rejection of Stateful Session UI
 
 The idea of storing page layouts or component trees in the HTTP Session ("SessionPage") was considered and explicitly rejected. This approach leads to severe memory, scalability, and data-synchronization problems that are contrary to modern, stateless web architecture. The framework will not support or recommend this pattern.

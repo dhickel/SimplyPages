@@ -299,7 +299,17 @@ public class DemoController {
 
         Component sidebar = getDocsNavigation();
         DocsPage docsPage = new DocsPage(title, markdown, sidebar);
-        return renderWithShellIfNeeded(hxRequest, docsPage, response);
+
+        // Tell caches to store separate versions based on HX-Request header
+        response.setHeader("Vary", "HX-Request");
+
+        // If this is an HTMX request from the sidebar navigation, return just the content
+        if (hxRequest != null) {
+            return docsPage.renderContent();
+        }
+
+        // For direct navigation, build full shell with page content
+        return renderWithShellIfNeeded(null, docsPage, response);
     }
 
     private String loadDocContent(String path) {
@@ -335,7 +345,7 @@ public class DemoController {
         Map<String, List<String>> structure = getDocsStructure();
         Div navContainer = new Div().withClass("docs-nav");
 
-        // Helper to add links
+        // Helper to add links with HTMX attributes for in-place content updates
         java.util.function.BiConsumer<Div, String> addLink = (container, filePath) -> {
             String fileName = filePath.contains("/") ? filePath.substring(filePath.lastIndexOf('/') + 1) : filePath;
             String title = fileName.replace(".md", "").replace("-", " ");
@@ -348,6 +358,10 @@ public class DemoController {
                 new Div().withClass("mb-1").withChild(
                     new Link("/docs/" + filePath, title)
                         .withClass("text-decoration-none text-dark")
+                        .withHxGet("/docs/" + filePath)
+                        .withHxTarget("#docs-content")
+                        .withHxSwap("innerHTML")
+                        .withHxPushUrl(true)
                 )
             );
         };

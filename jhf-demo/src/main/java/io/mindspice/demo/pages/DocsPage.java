@@ -24,10 +24,27 @@ public class DocsPage implements DemoPage {
     public String render() {
         return Page.builder()
                 .withStickySidebar(sidebar, 9, 3)
-                .addComponents(Header.H1(title))
-                .addComponents(ContentModule.create()
-                        .withContent(markdownContent))
+                .addComponents(
+                    new io.mindspice.jhf.components.Div()
+                        .withAttribute("id", "docs-content")
+                        .withChild(Header.H1(title))
+                        .withChild(ContentModule.create()
+                            .withContent(markdownContent))
+                )
                 .build()
                 .render();
+    }
+
+    /**
+     * Renders just the content portion (for HTMX updates).
+     * This is used when the sidebar navigation updates the content in-place.
+     */
+    public String renderContent() {
+        return new io.mindspice.jhf.components.Div()
+            .withAttribute("id", "docs-content")
+            .withChild(Header.H1(title))
+            .withChild(ContentModule.create()
+                .withContent(markdownContent))
+            .render();
     }
 }
