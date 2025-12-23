@@ -5,6 +5,7 @@ import io.mindspice.jhf.core.HtmlTag;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Side navigation component specifically designed for vertical navigation.
@@ -50,13 +51,13 @@ public class SideNav extends HtmlTag {
     }
 
     @Override
-    public String render() {
-        items.forEach(item -> {
-            if (item instanceof Component) {
-                super.withChild((Component) item);
-            }
-        });
-        return super.render();
+    protected Stream<Component> getChildrenStream() {
+        return Stream.concat(
+                super.getChildrenStream(),
+                items.stream()
+                        .filter(item -> item instanceof Component)
+                        .map(item -> (Component) item)
+        );
     }
 
     public static class NavItem implements Component {
