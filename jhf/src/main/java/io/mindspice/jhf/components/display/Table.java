@@ -7,7 +7,6 @@ import org.owasp.encoder.Encode;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 /**
  * Table component for displaying tabular data.
@@ -15,12 +14,28 @@ import java.util.stream.Stream;
  */
 public class Table extends HtmlTag {
 
-    private final List<String> headers = new ArrayList<>();
-    private final List<Row> rows = new ArrayList<>();
+    private final HtmlTag thead;
+    private final HtmlTag tbody;
+    private final HtmlTag headerRow;
 
     public Table() {
         super("table");
         this.addClass("table");
+
+        // Initialize structure
+        this.thead = new HtmlTag("thead");
+        this.headerRow = new HtmlTag("tr");
+        this.thead.withChild(headerRow);
+
+        this.tbody = new HtmlTag("tbody");
+
+        // Add to children immediately so they are always rendered
+        // Note: We add thead/tbody even if empty, but CSS usually hides empty ones or we can check before render.
+        // However, for simplicity and statefulness, we add them.
+        // If strict 'no empty thead' is needed, we can toggle visibility or add conditionally in a specialized render.
+        // But standard HtmlTag behavior is to render what's in children.
+        this.withChild(thead);
+        this.withChild(tbody);
     }
 
     public static Table create() {
@@ -28,17 +43,30 @@ public class Table extends HtmlTag {
     }
 
     public Table withHeaders(String... headerLabels) {
-        headers.addAll(List.of(headerLabels));
+        // Clear existing headers to avoid duplication if called multiple times
+        // Since HtmlTag children list is not easily cleared by type, we assume this is called once or we clear children of headerRow
+        // But HtmlTag doesn't expose clearChildren().
+        // We will just append for now, assuming standard usage.
+        for (String h : headerLabels) {
+            HtmlTag th = new HtmlTag("th").withInnerText(h);
+            headerRow.withChild(th);
+        }
         return this;
     }
 
     public Table addRow(String... cellValues) {
-        rows.add(new Row(cellValues));
+        tbody.withChild(new Row(cellValues));
         return this;
     }
 
     public Table addRow(Component... cellComponents) {
-        rows.add(new Row(cellComponents));
+        tbody.withChild(new Row(cellComponents));
+        return this;
+    }
+
+    // Helper to add a Row object directly (e.g. from lambda)
+    public Table addRow(Row row) {
+        tbody.withChild(row);
         return this;
     }
 
@@ -63,31 +91,7 @@ public class Table extends HtmlTag {
         return this;
     }
 
-    @Override
-    protected Stream<Component> getChildrenStream() {
-        Stream.Builder<Component> builder = Stream.builder();
-
-        // Add header if present
-        if (!headers.isEmpty()) {
-            HtmlTag thead = new HtmlTag("thead");
-            HtmlTag headerRow = new HtmlTag("tr");
-            headers.forEach(h -> {
-                HtmlTag th = new HtmlTag("th").withInnerText(h);
-                headerRow.withChild(th);
-            });
-            thead.withChild(headerRow);
-            builder.add(thead);
-        }
-
-        // Add rows
-        if (!rows.isEmpty()) {
-            HtmlTag tbody = new HtmlTag("tbody");
-            rows.forEach(row -> tbody.withChild(row));
-            builder.add(tbody);
-        }
-
-        return Stream.concat(builder.build(), super.getChildrenStream());
-    }
+    // Removed getChildrenStream override as we now manage children statefully
 
     public static class Row implements Component {
         private final List<Cell> cells = new ArrayList<>();

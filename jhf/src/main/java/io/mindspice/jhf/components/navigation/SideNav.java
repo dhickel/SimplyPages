@@ -4,17 +4,11 @@ import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
 import io.mindspice.jhf.core.RenderContext;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
-
 /**
  * Side navigation component specifically designed for vertical navigation.
  * Supports sections and nested items.
  */
 public class SideNav extends HtmlTag {
-
-    private final List<Object> items = new ArrayList<>(); // Can be NavItem or Section
 
     public SideNav() {
         super("nav");
@@ -26,22 +20,22 @@ public class SideNav extends HtmlTag {
     }
 
     public SideNav addItem(String text, String href) {
-        items.add(new NavItem(text, href, false));
+        this.withChild(new NavItem(text, href, false));
         return this;
     }
 
     public SideNav addItem(String text, String href, boolean active) {
-        items.add(new NavItem(text, href, active));
+        this.withChild(new NavItem(text, href, active));
         return this;
     }
 
     public SideNav addItem(NavItem navItem) {
-        items.add(navItem);
+        this.withChild(navItem);
         return this;
     }
 
     public SideNav addSection(String title) {
-        items.add(new Section(title));
+        this.withChild(new Section(title));
         return this;
     }
 
@@ -51,16 +45,7 @@ public class SideNav extends HtmlTag {
         return this;
     }
 
-    @Override
-    protected Stream<Component> getChildrenStream() {
-        // Items are stored in 'items' list, separate from super.children
-        // We concatenate them
-        Stream<Component> itemsStream = items.stream()
-                .filter(item -> item instanceof Component)
-                .map(item -> (Component) item);
-
-        return Stream.concat(super.getChildrenStream(), itemsStream);
-    }
+    // Removed getChildrenStream override. We just add items/sections as children directly.
 
     public static class NavItem implements Component {
         private final String text;

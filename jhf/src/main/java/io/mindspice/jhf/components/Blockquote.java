@@ -2,27 +2,12 @@ package io.mindspice.jhf.components;
 
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
+import io.mindspice.jhf.core.RenderContext;
+
+import java.util.stream.Stream;
 
 /**
  * Blockquote component for quoted text.
- *
- * <p>Blockquotes are used to quote text from external sources or highlight
- * important passages.</p>
- *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // Simple blockquote
- * Blockquote.create("This is a quote from a research paper.");
- *
- * // Blockquote with citation
- * Blockquote.create("Knowledge is power.")
- *     .withCitation("Francis Bacon");
- *
- * // Blockquote with source
- * Blockquote.create("Research findings show...")
- *     .withCitation("Dr. Smith")
- *     .withSource("Journal of Cannabis Research, 2024");
- * }</pre>
  */
 public class Blockquote extends HtmlTag {
 
@@ -40,39 +25,31 @@ public class Blockquote extends HtmlTag {
         return new Blockquote(quote);
     }
 
-    /**
-     * Adds a citation (author or source name).
-     *
-     * @param citation the citation text
-     */
     public Blockquote withCitation(String citation) {
         this.citation = citation;
         return this;
     }
 
-    /**
-     * Adds a source reference (publication, URL, etc.).
-     *
-     * @param source the source reference
-     */
     public Blockquote withSource(String source) {
         this.source = source;
         return this;
     }
 
+    @Override
     public Blockquote withClass(String className) {
-        String currentClass = "blockquote";
-        this.withAttribute("class", currentClass + " " + className);
+        super.addClass(className);
         return this;
     }
 
     @Override
-    public String render() {
+    protected Stream<Component> getChildrenStream() {
+        Stream.Builder<Component> builder = Stream.builder();
+
         // Quote text
         HtmlTag quoteText = new HtmlTag("p")
             .withAttribute("class", "blockquote-text")
             .withInnerText(quote);
-        super.withChild(quoteText);
+        builder.add(quoteText);
 
         // Footer with citation and/or source
         if (citation != null || source != null) {
@@ -95,9 +72,9 @@ public class Blockquote extends HtmlTag {
                 footer.withChild(sourceSpan);
             }
 
-            super.withChild(footer);
+            builder.add(footer);
         }
 
-        return super.render();
+        return Stream.concat(builder.build(), super.getChildrenStream());
     }
 }

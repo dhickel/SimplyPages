@@ -2,15 +2,10 @@ package io.mindspice.jhf.components.forum;
 
 import io.mindspice.jhf.core.HtmlTag;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * List of forum posts component.
  */
 public class PostList extends HtmlTag {
-
-    private final List<ForumPost> posts = new ArrayList<>();
 
     public PostList() {
         super("div");
@@ -22,19 +17,14 @@ public class PostList extends HtmlTag {
     }
 
     public PostList addPost(ForumPost post) {
-        posts.add(post);
-        return this;
-    }
-
-    public PostList withClass(String className) {
-        String currentClass = "post-list";
-        this.withAttribute("class", currentClass + " " + className);
+        // Add directly to children instead of storing in a separate list and overriding render/getChildrenStream
+        this.withChild(post);
         return this;
     }
 
     @Override
-    public String render() {
-        posts.forEach(post -> super.withChild(post));
-        return super.render();
+    public PostList withClass(String className) {
+        super.addClass(className);
+        return this;
     }
 }

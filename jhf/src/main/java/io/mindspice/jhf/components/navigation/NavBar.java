@@ -4,22 +4,25 @@ import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
 import io.mindspice.jhf.core.RenderContext;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
-
 /**
  * Navigation bar component.
  * Can be used for top navigation or side navigation.
  */
 public class NavBar extends HtmlTag {
 
-    private final List<NavItem> items = new ArrayList<>();
-    private String brand;
+    private final HtmlTag itemsContainer;
+    private HtmlTag brandDiv;
 
     public NavBar() {
         super("nav");
         this.withAttribute("class", "navbar");
+        this.itemsContainer = new HtmlTag("div").withAttribute("class", "navbar-items");
+        // We add itemsContainer to children. Brand will be added before it if set.
+        // But since we want brand first, we can manage order in constructor or addBrand logic.
+        // Let's add itemsContainer now, and if brand is added, we insert it at 0?
+        // HtmlTag doesn't support insert.
+        // So we'll add itemsContainer.
+        this.withChild(itemsContainer);
     }
 
     public static NavBar create() {
@@ -27,27 +30,38 @@ public class NavBar extends HtmlTag {
     }
 
     public NavBar withBrand(String brand) {
-        this.brand = brand;
+        if (brandDiv == null) {
+            brandDiv = new HtmlTag("div")
+                .withAttribute("class", "navbar-brand")
+                .withInnerText(brand);
+            // We need brand to be first.
+            // Since we can't insert, we'll cheat:
+            // Re-add itemsContainer after brand?
+            // Accessing protected children via inheritance.
+            this.children.add(0, brandDiv);
+        } else {
+            brandDiv.withInnerText(brand);
+        }
         return this;
     }
 
     public NavBar addItem(String text, String href) {
-        items.add(new NavItem(text, href));
+        itemsContainer.withChild(new NavItem(text, href));
         return this;
     }
 
     public NavBar addItem(String text, String href, boolean active) {
-        items.add(new NavItem(text, href, active));
+        itemsContainer.withChild(new NavItem(text, href, active));
         return this;
     }
 
     public NavBar vertical() {
-        this.withAttribute("class", "navbar navbar-vertical");
+        this.addClass("navbar-vertical");
         return this;
     }
 
     public NavBar horizontal() {
-        this.withAttribute("class", "navbar navbar-horizontal");
+        this.addClass("navbar-horizontal");
         return this;
     }
 
@@ -57,25 +71,7 @@ public class NavBar extends HtmlTag {
         return this;
     }
 
-    @Override
-    protected Stream<Component> getChildrenStream() {
-        Stream.Builder<Component> builder = Stream.builder();
-
-        // Brand
-        if (brand != null) {
-            HtmlTag brandDiv = new HtmlTag("div")
-                .withAttribute("class", "navbar-brand")
-                .withInnerText(brand);
-            builder.add(brandDiv);
-        }
-
-        // Items container
-        HtmlTag itemsContainer = new HtmlTag("div").withAttribute("class", "navbar-items");
-        items.forEach(itemsContainer::withChild);
-        builder.add(itemsContainer);
-
-        return Stream.concat(builder.build(), super.getChildrenStream());
-    }
+    // Removed getChildrenStream override
 
     public static class NavItem implements Component {
         private final String text;

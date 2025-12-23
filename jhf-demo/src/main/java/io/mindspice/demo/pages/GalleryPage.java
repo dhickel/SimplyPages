@@ -1,6 +1,7 @@
 package io.mindspice.demo.pages;
 
 import io.mindspice.jhf.components.*;
+import io.mindspice.jhf.components.media.*;
 import io.mindspice.jhf.layout.*;
 import io.mindspice.jhf.modules.*;
 import org.springframework.stereotype.Component;
@@ -59,6 +60,18 @@ public class GalleryPage implements DemoPage {
                             .withHeight(360);
                         ```
                         """)))
+                // Actual Video Component Added Here
+                .addRow(row -> {
+                    Video video = Video.create("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")
+                            .withControls(true)
+                            .withWidth(640)
+                            .withHeight(360)
+                            .withPoster("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg");
+
+                    row.withChild(ContentModule.create()
+                            .withTitle("Video Example")
+                            .withCustomContent(video));
+                })
 
                 // Audio Component
                 .addComponents(Header.H2("Audio Component"))
@@ -72,6 +85,15 @@ public class GalleryPage implements DemoPage {
                             .withControls(true);
                         ```
                         """)))
+                // Actual Audio Component Added Here
+                .addRow(row -> {
+                     Audio audio = Audio.create("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
+                             .withControls(true);
+
+                     row.withChild(ContentModule.create()
+                             .withTitle("Audio Example")
+                             .withCustomContent(audio));
+                })
 
                 .build();
 
