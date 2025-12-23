@@ -85,6 +85,10 @@ public class Page extends HtmlTag {
             if (mainWidth + sidebarWidth > 12) {
                 throw new IllegalArgumentException("Combined column widths cannot exceed 12");
             }
+
+            // Automatically enable independent scrolling for sticky sidebar
+            this.independentScrolling = true;
+
             this.stickyComponent = stickyComponent;
             this.stickyMainWidth = mainWidth;
             this.stickySidebarWidth = sidebarWidth;

@@ -46,7 +46,6 @@ public class StickySidebarDemoPage implements DemoPage {
                 );
 
         return Page.builder()
-                .withIndependentScrolling()
                 .withStickySidebar(sidebarContent, 9, 3)
                 .addComponents(
                         Header.H1("Sticky Sidebar Demo").withClass("mb-4"),
