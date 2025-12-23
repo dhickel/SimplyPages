@@ -317,17 +317,22 @@ public abstract class Module extends HtmlTag {
      * subclasses assemble their component structure. Use {@link #withChild(Component)}
      * to add components to the module.</p>
      *
-     * <p><strong>Note:</strong> This method may be called multiple times if the module is
-     * rendered multiple times. The children are automatically cleared before each call to
-     * ensure consistent output. Do not rely on state from previous calls.</p>
+     * <p><strong>Note:</strong> This method is called <strong>exactly once</strong> (idempotent)
+     * the first time the module is built or rendered. The children are NOT cleared between calls.
+     * This "build-once" lifecycle ensures that the module's structure is immutable after construction,
+     * which is essential for use with {@link Template}s and caching.</p>
+     *
+     * <p>If you need dynamic content that changes per-request, do not rely on re-running
+     * {@code buildContent()}. Instead, use {@link Slot} components and {@link SlotKey}s to
+     * inject dynamic data at render time.</p>
      *
      * <p><strong>Implementation Guidelines:</strong></p>
      * <ul>
      *   <li>Check if {@link #title} is present and add a header if so</li>
      *   <li>Compose child components based on module properties</li>
      *   <li>Add components using {@code super.withChild()}</li>
+     *   <li>Use {@link Slot#of(SlotKey)} for parts that need to change dynamically</li>
      *   <li>Don't call {@code render()} - that happens automatically</li>
-     *   <li>Don't accumulate state - children are cleared before each call</li>
      * </ul>
      *
      * <p>Example Implementation:</p>
