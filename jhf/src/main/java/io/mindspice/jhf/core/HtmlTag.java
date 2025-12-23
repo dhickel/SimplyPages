@@ -330,6 +330,50 @@ public class HtmlTag implements Component {
     }
 
     /**
+     * Adds a CSS class to this tag.
+     * Appends to existing classes rather than replacing them.
+     *
+     * @param className the CSS class to add
+     * @return this HtmlTag instance for method chaining
+     */
+    public HtmlTag addClass(String className) {
+        Optional<Attribute> classAttr = attributes.stream()
+                .filter(attr -> "class".equals(attr.getName()))
+                .findFirst();
+
+        if (classAttr.isPresent()) {
+            Attribute attr = classAttr.get();
+            String current = attr.getValue();
+            // Check if class already exists to avoid duplicates
+            boolean exists = false;
+            for (String c : current.split("\\s+")) {
+                if (c.equals(className)) {
+                    exists = true;
+                    break;
+                }
+            }
+
+            if (!exists) {
+                attributes.remove(attr);
+                attributes.add(new Attribute("class", current + " " + className));
+            }
+        } else {
+            attributes.add(new Attribute("class", className));
+        }
+        return this;
+    }
+
+    /**
+     * Alias for {@link #addClass(String)}.
+     *
+     * @param className the CSS class to add
+     * @return this HtmlTag instance for method chaining
+     */
+    public HtmlTag withClass(String className) {
+        return addClass(className);
+    }
+
+    /**
      * Adds or updates a CSS property in the style attribute.
      * Merges with existing styles rather than replacing them.
      *
@@ -445,6 +489,17 @@ public class HtmlTag implements Component {
     }
 
     /**
+     * Gets the stream of child components to be rendered.
+     * <p>Subclasses can override this to provide a custom list of children,
+     * such as filtering empty components or enforcing a specific order.</p>
+     *
+     * @return stream of components to render
+     */
+    protected java.util.stream.Stream<Component> getChildrenStream() {
+        return children.stream();
+    }
+
+    /**
      * Renders this tag and all its contents to an HTML string.
      *
      * <p>The rendering process:</p>
@@ -494,7 +549,7 @@ public class HtmlTag implements Component {
             }
         }
 
-        sb.append(children.stream().map(child -> child.render(context)).collect(Collectors.joining()));
+        sb.append(getChildrenStream().map(child -> child.render(context)).collect(Collectors.joining()));
         sb.append("</").append(tagName).append(">");
         return sb.toString();
     }
