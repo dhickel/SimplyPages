@@ -540,16 +540,31 @@ public class DemoController {
     ) {
         // Depending on target, we return the OOB swapped content for that specific module.
         // We use the helper methods in DynamicUpdatesPage which use Templates.
+        // Since we removed hx-swap-oob="true" from the templates to fix initial rendering,
+        // we must now inject it manually for the OOB updates.
+        String html;
+        String moduleId;
+
         switch (target) {
             case "card":
-                return DynamicUpdatesPage.renderCard(val1, val2);
+                html = DynamicUpdatesPage.renderCard(val1, val2);
+                moduleId = "card-module";
+                break;
             case "list":
-                return DynamicUpdatesPage.renderList(List.of(val1, val2, val3));
+                html = DynamicUpdatesPage.renderList(List.of(val1, val2, val3));
+                moduleId = "list-module";
+                break;
             case "table":
-                return DynamicUpdatesPage.renderTable(val1, val2, val3);
+                html = DynamicUpdatesPage.renderTable(val1, val2, val3);
+                moduleId = "table-module";
+                break;
             default:
                 return "<div id='error'>Invalid target</div>";
         }
+
+        // Inject hx-swap-oob="true" into the top-level element
+        // The top level element will have the ID we set in the template
+        return html.replace("id=\"" + moduleId + "\"", "id=\"" + moduleId + "\" hx-swap-oob=\"true\"");
     }
 
     @PostMapping("/demo/dynamic-updates/add-post")
