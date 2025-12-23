@@ -360,7 +360,7 @@ public class DemoController {
                         .withClass("text-decoration-none text-dark")
                         .withHxGet("/docs/" + filePath)
                         .withHxTarget("#docs-content")
-                        .withHxSwap("innerHTML")
+                        .withHxSwap("innerHTML scroll:top")
                         .withHxPushUrl(true)
                 )
             );

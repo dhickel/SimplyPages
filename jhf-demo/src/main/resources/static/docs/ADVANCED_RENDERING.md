@@ -132,7 +132,7 @@ This pattern demonstrates how to build navigation systems where clicking links u
         .withClass("text-decoration-none text-dark")
         .withHxGet("/docs/" + filePath)       // Load content via HTMX
         .withHxTarget("#docs-content")         // Target the content div
-        .withHxSwap("innerHTML")               // Replace inner HTML
+        .withHxSwap("innerHTML scroll:top")    // Replace inner HTML and scroll to top
         .withHxPushUrl(true)                   // Update browser URL
     ```
 
