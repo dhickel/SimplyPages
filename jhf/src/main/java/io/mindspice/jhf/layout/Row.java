@@ -13,10 +13,6 @@ public class Row extends HtmlTag {
         this.withAttribute("class", "row");
     }
 
-    public static Row create() {
-        return new Row();
-    }
-
     public Row withComponents(Component... components) {
         Arrays.stream(components).forEach(this::withChild);
         return this;

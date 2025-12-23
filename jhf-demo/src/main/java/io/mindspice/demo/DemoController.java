@@ -195,7 +195,6 @@ public class DemoController {
                                 .addSection("Advanced")
                                 .addLink("Layouts", "/layouts", "📐")
                                 .addLink("Page Layouts", "/page-layouts", "📄")
-                                .addLink("Advanced Rendering", "/advanced-rendering", "🚀")
                                 .addLink("HTMX", "/htmx", "⚡")
                                 .addLink("Custom", "/custom", "🔧")
                                 .addLink("Shell Demo", "/shell-demo", "🐚")
@@ -419,50 +418,6 @@ public class DemoController {
             HttpServletResponse response
     ) {
         return renderWithShellIfNeeded(hxRequest, stickySidebarDemoPage, response);
-    }
-
-    @GetMapping("/advanced-rendering")
-    @ResponseBody
-    public String advancedRendering(
-            @RequestHeader(value = "HX-Request", required = false) String hxRequest,
-            HttpServletResponse response
-    ) {
-        // Just for demo, assuming true (Pro User)
-        // In a real app, this would be determined by the user's session
-        if (hxRequest != null) {
-            return AdvancedRenderingPage.render(true);
-        }
-
-        // Manual shell handling since AdvancedRenderingPage does its own partial rendering logic
-        // But for consistency with other pages, we should probably wrap it.
-        // The AdvancedRenderingPage.render() returns a full page render, but we want to integrate it with the shell.
-
-        // Actually, AdvancedRenderingPage.render returns page.render().
-        // If we want to use the shell, we should probably just return the content component.
-        // Let's modify this to match the pattern.
-
-        // For now, let's just use the renderWithShellIfNeeded pattern but we need an instance of DemoPage.
-        // AdvancedRenderingPage is static.
-        // Let's just create a wrapper.
-
-        DemoPage wrapper = new DemoPage() {
-            @Override
-            public String render() {
-                // We strip the outer html if we want to inject into content-area?
-                // Actually renderWithShellIfNeeded expects page.render() to return the inner content
-                // IF hxRequest is present.
-                // AdvancedRenderingPage.render() creates a full Page.
-
-                // Let's just return the full page string and let the shell builder wrap it?
-                // No, renderWithShellIfNeeded injects the result of page.render() into #content-area.
-                // So page.render() should return only the content of the #content-area.
-
-                // I will adjust AdvancedRenderingPage to have a renderContent method.
-                return AdvancedRenderingPage.render(true);
-            }
-        };
-
-        return renderWithShellIfNeeded(hxRequest, wrapper, response);
     }
 
     // HTMX API endpoints (simple responses for demo purposes)
