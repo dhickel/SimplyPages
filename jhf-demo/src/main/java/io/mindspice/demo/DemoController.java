@@ -5,6 +5,7 @@ import io.mindspice.jhf.builders.AccountBarBuilder;
 import io.mindspice.jhf.builders.ShellBuilder;
 import io.mindspice.jhf.builders.SideNavBuilder;
 import io.mindspice.jhf.builders.TopBannerBuilder;
+import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.components.forum.ForumPost;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -25,6 +26,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.TreeMap;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 /**
  * Main demo controller for the Java HTML Framework.
@@ -254,19 +259,29 @@ public class DemoController {
 
     private final PathMatchingResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver();
     private final Map<String, String> docsCache = new ConcurrentHashMap<>();
+    private Map<String, List<String>> cachedDocsStructure = null;
 
-    @GetMapping("/docs/**")
+    @GetMapping(value = {"/docs/**", "/docs"})
     @ResponseBody
     public String docs(
             HttpServletResponse response,
             @RequestHeader(value = "HX-Request", required = false) String hxRequest,
             jakarta.servlet.http.HttpServletRequest request
     ) {
-        String path = request.getRequestURI().substring("/docs/".length());
-        if (path.isEmpty()) {
-            path = "getting-started/01-introduction"; // Default doc
+        String requestUri = request.getRequestURI();
+        // Handle /docs or /docs/ safely
+        String path = "";
+        if (requestUri.length() > "/docs/".length()) {
+             path = requestUri.substring("/docs/".length());
         }
 
+        // Normalize path: handle empty and default to introduction
+        if (path.isEmpty() || path.equals("/")) {
+            path = "getting-started/01-introduction.md";
+        }
+
+        // Support both with and without .md
+        // We will store in cache using the provided path, but load logic needs to be smart
         String markdown = docsCache.computeIfAbsent(path, this::loadDocContent);
 
         if (markdown == null) {
@@ -279,33 +294,30 @@ public class DemoController {
         title = title.replace("-", " ").replace(".md", "");
         title = title.substring(0, 1).toUpperCase() + title.substring(1);
 
-        DocsPage docsPage = new DocsPage(title, markdown);
+        Component sidebar = getDocsNavigation();
+        DocsPage docsPage = new DocsPage(title, markdown, sidebar);
         return renderWithShellIfNeeded(hxRequest, docsPage, response);
     }
 
     private String loadDocContent(String path) {
-        // Try to find the file.
-        // We look for any file ending with path + ".md" inside static/docs
+        if (path.contains("..")) {
+            return null; // Prevent path traversal
+        }
+
+        // If path ends with .md, use it as is for lookup, otherwise append .md
+        String lookupPath = path.endsWith(".md") ? path : path + ".md";
+        String cleanPath = path.endsWith(".md") ? path.substring(0, path.length() - 3) : path;
+
         try {
-            // First try direct match
-            Resource resource = resourceResolver.getResource("classpath:static/docs/" + path + ".md");
+            // 1. Try direct match
+            Resource resource = resourceResolver.getResource("classpath:static/docs/" + lookupPath);
             if (resource.exists()) {
                 return new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
             }
 
-            // If path doesn't include directory, maybe we need to search?
-            // User example: docs/01-getting-started
-            // File: static/docs/getting-started/01-getting-started.md (Wait, user file is 01-introduction.md?)
-            // Let's assume exact path match first as per user requirement: "takes the name of the file (without the .md) as the path"
-            // If the user requests /docs/getting-started/01-introduction, it should work.
-
-            // Fallback: search for file with that name recursively if not found directly?
-            // The user prompt said: "take the name of the file (without the .md) as the path... like ww.oursite.com/docs/01-getting-started"
-            // This implies flattening or smart search if "01-getting-started" is in a subdir.
-            // Let's try to find a file with that name anywhere in docs.
-
-            String fileName = path.contains("/") ? path.substring(path.lastIndexOf('/') + 1) : path;
-            Resource[] resources = resourceResolver.getResources("classpath:static/docs/**/" + fileName + ".md");
+            // 2. Recursive search for file name
+            String fileName = lookupPath.contains("/") ? lookupPath.substring(lookupPath.lastIndexOf('/') + 1) : lookupPath;
+            Resource[] resources = resourceResolver.getResources("classpath:static/docs/**/" + fileName);
             if (resources.length > 0) {
                  return new String(resources[0].getInputStream().readAllBytes(), StandardCharsets.UTF_8);
             }
@@ -314,6 +326,78 @@ public class DemoController {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private Component getDocsNavigation() {
+        Map<String, List<String>> structure = getDocsStructure();
+        SideNavBuilder builder = SideNavBuilder.create();
+
+        // Build navigation from cached structure
+        // Put "Getting Started" first if it exists
+        if (structure.containsKey("Getting Started")) {
+            builder.addSection("Getting Started");
+            structure.get("Getting Started").stream().sorted().forEach(file -> addLinkToNav(builder, file));
+        }
+
+        // Add rest
+        structure.forEach((section, files) -> {
+            if (!section.equals("Getting Started")) {
+                builder.addSection(section);
+                files.stream().sorted().forEach(file -> addLinkToNav(builder, file));
+            }
+        });
+
+        return builder.build();
+    }
+
+    private synchronized Map<String, List<String>> getDocsStructure() {
+        if (cachedDocsStructure != null) {
+            return cachedDocsStructure;
+        }
+
+        try {
+            Resource[] resources = resourceResolver.getResources("classpath:static/docs/**/*.md");
+
+            // Group by parent directory name
+            Map<String, List<String>> sections = new TreeMap<>();
+
+            for (Resource res : resources) {
+                String relativePath = res.getURL().toString();
+                // Extract part after /docs/
+                if (relativePath.contains("/docs/")) {
+                    String part = relativePath.substring(relativePath.indexOf("/docs/") + 6);
+                    String folder = "General";
+                    if (part.contains("/")) {
+                        folder = part.substring(0, part.lastIndexOf('/'));
+                        // Capitalize and format folder name
+                        folder = Arrays.stream(folder.split("-"))
+                            .map(s -> s.substring(0, 1).toUpperCase() + s.substring(1))
+                            .collect(Collectors.joining(" "));
+                    }
+                    sections.computeIfAbsent(folder, k -> new ArrayList<>()).add(part);
+                }
+            }
+
+            cachedDocsStructure = sections;
+            return cachedDocsStructure;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new TreeMap<>();
+        }
+    }
+
+    private void addLinkToNav(SideNavBuilder builder, String filePath) {
+        String fileName = filePath.contains("/") ? filePath.substring(filePath.lastIndexOf('/') + 1) : filePath;
+        String title = fileName.replace(".md", "").replace("-", " ");
+        // Strip numbering like "01-"
+        if (title.matches("^\\d+\\s.*")) {
+            title = title.replaceAll("^\\d+\\s", "");
+        }
+        title = title.substring(0, 1).toUpperCase() + title.substring(1);
+
+        // Link keeps .md to match the requested capability
+        builder.addLink(title, "/docs/" + filePath, "📄");
     }
 
     @GetMapping("/home")
