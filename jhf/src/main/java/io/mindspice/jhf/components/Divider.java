@@ -1,33 +1,13 @@
 package io.mindspice.jhf.components;
 
+import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
+import io.mindspice.jhf.core.RenderContext;
+
+import java.util.stream.Stream;
 
 /**
  * Divider component for creating horizontal or vertical visual separators.
- *
- * <p>Dividers are visual elements that separate content sections. They can be
- * styled with different thicknesses, colors, and styles (solid, dashed, dotted).</p>
- *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // Basic horizontal divider (default)
- * Divider.horizontal();
- *
- * // Thick horizontal divider
- * Divider.horizontal().thick();
- *
- * // Dashed divider
- * Divider.horizontal().dashed();
- *
- * // Dotted divider with custom color
- * Divider.horizontal().dotted().withColor("#cccccc");
- *
- * // Vertical divider (useful in flex layouts)
- * Divider.vertical().withHeight("100px");
- *
- * // Divider with text
- * Divider.horizontal().withText("or");
- * }</pre>
  */
 public class Divider extends HtmlTag {
 
@@ -67,125 +47,102 @@ public class Divider extends HtmlTag {
         this.withAttribute("class", "divider divider-" + orientation.name().toLowerCase());
     }
 
-    /**
-     * Creates a horizontal divider (default).
-     */
     public static Divider horizontal() {
         return new Divider(DividerOrientation.HORIZONTAL);
     }
 
-    /**
-     * Creates a vertical divider.
-     */
     public static Divider vertical() {
         return new Divider(DividerOrientation.VERTICAL);
     }
 
-    /**
-     * Sets thin thickness (1px) - default.
-     */
     public Divider thin() {
         this.thickness = DividerThickness.THIN;
         return this;
     }
 
-    /**
-     * Sets medium thickness (2px).
-     */
     public Divider medium() {
         this.thickness = DividerThickness.MEDIUM;
         return this;
     }
 
-    /**
-     * Sets thick thickness (4px).
-     */
     public Divider thick() {
         this.thickness = DividerThickness.THICK;
         return this;
     }
 
-    /**
-     * Sets solid line style (default).
-     */
     public Divider solid() {
         this.style = DividerStyle.SOLID;
         return this;
     }
 
-    /**
-     * Sets dashed line style.
-     */
     public Divider dashed() {
         this.style = DividerStyle.DASHED;
         return this;
     }
 
-    /**
-     * Sets dotted line style.
-     */
     public Divider dotted() {
         this.style = DividerStyle.DOTTED;
         return this;
     }
 
-    /**
-     * Sets the color of the divider.
-     *
-     * @param color CSS color value (e.g., "#cccccc", "rgb(200,200,200)", "gray")
-     */
     public Divider withColor(String color) {
         this.color = color;
         return this;
     }
 
-    /**
-     * Sets text to display in the middle of a horizontal divider.
-     *
-     * @param text the text to display
-     */
     public Divider withText(String text) {
         this.text = text;
         return this;
     }
 
-    /**
-     * Sets a custom height for vertical dividers.
-     *
-     * @param height CSS height value (e.g., "100px", "50%")
-     */
     public Divider withHeight(String height) {
         if (orientation == DividerOrientation.VERTICAL) {
-            this.withAttribute("style", buildStyle() + " height: " + height + ";");
+            this.addStyle("height", height);
         }
-        return this;
-    }
-
-    public Divider withClass(String className) {
-        String currentClass = "divider divider-" + orientation.name().toLowerCase();
-        this.withAttribute("class", currentClass + " " + className);
         return this;
     }
 
     @Override
-    public String render() {
-        // Apply styling
-        this.withAttribute("style", buildStyle());
+    public Divider withClass(String className) {
+        super.addClass(className);
+        return this;
+    }
 
-        // If there's text, create a special structure for centered text
+    @Override
+    protected Stream<Component> getChildrenStream() {
+        Stream.Builder<Component> builder = Stream.builder();
+
         if (text != null && orientation == DividerOrientation.HORIZONTAL) {
-            this.withAttribute("class", "divider divider-horizontal divider-with-text");
-            HtmlTag textSpan = new HtmlTag("span")
+             HtmlTag textSpan = new HtmlTag("span")
                 .withAttribute("class", "divider-text")
                 .withInnerText(text);
-            super.withChild(textSpan);
+             builder.add(textSpan);
         }
 
-        return super.render();
+        return Stream.concat(builder.build(), super.getChildrenStream());
+    }
+
+    // Override render(RenderContext) to apply styles/classes BEFORE invoking super.render
+    @Override
+    public String render(RenderContext context) {
+        // Apply styles and classes based on current state
+        this.withAttribute("style", buildStyle());
+
+        if (text != null && orientation == DividerOrientation.HORIZONTAL) {
+            // We need to ensure the class includes 'divider-with-text'
+            // We use addClass to preserve other classes
+             this.addClass("divider-with-text");
+        }
+
+        return super.render(context);
     }
 
     private String buildStyle() {
         StringBuilder styleBuilder = new StringBuilder();
+
+        // Preserve existing height style if any
+        // Accessing attributes is hard here without parsing.
+        // We will just regenerate the border style.
 
         if (orientation == DividerOrientation.HORIZONTAL) {
             if (text == null) {
@@ -202,11 +159,9 @@ public class Divider extends HtmlTag {
                 }
                 styleBuilder.append("; width: 100%; display: block; line-height: 0;");
             } else {
-                // Style for divider with text is handled by CSS
                 styleBuilder.append("position: relative; text-align: center; margin: 1rem 0;");
             }
         } else {
-            // Vertical divider
             styleBuilder.append("border-left: ")
                 .append(thickness.getThickness())
                 .append(" ")

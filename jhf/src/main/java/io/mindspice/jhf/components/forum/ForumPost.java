@@ -3,6 +3,9 @@ package io.mindspice.jhf.components.forum;
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
 import io.mindspice.jhf.components.Markdown;
+import io.mindspice.jhf.core.RenderContext;
+
+import java.util.stream.Stream;
 
 /**
  * Forum post component for displaying individual forum posts.
@@ -61,14 +64,16 @@ public class ForumPost extends HtmlTag {
         return this;
     }
 
+    @Override
     public ForumPost withClass(String className) {
-        String currentClass = "forum-post";
-        this.withAttribute("class", currentClass + " " + className);
+        super.addClass(className);
         return this;
     }
 
     @Override
-    public String render() {
+    protected Stream<Component> getChildrenStream() {
+        Stream.Builder<Component> builder = Stream.builder();
+
         // Header section
         HtmlTag header = new HtmlTag("div").withAttribute("class", "post-header");
 
@@ -81,17 +86,18 @@ public class ForumPost extends HtmlTag {
             .withInnerText(timestamp != null ? timestamp : "");
 
         header.withChild(authorDiv).withChild(timestampDiv);
+        builder.add(header);
 
         // Title section
-        Component titleComponent = null;
         if (title != null && !title.isEmpty()) {
-            titleComponent = new HtmlTag("h3")
+            HtmlTag titleComponent = new HtmlTag("h3")
                 .withAttribute("class", "post-title")
                 .withInnerText(title);
+            builder.add(titleComponent);
         }
 
         // Content section
-        Component contentComponent;
+        HtmlTag contentComponent;
         if (useMarkdown && content != null) {
             contentComponent = new HtmlTag("div")
                 .withAttribute("class", "post-content")
@@ -101,6 +107,7 @@ public class ForumPost extends HtmlTag {
                 .withAttribute("class", "post-content")
                 .withInnerText(content != null ? content : "");
         }
+        builder.add(contentComponent);
 
         // Footer section
         HtmlTag footer = new HtmlTag("div").withAttribute("class", "post-footer");
@@ -114,15 +121,8 @@ public class ForumPost extends HtmlTag {
             .withInnerText(replies + " replies");
 
         footer.withChild(likesSpan).withChild(repliesSpan);
+        builder.add(footer);
 
-        // Assemble
-        super.withChild(header);
-        if (titleComponent != null) {
-            super.withChild(titleComponent);
-        }
-        super.withChild(contentComponent);
-        super.withChild(footer);
-
-        return super.render();
+        return Stream.concat(builder.build(), super.getChildrenStream());
     }
 }

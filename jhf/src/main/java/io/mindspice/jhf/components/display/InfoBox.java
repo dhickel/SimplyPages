@@ -2,20 +2,35 @@ package io.mindspice.jhf.components.display;
 
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
-import java.util.stream.Stream;
 
 /**
  * InfoBox component for displaying highlighted information.
  */
 public class InfoBox extends HtmlTag {
 
-    private String title;
-    private String value;
-    private String icon;
+    private final HtmlTag iconDiv;
+    private final HtmlTag contentDiv;
+    private final HtmlTag titleDiv;
+    private final HtmlTag valueDiv;
 
     public InfoBox() {
         super("div");
         this.withAttribute("class", "info-box");
+
+        // Initialize structure
+        this.iconDiv = new HtmlTag("div").withAttribute("class", "info-box-icon");
+        this.contentDiv = new HtmlTag("div").withAttribute("class", "info-box-content");
+        this.titleDiv = new HtmlTag("div").withAttribute("class", "info-box-title");
+        this.valueDiv = new HtmlTag("div").withAttribute("class", "info-box-value");
+
+        // Assemble (even if empty, they will be hidden via CSS or updated later)
+        // Note: Logic in getChildrenStream was conditional.
+        // We can replicate that by only adding to children if set, or managing visibility.
+        // For now, let's assume we want them in DOM.
+        // Or better: don't add iconDiv yet.
+        this.withChild(contentDiv);
+        contentDiv.withChild(titleDiv);
+        contentDiv.withChild(valueDiv);
     }
 
     public static InfoBox create() {
@@ -23,17 +38,21 @@ public class InfoBox extends HtmlTag {
     }
 
     public InfoBox withTitle(String title) {
-        this.title = title;
+        titleDiv.withInnerText(title);
         return this;
     }
 
     public InfoBox withValue(String value) {
-        this.value = value;
+        valueDiv.withInnerText(value);
         return this;
     }
 
     public InfoBox withIcon(String icon) {
-        this.icon = icon;
+        iconDiv.withInnerText(icon);
+        // Ensure iconDiv is first child if not already present
+        if (!children.contains(iconDiv)) {
+            children.add(0, iconDiv);
+        }
         return this;
     }
 
@@ -43,35 +62,5 @@ public class InfoBox extends HtmlTag {
         return this;
     }
 
-    @Override
-    protected Stream<Component> getChildrenStream() {
-        Stream.Builder<Component> builder = Stream.builder();
-
-        if (icon != null) {
-            HtmlTag iconDiv = new HtmlTag("div")
-                .withAttribute("class", "info-box-icon")
-                .withInnerText(icon);
-            builder.add(iconDiv);
-        }
-
-        HtmlTag contentDiv = new HtmlTag("div").withAttribute("class", "info-box-content");
-
-        if (title != null) {
-            HtmlTag titleDiv = new HtmlTag("div")
-                .withAttribute("class", "info-box-title")
-                .withInnerText(title);
-            contentDiv.withChild(titleDiv);
-        }
-
-        if (value != null) {
-            HtmlTag valueDiv = new HtmlTag("div")
-                .withAttribute("class", "info-box-value")
-                .withInnerText(value);
-            contentDiv.withChild(valueDiv);
-        }
-
-        builder.add(contentDiv);
-
-        return Stream.concat(builder.build(), super.getChildrenStream());
-    }
+    // Removed getChildrenStream override
 }
