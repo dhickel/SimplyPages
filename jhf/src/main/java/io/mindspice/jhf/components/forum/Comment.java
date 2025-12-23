@@ -2,7 +2,10 @@ package io.mindspice.jhf.components.forum;
 
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
+import io.mindspice.jhf.core.RenderContext;
 import io.mindspice.jhf.components.Markdown;
+
+import java.util.stream.Stream;
 
 /**
  * Comment component for displaying individual comments.
@@ -49,18 +52,15 @@ public class Comment extends HtmlTag {
         return this;
     }
 
+    @Override
     public Comment withClass(String className) {
-        String currentClass = "comment";
-        this.withAttribute("class", currentClass + " " + className);
+        super.addClass(className);
         return this;
     }
 
     @Override
-    public String render() {
-        if (depth > 0) {
-            this.withAttribute("class", "comment comment-depth-" + depth);
-            this.withAttribute("style", "margin-left: " + (depth * 20) + "px");
-        }
+    protected Stream<Component> getChildrenStream() {
+        Stream.Builder<Component> builder = Stream.builder();
 
         // Header
         HtmlTag header = new HtmlTag("div").withAttribute("class", "comment-header");
@@ -74,6 +74,7 @@ public class Comment extends HtmlTag {
             .withInnerText(timestamp != null ? timestamp : "");
 
         header.withChild(authorSpan).withChild(timestampSpan);
+        builder.add(header);
 
         // Content
         Component contentComponent;
@@ -86,10 +87,19 @@ public class Comment extends HtmlTag {
                 .withAttribute("class", "comment-content")
                 .withInnerText(content != null ? content : "");
         }
+        builder.add(contentComponent);
 
-        super.withChild(header);
-        super.withChild(contentComponent);
+        return Stream.concat(builder.build(), super.getChildrenStream());
+    }
 
-        return super.render();
+    @Override
+    public String render(RenderContext context) {
+        if (depth > 0) {
+            // We need to append the depth class and style.
+            // Using addClass is safe.
+            this.addClass("comment-depth-" + depth);
+            this.addStyle("margin-left", (depth * 20) + "px");
+        }
+        return super.render(context);
     }
 }
