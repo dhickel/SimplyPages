@@ -15,8 +15,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * Main demo controller for the Java HTML Framework.
@@ -179,7 +187,7 @@ public class DemoController {
                 .withAccountBar(
                         AccountBarBuilder.create()
                                 .addLeftLink("Home", "/home")
-                                .addLeftLink("Docs", "https://github.com/mindspice/java-html-framework")
+                                .addLeftLink("Docs", "/docs/getting-started/01-introduction")
                                 .addRightAccountWidget("/api/account-status")
                                 .build()
                 )
@@ -242,6 +250,70 @@ public class DemoController {
             HttpServletResponse response
     ) {
         return renderWithShellIfNeeded(hxRequest, homePage, response);
+    }
+
+    private final PathMatchingResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver();
+    private final Map<String, String> docsCache = new ConcurrentHashMap<>();
+
+    @GetMapping("/docs/**")
+    @ResponseBody
+    public String docs(
+            HttpServletResponse response,
+            @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+            jakarta.servlet.http.HttpServletRequest request
+    ) {
+        String path = request.getRequestURI().substring("/docs/".length());
+        if (path.isEmpty()) {
+            path = "getting-started/01-introduction"; // Default doc
+        }
+
+        String markdown = docsCache.computeIfAbsent(path, this::loadDocContent);
+
+        if (markdown == null) {
+            response.setStatus(404);
+            return "Documentation not found: " + path;
+        }
+
+        String title = path.contains("/") ? path.substring(path.lastIndexOf('/') + 1) : path;
+        // Basic title formatting
+        title = title.replace("-", " ").replace(".md", "");
+        title = title.substring(0, 1).toUpperCase() + title.substring(1);
+
+        DocsPage docsPage = new DocsPage(title, markdown);
+        return renderWithShellIfNeeded(hxRequest, docsPage, response);
+    }
+
+    private String loadDocContent(String path) {
+        // Try to find the file.
+        // We look for any file ending with path + ".md" inside static/docs
+        try {
+            // First try direct match
+            Resource resource = resourceResolver.getResource("classpath:static/docs/" + path + ".md");
+            if (resource.exists()) {
+                return new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            }
+
+            // If path doesn't include directory, maybe we need to search?
+            // User example: docs/01-getting-started
+            // File: static/docs/getting-started/01-getting-started.md (Wait, user file is 01-introduction.md?)
+            // Let's assume exact path match first as per user requirement: "takes the name of the file (without the .md) as the path"
+            // If the user requests /docs/getting-started/01-introduction, it should work.
+
+            // Fallback: search for file with that name recursively if not found directly?
+            // The user prompt said: "take the name of the file (without the .md) as the path... like ww.oursite.com/docs/01-getting-started"
+            // This implies flattening or smart search if "01-getting-started" is in a subdir.
+            // Let's try to find a file with that name anywhere in docs.
+
+            String fileName = path.contains("/") ? path.substring(path.lastIndexOf('/') + 1) : path;
+            Resource[] resources = resourceResolver.getResources("classpath:static/docs/**/" + fileName + ".md");
+            if (resources.length > 0) {
+                 return new String(resources[0].getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @GetMapping("/home")
