@@ -589,7 +589,7 @@ public class DemoController {
     @GetMapping("/demo/advanced/layout")
     @ResponseBody
     public String getAdvancedLayout(@RequestParam("complex") boolean complex) {
-        return advancedRenderingPage.renderPatternASection(complex).render(null);
+        return advancedRenderingPage.renderPatternAInner(complex).render(null);
     }
 
     // Wiki demo session state

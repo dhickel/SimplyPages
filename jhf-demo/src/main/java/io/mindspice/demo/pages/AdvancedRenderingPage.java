@@ -24,13 +24,26 @@ public class AdvancedRenderingPage implements DemoPage {
     // We define a simple module for the Pattern B demo (High Performance List)
     private static final SlotKey<String> ITEM_TEXT = SlotKey.of("text");
 
-    // A single item template
+    // A single item template (Pattern B)
     private static final Template ITEM_TEMPLATE = Template.of(
         new Div()
-            .withClass("p-2 mb-2 rounded border border-gray-200")
-            // Note: Dynamic style via Slot is not directly supported in attributes in this version.
-            // We focus on dynamic content.
-            .withChild(Slot.of(ITEM_TEXT))
+            .withClass("card mb-2 shadow-sm")
+            .withChild(new Div().withClass("card-body p-3")
+                .withChild(Slot.of(ITEM_TEXT))
+            )
+    );
+
+    // Template for Composite Pattern (mimics a full module)
+    private static final Template COMPOSITE_MODULE_TEMPLATE = Template.of(
+        new Div().withClass("card h-100 shadow-sm")
+            .withChild(
+                new Div().withClass("card-header bg-light fw-bold")
+                    .withChild(Slot.of(ITEM_TEXT)) // Use the text slot as title
+            )
+            .withChild(
+                new Div().withClass("card-body")
+                    .withInnerText("This is a pre-compiled template module rendered within a runtime layout.")
+            )
     );
 
     // --- Wiki-Style Editing Demo Templates ---
@@ -115,6 +128,20 @@ public class AdvancedRenderingPage implements DemoPage {
      * Builds a different layout based on a condition (simulated by a boolean).
      */
     public Component renderPatternASection(boolean complexLayout) {
+        return new ContentModule()
+            .withTitle("Pattern A: Dynamic Structure")
+            .withCustomContent(
+                new Div()
+                    .withChild(new Paragraph().withInnerText("Layout changes based on condition (click toggle below)."))
+                    .withChild(renderPatternAInner(complexLayout))
+            );
+    }
+
+    /**
+     * Helper to render the inner content of Pattern A.
+     * Separated to avoid duplicating the outer module when updating via HTMX.
+     */
+    public Div renderPatternAInner(boolean complexLayout) {
         Div container = new Div().withAttribute("id", "pattern-a-container");
 
         // Control to toggle layout
@@ -146,14 +173,7 @@ public class AdvancedRenderingPage implements DemoPage {
                     ))
             );
         }
-
-        return new ContentModule()
-            .withTitle("Pattern A: Dynamic Structure")
-            .withCustomContent(
-                new Div()
-                    .withChild(new Paragraph().withInnerText("Layout changes based on condition (click toggle below)."))
-                    .withChild(container)
-            );
+        return container;
     }
 
     /**
@@ -204,7 +224,7 @@ public class AdvancedRenderingPage implements DemoPage {
                 .with(ITEM_TEXT, modName)
                 .build();
 
-            col.withChild(TemplateComponent.of(ITEM_TEMPLATE, ctx));
+            col.withChild(TemplateComponent.of(COMPOSITE_MODULE_TEMPLATE, ctx));
             row.withChild(col);
         }
 
