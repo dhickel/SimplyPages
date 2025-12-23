@@ -6,6 +6,9 @@ import io.mindspice.jhf.builders.ShellBuilder;
 import io.mindspice.jhf.builders.SideNavBuilder;
 import io.mindspice.jhf.builders.TopBannerBuilder;
 import io.mindspice.jhf.core.Component;
+import io.mindspice.jhf.components.Div;
+import io.mindspice.jhf.components.Header;
+import io.mindspice.jhf.components.navigation.Link;
 import io.mindspice.jhf.components.forum.ForumPost;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -330,24 +333,39 @@ public class DemoController {
 
     private Component getDocsNavigation() {
         Map<String, List<String>> structure = getDocsStructure();
-        SideNavBuilder builder = SideNavBuilder.create();
+        Div navContainer = new Div().withClass("docs-nav");
+
+        // Helper to add links
+        java.util.function.BiConsumer<Div, String> addLink = (container, filePath) -> {
+            String fileName = filePath.contains("/") ? filePath.substring(filePath.lastIndexOf('/') + 1) : filePath;
+            String title = fileName.replace(".md", "").replace("-", " ");
+            if (title.matches("^\\d+\\s.*")) {
+                title = title.replaceAll("^\\d+\\s", "");
+            }
+            title = title.substring(0, 1).toUpperCase() + title.substring(1);
+
+            container.withChild(
+                new Div().withClass("mb-1").withChild(
+                    new Link("/docs/" + filePath, title)
+                        .withClass("text-decoration-none text-dark")
+                )
+            );
+        };
 
         // Build navigation from cached structure
-        // Put "Getting Started" first if it exists
         if (structure.containsKey("Getting Started")) {
-            builder.addSection("Getting Started");
-            structure.get("Getting Started").stream().sorted().forEach(file -> addLinkToNav(builder, file));
+            navContainer.withChild(Header.H4("Getting Started").withClass("mb-2 mt-3"));
+            structure.get("Getting Started").stream().sorted().forEach(file -> addLink.accept(navContainer, file));
         }
 
-        // Add rest
         structure.forEach((section, files) -> {
             if (!section.equals("Getting Started")) {
-                builder.addSection(section);
-                files.stream().sorted().forEach(file -> addLinkToNav(builder, file));
+                navContainer.withChild(Header.H4(section).withClass("mb-2 mt-4"));
+                files.stream().sorted().forEach(file -> addLink.accept(navContainer, file));
             }
         });
 
-        return builder.build();
+        return navContainer;
     }
 
     private synchronized Map<String, List<String>> getDocsStructure() {
@@ -387,18 +405,6 @@ public class DemoController {
         }
     }
 
-    private void addLinkToNav(SideNavBuilder builder, String filePath) {
-        String fileName = filePath.contains("/") ? filePath.substring(filePath.lastIndexOf('/') + 1) : filePath;
-        String title = fileName.replace(".md", "").replace("-", " ");
-        // Strip numbering like "01-"
-        if (title.matches("^\\d+\\s.*")) {
-            title = title.replaceAll("^\\d+\\s", "");
-        }
-        title = title.substring(0, 1).toUpperCase() + title.substring(1);
-
-        // Link keeps .md to match the requested capability
-        builder.addLink(title, "/docs/" + filePath, "📄");
-    }
 
     @GetMapping("/home")
     @ResponseBody
