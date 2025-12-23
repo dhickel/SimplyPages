@@ -154,7 +154,7 @@ public class DynamicUpdatesPage implements DemoPage {
                                                     .withAttribute("hx-swap", "outerHTML") // Replace the entire module, not just inner content
                                                     .withAttribute("hx-on::after-request", "this.reset()") // Reset form
                                                     .withClass("form-layout")
-                                                    .withChild(createInput("content", "Write a post..."))
+                                                    .withChild(createInput("content", "New Post Content", "Write a post..."))
                                                     .withChild(new HtmlTag("button")
                                                             .withAttribute("type", "submit")
                                                             .withClass("btn btn-success")
@@ -169,12 +169,21 @@ public class DynamicUpdatesPage implements DemoPage {
     }
 
     private io.mindspice.jhf.core.Component createInput(String name, String label) {
+        return createInput(name, label, "");
+    }
+
+    private io.mindspice.jhf.core.Component createInput(String name, String label, String placeholder) {
         return new HtmlTag("div").withClass("form-group")
-                .withChild(new HtmlTag("label").withAttribute("for", name).withInnerText(label))
+                .withChild(new HtmlTag("label")
+                        .withAttribute("for", name)
+                        .withInnerText(label)
+                        .addStyle("margin-bottom", "0.5rem")
+                        .addStyle("display", "block"))
                 .withChild(new HtmlTag("input")
                         .withAttribute("type", "text")
                         .withAttribute("name", name)
                         .withAttribute("id", name)
+                        .withAttribute("placeholder", placeholder)
                         .withAttribute("class", "form-control")
                 );
     }
