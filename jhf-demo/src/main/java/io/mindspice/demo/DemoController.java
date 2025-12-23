@@ -82,6 +82,7 @@ public class DemoController {
     private final ScrollingDemoPage scrollingDemoPage;
     private final StickySidebarDemoPage stickySidebarDemoPage;
     private final DynamicUpdatesPage dynamicUpdatesPage;
+    private final AdvancedRenderingPage advancedRenderingPage;
 
     @Autowired
     public DemoController(
@@ -106,7 +107,8 @@ public class DemoController {
             PageLayoutsPage pageLayoutsPage,
             ScrollingDemoPage scrollingDemoPage,
             StickySidebarDemoPage stickySidebarDemoPage,
-            DynamicUpdatesPage dynamicUpdatesPage
+            DynamicUpdatesPage dynamicUpdatesPage,
+            AdvancedRenderingPage advancedRenderingPage
     ) {
         this.homePage = homePage;
         this.componentsPage = componentsPage;
@@ -130,6 +132,7 @@ public class DemoController {
         this.scrollingDemoPage = scrollingDemoPage;
         this.stickySidebarDemoPage = stickySidebarDemoPage;
         this.dynamicUpdatesPage = dynamicUpdatesPage;
+        this.advancedRenderingPage = advancedRenderingPage;
     }
 
     /**
@@ -205,6 +208,7 @@ public class DemoController {
                                 .addLink("Page Layouts", "/page-layouts", "📄")
                                 .addLink("HTMX", "/htmx", "⚡")
                                 .addLink("Dynamic Updates", "/demo/dynamic-updates", "🔄")
+                                .addLink("Advanced Rendering", "/advanced-rendering", "🚀")
                                 .addLink("Custom", "/custom", "🔧")
                                 .addLink("Shell Demo", "/shell-demo", "🐚")
                                 .build()
@@ -373,6 +377,15 @@ public class DemoController {
             HttpServletResponse response
     ) {
         return renderWithShellIfNeeded(hxRequest, dynamicUpdatesPage, response);
+    }
+
+    @GetMapping("/advanced-rendering")
+    @ResponseBody
+    public String advancedRendering(
+            @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+            HttpServletResponse response
+    ) {
+        return renderWithShellIfNeeded(hxRequest, advancedRenderingPage, response);
     }
 
     @GetMapping("/custom")
@@ -569,5 +582,45 @@ public class DemoController {
         // Here we just return the module HTML, which replaces #forum-module.
         // The form reset is handled by client-side JS (hx-on::after-request).
         return DynamicUpdatesPage.renderForumModule(posts).render(null);
+    }
+
+    // --- Advanced Rendering Demo Endpoints ---
+
+    @GetMapping("/demo/advanced/layout")
+    @ResponseBody
+    public String getAdvancedLayout(@RequestParam("complex") boolean complex) {
+        return advancedRenderingPage.renderPatternASection(complex).render(null);
+    }
+
+    // Wiki demo session state
+    private static final String WIKI_CONTENT_SESSION_KEY = "wiki_content_v1";
+
+    @GetMapping("/demo/wiki/display")
+    @ResponseBody
+    public String wikiDisplay(HttpSession session) {
+        String content = (String) session.getAttribute(WIKI_CONTENT_SESSION_KEY);
+        if (content == null) {
+            content = "This is a wiki article. Click edit to modify me.";
+            session.setAttribute(WIKI_CONTENT_SESSION_KEY, content);
+        }
+        return AdvancedRenderingPage.renderWikiDisplay(content).render(null);
+    }
+
+    @GetMapping("/demo/wiki/edit")
+    @ResponseBody
+    public String wikiEdit(HttpSession session) {
+        String content = (String) session.getAttribute(WIKI_CONTENT_SESSION_KEY);
+        if (content == null) {
+            content = "This is a wiki article. Click edit to modify me.";
+            session.setAttribute(WIKI_CONTENT_SESSION_KEY, content);
+        }
+        return AdvancedRenderingPage.renderWikiEdit(content).render(null);
+    }
+
+    @PostMapping("/demo/wiki/save")
+    @ResponseBody
+    public String wikiSave(@RequestParam("content") String content, HttpSession session) {
+        session.setAttribute(WIKI_CONTENT_SESSION_KEY, content);
+        return AdvancedRenderingPage.renderWikiDisplay(content).render(null);
     }
 }
