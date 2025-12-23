@@ -1092,6 +1092,14 @@ Div lastItem = createItemCard(lastItemInPage)
     .withAttribute("hx-indicator", "#loading");
 ```
 
+## Advanced: Dynamic Updates with Templates (OOB Swaps)
+
+For complex dynamic updates, such as updating multiple parts of a page from a single request or updating a Module that was built once, you should use **Templates** and **Out-of-Band (OOB) Swaps**.
+
+Since Modules are now "build-once", you cannot simply re-instantiate a Module with new data and swap it if the Module relies on internal state. Instead, you define the Module structure as a `Template` with `SlotKey`s, and then render that Template with a new `RenderContext`.
+
+See [Part 13: Templates and Dynamic Updates](13-templates-and-dynamic-updates.md) for a deep dive into this pattern.
+
 ## Key Takeaways
 
 1. **HTMX = HTML Attributes**: No JavaScript required for dynamic updates
@@ -1102,6 +1110,7 @@ Div lastItem = createItemCard(lastItemInPage)
 6. **JHF Integration**: All components support HTMX via `withAttribute()`
 7. **Progressive Enhancement**: Start with SSR, add HTMX where needed
 8. **Spring Pattern**: Detect HX-Request header, return HTML fragments
+9. **Templates for Complex Updates**: Use Templates and OOB swaps for robust dynamic module updates
 
 ---
 
