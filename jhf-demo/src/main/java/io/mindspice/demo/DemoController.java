@@ -5,6 +5,7 @@ import io.mindspice.jhf.builders.AccountBarBuilder;
 import io.mindspice.jhf.builders.ShellBuilder;
 import io.mindspice.jhf.builders.SideNavBuilder;
 import io.mindspice.jhf.builders.TopBannerBuilder;
+import io.mindspice.jhf.components.forum.ForumPost;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.List;
 
 /**
  * Main demo controller for the Java HTML Framework.
@@ -49,6 +53,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
  *   <li><strong>/shell-demo:</strong> Shell builder demonstration</li>
  *   <li><strong>/new-components:</strong> Newly added components (Spacer, Divider, etc.)</li>
  *   <li><strong>/new-modules:</strong> Newly added modules (Hero, Stats, Timeline, etc.)</li>
+ *   <li><strong>/dynamic-updates:</strong> Dynamic updates via Templates and HTMX</li>
  * </ul>
  */
 @Controller
@@ -76,6 +81,7 @@ public class DemoController {
     private final PageLayoutsPage pageLayoutsPage;
     private final ScrollingDemoPage scrollingDemoPage;
     private final StickySidebarDemoPage stickySidebarDemoPage;
+    private final DynamicUpdatesPage dynamicUpdatesPage;
 
     @Autowired
     public DemoController(
@@ -99,7 +105,8 @@ public class DemoController {
             NewModulesPage newModulesPage,
             PageLayoutsPage pageLayoutsPage,
             ScrollingDemoPage scrollingDemoPage,
-            StickySidebarDemoPage stickySidebarDemoPage
+            StickySidebarDemoPage stickySidebarDemoPage,
+            DynamicUpdatesPage dynamicUpdatesPage
     ) {
         this.homePage = homePage;
         this.componentsPage = componentsPage;
@@ -122,6 +129,7 @@ public class DemoController {
         this.pageLayoutsPage = pageLayoutsPage;
         this.scrollingDemoPage = scrollingDemoPage;
         this.stickySidebarDemoPage = stickySidebarDemoPage;
+        this.dynamicUpdatesPage = dynamicUpdatesPage;
     }
 
     /**
@@ -196,6 +204,7 @@ public class DemoController {
                                 .addLink("Layouts", "/layouts", "📐")
                                 .addLink("Page Layouts", "/page-layouts", "📄")
                                 .addLink("HTMX", "/htmx", "⚡")
+                                .addLink("Dynamic Updates", "/demo/dynamic-updates", "🔄")
                                 .addLink("Custom", "/custom", "🔧")
                                 .addLink("Shell Demo", "/shell-demo", "🐚")
                                 .build()
@@ -357,6 +366,15 @@ public class DemoController {
         return renderWithShellIfNeeded(hxRequest, htmxPage, response);
     }
 
+    @GetMapping("/demo/dynamic-updates")
+    @ResponseBody
+    public String dynamicUpdates(
+            @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+            HttpServletResponse response
+    ) {
+        return renderWithShellIfNeeded(hxRequest, dynamicUpdatesPage, response);
+    }
+
     @GetMapping("/custom")
     @ResponseBody
     public String custom(
@@ -495,5 +513,61 @@ public class DemoController {
                                 .build()
                 )
                 .build();
+    }
+
+    // --- Dynamic Updates Demo Endpoints ---
+
+    @PostMapping("/demo/dynamic-updates/update-module")
+    @ResponseBody
+    public String updateDynamicModule(
+            @RequestParam("target") String target,
+            @RequestParam("val1") String val1,
+            @RequestParam("val2") String val2,
+            @RequestParam("val3") String val3
+    ) {
+        // Depending on target, we return the OOB swapped content for that specific module.
+        // We use the helper methods in DynamicUpdatesPage which use Templates.
+        switch (target) {
+            case "card":
+                return DynamicUpdatesPage.renderCard(val1, val2);
+            case "list":
+                return DynamicUpdatesPage.renderList(List.of(val1, val2, val3));
+            case "table":
+                return DynamicUpdatesPage.renderTable(val1, val2, val3);
+            default:
+                return "<div id='error'>Invalid target</div>";
+        }
+    }
+
+    @PostMapping("/demo/dynamic-updates/add-post")
+    @ResponseBody
+    public String addForumPost(
+            @RequestParam("content") String content,
+            HttpSession session
+    ) {
+        // Retrieve or initialize posts from session
+        @SuppressWarnings("unchecked")
+        List<ForumPost> posts = (List<ForumPost>) session.getAttribute("forum_posts");
+        if (posts == null) {
+            posts = DynamicUpdatesPage.getInitialPosts();
+        }
+
+        // Add new post
+        posts.add(ForumPost.create()
+                .withAuthor("DemoUser")
+                .withTimestamp("Just now")
+                .withTitle("User Post")
+                .withContent(content)
+                .withLikes(0)
+        );
+
+        session.setAttribute("forum_posts", posts);
+
+        // Return the rendered forum module (replacing the old one)
+        // Since we are replacing the target, we don't strictly need OOB,
+        // but if we used OOB for other parts (like resetting input) we might mix them.
+        // Here we just return the module HTML, which replaces #forum-module.
+        // The form reset is handled by client-side JS (hx-on::after-request).
+        return DynamicUpdatesPage.renderForumModule(posts).render(null);
     }
 }
