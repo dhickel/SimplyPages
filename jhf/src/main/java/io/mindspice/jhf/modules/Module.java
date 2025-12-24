@@ -194,6 +194,8 @@ import java.util.Optional;
  */
 public abstract class Module extends HtmlTag {
 
+    private boolean rendered = false;
+
     /** Unique identifier for this module instance (becomes HTML id attribute) */
     protected String moduleId;
 
@@ -342,11 +344,12 @@ public abstract class Module extends HtmlTag {
      */
     @Override
     public String render() {
-        // Clear previous content to prevent duplication
-        children.clear();
-        // Ensure module class is set before rendering
-        ensureModuleClass();
-        buildContent();
+        if (!rendered) {
+            // Ensure module class is set before rendering
+            ensureModuleClass();
+            buildContent();
+            rendered = true;
+        }
         return super.render();
     }
 

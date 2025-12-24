@@ -14,6 +14,7 @@ import java.util.function.Function;
  */
 public class DataTable<T> extends HtmlTag {
 
+    private boolean rendered = false;
     private final List<Column<T>> columns = new ArrayList<>();
     private final List<T> data = new ArrayList<>();
     private boolean striped = false;
@@ -72,7 +73,14 @@ public class DataTable<T> extends HtmlTag {
 
     @Override
     public String render() {
-        children.clear();
+        if (!rendered) {
+            buildTable();
+            rendered = true;
+        }
+        return super.render();
+    }
+
+    private void buildTable() {
         // Build table class
         StringBuilder classBuilder = new StringBuilder("table data-table");
         if (striped) classBuilder.append(" table-striped");
@@ -115,7 +123,6 @@ public class DataTable<T> extends HtmlTag {
         table.withChild(tbody);
 
         super.withChild(table);
-        return super.render();
     }
 
     private static class Column<T> {
