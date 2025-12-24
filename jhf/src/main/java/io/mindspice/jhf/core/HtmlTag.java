@@ -139,6 +139,8 @@ public class HtmlTag implements Component {
     /** The HTML element name (e.g., "div", "p", "button") */
     protected final String tagName;
 
+    private boolean rendered = false;
+
     /** List of HTML attributes for this tag */
     protected final List<Attribute> attributes = new ArrayList<>();
 
@@ -428,10 +430,26 @@ public class HtmlTag implements Component {
     }
 
     /**
+     * Lifecycle method for building component structure.
+     *
+     * <p>This method is called exactly once before the first render.
+     * Subclasses should override this method to add children or configure
+     * the component, rather than overriding {@link #render()}.</p>
+     *
+     * <p>This ensures that the component structure is built only once,
+     * preventing duplication on re-renders and preserving any manually
+     * added children.</p>
+     */
+    protected void build() {
+        // Default implementation does nothing
+    }
+
+    /**
      * Renders this tag and all its contents to an HTML string.
      *
      * <p>The rendering process:</p>
      * <ol>
+     *   <li>Calls {@link #build()} if this is the first render</li>
      *   <li>Builds opening tag: {@code <tagName}</li>
      *   <li>Appends all attributes: {@code  class="x" id="y"}</li>
      *   <li>Closes opening tag: {@code >} or {@code />} for self-closing</li>
@@ -453,6 +471,11 @@ public class HtmlTag implements Component {
      */
     @Override
     public String render() {
+        if (!rendered) {
+            build();
+            rendered = true;
+        }
+
         StringBuilder sb = new StringBuilder("<").append(tagName);
         sb.append(attributes.stream().map(Attribute::render).collect(Collectors.joining()));
 

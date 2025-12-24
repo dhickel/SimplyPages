@@ -33,8 +33,7 @@ public class CommentThread extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    protected void build() {
         comments.forEach(comment -> super.withChild(comment));
-        return super.render();
     }
 }

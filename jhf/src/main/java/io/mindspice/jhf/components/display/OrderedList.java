@@ -49,9 +49,8 @@ public class OrderedList extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    protected void build() {
         items.forEach(item -> super.withChild(item));
-        return super.render();
     }
 
     private static class ListItem implements Component {

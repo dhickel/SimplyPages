@@ -68,7 +68,7 @@ public class ForumPost extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    protected void build() {
         // Header section
         HtmlTag header = new HtmlTag("div").withAttribute("class", "post-header");
 
@@ -122,7 +122,5 @@ public class ForumPost extends HtmlTag {
         }
         super.withChild(contentComponent);
         super.withChild(footer);
-
-        return super.render();
     }
 }

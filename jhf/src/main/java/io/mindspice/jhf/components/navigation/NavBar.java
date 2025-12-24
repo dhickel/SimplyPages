@@ -56,7 +56,7 @@ public class NavBar extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    protected void build() {
         // Add brand if present
         if (brand != null) {
             HtmlTag brandDiv = new HtmlTag("div")
@@ -69,8 +69,6 @@ public class NavBar extends HtmlTag {
         HtmlTag itemsContainer = new HtmlTag("div").withAttribute("class", "navbar-items");
         items.forEach(item -> itemsContainer.withChild(item));
         super.withChild(itemsContainer);
-
-        return super.render();
     }
 
     public static class NavItem implements Component {

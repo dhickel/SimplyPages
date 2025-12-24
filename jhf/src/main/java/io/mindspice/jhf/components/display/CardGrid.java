@@ -40,9 +40,8 @@ public class CardGrid extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    protected void build() {
         this.withAttribute("class", "card-grid grid-cols-" + columns);
         cards.forEach(card -> super.withChild(card));
-        return super.render();
     }
 }

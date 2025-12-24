@@ -56,7 +56,7 @@ public class Comment extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    protected void build() {
         if (depth > 0) {
             this.withAttribute("class", "comment comment-depth-" + depth);
             this.withAttribute("style", "margin-left: " + (depth * 20) + "px");
@@ -89,7 +89,5 @@ public class Comment extends HtmlTag {
 
         super.withChild(header);
         super.withChild(contentComponent);
-
-        return super.render();
     }
 }

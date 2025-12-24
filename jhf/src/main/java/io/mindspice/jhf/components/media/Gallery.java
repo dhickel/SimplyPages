@@ -45,7 +45,7 @@ public class Gallery extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    protected void build() {
         this.withAttribute("class", "gallery grid-cols-" + columns);
 
         images.forEach(image -> {
@@ -67,8 +67,6 @@ public class Gallery extends HtmlTag {
 
             super.withChild(imgWrapper);
         });
-
-        return super.render();
     }
 
     private static class GalleryImage {

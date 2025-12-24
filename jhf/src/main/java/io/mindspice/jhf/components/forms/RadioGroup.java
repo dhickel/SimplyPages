@@ -12,7 +12,6 @@ import java.util.List;
  */
 public class RadioGroup extends Div {
 
-    private boolean rendered = false;
     private final String name;
     private final List<RadioOption> options = new ArrayList<>();
     private String selectedValue;
@@ -49,15 +48,7 @@ public class RadioGroup extends Div {
     }
 
     @Override
-    public String render() {
-        if (!rendered) {
-            buildOptions();
-            rendered = true;
-        }
-        return super.render();
-    }
-
-    private void buildOptions() {
+    protected void build() {
         for (RadioOption option : options) {
             Div optionWrapper = new Div().withClass("radio-option");
 

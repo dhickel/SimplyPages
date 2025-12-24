@@ -9,7 +9,6 @@ import io.mindspice.jhf.core.HtmlTag;
  */
 public class Card extends HtmlTag {
 
-    private boolean rendered = false;
     private Component header;
     private Component body;
     private Component footer;
@@ -81,14 +80,10 @@ public class Card extends HtmlTag {
     }
 
     @Override
-    public String render() {
-        if (!rendered) {
-            if (image != null) super.withChild(image);
-            if (header != null) super.withChild(header);
-            if (body != null) super.withChild(body);
-            if (footer != null) super.withChild(footer);
-            rendered = true;
-        }
-        return super.render();
+    protected void build() {
+        if (image != null) super.withChild(image);
+        if (header != null) super.withChild(header);
+        if (body != null) super.withChild(body);
+        if (footer != null) super.withChild(footer);
     }
 }

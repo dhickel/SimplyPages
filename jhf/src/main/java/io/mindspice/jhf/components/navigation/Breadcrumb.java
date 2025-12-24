@@ -40,11 +40,10 @@ public class Breadcrumb extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    protected void build() {
         HtmlTag ol = new HtmlTag("ol").withAttribute("class", "breadcrumb-list");
         items.forEach(item -> ol.withChild(item));
         super.withChild(ol);
-        return super.render();
     }
 
     private static class BreadcrumbItem implements Component {

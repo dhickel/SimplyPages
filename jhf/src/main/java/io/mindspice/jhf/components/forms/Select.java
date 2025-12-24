@@ -12,7 +12,6 @@ import java.util.List;
  */
 public class Select extends HtmlTag {
 
-    private boolean rendered = false;
     private final List<Option> options = new ArrayList<>();
 
     public Select(String name) {
@@ -72,13 +71,9 @@ public class Select extends HtmlTag {
     }
 
     @Override
-    public String render() {
-        if (!rendered) {
-            // Add all options as children before rendering
-            options.forEach(option -> super.withChild(option));
-            rendered = true;
-        }
-        return super.render();
+    protected void build() {
+        // Add all options as children before rendering
+        options.forEach(option -> super.withChild(option));
     }
 
     @Override

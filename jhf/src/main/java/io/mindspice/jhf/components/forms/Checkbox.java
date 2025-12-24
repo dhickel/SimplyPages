@@ -60,11 +60,10 @@ public class Checkbox extends Div {
     }
 
     @Override
-    public String render() {
+    protected void build() {
         super.withChild(input);
         if (label != null) {
             super.withChild(label);
         }
-        return super.render();
     }
 }

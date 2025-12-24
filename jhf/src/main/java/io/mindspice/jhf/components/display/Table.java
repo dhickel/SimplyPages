@@ -64,7 +64,7 @@ public class Table extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    protected void build() {
         // Build class string
         StringBuilder classBuilder = new StringBuilder("table");
         if (striped) classBuilder.append(" table-striped");
@@ -90,8 +90,6 @@ public class Table extends HtmlTag {
             rows.forEach(row -> tbody.withChild(row));
             super.withChild(tbody);
         }
-
-        return super.render();
     }
 
     public static class Row implements Component {

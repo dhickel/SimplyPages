@@ -50,13 +50,12 @@ public class SideNav extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    protected void build() {
         items.forEach(item -> {
             if (item instanceof Component) {
                 super.withChild((Component) item);
             }
         });
-        return super.render();
     }
 
     public static class NavItem implements Component {

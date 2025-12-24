@@ -33,8 +33,7 @@ public class PostList extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    protected void build() {
         posts.forEach(post -> super.withChild(post));
-        return super.render();
     }
 }
