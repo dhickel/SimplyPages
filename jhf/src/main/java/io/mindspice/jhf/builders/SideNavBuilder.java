@@ -13,6 +13,7 @@ public class SideNavBuilder {
 
     private final List<Object> items = new ArrayList<>(); // Can be NavLink or Section
     private String contentTarget = "#content-area";
+    private String hxSwap;
 
     private SideNavBuilder() {}
 
@@ -50,6 +51,11 @@ public class SideNavBuilder {
         return this;
     }
 
+    public SideNavBuilder withHxSwap(String swap) {
+        this.hxSwap = swap;
+        return this;
+    }
+
     public SideNav build() {
         SideNav sideNav = SideNav.create();
 
@@ -60,6 +66,7 @@ public class SideNavBuilder {
                 SideNav.NavItem navItem = new SideNav.NavItem(link.name, link.path, link.active)
                     .withHxGet(link.path)
                     .withHxTarget(contentTarget)
+                    .withHxSwap(hxSwap)
                     .withHxPushUrl();
 
                 if (link.icon != null) {

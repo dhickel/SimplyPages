@@ -66,6 +66,7 @@ public class SideNav extends HtmlTag {
         private String icon;
         private String hxGet;
         private String hxTarget;
+        private String hxSwap;
         private boolean hxPushUrl;
 
         public NavItem(String text, String href, boolean active) {
@@ -89,6 +90,11 @@ public class SideNav extends HtmlTag {
             return this;
         }
 
+        public NavItem withHxSwap(String swap) {
+            this.hxSwap = swap;
+            return this;
+        }
+
         public NavItem withHxPushUrl() {
             this.hxPushUrl = true;
             return this;
@@ -108,6 +114,9 @@ public class SideNav extends HtmlTag {
             }
             if (hxTarget != null) {
                 sb.append(" hx-target=\"").append(hxTarget).append("\"");
+            }
+            if (hxSwap != null) {
+                sb.append(" hx-swap=\"").append(hxSwap).append("\"");
             }
             if (hxPushUrl) {
                 sb.append(" hx-push-url=\"true\"");

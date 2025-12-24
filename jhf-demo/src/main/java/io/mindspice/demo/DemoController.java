@@ -174,6 +174,7 @@ public class DemoController {
                 )
                 .withSideNav(
                         SideNavBuilder.create()
+                                .withHxSwap("innerHTML show:top")
                                 .addSection("Getting Started")
                                 .addLink("Home", "/home", false, "🏠")
                                 .addSection("Core Components")
