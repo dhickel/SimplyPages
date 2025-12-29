@@ -1625,20 +1625,33 @@ img {
 
 /* ===== Editing System Styles ===== */
 
-/* Edit toolbar - displayed above modules in editable mode */
+/* Edit toolbar - positioned absolutely in top-right corner */
 .edit-toolbar {
+    position: absolute;
+    top: 8px;
+    right: 8px;
     display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-bottom: 8px;
-    padding: 8px;
-    background-color: #f8f9fa;
-    border-radius: 4px;
-    border: 1px solid #dee2e6;
+    gap: 6px;
+    z-index: 10;
+}
+
+.edit-toolbar .btn-sm {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    line-height: 1.2;
+    border: none;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.edit-toolbar .btn-sm:hover {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
 }
 
 .editable-module-wrapper {
     position: relative;
+    padding-top: 4px;
 }
 
 /* Page builder UI - module addition sections */

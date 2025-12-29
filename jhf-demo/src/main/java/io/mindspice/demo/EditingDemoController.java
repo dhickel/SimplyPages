@@ -48,20 +48,24 @@ public class EditingDemoController {
     private static class DemoModule {
         String id;
         String type;
+        int width;  // 1-12 column width
         Map<String, Object> data = new HashMap<>();
 
-        DemoModule(String id, String type) {
+        DemoModule(String id, String type, int width) {
             this.id = id;
             this.type = type;
+            this.width = width;
         }
     }
 
     private static class DemoRow {
         String id;
+        int position;  // Row order in page
         List<DemoModule> modules = new ArrayList<>();
 
-        DemoRow(String id) {
+        DemoRow(String id, int position) {
             this.id = id;
+            this.position = position;
         }
     }
 
@@ -79,8 +83,51 @@ public class EditingDemoController {
         }
     }
 
-    // Page storage: pageId -> list of rows
-    private final Map<String, List<DemoRow>> pages = new ConcurrentHashMap<>();
+    private static class PageData {
+        String pageId;
+        String userId;
+        long lastModified;
+        List<DemoRow> rows = new ArrayList<>();
+
+        PageData(String pageId, String userId) {
+            this.pageId = pageId;
+            this.userId = userId;
+            this.lastModified = System.currentTimeMillis();
+        }
+
+        // Flat structure for future DB migration
+        Map<String, Object> toMap() {
+            Map<String, Object> map = new HashMap<>();
+            map.put("pageId", pageId);
+            map.put("userId", userId);
+            map.put("lastModified", lastModified);
+
+            List<Map<String, Object>> rowList = new ArrayList<>();
+            for (DemoRow row : rows) {
+                Map<String, Object> rowMap = new HashMap<>();
+                rowMap.put("rowId", row.id);
+                rowMap.put("position", row.position);
+
+                List<Map<String, Object>> moduleList = new ArrayList<>();
+                for (DemoModule module : row.modules) {
+                    Map<String, Object> moduleMap = new HashMap<>();
+                    moduleMap.put("moduleId", module.id);
+                    moduleMap.put("type", module.type);
+                    moduleMap.put("width", module.width);
+                    moduleMap.put("data", new HashMap<>(module.data));
+                    moduleList.add(moduleMap);
+                }
+                rowMap.put("modules", moduleList);
+                rowList.add(rowMap);
+            }
+            map.put("rows", rowList);
+            return map;
+        }
+    }
+
+    // Page storage: pageId -> PageData
+    private final Map<String, PageData> pages = new ConcurrentHashMap<>();
+    private final Map<String, PageData> savedPages = new ConcurrentHashMap<>();
 
     // Pending edits storage for USER_EDIT mode
     private final Map<String, List<PendingEdit>> pendingEdits = new ConcurrentHashMap<>();
@@ -92,27 +139,27 @@ public class EditingDemoController {
     }
 
     private void initializeDemoData() {
-        List<DemoRow> rows = new ArrayList<>();
+        PageData pageData = new PageData("demo-page", "demo-user");
 
         // Row 1: Two content modules
-        DemoRow row1 = new DemoRow("row-1");
+        DemoRow row1 = new DemoRow("row-1", 0);
 
-        DemoModule m1 = new DemoModule("module-1", "content");
+        DemoModule m1 = new DemoModule("module-1", "content", 6);  // Half width
         m1.data.put("title", "Welcome to Editing Demo");
         m1.data.put("content", "# Editing System\n\nClick **Edit** to modify this content!\n\n- In-place editing\n- HTMX updates\n- No page reloads\n\nThis module uses **OWNER_EDIT** mode - changes go live immediately.");
         row1.modules.add(m1);
 
-        DemoModule m2 = new DemoModule("module-2", "content");
+        DemoModule m2 = new DemoModule("module-2", "content", 6);  // Half width
         m2.data.put("title", "Approval Workflow");
         m2.data.put("content", "# User Edits\n\nTry editing this module to see the approval workflow in action.\n\nThis module uses **USER_EDIT** mode - edits are staged for approval.\n\n**Pending edits will show in the sidebar.**");
         row1.modules.add(m2);
 
-        rows.add(row1);
+        pageData.rows.add(row1);
 
         // Row 2: Gallery
-        DemoRow row2 = new DemoRow("row-2");
+        DemoRow row2 = new DemoRow("row-2", 1);
 
-        DemoModule m3 = new DemoModule("module-3", "gallery");
+        DemoModule m3 = new DemoModule("module-3", "gallery", 12);  // Full width
         m3.data.put("title", "Sample Gallery");
         List<String> urls = List.of(
                 "https://picsum.photos/400/300?random=1",
@@ -122,9 +169,9 @@ public class EditingDemoController {
         m3.data.put("urls", urls);
         row2.modules.add(m3);
 
-        rows.add(row2);
+        pageData.rows.add(row2);
 
-        pages.put("demo-page", rows);
+        pages.put("demo-page", pageData);
         pendingEdits.put("demo-page", new ArrayList<>());
     }
 
@@ -146,12 +193,15 @@ public class EditingDemoController {
     }
 
     private String renderEditablePage() {
-        List<DemoRow> rows = pages.get("demo-page");
+        PageData pageData = pages.get("demo-page");
+        if (pageData == null) {
+            return Alert.danger("Page not found").render();
+        }
 
         Div pageContainer = new Div()
                 .withClass("editable-page-wrapper");
 
-        for (DemoRow demoRow : rows) {
+        for (DemoRow demoRow : pageData.rows) {
             Row row = new Row();
 
             // Determine edit mode: module-1 is OWNER_EDIT, module-2 is USER_EDIT, rest are OWNER_EDIT
@@ -165,10 +215,8 @@ public class EditingDemoController {
                         .withDeleteUrl("/editing-demo/api/modules/" + dm.id + "/delete")
                         .withEditMode(mode);
 
-                // Manually add to row with calculated width
-                int moduleCount = demoRow.modules.size();
-                int colWidth = 12 / Math.max(1, moduleCount);
-                Column col = Column.create().withWidth(colWidth).withChild(editableModule);
+                // Use module's configured width instead of calculating
+                Column col = Column.create().withWidth(dm.width).withChild(editableModule);
                 row.addColumn(col);
             }
 
@@ -187,7 +235,7 @@ public class EditingDemoController {
                 Button addBtn = Button.create("+ Add Module")
                         .withStyle(Button.ButtonStyle.SECONDARY);
 
-                addBtn.withAttribute("hx-get", "/editing-demo/api/rows/" + demoRow.id + "/add-module-form");
+                addBtn.withAttribute("hx-get", "/editing-demo/api/rows/" + demoRow.id + "/add-module-modal");
                 addBtn.withAttribute("hx-target", "#add-module-modal");
                 addBtn.withAttribute("hx-swap", "innerHTML");
 
@@ -201,10 +249,10 @@ public class EditingDemoController {
             Div insertRowSection = new Div()
                     .withClass("insert-row-section");
 
-            Button insertBtn = Button.create("+ Insert Row Below")
+            Button insertBtn = Button.create("Add Row Below")
                     .withStyle(Button.ButtonStyle.LINK);
 
-            insertBtn.withAttribute("hx-post", "/editing-demo/api/pages/demo-page/rows/insert");
+            insertBtn.withAttribute("hx-post", "/editing-demo/api/pages/demo-page/rows/insert?afterRowId=" + demoRow.id);
             insertBtn.withAttribute("hx-target", "#page-demo-page");
             insertBtn.withAttribute("hx-swap", "outerHTML");
 
@@ -212,28 +260,41 @@ public class EditingDemoController {
             pageContainer.withChild(insertRowSection);
         }
 
-        // Add final "Add Row at Bottom" button
-        Div finalAddSection = new Div()
-                .withClass("add-row-final");
-
-        Button finalAddBtn = Button.create("+ Add Row at Bottom")
-                .withStyle(Button.ButtonStyle.PRIMARY);
-
-        finalAddBtn.withAttribute("hx-post", "/editing-demo/api/pages/demo-page/rows/add");
-        finalAddBtn.withAttribute("hx-target", "#page-demo-page");
-        finalAddBtn.withAttribute("hx-swap", "outerHTML");
-
-        finalAddSection.withChild(finalAddBtn);
-        pageContainer.withChild(finalAddSection);
-
         String pageHtml = pageContainer.render();
 
-        // Add modal container and pending edits sidebar
+        // Save/Load controls
+        Div saveLoadControls = new Div()
+                .withClass("save-load-controls mb-3 d-flex gap-2 justify-content-end");
+
+        Button saveBtn = Button.create("Save Page")
+                .withStyle(Button.ButtonStyle.SUCCESS);
+        saveBtn.withAttribute("hx-post", "/editing-demo/api/pages/demo-page/save");
+        saveBtn.withAttribute("hx-target", "#save-status");
+        saveBtn.withAttribute("hx-swap", "innerHTML");
+
+        Button loadBtn = Button.create("Load Saved")
+                .withStyle(Button.ButtonStyle.SECONDARY);
+        loadBtn.withAttribute("hx-post", "/editing-demo/api/pages/demo-page/load");
+        loadBtn.withAttribute("hx-target", "#page-demo-page");
+        loadBtn.withAttribute("hx-swap", "outerHTML");
+        loadBtn.withAttribute("hx-confirm", "This will discard unsaved changes. Continue?");
+
+        saveLoadControls.withChild(saveBtn);
+        saveLoadControls.withChild(loadBtn);
+
+        Div saveStatus = new Div().withAttribute("id", "save-status");
+
+        // Add modal containers and pending edits sidebar
         StringBuilder html = new StringBuilder();
         html.append("<div class=\"row\" id=\"page-demo-page\">");
         html.append("<div class=\"col\" style=\"flex: 1 1 0;\">");
+        html.append("<div class=\"save-load-wrapper mb-3\">");
+        html.append(saveLoadControls.render());
+        html.append(saveStatus.render());
+        html.append("</div>");
         html.append(pageHtml);
         html.append("<div id=\"add-module-modal\" class=\"mt-4\"></div>");
+        html.append("<div id=\"edit-module-modal\" class=\"mt-4\"></div>");
         html.append("</div>");
 
         // Pending edits sidebar
@@ -321,12 +382,96 @@ public class EditingDemoController {
         if (dm == null) {
             return Alert.danger("Module not found").render();
         }
+        return renderEditModal(dm);
+    }
 
-        return switch (dm.type) {
-            case "content" -> renderContentForm(dm);
-            case "gallery" -> renderGalleryForm(dm);
-            default -> Alert.warning("Edit not supported").render();
-        };
+    private String renderEditModal(DemoModule dm) {
+        Div modal = new Div()
+                .withClass("modal-content p-4")
+                .withAttribute("style", "background-color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px;");
+
+        modal.withChild(Header.H3("Edit Module"));
+
+        EditMode mode = dm.id.equals("module-2") ? EditMode.USER_EDIT : EditMode.OWNER_EDIT;
+        if (mode == EditMode.USER_EDIT) {
+            modal.withChild(Alert.info("Changes will be staged for approval").withClass("mb-3"));
+        }
+
+        // Width controls
+        Div widthSection = new Div().withClass("mb-3");
+        widthSection.withChild(new Paragraph("Width:").withClass("fw-bold mb-2"));
+
+        // Preset buttons
+        Div presetButtons = new Div().withClass("d-flex gap-2 mb-2");
+        String[] presets = {"Full:12", "3/4:9", "1/2:6", "1/4:3"};
+        for (String preset : presets) {
+            String[] parts = preset.split(":");
+            Button presetBtn = Button.create(parts[0])
+                    .withStyle(Button.ButtonStyle.SECONDARY).small();
+            presetBtn.withAttribute("type", "button");
+            presetBtn.withAttribute("onclick",
+                    "document.getElementById('module-width-edit').value=" + parts[1]);
+            presetButtons.withChild(presetBtn);
+        }
+        widthSection.withChild(presetButtons);
+
+        // Precise width input
+        Div preciseWidth = new Div().withClass("d-flex gap-2 align-items-center");
+        preciseWidth.withChild(new Paragraph("Precise:").withClass("mb-0"));
+        TextInput widthInput = TextInput.create("width");
+        widthInput.withAttribute("type", "number");
+        widthInput.withAttribute("min", "1");
+        widthInput.withAttribute("max", "12");
+        widthInput.withValue(String.valueOf(dm.width));
+        widthInput.withAttribute("id", "module-width-edit");
+        widthInput.withAttribute("style", "width: 80px;");
+        preciseWidth.withChild(widthInput);
+        preciseWidth.withChild(new Paragraph("/ 12 columns").withClass("mb-0 text-muted small"));
+        widthSection.withChild(preciseWidth);
+        modal.withChild(widthSection);
+
+        // Type-specific fields
+        if ("content".equals(dm.type)) {
+            Div titleGroup = new Div().withClass("mb-3");
+            titleGroup.withChild(new Paragraph("Title:").withClass("fw-bold mb-1"));
+            TextInput titleInput = TextInput.create("title");
+            titleInput.withValue((String) dm.data.getOrDefault("title", ""));
+            titleInput.withAttribute("style", "width: 100%;");
+            titleGroup.withChild(titleInput);
+            modal.withChild(titleGroup);
+
+            Div contentGroup = new Div().withClass("mb-3");
+            contentGroup.withChild(new Paragraph("Content (Markdown):").withClass("fw-bold mb-1"));
+            TextArea contentArea = TextArea.create("content");
+            contentArea.withValue((String) dm.data.getOrDefault("content", ""));
+            contentArea.withRows(15);
+            contentArea.withAttribute("style", "width: 100%;");
+            contentGroup.withChild(contentArea);
+            modal.withChild(contentGroup);
+        } else if ("gallery".equals(dm.type)) {
+            modal.withChild(new Paragraph("Gallery editing - simplified for demo")
+                    .withClass("text-muted mb-3"));
+        }
+
+        // Buttons
+        Div buttons = new Div().withClass("d-flex gap-2 justify-content-end");
+
+        Button saveBtn = Button.submit("Save Changes").withStyle(Button.ButtonStyle.PRIMARY);
+        saveBtn.withAttribute("hx-post", "/editing-demo/api/modules/" + dm.id + "/update");
+        saveBtn.withAttribute("hx-target", "#page-demo-page");
+        saveBtn.withAttribute("hx-swap", "outerHTML");
+        saveBtn.withAttribute("hx-include", "closest .modal-content");
+        buttons.withChild(saveBtn);
+
+        Button cancelBtn = Button.create("Cancel").withStyle(Button.ButtonStyle.SECONDARY);
+        cancelBtn.withAttribute("hx-get", "/editing-demo/api/clear-modal");
+        cancelBtn.withAttribute("hx-target", "#edit-module-modal");
+        cancelBtn.withAttribute("hx-swap", "innerHTML");
+        buttons.withChild(cancelBtn);
+
+        modal.withChild(buttons);
+
+        return modal.render();
     }
 
     private String renderContentForm(DemoModule dm) {
@@ -427,37 +572,36 @@ public class EditingDemoController {
             // Add new pending edit
             pending.add(new PendingEdit(moduleId, dm.type, formData));
 
-            // Return module with pending badge
-            Module module = createModule(dm);
-            EditableModule editable = EditableModule.wrap(module)
-                    .withModuleId(moduleId)
-                    .withEditUrl("/editing-demo/api/modules/" + moduleId + "/edit")
-                    .withDeleteUrl("/editing-demo/api/modules/" + moduleId + "/delete")
-                    .withEditMode(mode);
-
-            String moduleHtml = editable.render();
+            // Clear modal and re-render page to show pending status
             String pendingSidebar = renderPendingEditsSidebar();
-
-            // Return both module and updated sidebar
             return "" +
+                   "<div hx-swap-oob=\"true\" id=\"edit-module-modal\"></div>" +
                    "<div hx-swap-oob=\"true\" id=\"pending-edits-sidebar\">" + pendingSidebar + "</div>" +
-                   moduleHtml;
+                   "<div hx-swap-oob=\"true\" id=\"page-demo-page\">" + renderEditablePage() + "</div>";
         } else {
             // OWNER_EDIT: Apply changes immediately
+            // Update width if provided
+            if (formData.containsKey("width")) {
+                try {
+                    int width = Integer.parseInt(formData.get("width"));
+                    if (width >= 1 && width <= 12) {
+                        dm.width = width;
+                    }
+                } catch (NumberFormatException e) {
+                    // Ignore invalid width
+                }
+            }
+
+            // Update content based on type
             if ("content".equals(dm.type)) {
                 dm.data.put("title", formData.get("title"));
                 dm.data.put("content", formData.get("content"));
             }
 
-            // Return updated editable module
-            Module module = createModule(dm);
-            EditableModule editable = EditableModule.wrap(module)
-                    .withModuleId(moduleId)
-                    .withEditUrl("/editing-demo/api/modules/" + moduleId + "/edit")
-                    .withDeleteUrl("/editing-demo/api/modules/" + moduleId + "/delete")
-                    .withEditMode(mode);
-
-            return "" + editable.render();
+            // Clear modal and re-render entire page to reflect width changes
+            return "" +
+                   "<div hx-swap-oob=\"true\" id=\"edit-module-modal\"></div>" +
+                   "<div hx-swap-oob=\"true\" id=\"page-demo-page\">" + renderEditablePage() + "</div>";
         }
     }
 
@@ -484,8 +628,8 @@ public class EditingDemoController {
     @DeleteMapping("/api/modules/{moduleId}/delete")
     @ResponseBody
     public String deleteModule(@PathVariable String moduleId) {
-        for (List<DemoRow> rows : pages.values()) {
-            for (DemoRow row : rows) {
+        for (PageData pageData : pages.values()) {
+            for (DemoRow row : pageData.rows) {
                 row.modules.removeIf(m -> m.id.equals(moduleId));
             }
         }
@@ -532,23 +676,63 @@ public class EditingDemoController {
 
     // ===== ADD MODULE ENDPOINTS =====
 
-    @GetMapping("/api/rows/{rowId}/add-module-form")
+    @GetMapping("/api/rows/{rowId}/add-module-modal")
     @ResponseBody
-    public String showAddModuleForm(@PathVariable String rowId) {
+    public String showAddModuleModal(@PathVariable String rowId) {
         Div modal = new Div()
                 .withClass("modal-content p-4")
-                .withAttribute("style", "background-color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);");
+                .withAttribute("style", "background-color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px;");
 
         modal.withChild(Header.H3("Add Module"));
-        modal.withChild(new Paragraph("Select module type:").withClass("mb-3"));
 
-        // Module type selector
+        // Module type dropdown
+        Div typeGroup = new Div().withClass("mb-3");
+        typeGroup.withChild(new Paragraph("Module Type:").withClass("fw-bold mb-1"));
         Select typeSelect = Select.create("moduleType")
-                .addOption("content", "Content Module", true)
-                .addOption("gallery", "Gallery Module", false);
-        typeSelect.withClass("mb-3");
+                .addOption("content", "Content (Markdown)", true)
+                .addOption("gallery", "Gallery (Images)", false)
+                .addOption("callout", "Callout Box", false)
+                .addOption("form", "Form", false)
+                .addOption("hero", "Hero Banner", false)
+                .addOption("stats", "Statistics", false)
+                .addOption("timeline", "Timeline", false)
+                .addOption("quote", "Quote Block", false);
         typeSelect.withAttribute("style", "width: 100%;");
-        modal.withChild(typeSelect);
+        typeGroup.withChild(typeSelect);
+        modal.withChild(typeGroup);
+
+        // Width controls
+        Div widthSection = new Div().withClass("mb-3");
+        widthSection.withChild(new Paragraph("Width:").withClass("fw-bold mb-2"));
+
+        // Preset buttons
+        Div presetButtons = new Div().withClass("d-flex gap-2 mb-2");
+        String[] presets = {"Full:12", "3/4:9", "1/2:6", "1/4:3"};
+        for (String preset : presets) {
+            String[] parts = preset.split(":");
+            Button presetBtn = Button.create(parts[0])
+                    .withStyle(Button.ButtonStyle.SECONDARY).small();
+            presetBtn.withAttribute("type", "button");
+            presetBtn.withAttribute("onclick",
+                    "document.getElementById('module-width').value=" + parts[1]);
+            presetButtons.withChild(presetBtn);
+        }
+        widthSection.withChild(presetButtons);
+
+        // Precise width input
+        Div preciseWidth = new Div().withClass("d-flex gap-2 align-items-center");
+        preciseWidth.withChild(new Paragraph("Precise:").withClass("mb-0"));
+        TextInput widthInput = TextInput.create("width");
+        widthInput.withAttribute("type", "number");
+        widthInput.withAttribute("min", "1");
+        widthInput.withAttribute("max", "12");
+        widthInput.withValue("6");
+        widthInput.withAttribute("id", "module-width");
+        widthInput.withAttribute("style", "width: 80px;");
+        preciseWidth.withChild(widthInput);
+        preciseWidth.withChild(new Paragraph("/ 12 columns").withClass("mb-0 text-muted small"));
+        widthSection.withChild(preciseWidth);
+        modal.withChild(widthSection);
 
         // Title field
         Div titleGroup = new Div().withClass("mb-3");
@@ -559,22 +743,22 @@ public class EditingDemoController {
         titleGroup.withChild(titleInput);
         modal.withChild(titleGroup);
 
-        // Content field (for content modules)
+        // Content field
         Div contentGroup = new Div().withClass("mb-3");
-        contentGroup.withChild(new Paragraph("Content (Markdown):").withClass("fw-bold mb-1"));
+        contentGroup.withChild(new Paragraph("Content:").withClass("fw-bold mb-1"));
         TextArea contentArea = TextArea.create("content");
         contentArea.withPlaceholder("# Heading\n\nYour content here...");
-        contentArea.withRows(10);
+        contentArea.withRows(8);
         contentArea.withAttribute("style", "width: 100%;");
         contentGroup.withChild(contentArea);
         modal.withChild(contentGroup);
 
         // Buttons
-        Div buttons = new Div().withClass("d-flex gap-2");
+        Div buttons = new Div().withClass("d-flex gap-2 justify-content-end");
 
         Button addBtn = Button.submit("Add Module").withStyle(Button.ButtonStyle.PRIMARY);
         addBtn.withAttribute("hx-post", "/editing-demo/api/rows/" + rowId + "/add-module");
-        addBtn.withAttribute("hx-target", "#row-" + rowId);
+        addBtn.withAttribute("hx-target", "#page-demo-page");
         addBtn.withAttribute("hx-swap", "outerHTML");
         addBtn.withAttribute("hx-include", "closest .modal-content");
         buttons.withChild(addBtn);
@@ -615,7 +799,18 @@ public class EditingDemoController {
         String moduleId = "module-" + idCounter.incrementAndGet();
         String type = formData.getOrDefault("moduleType", "content");
 
-        DemoModule newModule = new DemoModule(moduleId, type);
+        // Get and validate width
+        int width;
+        try {
+            width = Integer.parseInt(formData.getOrDefault("width", "6"));
+            if (width < 1 || width > 12) {
+                return "" + Alert.danger("Width must be between 1 and 12").render();
+            }
+        } catch (NumberFormatException e) {
+            width = 6;  // Default to half width
+        }
+
+        DemoModule newModule = new DemoModule(moduleId, type, width);
         newModule.data.put("title", formData.getOrDefault("title", "New Module"));
 
         if ("content".equals(type)) {
@@ -642,23 +837,24 @@ public class EditingDemoController {
     @PostMapping("/api/pages/{pageId}/rows/add")
     @ResponseBody
     public String addRow(@PathVariable String pageId) {
-        List<DemoRow> rows = pages.get(pageId);
-        if (rows == null) {
+        PageData pageData = pages.get(pageId);
+        if (pageData == null) {
             return "" + Alert.danger("Page not found").render();
         }
 
-        // Create new empty row
+        // Create new empty row at end
         String rowId = "row-" + idCounter.incrementAndGet();
-        DemoRow newRow = new DemoRow(rowId);
+        int newPosition = pageData.rows.size();
+        DemoRow newRow = new DemoRow(rowId, newPosition);
 
         // Add a placeholder module
         String moduleId = "module-" + idCounter.incrementAndGet();
-        DemoModule module = new DemoModule(moduleId, "content");
+        DemoModule module = new DemoModule(moduleId, "content", 12);  // Full width
         module.data.put("title", "New Row");
         module.data.put("content", "Click **Edit** to add content to this new row!");
         newRow.modules.add(module);
 
-        rows.add(newRow);
+        pageData.rows.add(newRow);
 
         // Return the entire page
         return "" + renderEditablePage();
@@ -666,16 +862,123 @@ public class EditingDemoController {
 
     @PostMapping("/api/pages/{pageId}/rows/insert")
     @ResponseBody
-    public String insertRow(@PathVariable String pageId) {
-        // For simplicity, just add at the end (same as add)
-        return addRow(pageId);
+    public String insertRow(
+            @PathVariable String pageId,
+            @RequestParam(required = false) String afterRowId
+    ) {
+        PageData pageData = pages.get(pageId);
+        if (pageData == null) {
+            return "" + Alert.danger("Page not found").render();
+        }
+
+        String rowId = "row-" + idCounter.incrementAndGet();
+        int newPosition;
+
+        if (afterRowId == null) {
+            // No afterRowId - add at end
+            newPosition = pageData.rows.size();
+        } else {
+            // Find the row to insert after
+            int afterIndex = -1;
+            for (int i = 0; i < pageData.rows.size(); i++) {
+                if (pageData.rows.get(i).id.equals(afterRowId)) {
+                    afterIndex = i;
+                    break;
+                }
+            }
+
+            if (afterIndex == -1) {
+                // Row not found, add at end
+                newPosition = pageData.rows.size();
+            } else {
+                // Insert after the found row
+                newPosition = afterIndex + 1;
+            }
+        }
+
+        DemoRow newRow = new DemoRow(rowId, newPosition);
+
+        // Add placeholder module
+        String moduleId = "module-" + idCounter.incrementAndGet();
+        DemoModule module = new DemoModule(moduleId, "content", 12);  // Full width
+        module.data.put("title", "New Row");
+        module.data.put("content", "Click **Edit** to customize this row!");
+        newRow.modules.add(module);
+
+        // Insert at correct position
+        pageData.rows.add(newPosition, newRow);
+
+        // Renumber positions after insertion
+        for (int i = 0; i < pageData.rows.size(); i++) {
+            pageData.rows.get(i).position = i;
+        }
+
+        return "" + renderEditablePage();
+    }
+
+    // ===== SAVE/LOAD ENDPOINTS =====
+
+    @PostMapping("/api/pages/{pageId}/save")
+    @ResponseBody
+    public String savePage(@PathVariable String pageId) {
+        PageData current = pages.get(pageId);
+        if (current == null) {
+            return "" + Alert.danger("Page not found").render();
+        }
+
+        // Deep copy to saved state
+        PageData saved = new PageData(current.pageId, current.userId);
+        saved.lastModified = System.currentTimeMillis();
+
+        for (DemoRow row : current.rows) {
+            DemoRow rowCopy = new DemoRow(row.id, row.position);
+            for (DemoModule module : row.modules) {
+                DemoModule moduleCopy = new DemoModule(module.id, module.type, module.width);
+                moduleCopy.data.putAll(module.data);
+                rowCopy.modules.add(moduleCopy);
+            }
+            saved.rows.add(rowCopy);
+        }
+
+        savedPages.put(pageId, saved);
+
+        return "" + Alert.success("Page saved! Last saved: " + new java.util.Date(saved.lastModified))
+                .render();
+    }
+
+    @PostMapping("/api/pages/{pageId}/load")
+    @ResponseBody
+    public String loadPage(@PathVariable String pageId) {
+        PageData saved = savedPages.get(pageId);
+        if (saved == null) {
+            return "" + Alert.warning("No saved state found").render();
+        }
+
+        // Deep copy from saved to current
+        PageData loaded = new PageData(saved.pageId, saved.userId);
+        loaded.lastModified = saved.lastModified;
+
+        for (DemoRow row : saved.rows) {
+            DemoRow rowCopy = new DemoRow(row.id, row.position);
+            for (DemoModule module : row.modules) {
+                DemoModule moduleCopy = new DemoModule(module.id, module.type, module.width);
+                moduleCopy.data.putAll(module.data);
+                rowCopy.modules.add(moduleCopy);
+            }
+            loaded.rows.add(rowCopy);
+        }
+
+        pages.put(pageId, loaded);
+        pendingEdits.put(pageId, new ArrayList<>());  // Clear pending edits
+
+        return "" + renderEditablePage();
     }
 
     // ===== HELPER METHODS =====
 
     private DemoModule findModule(String id) {
-        for (List<DemoRow> rows : pages.values()) {
-            for (DemoRow row : rows) {
+        for (PageData pageData : pages.values()) {
+            for (DemoRow row : pageData.rows) {
                 for (DemoModule m : row.modules) {
                     if (m.id.equals(id)) {
                         return m;
@@ -687,8 +990,8 @@ public class EditingDemoController {
     }
 
     private DemoRow findRow(String id) {
-        for (List<DemoRow> rows : pages.values()) {
-            for (DemoRow row : rows) {
+        for (PageData pageData : pages.values()) {
+            for (DemoRow row : pageData.rows) {
                 if (row.id.equals(id)) {
                     return row;
                 }

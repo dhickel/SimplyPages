@@ -229,14 +229,15 @@ public class EditableModule extends Module {
         Div toolbar = new Div()
                 .withClass("edit-toolbar");
 
-        // Edit button with HTMX attributes
+        // Edit button with HTMX attributes - targets modal
         Button editBtn = Button.create("Edit")
-                .withStyle(Button.ButtonStyle.PRIMARY)
+                .withStyle(Button.ButtonStyle.LINK)
                 .small();
 
         editBtn.withAttribute("hx-get", editUrl);
-        editBtn.withAttribute("hx-target", "#" + moduleId);
-        editBtn.withAttribute("hx-swap", "outerHTML");
+        editBtn.withAttribute("hx-target", "#edit-module-modal");
+        editBtn.withAttribute("hx-swap", "innerHTML");
+        editBtn.withAttribute("style", "text-decoration: none; font-size: 0.75rem;");
 
         // Add approval hint for user edits
         if (editMode == EditMode.USER_EDIT) {
@@ -248,13 +249,14 @@ public class EditableModule extends Module {
         // Delete button (only if deleteUrl is set)
         if (deleteUrl != null) {
             Button deleteBtn = Button.create("Delete")
-                    .withStyle(Button.ButtonStyle.DANGER)
+                    .withStyle(Button.ButtonStyle.LINK)
                     .small();
 
             deleteBtn.withAttribute("hx-delete", deleteUrl);
             deleteBtn.withAttribute("hx-confirm", "Are you sure you want to delete this module?");
             deleteBtn.withAttribute("hx-target", "#" + moduleId);
             deleteBtn.withAttribute("hx-swap", "outerHTML swap:1s");
+            deleteBtn.withAttribute("style", "text-decoration: none; font-size: 0.75rem; color: #dc3545;");
 
             toolbar.withChild(deleteBtn);
         }
