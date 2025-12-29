@@ -1622,3 +1622,57 @@ img {
     .d-md-inline { display: inline; }
     .d-md-flex { display: flex; }
 }
+
+/* ===== Editing System Styles ===== */
+
+/* Edit toolbar - displayed above modules in editable mode */
+.edit-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.editable-module-wrapper {
+    position: relative;
+}
+
+/* Page builder UI - module addition sections */
+.add-module-section,
+.add-row-final {
+    padding: 16px;
+    text-align: center;
+}
+
+/* Insert row section - dashed border separator */
+.insert-row-section {
+    border-top: 2px dashed #dee2e6;
+    margin: 24px 0;
+    padding-top: 16px;
+    text-align: center;
+}
+
+/* Editable page wrapper */
+.editable-page-wrapper {
+    position: relative;
+}
+
+.editable-page {
+    min-height: 200px;
+}
+
+/* Editable row wrapper */
+.editable-row-wrapper {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+/* Hover states for better UX */
+.edit-toolbar button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
