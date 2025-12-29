@@ -229,37 +229,26 @@ public class EditableModule extends Module {
         Div toolbar = new Div()
                 .withClass("edit-toolbar");
 
-        // Edit button with HTMX attributes - targets modal
-        Button editBtn = Button.create("Edit")
+        // Very small edit button - just text link
+        Button editBtn = Button.create("✏")
                 .withStyle(Button.ButtonStyle.LINK)
                 .small();
 
         editBtn.withAttribute("hx-get", editUrl);
         editBtn.withAttribute("hx-target", "#edit-module-modal");
         editBtn.withAttribute("hx-swap", "innerHTML");
-        editBtn.withAttribute("style", "text-decoration: none; font-size: 0.75rem;");
+        editBtn.withAttribute("style", "text-decoration: none; font-size: 0.9rem; padding: 2px 6px; color: #6c757d; opacity: 0.6;");
+        editBtn.withAttribute("onmouseover", "this.style.opacity='1'");
+        editBtn.withAttribute("onmouseout", "this.style.opacity='0.6'");
 
         // Add approval hint for user edits
         if (editMode == EditMode.USER_EDIT) {
-            editBtn.withAttribute("title", "Changes require approval");
+            editBtn.withAttribute("title", "Edit (changes require approval)");
+        } else {
+            editBtn.withAttribute("title", "Edit");
         }
 
         toolbar.withChild(editBtn);
-
-        // Delete button (only if deleteUrl is set)
-        if (deleteUrl != null) {
-            Button deleteBtn = Button.create("Delete")
-                    .withStyle(Button.ButtonStyle.LINK)
-                    .small();
-
-            deleteBtn.withAttribute("hx-delete", deleteUrl);
-            deleteBtn.withAttribute("hx-confirm", "Are you sure you want to delete this module?");
-            deleteBtn.withAttribute("hx-target", "#" + moduleId);
-            deleteBtn.withAttribute("hx-swap", "outerHTML swap:1s");
-            deleteBtn.withAttribute("style", "text-decoration: none; font-size: 0.75rem; color: #dc3545;");
-
-            toolbar.withChild(deleteBtn);
-        }
 
         return toolbar;
     }

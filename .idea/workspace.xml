@@ -5,14 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7458035e-2a44-4ace-b3c3-43ca67179f0a" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jhf-demo/src/main/java/io/mindspice/demo/EditingDemoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/jhf-demo/src/main/java/io/mindspice/demo/EditingDemoController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jhf/src/main/java/io/mindspice/jhf/editing/EditableModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/jhf/src/main/java/io/mindspice/jhf/editing/EditableModule.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jhf/src/main/resources/static/css/framework.css" beforeDir="false" afterPath="$PROJECT_DIR$/jhf/src/main/resources/static/css/framework.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,7 +75,7 @@
       <updated>1766275890172</updated>
       <workItem from="1766275891395" duration="7444000" />
       <workItem from="1766370069183" duration="65136000" />
-      <workItem from="1766972526092" duration="18068000" />
+      <workItem from="1766972526092" duration="19340000" />
     </task>
     <servers />
   </component>

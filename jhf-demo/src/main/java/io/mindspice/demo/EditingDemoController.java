@@ -262,7 +262,7 @@ public class EditingDemoController {
 
         String pageHtml = pageContainer.render();
 
-        // Save/Load controls
+        // Save/Load/Pending Edits controls
         Div saveLoadControls = new Div()
                 .withClass("save-load-controls mb-3 d-flex gap-2 justify-content-end");
 
@@ -279,31 +279,86 @@ public class EditingDemoController {
         loadBtn.withAttribute("hx-swap", "outerHTML");
         loadBtn.withAttribute("hx-confirm", "This will discard unsaved changes. Continue?");
 
+        Button pendingBtn = Button.create("Pending Edits")
+                .withStyle(Button.ButtonStyle.INFO);
+        pendingBtn.withAttribute("hx-get", "/editing-demo/api/pending-edits-modal");
+        pendingBtn.withAttribute("hx-target", "#pending-edits-modal");
+        pendingBtn.withAttribute("hx-swap", "innerHTML");
+
         saveLoadControls.withChild(saveBtn);
         saveLoadControls.withChild(loadBtn);
+        saveLoadControls.withChild(pendingBtn);
 
         Div saveStatus = new Div().withAttribute("id", "save-status");
 
-        // Add modal containers and pending edits sidebar
+        // Build page with modal containers (no embedded modals)
         StringBuilder html = new StringBuilder();
-        html.append("<div class=\"row\" id=\"page-demo-page\">");
-        html.append("<div class=\"col\" style=\"flex: 1 1 0;\">");
+        html.append("<div id=\"page-demo-page\">");
         html.append("<div class=\"save-load-wrapper mb-3\">");
         html.append(saveLoadControls.render());
         html.append(saveStatus.render());
         html.append("</div>");
         html.append(pageHtml);
-        html.append("<div id=\"add-module-modal\" class=\"mt-4\"></div>");
-        html.append("<div id=\"edit-module-modal\" class=\"mt-4\"></div>");
         html.append("</div>");
 
-        // Pending edits sidebar
-        html.append("<div class=\"col-3\">");
-        html.append(renderPendingEditsSidebar());
-        html.append("</div>");
-        html.append("</div>");
+        // Modal containers at bottom of page (outside main content)
+        html.append("<div id=\"add-module-modal\"></div>");
+        html.append("<div id=\"edit-module-modal\"></div>");
+        html.append("<div id=\"pending-edits-modal\"></div>");
 
         return html.toString();
+    }
+
+    @GetMapping("/api/pending-edits-modal")
+    @ResponseBody
+    public String showPendingEditsModal() {
+        List<PendingEdit> pending = pendingEdits.get("demo-page");
+
+        Div modal = new Div()
+                .withClass("modal-content p-4")
+                .withAttribute("style", "background-color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px;");
+
+        modal.withChild(Header.H3("Pending Edits"));
+
+        if (pending.isEmpty()) {
+            modal.withChild(new Paragraph("No pending edits").withClass("text-muted"));
+        } else {
+            for (PendingEdit edit : pending) {
+                Div editItem = new Div().withClass("pending-edit-item mb-3 p-2")
+                        .withAttribute("style", "border: 1px solid #dee2e6; border-radius: 4px;");
+
+                editItem.withChild(new Paragraph("Module: " + edit.moduleId).withClass("fw-bold mb-1"));
+                editItem.withChild(new Paragraph("Type: " + edit.type).withClass("small text-muted mb-2"));
+
+                Div buttons = new Div().withClass("d-flex gap-2");
+
+                Button approveBtn = Button.create("Approve").withStyle(Button.ButtonStyle.SUCCESS).small();
+                approveBtn.withAttribute("hx-post", "/editing-demo/api/pending/" + edit.moduleId + "/approve");
+                approveBtn.withAttribute("hx-target", "#page-demo-page");
+                approveBtn.withAttribute("hx-swap", "outerHTML");
+                buttons.withChild(approveBtn);
+
+                Button rejectBtn = Button.create("Reject").withStyle(Button.ButtonStyle.DANGER).small();
+                rejectBtn.withAttribute("hx-delete", "/editing-demo/api/pending/" + edit.moduleId + "/reject");
+                rejectBtn.withAttribute("hx-target", "#pending-edits-modal");
+                rejectBtn.withAttribute("hx-swap", "innerHTML");
+                buttons.withChild(rejectBtn);
+
+                editItem.withChild(buttons);
+                modal.withChild(editItem);
+            }
+        }
+
+        // Close button
+        Div buttonRow = new Div().withClass("d-flex justify-content-end mt-3");
+        Button closeBtn = Button.create("Close").withStyle(Button.ButtonStyle.SECONDARY);
+        closeBtn.withAttribute("hx-get", "/editing-demo/api/clear-modal");
+        closeBtn.withAttribute("hx-target", "#pending-edits-modal");
+        closeBtn.withAttribute("hx-swap", "innerHTML");
+        buttonRow.withChild(closeBtn);
+        modal.withChild(buttonRow);
+
+        return modal.render();
     }
 
     private String renderPendingEditsSidebar() {
@@ -453,22 +508,34 @@ public class EditingDemoController {
                     .withClass("text-muted mb-3"));
         }
 
-        // Buttons
-        Div buttons = new Div().withClass("d-flex gap-2 justify-content-end");
+        // Buttons - Save/Cancel on right, Delete on left
+        Div buttons = new Div().withClass("d-flex gap-2 justify-content-between");
+
+        // Delete button on left
+        Button deleteBtn = Button.create("Delete Module").withStyle(Button.ButtonStyle.DANGER);
+        deleteBtn.withAttribute("hx-delete", "/editing-demo/api/modules/" + dm.id + "/delete");
+        deleteBtn.withAttribute("hx-confirm", "Are you sure you want to delete this module?");
+        deleteBtn.withAttribute("hx-target", "#page-demo-page");
+        deleteBtn.withAttribute("hx-swap", "outerHTML");
+        buttons.withChild(deleteBtn);
+
+        // Save/Cancel on right
+        Div rightButtons = new Div().withClass("d-flex gap-2");
 
         Button saveBtn = Button.submit("Save Changes").withStyle(Button.ButtonStyle.PRIMARY);
         saveBtn.withAttribute("hx-post", "/editing-demo/api/modules/" + dm.id + "/update");
         saveBtn.withAttribute("hx-target", "#page-demo-page");
         saveBtn.withAttribute("hx-swap", "outerHTML");
         saveBtn.withAttribute("hx-include", "closest .modal-content");
-        buttons.withChild(saveBtn);
+        rightButtons.withChild(saveBtn);
 
         Button cancelBtn = Button.create("Cancel").withStyle(Button.ButtonStyle.SECONDARY);
         cancelBtn.withAttribute("hx-get", "/editing-demo/api/clear-modal");
         cancelBtn.withAttribute("hx-target", "#edit-module-modal");
         cancelBtn.withAttribute("hx-swap", "innerHTML");
-        buttons.withChild(cancelBtn);
+        rightButtons.withChild(cancelBtn);
 
+        buttons.withChild(rightButtons);
         modal.withChild(buttons);
 
         return modal.render();
@@ -573,10 +640,8 @@ public class EditingDemoController {
             pending.add(new PendingEdit(moduleId, dm.type, formData));
 
             // Clear modal and re-render page to show pending status
-            String pendingSidebar = renderPendingEditsSidebar();
             return "" +
                    "<div hx-swap-oob=\"true\" id=\"edit-module-modal\"></div>" +
-                   "<div hx-swap-oob=\"true\" id=\"pending-edits-sidebar\">" + pendingSidebar + "</div>" +
                    "<div hx-swap-oob=\"true\" id=\"page-demo-page\">" + renderEditablePage() + "</div>";
         } else {
             // OWNER_EDIT: Apply changes immediately
@@ -633,7 +698,10 @@ public class EditingDemoController {
                 row.modules.removeIf(m -> m.id.equals(moduleId));
             }
         }
-        return "";  // Empty - HTMX removes element
+        // Clear modal and re-render page
+        return "" +
+               "<div hx-swap-oob=\"true\" id=\"edit-module-modal\"></div>" +
+               "<div hx-swap-oob=\"true\" id=\"page-demo-page\">" + renderEditablePage() + "</div>";
     }
 
     // ===== PENDING EDIT APPROVAL ENDPOINTS =====
