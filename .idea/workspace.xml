@@ -5,11 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7458035e-2a44-4ace-b3c3-43ca67179f0a" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/jhf/src/main/java/io/mindspice/jhf/components/display/Card.java" beforeDir="false" afterPath="$PROJECT_DIR$/jhf/src/main/java/io/mindspice/jhf/components/display/Card.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jhf/src/main/java/io/mindspice/jhf/components/display/DataTable.java" beforeDir="false" afterPath="$PROJECT_DIR$/jhf/src/main/java/io/mindspice/jhf/components/display/DataTable.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jhf/src/main/java/io/mindspice/jhf/components/forms/RadioGroup.java" beforeDir="false" afterPath="$PROJECT_DIR$/jhf/src/main/java/io/mindspice/jhf/components/forms/RadioGroup.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jhf/src/main/java/io/mindspice/jhf/components/forms/Select.java" beforeDir="false" afterPath="$PROJECT_DIR$/jhf/src/main/java/io/mindspice/jhf/components/forms/Select.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jhf/src/main/java/io/mindspice/jhf/layout/Grid.java" beforeDir="false" afterPath="$PROJECT_DIR$/jhf/src/main/java/io/mindspice/jhf/layout/Grid.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jhf-demo/src/main/resources/static/docs/RENDERING_REFACTOR.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/jhf/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/jhf/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,24 +34,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "junie.onboarding.icon.badge.shown": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/home/hickelpickle/Code/Java/cannasite/java-html-framework",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "advanced.settings",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/hickelpickle/Code/Java/cannasite/java-html-framework&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.statistic.project.settings&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="DemoApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="jhf-demo" />
@@ -77,11 +78,15 @@
       <option name="presentableId" value="Default" />
       <updated>1766275890172</updated>
       <workItem from="1766275891395" duration="7444000" />
-      <workItem from="1766370069183" duration="38326000" />
+      <workItem from="1766370069183" duration="65136000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>
