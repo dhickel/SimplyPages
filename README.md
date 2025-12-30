@@ -1,6 +1,8 @@
-# Java HTML Framework (JHF)
+# SimplyPages
 
-A lightweight, domain-specific framework for building server-side rendered web applications with minimal JavaScript. Built specifically for data-heavy applications like scientific portals, research databases, and content management systems.
+A lightweight framework for building server-side rendered web pages with minimal JavaScript. Built specifically for data-heavy applications like scientific portals, research databases, and content management systems.
+
+**Part of the SimplyWeb Suite** - Use SimplyPages with SimplyJdbc for full-stack Java web development.
 
 ## Philosophy
 
@@ -44,9 +46,25 @@ All components are strongly typed, providing compile-time safety and IDE autocom
 
 ## Quick Start
 
+### Installation
+
+Add to your `pom.xml`:
+
+```xml
+<dependency>
+    <groupId>io.mindspice</groupId>
+    <artifactId>simplypages</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
 ### 1. Basic Page
 
 ```java
+import io.mindspice.simplypages.layout.Page;
+import io.mindspice.simplypages.components.Header;
+import io.mindspice.simplypages.components.Markdown;
+
 @GetMapping("/example")
 @ResponseBody
 public String examplePage() {
@@ -64,6 +82,8 @@ public String examplePage() {
 ### 2. Form Example
 
 ```java
+import io.mindspice.simplypages.components.forms.*;
+
 Form contactForm = Form.create()
     .addField("Name", TextInput.create("name")
         .withPlaceholder("Enter your name")
@@ -78,6 +98,8 @@ Form contactForm = Form.create()
 ### 3. Data Table
 
 ```java
+import io.mindspice.simplypages.modules.DataModule;
+
 DataTable<Strain> table = DataTable.create(Strain.class)
     .addColumn("Name", Strain::getName)
     .addColumn("Type", Strain::getType)
@@ -90,6 +112,8 @@ DataTable<Strain> table = DataTable.create(Strain.class)
 ### 4. Module Usage
 
 ```java
+import io.mindspice.simplypages.modules.ContentModule;
+
 ContentModule module = ContentModule.create()
     .withTitle("Welcome")
     .withContent("""
@@ -103,12 +127,14 @@ ContentModule module = ContentModule.create()
 ### 5. Two-Column Layout
 
 ```java
+import io.mindspice.simplypages.layout.*;
+
 Page page = Page.builder()
     .addRow(row -> row
-        .withChild(new Column().withWidth(8).withChild(
+        .withChild(Column.create().withWidth(8).withChild(
             new Markdown("Main content area")
         ))
-        .withChild(new Column().withWidth(4).withChild(
+        .withChild(Column.create().withWidth(4).withChild(
             new Markdown("Sidebar")
         ))
     )
@@ -309,8 +335,8 @@ Component (interface)
 ## Running the Demo
 
 ```bash
-cd java-html-framework
-./mvnw spring-boot:run
+cd simplypages-demo
+../mvnw spring-boot:run
 ```
 
 Navigate to `http://localhost:8080` to see the interactive demo showcasing all components.
@@ -326,12 +352,14 @@ Navigate to `http://localhost:8080` to see the interactive demo showcasing all c
 - **Alerts**: Notifications, badges, and tags
 - **Modules**: Module system examples
 - **Layouts**: Grid and layout system demonstrations
+- **Editing**: In-place editing system with approval workflow
 
 ## Dependencies
 
-- Spring Boot 3.2.3
+- Spring Boot 3.2.3 (optional - for demo only)
 - HTMX 1.9.10 (via WebJars)
 - CommonMark 0.21.0 (Markdown rendering)
+- OWASP Encoder 1.2.3 (security)
 
 ## Design Principles
 
@@ -341,6 +369,16 @@ Navigate to `http://localhost:8080` to see the interactive demo showcasing all c
 4. **Developer Experience**: Fluent APIs, clear naming, good defaults
 5. **Composability**: Small pieces combine into larger wholes
 6. **Domain Focus**: Optimized for data-heavy, content-rich applications
+
+## SimplyWeb Suite
+
+SimplyPages is part of the **SimplyWeb Suite** of Java libraries:
+
+- **SimplyJdbc** - Simple, type-safe database access
+- **SimplyPages** - Build web pages in Java (this library)
+- **Future**: SimplyServer, SimplyAuth, and more
+
+Use them independently or together for full-stack Java web development.
 
 ## Future Enhancements
 

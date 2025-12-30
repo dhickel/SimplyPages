@@ -1,9 +1,9 @@
 package io.mindspice.demo.pages;
 
-import io.mindspice.jhf.components.*;
-import io.mindspice.jhf.components.forum.*;
-import io.mindspice.jhf.layout.*;
-import io.mindspice.jhf.modules.*;
+import io.mindspice.simplypages.components.*;
+import io.mindspice.simplypages.components.forum.*;
+import io.mindspice.simplypages.layout.*;
+import io.mindspice.simplypages.modules.*;
 import org.springframework.stereotype.Component;
 
 /**

@@ -12,20 +12,20 @@
     </parent>
 
     <groupId>io.mindspice</groupId>
-    <artifactId>jhf-demo</artifactId>
+    <artifactId>simplypages-demo</artifactId>
     <version>0.0.5-SNAPSHOT</version>
-    <name>jhf-demo</name>
-    <description>Demo application for Java HTML Framework</description>
+    <name>SimplyPages Demo</name>
+    <description>Demo application for SimplyPages</description>
 
     <properties>
         <java.version>17</java.version>
     </properties>
 
     <dependencies>
-        <!-- Framework Dependency -->
+        <!-- SimplyPages Framework Dependency -->
         <dependency>
             <groupId>io.mindspice</groupId>
-            <artifactId>jhf</artifactId>
+            <artifactId>simplypages</artifactId>
             <version>0.1.0</version>
         </dependency>
 

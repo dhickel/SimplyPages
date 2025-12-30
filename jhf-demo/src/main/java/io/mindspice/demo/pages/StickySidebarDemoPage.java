@@ -1,9 +1,9 @@
 package io.mindspice.demo.pages;
 
-import io.mindspice.jhf.components.*;
-import io.mindspice.jhf.components.display.*;
-import io.mindspice.jhf.components.navigation.*;
-import io.mindspice.jhf.layout.Page;
+import io.mindspice.simplypages.components.*;
+import io.mindspice.simplypages.components.display.*;
+import io.mindspice.simplypages.components.navigation.*;
+import io.mindspice.simplypages.layout.Page;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,7 +16,7 @@ public class StickySidebarDemoPage implements DemoPage {
     @Override
     public String render() {
         // Build the sidebar content
-        io.mindspice.jhf.core.Component sidebarContent = new Div()
+        io.mindspice.simplypages.core.Component sidebarContent = new Div()
                 .withChild(Header.H3("Table of Contents").withClass("mb-3"))
                 .withChild(
                         new Div()
@@ -69,7 +69,7 @@ public class StickySidebarDemoPage implements DemoPage {
                 .render();
     }
 
-    private io.mindspice.jhf.core.Component generateSection(int number) {
+    private io.mindspice.simplypages.core.Component generateSection(int number) {
         return new Div()
                 .withAttribute("id", "section-" + number)
                 .withClass("mb-5")

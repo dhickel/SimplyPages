@@ -1,8 +1,8 @@
 package io.mindspice.demo.pages;
 
-import io.mindspice.jhf.components.*;
-import io.mindspice.jhf.components.display.*;
-import io.mindspice.jhf.layout.Page;
+import io.mindspice.simplypages.components.*;
+import io.mindspice.simplypages.components.display.*;
+import io.mindspice.simplypages.layout.Page;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,7 +38,7 @@ public class ScrollingDemoPage implements DemoPage {
                 .render();
     }
 
-    private io.mindspice.jhf.core.Component generateSection(int number) {
+    private io.mindspice.simplypages.core.Component generateSection(int number) {
         return new Div()
                 .withClass("mb-5")
                 .withChild(Header.H2("Section " + number).withClass("mb-3"))

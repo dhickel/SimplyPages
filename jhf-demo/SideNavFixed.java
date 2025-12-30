@@ -1,7 +1,7 @@
 package io.mindspice.jhf.components.navigation;
 
-import io.mindspice.jhf.core.Component;
-import io.mindspice.jhf.core.HtmlTag;
+import io.mindspice.simplypages.core.Component;
+import io.mindspice.simplypages.core.HtmlTag;
 
 import java.util.ArrayList;
 import java.util.List;

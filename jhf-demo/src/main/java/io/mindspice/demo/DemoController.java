@@ -1,15 +1,15 @@
 package io.mindspice.demo;
 
 import io.mindspice.demo.pages.*;
-import io.mindspice.jhf.builders.AccountBarBuilder;
-import io.mindspice.jhf.builders.ShellBuilder;
-import io.mindspice.jhf.builders.SideNavBuilder;
-import io.mindspice.jhf.builders.TopBannerBuilder;
-import io.mindspice.jhf.core.Component;
-import io.mindspice.jhf.components.Div;
-import io.mindspice.jhf.components.Header;
-import io.mindspice.jhf.components.navigation.Link;
-import io.mindspice.jhf.components.forum.ForumPost;
+import io.mindspice.simplypages.builders.AccountBarBuilder;
+import io.mindspice.simplypages.builders.ShellBuilder;
+import io.mindspice.simplypages.builders.SideNavBuilder;
+import io.mindspice.simplypages.builders.TopBannerBuilder;
+import io.mindspice.simplypages.core.Component;
+import io.mindspice.simplypages.components.Div;
+import io.mindspice.simplypages.components.Header;
+import io.mindspice.simplypages.components.navigation.Link;
+import io.mindspice.simplypages.components.forum.ForumPost;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -677,13 +677,13 @@ public class DemoController {
         }
 
         if (isAuthenticated) {
-            return io.mindspice.jhf.components.AccountWidget
+            return io.mindspice.simplypages.components.AccountWidget
                 .createAuthenticated("demo_user")
                 .withProfileUrl("/profile")
                 .withLogoutUrl("/logout")
                 .render();
         } else {
-            return io.mindspice.jhf.components.AccountWidget
+            return io.mindspice.simplypages.components.AccountWidget
                 .createGuest()
                 .withLoginUrl("/login")
                 .withSignupUrl("/signup")

@@ -1,16 +1,16 @@
 package io.mindspice.demo.pages;
 
-import io.mindspice.jhf.components.forms.Button;
-import io.mindspice.jhf.components.forms.Form;
-import io.mindspice.jhf.components.forms.TextArea;
-import io.mindspice.jhf.components.forms.Button.ButtonType;
-import io.mindspice.jhf.components.*;
-import io.mindspice.jhf.core.Component; // Explicit import
-import io.mindspice.jhf.core.*;
-import io.mindspice.jhf.modules.ContentModule;
-import io.mindspice.jhf.layout.Row;
-import io.mindspice.jhf.layout.Column;
-import io.mindspice.jhf.layout.Page;
+import io.mindspice.simplypages.components.forms.Button;
+import io.mindspice.simplypages.components.forms.Form;
+import io.mindspice.simplypages.components.forms.TextArea;
+import io.mindspice.simplypages.components.forms.Button.ButtonType;
+import io.mindspice.simplypages.components.*;
+import io.mindspice.simplypages.core.Component; // Explicit import
+import io.mindspice.simplypages.core.*;
+import io.mindspice.simplypages.modules.ContentModule;
+import io.mindspice.simplypages.layout.Row;
+import io.mindspice.simplypages.layout.Column;
+import io.mindspice.simplypages.layout.Page;
 
 import java.util.List;
 import java.util.stream.Collectors;

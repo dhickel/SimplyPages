@@ -1,9 +1,9 @@
 package io.mindspice.demo.pages;
 
-import io.mindspice.jhf.core.Component;
-import io.mindspice.jhf.components.Header;
-import io.mindspice.jhf.layout.Page;
-import io.mindspice.jhf.modules.ContentModule;
+import io.mindspice.simplypages.core.Component;
+import io.mindspice.simplypages.components.Header;
+import io.mindspice.simplypages.layout.Page;
+import io.mindspice.simplypages.modules.ContentModule;
 
 /**
  * Page for rendering documentation from markdown files.
@@ -25,7 +25,7 @@ public class DocsPage implements DemoPage {
         return Page.builder()
                 .withStickySidebar(sidebar, 9, 3)
                 .addComponents(
-                    new io.mindspice.jhf.components.Div()
+                    new io.mindspice.simplypages.components.Div()
                         .withAttribute("id", "docs-content")
                         .withChild(Header.H1(title))
                         .withChild(ContentModule.create()
@@ -40,7 +40,7 @@ public class DocsPage implements DemoPage {
      * This is used when the sidebar navigation updates the content in-place.
      */
     public String renderContent() {
-        return new io.mindspice.jhf.components.Div()
+        return new io.mindspice.simplypages.components.Div()
             .withAttribute("id", "docs-content")
             .withChild(Header.H1(title))
             .withChild(ContentModule.create()

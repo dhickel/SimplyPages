@@ -1,6 +1,6 @@
 package io.mindspice.jhf.builders;
 
-import io.mindspice.jhf.components.navigation.SideNav;
+import io.mindspice.simplypages.components.navigation.SideNav;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,13 +1,13 @@
 package io.mindspice.demo.pages;
 
-import io.mindspice.jhf.components.*;
-import io.mindspice.jhf.components.forum.ForumPost;
-import io.mindspice.jhf.core.*;
-import io.mindspice.jhf.layout.Grid;
-import io.mindspice.jhf.layout.Page;
-import io.mindspice.jhf.modules.ContentModule;
-import io.mindspice.jhf.modules.FormModule;
-import io.mindspice.jhf.modules.ForumModule;
+import io.mindspice.simplypages.components.*;
+import io.mindspice.simplypages.components.forum.ForumPost;
+import io.mindspice.simplypages.core.*;
+import io.mindspice.simplypages.layout.Grid;
+import io.mindspice.simplypages.layout.Page;
+import io.mindspice.simplypages.modules.ContentModule;
+import io.mindspice.simplypages.modules.FormModule;
+import io.mindspice.simplypages.modules.ForumModule;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -20,8 +20,8 @@ public class DynamicUpdatesPage implements DemoPage {
 
     public static final SlotKey<String> CARD_TITLE = SlotKey.of("card_title");
     public static final SlotKey<String> CARD_BODY = SlotKey.of("card_body");
-    public static final SlotKey<io.mindspice.jhf.core.Component> LIST_CONTENT = SlotKey.of("list_content");
-    public static final SlotKey<io.mindspice.jhf.core.Component> TABLE_BODY = SlotKey.of("table_body");
+    public static final SlotKey<io.mindspice.simplypages.core.Component> LIST_CONTENT = SlotKey.of("list_content");
+    public static final SlotKey<io.mindspice.simplypages.core.Component> TABLE_BODY = SlotKey.of("table_body");
 
     // We add hx-swap-oob="true" to the modules in the template.
 
@@ -76,19 +76,19 @@ public class DynamicUpdatesPage implements DemoPage {
                 .addComponents(
                         Grid.create()
                                 .withColumns(3)
-                                .withChild(new io.mindspice.jhf.core.Component() {
+                                .withChild(new io.mindspice.simplypages.core.Component() {
                                     @Override
                                     public String render(RenderContext context) {
                                         return renderCard("Initial Title", "Initial content...");
                                     }
                                 })
-                                .withChild(new io.mindspice.jhf.core.Component() {
+                                .withChild(new io.mindspice.simplypages.core.Component() {
                                     @Override
                                     public String render(RenderContext context) {
                                         return renderList(List.of("Item A", "Item B", "Item C"));
                                     }
                                 })
-                                .withChild(new io.mindspice.jhf.core.Component() {
+                                .withChild(new io.mindspice.simplypages.core.Component() {
                                     @Override
                                     public String render(RenderContext context) {
                                         return renderTable("Cell X", "Cell Y", "Cell Z");
@@ -168,11 +168,11 @@ public class DynamicUpdatesPage implements DemoPage {
                 .render();
     }
 
-    private io.mindspice.jhf.core.Component createInput(String name, String label) {
+    private io.mindspice.simplypages.core.Component createInput(String name, String label) {
         return createInput(name, label, "");
     }
 
-    private io.mindspice.jhf.core.Component createInput(String name, String label, String placeholder) {
+    private io.mindspice.simplypages.core.Component createInput(String name, String label, String placeholder) {
         return new HtmlTag("div").withClass("form-group")
                 .withChild(new HtmlTag("label")
                         .withAttribute("for", name)
@@ -200,7 +200,7 @@ public class DynamicUpdatesPage implements DemoPage {
     }
 
     public static String renderList(List<String> items) {
-        io.mindspice.jhf.core.Component itemsComponent = new io.mindspice.jhf.core.Component() {
+        io.mindspice.simplypages.core.Component itemsComponent = new io.mindspice.simplypages.core.Component() {
             @Override
             public String render(RenderContext context) {
                 StringBuilder sb = new StringBuilder();
@@ -214,7 +214,7 @@ public class DynamicUpdatesPage implements DemoPage {
     }
 
     public static String renderTable(String col1, String col2, String col3) {
-        io.mindspice.jhf.core.Component rowComponent = new HtmlTag("tr")
+        io.mindspice.simplypages.core.Component rowComponent = new HtmlTag("tr")
                 .withChild(new HtmlTag("td").withInnerText(col1))
                 .withChild(new HtmlTag("td").withInnerText(col2))
                 .withChild(new HtmlTag("td").withInnerText(col3));
@@ -224,7 +224,7 @@ public class DynamicUpdatesPage implements DemoPage {
 
     // --- Helper Methods for Forum ---
 
-    public static io.mindspice.jhf.core.Component renderForumModule(List<ForumPost> posts) {
+    public static io.mindspice.simplypages.core.Component renderForumModule(List<ForumPost> posts) {
         ForumModule module = ForumModule.create()
                 .withModuleId("forum-module")
                 .withTitle("Recent Posts");
