@@ -10,7 +10,7 @@ import io.mindspice.simplypages.core.HtmlTag;
  * <p>Example usage:</p>
  * <pre>{@code
  * TopBannerBuilder.create()
- *     .withTitle("Cannabis Research Portal")
+ *     .withTitle("Research Portal")
  *     .withSubtitle("Open source research platform")
  *     .withImage("/images/logo.png")
  *     .withBackgroundColor("#2c3e50")

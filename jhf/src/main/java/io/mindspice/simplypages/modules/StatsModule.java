@@ -22,7 +22,7 @@ import java.util.List;
  *     .withTitle("Research Stats")
  *     .addStat("1,234", "Studies Documented")
  *     .addStat("567", "Active Researchers")
- *     .addStat("89", "Strains Cataloged");
+ *     .addStat("89", "Items Cataloged");
  *
  * // Custom column layout
  * StatsModule.create()

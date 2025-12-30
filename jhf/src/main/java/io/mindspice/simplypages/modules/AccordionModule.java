@@ -22,7 +22,7 @@ import java.util.List;
  * // FAQ accordion
  * AccordionModule.create()
  *     .withTitle("Frequently Asked Questions")
- *     .addItem("What is cannabis?", "Cannabis is a plant...")
+ *     .addItem("What is research?", "Research is a process...")
  *     .addItem("How do I start?", "First, you need to...")
  *     .withFirstExpanded();
  *

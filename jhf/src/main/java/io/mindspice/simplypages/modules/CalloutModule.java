@@ -20,7 +20,7 @@ import io.mindspice.simplypages.core.HtmlTag;
  * CalloutModule.create()
  *     .info()
  *     .withTitle("Did you know?")
- *     .withContent("Cannabis research is rapidly expanding.");
+ *     .withContent("Scientific research is rapidly expanding.");
  *
  * // Warning callout
  * CalloutModule.create()

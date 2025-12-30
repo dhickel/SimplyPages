@@ -1,7 +1,7 @@
 # SimplyPages - Claude Init
 
 ## Project Overview
-SimplyPages is a lightweight, domain-specific framework for building server-side rendered web applications with minimal JavaScript. Built for data-heavy applications like research portals, community platforms, and content management systems. Foundation for the Cannabis Research Portal, planned for eventual open source release.
+SimplyPages is a lightweight, domain-specific framework for building server-side rendered web applications with minimal JavaScript. Built for data-heavy applications like research portals, community platforms, and content management systems. Planned for eventual open source release.
 
 ## Framework Philosophy
 
@@ -506,7 +506,7 @@ Use imperative mood ("Add feature" not "Added feature"), be specific, include co
 
 **Developer Experience**: Component playground, documentation generation, hot reload, testing utilities, performance profiling
 
-**Cannabis Portal Specific**: Research data templates, voting/rating, user reputation, version control for collaborative pages, advanced forum features, grow journal timeline, strain comparison
+**Domain-Specific Features**: Research data templates, voting/rating, user reputation, version control for collaborative pages, advanced forum features, journal timeline, comparison tools
 
 ### Open Source Plans
 Documentation, testing, example applications, licensing, community guidelines, semantic versioning
@@ -522,9 +522,6 @@ Documentation, testing, example applications, licensing, community guidelines, s
 - [Spring Boot Reference](https://docs.spring.io/spring-boot/docs/current/reference/html/)
 - [HTMX Documentation](https://htmx.org/docs/)
 - [CommonMark Spec](https://commonmark.org/)
-
-### Cannabis Portal Context
-- `/home/hickelpickle/Code/Java/cannasite/CLAUDE.md` - Main portal documentation
 
 ## Maintenance Philosophy
 Designed for Java developers with limited web experience. Avoid over-abstraction and complex patterns. Prefer explicit over implicit behavior. Keep dependency count minimal. Favor server-side rendering over client-side complexity. Make the common case easy, advanced cases possible.

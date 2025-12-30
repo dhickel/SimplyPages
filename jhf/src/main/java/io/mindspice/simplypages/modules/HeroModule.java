@@ -20,9 +20,9 @@ import io.mindspice.simplypages.core.HtmlTag;
  * <pre>{@code
  * // Basic hero
  * HeroModule.create()
- *     .withTitle("Welcome to Cannabis Research Portal")
+ *     .withTitle("Welcome to Research Portal")
  *     .withSubtitle("Open source research data and community")
- *     .withDescription("Join researchers worldwide in documenting cannabis science");
+ *     .withDescription("Join researchers worldwide in documenting scientific data");
  *
  * // Hero with CTA buttons
  * HeroModule.create()

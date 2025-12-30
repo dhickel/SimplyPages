@@ -100,11 +100,11 @@ Form contactForm = Form.create()
 ```java
 import io.mindspice.simplypages.modules.DataModule;
 
-DataTable<Strain> table = DataTable.create(Strain.class)
-    .addColumn("Name", Strain::getName)
-    .addColumn("Type", Strain::getType)
-    .addColumn("THC %", s -> String.valueOf(s.getThcPercentage()))
-    .withData(strainList)
+DataTable<Product> table = DataTable.create(Product.class)
+    .addColumn("Name", Product::getName)
+    .addColumn("Category", Product::getCategory)
+    .addColumn("Price", p -> String.format("$%.2f", p.getPrice()))
+    .withData(productList)
     .striped()
     .hoverable();
 ```
@@ -235,17 +235,17 @@ SideNav sideNav = SideNav.create()
 ```java
 // Top navigation builder
 NavBar topNav = TopNavBuilder.create()
-    .withBrand("Cannabis Portal")
-    .addPortal("Research", "/research", true)
+    .withBrand("My Portal")
+    .addPortal("Home", "/home", true)
     .addPortal("Forums", "/forums")
-    .addPortal("Journals", "/journals")
+    .addPortal("Articles", "/articles")
     .build();
 
 // Side navigation builder
 SideNav sideNav = SideNavBuilder.create()
-    .addSection("Research")
-    .addLink("Strains", "/strains", "🌿")
-    .addLink("Studies", "/studies", "📚")
+    .addSection("Content")
+    .addLink("Articles", "/articles", "📄")
+    .addLink("Resources", "/resources", "📚")
     .addSection("Community")
     .addLink("Discussions", "/forum", "💬")
     .build();
@@ -394,8 +394,8 @@ Use them independently or together for full-stack Java web development.
 
 ## License
 
-Open source - designed for the Cannabis Research Portal project but suitable for any data-heavy web application.
+Open source - designed for data-heavy web applications including research portals, community platforms, and content management systems.
 
 ## Contributing
 
-This is a prototype framework. Feedback and contributions welcome as the framework evolves based on real-world usage in the Cannabis Research Portal.
+This is a prototype framework. Feedback and contributions welcome as the framework evolves based on real-world usage.
