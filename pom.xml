@@ -12,8 +12,8 @@
     <description>Parent POM for SimplyPages - Build web pages in Java</description>
 
     <modules>
-        <module>jhf</module>
-        <module>jhf-demo</module>
+        <module>simplypages</module>
+        <module>demo</module>
     </modules>
 
 </project>
