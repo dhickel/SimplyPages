@@ -27,30 +27,30 @@ public class TablesPage implements DemoPage {
 
                         ```java
                         Table.create()
-                            .withHeaders("Name", "Type", "THC %", "Rating")
-                            .addRow("Blue Dream", "Hybrid", "17-24%", "4.5/5")
-                            .addRow("OG Kush", "Hybrid", "19-26%", "4.7/5")
+                            .withHeaders("Name", "Category", "Property A", "Rating")
+                            .addRow("Product Alpha", "Category B", "17-24", "4.5/5")
+                            .addRow("Product Beta", "Category B", "19-26", "4.7/5")
                             .striped()      // Alternating row colors
                             .bordered()     // Cell borders
                             .hoverable();   // Highlight on hover
                         ```
                         """)))
                 .addRow(row -> {
-                    Table strainTable = Table.create()
-                            .withHeaders("Strain", "Type", "THC %", "CBD %", "Rating")
-                            .addRow("Blue Dream", "Hybrid", "17-24%", "0.1-0.2%", "⭐⭐⭐⭐½")
-                            .addRow("OG Kush", "Hybrid", "19-26%", "0.1-0.3%", "⭐⭐⭐⭐⭐")
-                            .addRow("Northern Lights", "Indica", "16-21%", "0.1%", "⭐⭐⭐⭐½")
-                            .addRow("Sour Diesel", "Sativa", "20-25%", "0.2%", "⭐⭐⭐⭐")
-                            .addRow("Girl Scout Cookies", "Hybrid", "18-28%", "0.1%", "⭐⭐⭐⭐⭐")
-                            .addRow("Jack Herer", "Sativa", "18-24%", "0.1%", "⭐⭐⭐⭐½")
+                    Table productTable = Table.create()
+                            .withHeaders("Product", "Category", "Property A", "Property B", "Rating")
+                            .addRow("Product Alpha", "Category B", "17-24", "0.1-0.2", "⭐⭐⭐⭐½")
+                            .addRow("Product Beta", "Category B", "19-26", "0.1-0.3", "⭐⭐⭐⭐⭐")
+                            .addRow("Product Gamma", "Category A", "16-21", "0.1", "⭐⭐⭐⭐½")
+                            .addRow("Product Delta", "Category C", "20-25", "0.2", "⭐⭐⭐⭐")
+                            .addRow("Product Epsilon", "Category B", "18-28", "0.1", "⭐⭐⭐⭐⭐")
+                            .addRow("Product Zeta", "Category C", "18-24", "0.1", "⭐⭐⭐⭐½")
                             .striped()
                             .bordered()
                             .hoverable();
 
                     row.withChild(ContentModule.create()
-                            .withTitle("Cannabis Strains Database")
-                            .withCustomContent(strainTable));
+                            .withTitle("Product Database")
+                            .withCustomContent(productTable));
                 })
 
                 // DataTable (type-safe)
@@ -60,11 +60,11 @@ public class TablesPage implements DemoPage {
                         **DataTable** provides type-safe data display with method references:
 
                         ```java
-                        DataTable<Strain> table = DataTable.create(Strain.class)
-                            .addColumn("Name", Strain::getName)
-                            .addColumn("Type", Strain::getType)
-                            .addColumn("THC %", s -> s.getThcPercentage() + "%")
-                            .withData(strainList)
+                        DataTable<Product> table = DataTable.create(Product.class)
+                            .addColumn("Name", Product::getName)
+                            .addColumn("Category", Product::getCategory)
+                            .addColumn("Property A", p -> p.getPropertyA() + "")
+                            .withData(productList)
                             .striped()
                             .hoverable();
                         ```

@@ -95,32 +95,32 @@ public class AlertsPage implements DemoPage {
                         Tag.create("Label Text");
                         ```
 
-                        Use tags to categorize content, show strain types, or filter options.
+                        Use tags to categorize content, show product types, or filter options.
                         """)))
 
                 .addRow(row -> {
                     Div tagsDiv = new Div();
 
-                    Paragraph strainTypes = new Paragraph("Strain Types: ");
-                    strainTypes.withChild(Tag.create("Indica"));
-                    strainTypes.withChild(Tag.create("Sativa"));
-                    strainTypes.withChild(Tag.create("Hybrid"));
-                    tagsDiv.withChild(strainTypes);
+                    Paragraph productCategories = new Paragraph("Product Categories: ");
+                    productCategories.withChild(Tag.create("Category A"));
+                    productCategories.withChild(Tag.create("Category B"));
+                    productCategories.withChild(Tag.create("Category C"));
+                    tagsDiv.withChild(productCategories);
 
                     Paragraph characteristics = new Paragraph("Characteristics: ");
-                    characteristics.withChild(Tag.create("High THC"));
-                    characteristics.withChild(Tag.create("CBD Rich"));
-                    characteristics.withChild(Tag.create("Autoflower"));
-                    characteristics.withChild(Tag.create("Feminized"));
+                    characteristics.withChild(Tag.create("High Performance"));
+                    characteristics.withChild(Tag.create("Enhanced Quality"));
+                    characteristics.withChild(Tag.create("Automated"));
+                    characteristics.withChild(Tag.create("Optimized"));
                     tagsDiv.withChild(characteristics);
 
-                    Paragraph growMethods = new Paragraph("Growing Methods: ");
-                    growMethods.withChild(Tag.create("Indoor"));
-                    growMethods.withChild(Tag.create("Outdoor"));
-                    growMethods.withChild(Tag.create("Greenhouse"));
-                    growMethods.withChild(Tag.create("Hydroponic"));
-                    growMethods.withChild(Tag.create("Organic"));
-                    tagsDiv.withChild(growMethods);
+                    Paragraph processingMethods = new Paragraph("Processing Methods: ");
+                    processingMethods.withChild(Tag.create("Standard"));
+                    processingMethods.withChild(Tag.create("Accelerated"));
+                    processingMethods.withChild(Tag.create("Controlled"));
+                    processingMethods.withChild(Tag.create("Precision"));
+                    processingMethods.withChild(Tag.create("Certified"));
+                    tagsDiv.withChild(processingMethods);
 
                     row.withChild(ContentModule.create()
                             .withTitle("Tag Examples")

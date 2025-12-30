@@ -191,7 +191,7 @@ public class NewComponentsPage implements DemoPage {
                     demo.withChild(
                             Blockquote.create("Collaborative research yields better results and more reliable data.")
                                     .withCitation("Dr. Jane Smith")
-                                    .withSource("Journal of Cannabis Research, 2024")
+                                    .withSource("Journal of Scientific Research, 2024")
                     );
                     row.withChild(demo);
                 })

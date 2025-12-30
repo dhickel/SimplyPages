@@ -96,7 +96,7 @@ public class ShellDemoPage implements DemoPage {
                         ```java
                         BannerBuilder.create()
                             .withLayout(BannerLayout.LEFT)
-                            .withTitle("Cannabis Research Portal")
+                            .withTitle("Research Portal")
                             .withSubtitle("Open source research platform")
                             .build();
                         ```
@@ -116,7 +116,7 @@ public class ShellDemoPage implements DemoPage {
                             .withLayout(BannerLayout.IMAGE_OVERLAY)
                             .withBackgroundImage("/images/hero-bg.jpg")
                             .withTitle("Research Portal")
-                            .withSubtitle("Advancing cannabis science")
+                            .withSubtitle("Advancing scientific research")
                             .withTextAlignment(TextAlignment.CENTER)  // LEFT, CENTER, or RIGHT
                             .withMinHeight(300)  // Optional height
                             .build();
@@ -236,18 +236,18 @@ public class ShellDemoPage implements DemoPage {
                 .addComponents(Header.H2("Complete Example"))
                 .addRow(row -> row.withChild(new Markdown(
                         """
-                        Here's a complete example building a cannabis research portal shell:
+                        Here's a complete example building a research portal shell:
 
                         ```java
                         @GetMapping("/custom-shell")
                         @ResponseBody
                         public String customShell() {
                             return ShellBuilder.create()
-                                .withPageTitle("Cannabis Research Portal")
+                                .withPageTitle("Research Portal")
                                 .withTopBanner(
                                     TopBannerBuilder.create()
-                                        .withImage("/images/cannabis-logo.png", "Logo")
-                                        .withTitle("Cannabis Research Portal")
+                                        .withImage("/images/research-logo.png", "Logo")
+                                        .withTitle("Research Portal")
                                         .withSubtitle("Open source research platform")
                                         .withBackgroundColor("#2c3e50")
                                         .withTextColor("#ffffff")
@@ -270,12 +270,12 @@ public class ShellDemoPage implements DemoPage {
                                 .withSideNav(
                                     SideNavBuilder.create()
                                         .addSection("Research")
-                                        .addLink("Strains Database", "/strains", "🌿")
+                                        .addLink("Products Database", "/products", "📦")
                                         .addLink("Studies", "/studies", "📚")
                                         .addLink("Data Analysis", "/data", "📊")
                                         .addSection("Community")
                                         .addLink("Forums", "/forums", "💬")
-                                        .addLink("Grow Journals", "/journals", "📓")
+                                        .addLink("Data Journals", "/journals", "📓")
                                         .addSection("My Account")
                                         .addLink("Profile", "/profile", "👤")
                                         .addLink("Settings", "/settings", "⚙️")

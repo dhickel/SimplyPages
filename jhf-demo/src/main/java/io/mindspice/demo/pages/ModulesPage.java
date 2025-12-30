@@ -134,13 +134,13 @@ public class ModulesPage implements DemoPage {
                         **DataModule** displays type-safe data tables:
 
                         ```java
-                        DataModule.create(Strain.class)
-                            .withTitle("Strain Database")
+                        DataModule.create(Product.class)
+                            .withTitle("Product Database")
                             .withDataTable(
-                                DataTable.create(Strain.class)
-                                    .addColumn("Name", Strain::getName)
-                                    .addColumn("Type", Strain::getType)
-                                    .withData(strainList)
+                                DataTable.create(Product.class)
+                                    .addColumn("Name", Product::getName)
+                                    .addColumn("Category", Product::getCategory)
+                                    .withData(productList)
                             );
                         ```
 

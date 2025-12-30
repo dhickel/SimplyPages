@@ -63,28 +63,28 @@ public class CustomPage implements DemoPage {
                         Extend `Module` for complex compositions:
 
                         ```java
-                        public class StrainCardModule extends Module {
-                            private String strainName;
-                            private String type;
-                            private double thcPercent;
+                        public class ProductCardModule extends Module {
+                            private String productName;
+                            private String category;
+                            private double propertyValue;
                             private String imageUrl;
 
-                            public StrainCardModule() {
+                            public ProductCardModule() {
                                 super("div");
-                                this.withClass("strain-card-module");
+                                this.withClass("product-card-module");
                             }
 
-                            public static StrainCardModule create() {
-                                return new StrainCardModule();
+                            public static ProductCardModule create() {
+                                return new ProductCardModule();
                             }
 
-                            public StrainCardModule withStrain(String name,
-                                                                String type,
-                                                                double thc,
+                            public ProductCardModule withProduct(String name,
+                                                                String category,
+                                                                double value,
                                                                 String imgUrl) {
-                                this.strainName = name;
-                                this.type = type;
-                                this.thcPercent = thc;
+                                this.productName = name;
+                                this.category = category;
+                                this.propertyValue = value;
                                 this.imageUrl = imgUrl;
                                 return this;
                             }
@@ -92,15 +92,15 @@ public class CustomPage implements DemoPage {
                             @Override
                             protected void buildContent() {
                                 Card card = Card.create()
-                                    .withHeader(strainName)
+                                    .withHeader(productName)
                                     .withBody(new Div()
                                         .withChild(Image.create()
                                             .withSrc(imageUrl)
                                             .withWidth(200))
                                         .withChild(new Paragraph()
-                                            .withInnerText("Type: " + type))
+                                            .withInnerText("Category: " + category))
                                         .withChild(new Paragraph()
-                                            .withInnerText("THC: " + thcPercent + "%"))
+                                            .withInnerText("Property A: " + propertyValue))
                                     )
                                     .withFooter(Button.create("View Details")
                                         .withStyle(Button.ButtonStyle.PRIMARY));
@@ -110,9 +110,9 @@ public class CustomPage implements DemoPage {
                         }
 
                         // Usage:
-                        StrainCardModule strain = StrainCardModule.create()
-                            .withTitle("Featured Strain")
-                            .withStrain("Blue Dream", "Hybrid", 21.5, "/img/blue-dream.jpg");
+                        ProductCardModule product = ProductCardModule.create()
+                            .withTitle("Featured Product")
+                            .withProduct("Product Alpha", "Category B", 21.5, "/img/product-alpha.jpg");
                         ```
 
                         ## Extension via Interfaces

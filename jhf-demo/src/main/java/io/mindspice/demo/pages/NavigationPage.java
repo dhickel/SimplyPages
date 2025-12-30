@@ -75,7 +75,7 @@ public class NavigationPage implements DemoPage {
 
                         ```java
                         TopNavBuilder.create()
-                            .withBrand("Cannabis Portal")
+                            .withBrand("Research Portal")
                             .addPortal("Research", "/research", true)
                             .addPortal("Forums", "/forums")
                             .addPortal("Journals", "/journals")
@@ -108,7 +108,7 @@ public class NavigationPage implements DemoPage {
                             .addItem("Dashboard", "/dashboard", true)
                             .addItem("Profile", "/profile")
                             .addSection("Data")
-                            .addItem("Strains", "/strains")
+                            .addItem("Products", "/products")
                             .addItem("Journals", "/journals");
                         ```
 
@@ -117,7 +117,7 @@ public class NavigationPage implements DemoPage {
                         ```java
                         SideNavBuilder.create()
                             .addSection("Research")
-                            .addLink("Strains", "/strains", "🌿")
+                            .addLink("Products", "/products", "📦")
                             .addLink("Studies", "/studies", "📚")
                             .addSection("Community")
                             .addLink("Forums", "/forum", "💬")

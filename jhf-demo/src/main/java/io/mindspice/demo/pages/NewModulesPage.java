@@ -60,9 +60,9 @@ public class NewModulesPage implements DemoPage {
                 )))
                 .addRow(row -> {
                     HeroModule hero = HeroModule.create()
-                            .withTitle("Welcome to Cannabis Research Portal")
+                            .withTitle("Welcome to Research Portal")
                             .withSubtitle("Open Source • Community-Driven • Scientific")
-                            .withDescription("Join researchers worldwide in documenting cannabis science and cultivation data.")
+                            .withDescription("Join researchers worldwide in documenting scientific research and data collection.")
                             .withPrimaryButton("Get Started", "/register")
                             .withSecondaryButton("Learn More", "/about")
                             .centered();
@@ -89,7 +89,7 @@ public class NewModulesPage implements DemoPage {
                             .withColumns(4)
                             .addStat("1,234", "Research Papers", "Peer-reviewed studies")
                             .addStat("567", "Active Researchers", "Contributing members")
-                            .addStat("89", "Strains Cataloged", "Documented varieties")
+                            .addStat("89", "Products Cataloged", "Documented items")
                             .addStat("95%", "Data Accuracy", "Verification rate");
                     row.withChild(stats);
                 })
@@ -105,18 +105,18 @@ public class NewModulesPage implements DemoPage {
                         **Features:**
                         - Vertical or horizontal orientation
                         - Date markers with event content
-                        - Perfect for grow journals, project history, or research progress
+                        - Perfect for data journals, project history, or research progress
                         - Supports custom component content
                         """
                 )))
                 .addRow(row -> {
                     TimelineModule timeline = TimelineModule.create()
-                            .withTitle("Grow Journal Timeline")
+                            .withTitle("Data Collection Timeline")
                             .vertical()
-                            .addEvent("Day 1", "Germination", "Seeds placed in wet paper towel. Temperature maintained at 70°F.")
-                            .addEvent("Day 7", "Seedling", "First true leaves appeared. Moved to small pots with soil.")
-                            .addEvent("Day 21", "Vegetative Stage", "Switched to 18/6 light cycle. Plants showing strong growth.")
-                            .addEvent("Day 45", "Flowering Initiated", "Changed to 12/12 light cycle. Added flowering nutrients.");
+                            .addEvent("Day 1", "Initialization", "Project started. Initial parameters set. Temperature maintained at 70°F.")
+                            .addEvent("Day 7", "First Milestone", "Initial data points collected. System showing expected behavior.")
+                            .addEvent("Day 21", "Processing Stage", "Moved to accelerated processing. Data showing strong trends.")
+                            .addEvent("Day 45", "Quality Check Initiated", "Validation phase started. Final verification in progress.");
                     row.withChild(timeline);
                 })
 
@@ -171,14 +171,14 @@ public class NewModulesPage implements DemoPage {
                 )))
                 .addRow(row -> {
                     TabsModule tabs = TabsModule.create()
-                            .withTitle("Strain Information")
-                            .addTab("Overview", "Blue Dream is a sativa-dominant hybrid cross between " +
-                                    "Blueberry and Haze. Known for balanced effects.")
-                            .addTab("Effects", "Users report cerebral stimulation, euphoria, and creativity. " +
-                                    "Helps with stress, pain, and depression.")
-                            .addTab("Growing", "Flowering time: 9-10 weeks. Medium difficulty. " +
-                                    "Prefers warm climate. High yield potential.")
-                            .addTab("Cannabinoids", "THC: 17-24%, CBD: <1%, CBG: 0.5-1%");
+                            .withTitle("Product Information")
+                            .addTab("Overview", "Product Alpha is a Category C item with enhanced properties. " +
+                                    "Known for balanced performance characteristics.")
+                            .addTab("Properties", "Users report high efficiency, durability, and versatility. " +
+                                    "Optimal for various applications and environments.")
+                            .addTab("Processing", "Processing time: 9-10 weeks. Medium complexity. " +
+                                    "Prefers controlled environment. High output potential.")
+                            .addTab("Specifications", "Property A: 17-24, Property B: <1, Property C: 0.5-1");
                     row.withChild(tabs);
                 })
 
@@ -237,7 +237,7 @@ public class NewModulesPage implements DemoPage {
                             CalloutModule.create()
                                     .info()
                                     .withTitle("Information")
-                                    .withContent("Cannabis research is rapidly expanding worldwide.")
+                                    .withContent("Scientific research is rapidly expanding worldwide.")
                     );
 
                     calloutRow.withChild(
@@ -276,22 +276,22 @@ public class NewModulesPage implements DemoPage {
                         - Multiple columns for comparison
                         - Highlighted/featured column option
                         - Row labels with values
-                        - Perfect for strain comparison, pricing tables, feature matrices
+                        - Perfect for product comparison, pricing tables, feature matrices
                         """
                 )))
                 .addRow(row -> {
                     ComparisonModule comparison = ComparisonModule.create()
-                            .withTitle("Strain Comparison")
-                            .addColumn("Blue Dream")
-                            .addColumn("OG Kush", true)  // Highlighted
-                            .addColumn("Sour Diesel")
-                            .addRow("Type", "Sativa-Dominant", "Indica-Dominant", "Sativa-Dominant")
-                            .addRow("THC", "17-24%", "20-25%", "20-25%")
-                            .addRow("CBD", "<1%", "<1%", "<1%")
-                            .addRow("Flowering Time", "9-10 weeks", "8-9 weeks", "10-11 weeks")
-                            .addRow("Effects", "Creative, Uplifting", "Relaxing, Euphoric", "Energizing, Focus")
-                            .addRow("Difficulty", "Medium", "Easy", "Medium")
-                            .addRow("Yield", "High", "Medium-High", "High");
+                            .withTitle("Product Comparison")
+                            .addColumn("Product Alpha")
+                            .addColumn("Product Beta", true)  // Highlighted
+                            .addColumn("Product Gamma")
+                            .addRow("Category", "Category C", "Category A", "Category C")
+                            .addRow("Property A", "17-24", "20-25", "20-25")
+                            .addRow("Property B", "<1", "<1", "<1")
+                            .addRow("Processing Time", "9-10 weeks", "8-9 weeks", "10-11 weeks")
+                            .addRow("Characteristics", "Efficient, Versatile", "Reliable, Consistent", "Fast, Precise")
+                            .addRow("Complexity", "Medium", "Easy", "Medium")
+                            .addRow("Output", "High", "Medium-High", "High");
 
                     row.withChild(comparison);
                 })

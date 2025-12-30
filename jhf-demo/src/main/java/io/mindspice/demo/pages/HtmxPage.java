@@ -179,7 +179,7 @@ public class HtmxPage implements DemoPage {
 
                         ```java
                         TextInput.create("search")
-                            .withPlaceholder("Search strains...")
+                            .withPlaceholder("Search products...")
                             .withAttribute("hx-get", "/api/search")
                             .withAttribute("hx-trigger", "keyup changed delay:500ms")
                             .withAttribute("hx-target", "#search-results")

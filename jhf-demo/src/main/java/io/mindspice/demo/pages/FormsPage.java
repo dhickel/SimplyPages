@@ -122,25 +122,25 @@ public class FormsPage implements DemoPage {
                         **Select** components create dropdown menus:
 
                         ```java
-                        Select.create("strain_type")
-                            .addOption("sativa", "Sativa")
-                            .addOption("indica", "Indica")
-                            .addOption("hybrid", "Hybrid")
-                            .withSelectedValue("hybrid");
+                        Select.create("product_category")
+                            .addOption("category_a", "Category A")
+                            .addOption("category_b", "Category B")
+                            .addOption("category_c", "Category C")
+                            .withSelectedValue("category_b");
                         ```
                         """)))
                 .addRow(row -> {
                     Form selectForm = Form.create()
-                            .addField("Strain Type", Select.create("strain_type")
-                                    .addOption("sativa", "Sativa")
-                                    .addOption("indica", "Indica")
-                                    .addOption("hybrid", "Hybrid")
+                            .addField("Product Category", Select.create("product_category")
+                                    .addOption("category_a", "Category A")
+                                    .addOption("category_b", "Category B")
+                                    .addOption("category_c", "Category C")
                                     .withMaxWidth("250px"))
-                            .addField("Growth Stage", Select.create("growth_stage")
-                                    .addOption("seed", "Seedling")
-                                    .addOption("veg", "Vegetative")
-                                    .addOption("flower", "Flowering")
-                                    .addOption("harvest", "Ready to Harvest")
+                            .addField("Processing Stage", Select.create("processing_stage")
+                                    .addOption("stage1", "Initial Stage")
+                                    .addOption("stage2", "Processing")
+                                    .addOption("stage3", "Quality Check")
+                                    .addOption("stage4", "Ready for Distribution")
                                     .withMaxWidth("300px"));
 
                     row.withChild(ContentModule.create()
@@ -162,10 +162,10 @@ public class FormsPage implements DemoPage {
                         """)))
                 .addRow(row -> {
                     Form checkboxForm = Form.create()
-                            .addField("Preferences", Checkbox.create("organic", "yes")
-                                    .withLabel("Organic growing only"))
-                            .addField("", Checkbox.create("indoor", "yes")
-                                    .withLabel("Indoor growing"))
+                            .addField("Preferences", Checkbox.create("premium", "yes")
+                                    .withLabel("Premium features only"))
+                            .addField("", Checkbox.create("advanced", "yes")
+                                    .withLabel("Advanced options"))
                             .addField("", Checkbox.create("newsletter", "yes")
                                     .withLabel("Subscribe to newsletter")
                                     .checked());
@@ -198,15 +198,15 @@ public class FormsPage implements DemoPage {
                             .addOption("expert", "Expert")
                             .withSelectedValue("beginner");
 
-                    RadioGroup growMethod = RadioGroup.create("method")
-                            .addOption("soil", "Soil")
-                            .addOption("hydro", "Hydroponic")
-                            .addOption("aero", "Aeroponic")
+                    RadioGroup processingMethod = RadioGroup.create("method")
+                            .addOption("standard", "Standard")
+                            .addOption("accelerated", "Accelerated")
+                            .addOption("precision", "Precision")
                             .inline();
 
                     Form radioForm = Form.create()
                             .addField("Experience Level", experienceLevel)
-                            .addField("Growing Method", growMethod);
+                            .addField("Processing Method", processingMethod);
 
                     row.withChild(ContentModule.create()
                             .withTitle("Radio Group Examples")
@@ -259,22 +259,22 @@ public class FormsPage implements DemoPage {
                 .addComponents(Header.H2("Complete Form Example"))
                 .addRow(row -> row.withChild(new Markdown(
                         """
-                        Putting it all together - a complete grow journal entry form with width constraints:
+                        Putting it all together - a complete data collection form with width constraints:
 
                         ```java
-                        Form growJournalForm = Form.create()
-                            .withId("grow-journal-form")
+                        Form dataEntryForm = Form.create()
+                            .withId("data-entry-form")
                             .addField("Date", TextInput.date("entry_date")
                                 .withMaxWidth("200px")
                                 .required())
-                            .addField("Strain", TextInput.create("strain_name")
+                            .addField("Product Name", TextInput.create("product_name")
                                 .withMaxWidth("350px")
                                 .required())
-                            .addField("Growth Stage", Select.create("stage")
+                            .addField("Processing Stage", Select.create("stage")
                                 .withMaxWidth("300px")
-                                .addOption("seed", "Seedling")
-                                .addOption("veg", "Vegetative")
-                                .addOption("flower", "Flowering"))
+                                .addOption("stage1", "Initial Stage")
+                                .addOption("stage2", "Processing")
+                                .addOption("stage3", "Quality Check"))
                             .addField("Notes", TextArea.create("notes")
                                 .withRows(5)
                                 .withMaxWidth("700px"))
@@ -284,20 +284,20 @@ public class FormsPage implements DemoPage {
                         ```
                         """)))
                 .addRow(row -> {
-                    Form growJournalForm = Form.create()
-                            .withId("grow-journal-form")
+                    Form dataCollectionForm = Form.create()
+                            .withId("data-collection-form")
                             .addField("Entry Date", TextInput.date("entry_date")
                                     .required()
                                     .withMaxWidth("200px"))
-                            .addField("Strain Name", TextInput.create("strain_name")
-                                    .withPlaceholder("e.g., Blue Dream")
+                            .addField("Product Name", TextInput.create("product_name")
+                                    .withPlaceholder("e.g., Product Alpha")
                                     .required()
                                     .withMaxWidth("350px"))
-                            .addField("Growth Stage", Select.create("growth_stage")
-                                    .addOption("seedling", "Seedling (1-3 weeks)")
-                                    .addOption("vegetative", "Vegetative (3-16 weeks)")
-                                    .addOption("flowering", "Flowering (8-11 weeks)")
-                                    .addOption("harvest", "Ready to Harvest")
+                            .addField("Processing Stage", Select.create("processing_stage")
+                                    .addOption("stage1", "Initial Stage (1-3 days)")
+                                    .addOption("stage2", "Processing (3-16 days)")
+                                    .addOption("stage3", "Quality Check (8-11 days)")
+                                    .addOption("stage4", "Ready for Distribution")
                                     .withMaxWidth("300px"))
                             .addField("Temperature (°F)", TextInput.number("temperature")
                                     .withPlaceholder("70-85")
@@ -312,13 +312,13 @@ public class FormsPage implements DemoPage {
                             .addField("Public Entry", Checkbox.create("public", "yes")
                                     .withLabel("Share with community")
                                     .checked())
-                            .addField("", Button.submit("Save Journal Entry")
+                            .addField("", Button.submit("Save Data Entry")
                                     .withStyle(Button.ButtonStyle.PRIMARY)
                                     .withMinWidth("180px"));
 
                     row.withChild(ContentModule.create()
-                            .withTitle("Grow Journal Entry Form")
-                            .withCustomContent(growJournalForm));
+                            .withTitle("Data Collection Entry Form")
+                            .withCustomContent(dataCollectionForm));
                 })
 
                 .build();
