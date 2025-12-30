@@ -132,7 +132,7 @@ public class EditingDemoController {
     // Pending edits storage for USER_EDIT mode
     private final Map<String, List<PendingEdit>> pendingEdits = new ConcurrentHashMap<>();
 
-    private final AtomicInteger idCounter = new AtomicInteger(1);
+    private final AtomicInteger idCounter = new AtomicInteger(10);  // Start after initial demo data
 
     public EditingDemoController() {
         initializeDemoData();
