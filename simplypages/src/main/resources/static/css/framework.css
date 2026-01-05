@@ -323,6 +323,242 @@ p { margin-bottom: 1rem; }
     background-color: #f7fafc;
 }
 
+/* ===== Markdown Content Styling ===== */
+
+/* Blockquotes */
+.content-module blockquote,
+.module-content blockquote {
+    margin: 1.5em 0;
+    padding: 0.75em 1.25em;
+    border-left: 4px solid #4299e1;
+    background-color: #ebf8ff;
+    color: #2c5282;
+    font-style: italic;
+}
+
+.content-module blockquote p,
+.module-content blockquote p {
+    margin: 0.5em 0;
+}
+
+.content-module blockquote p:first-child,
+.module-content blockquote p:first-child {
+    margin-top: 0;
+}
+
+.content-module blockquote p:last-child,
+.module-content blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* Headings in markdown content */
+.content-module h1,
+.module-content h1 {
+    font-size: 2em;
+    font-weight: 700;
+    margin-top: 1.5em;
+    margin-bottom: 0.75em;
+    color: #1a202c;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0.3em;
+}
+
+.content-module h1:first-child,
+.module-content h1:first-child {
+    margin-top: 0;
+}
+
+.content-module h2,
+.module-content h2 {
+    font-size: 1.5em;
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.75em;
+    color: #2d3748;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.3em;
+}
+
+.content-module h3,
+.module-content h3 {
+    font-size: 1.25em;
+    font-weight: 600;
+    margin-top: 1.25em;
+    margin-bottom: 0.5em;
+    color: #2d3748;
+}
+
+.content-module h4,
+.module-content h4 {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    color: #4a5568;
+}
+
+.content-module h5,
+.module-content h5 {
+    font-size: 1em;
+    font-weight: 600;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    color: #4a5568;
+}
+
+.content-module h6,
+.module-content h6 {
+    font-size: 0.9em;
+    font-weight: 600;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    color: #718096;
+}
+
+/* Paragraphs */
+.content-module p,
+.module-content p {
+    margin: 1em 0;
+    line-height: 1.7;
+}
+
+/* Lists */
+.content-module ul,
+.module-content ul {
+    margin: 1em 0;
+    padding-left: 2em;
+    list-style-type: disc;
+}
+
+.content-module ol,
+.module-content ol {
+    margin: 1em 0;
+    padding-left: 2em;
+    list-style-type: decimal;
+}
+
+.content-module li,
+.module-content li {
+    margin: 0.5em 0;
+    line-height: 1.6;
+}
+
+/* Nested lists */
+.content-module ul ul,
+.module-content ul ul,
+.content-module ol ol,
+.module-content ol ol,
+.content-module ul ol,
+.module-content ul ol,
+.content-module ol ul,
+.module-content ol ul {
+    margin: 0.25em 0;
+}
+
+.content-module ul ul,
+.module-content ul ul {
+    list-style-type: circle;
+}
+
+.content-module ul ul ul,
+.module-content ul ul ul {
+    list-style-type: square;
+}
+
+/* Horizontal rules */
+.content-module hr,
+.module-content hr {
+    margin: 2em 0;
+    border: none;
+    border-top: 2px solid #e2e8f0;
+}
+
+/* Links */
+.content-module a,
+.module-content a {
+    color: #3182ce;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.content-module a:hover,
+.module-content a:hover {
+    color: #2c5282;
+    border-bottom-color: #2c5282;
+}
+
+/* Images */
+.content-module img,
+.module-content img {
+    max-width: 100%;
+    height: auto;
+    margin: 1em 0;
+    border-radius: 4px;
+}
+
+/* Strong and emphasis */
+.content-module strong,
+.module-content strong {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.content-module em,
+.module-content em {
+    font-style: italic;
+}
+
+/* Inline code */
+.content-module code,
+.module-content code {
+    background-color: #f7fafc;
+    color: #e53e3e;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+}
+
+/* Code blocks override inline code styling */
+.content-module pre code,
+.module-content pre code {
+    background-color: transparent;
+    color: inherit;
+    padding: 0;
+    border-radius: 0;
+}
+
+/* Pre-formatted text / code blocks */
+.content-module pre,
+.module-content pre {
+    background-color: #2d3748;
+    color: #e2e8f0;
+    padding: 1em;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 1.5em 0;
+    line-height: 1.5;
+}
+
+/* Definition lists */
+.content-module dl,
+.module-content dl {
+    margin: 1em 0;
+}
+
+.content-module dt,
+.module-content dt {
+    font-weight: 600;
+    margin-top: 1em;
+}
+
+.content-module dd,
+.module-content dd {
+    margin-left: 2em;
+    margin-bottom: 0.5em;
+}
+
 /* ===== Code Blocks ===== */
 code {
     font-family: 'Courier New', Courier, monospace;
@@ -1652,21 +1888,84 @@ img {
 
 .editable-module-wrapper {
     position: relative;
+    margin-bottom: 24px;
 }
 
-/* Page builder UI - module addition sections */
-.add-module-section,
-.add-row-final {
-    padding: 16px;
+/* Edit/Delete buttons for editable modules */
+.module-edit-btn {
+    position: absolute;
+    top: 2px;
+    right: 30px;
+    font-size: 1.2rem;
+    text-decoration: none;
+    color: #6c757d;
+    padding: 2px 4px;
+    z-index: 10;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.module-edit-btn:hover {
+    color: #495057;
+}
+
+.module-delete-btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 1.2rem;
+    text-decoration: none;
+    color: #dc3545;
+    padding: 2px 4px;
+    z-index: 10;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.module-delete-btn:hover {
+    color: #bd2130;
+}
+
+/* Page builder UI - module addition section */
+.add-module-section {
+    margin: 16px 0;
     text-align: center;
+}
+
+.add-module-section .btn {
+    background-color: #e2e8f0;
+    color: #4a5568;
+    border: 2px dashed #cbd5e0;
+    padding: 12px 24px;
+    font-weight: 500;
+}
+
+.add-module-section .btn:hover {
+    background-color: #cbd5e0;
+    border-color: #a0aec0;
+    transform: translateY(-1px);
 }
 
 /* Insert row section - dashed border separator */
 .insert-row-section {
-    border-top: 2px dashed #dee2e6;
     margin: 24px 0;
-    padding-top: 16px;
+    padding: 16px 0;
+    border-top: 1px solid #e2e8f0;
     text-align: center;
+}
+
+.insert-row-section .btn {
+    color: #718096;
+    background: transparent;
+    font-size: 0.9rem;
+    border: 1px solid #e2e8f0;
+}
+
+.insert-row-section .btn:hover {
+    background-color: #f7fafc;
+    border-color: #cbd5e0;
 }
 
 /* Editable page wrapper */
@@ -1681,11 +1980,127 @@ img {
 /* Editable row wrapper */
 .editable-row-wrapper {
     position: relative;
-    margin-bottom: 20px;
+    margin-bottom: 32px;
+    padding: 16px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.editable-row-wrapper:hover {
+    background-color: #f7fafc;
 }
 
 /* Hover states for better UX */
 .edit-toolbar button:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Modal System ===== */
+
+/* Modal backdrop - full viewport overlay */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Modal container - centered content box */
+.modal-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.2s ease-out;
+    z-index: 1001;
+}
+
+/* Modal slide-in animation */
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Modal header */
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Modal body */
+.modal-body {
+    padding: 24px;
+}
+
+/* Modal footer */
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Form fields in modals - better spacing */
+.modal-body .form-field {
+    margin-bottom: 24px;
+}
+
+.modal-body .form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.modal-body .form-input,
+.modal-body .form-textarea,
+.modal-body .form-select {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #cbd5e0;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.modal-body .form-input:focus,
+.modal-body .form-textarea:focus,
+.modal-body .form-select:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+/* Mobile: Full screen modal */
+@media (max-width: 768px) {
+    .modal-container {
+        max-width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+        margin: 0;
+    }
+
+    .modal-backdrop {
+        padding: 0;
+    }
 }

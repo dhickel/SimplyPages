@@ -1,6 +1,7 @@
 package io.mindspice.simplypages.components;
 
 import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.core.RenderContext;
 
 /**
  * Account widget component for displaying user authentication status.
@@ -101,13 +102,19 @@ public class AccountWidget extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    public String render(RenderContext context) {
+        children.clear();
         if (isAuthenticated) {
             buildAuthenticatedContent();
         } else {
             buildGuestContent();
         }
-        return super.render();
+        return super.render(context);
+    }
+
+    @Override
+    public String render() {
+        return render(RenderContext.empty());
     }
 
     /**

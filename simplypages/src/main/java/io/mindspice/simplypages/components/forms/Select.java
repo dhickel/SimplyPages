@@ -3,6 +3,7 @@ package io.mindspice.simplypages.components.forms;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
+import org.owasp.encoder.Encode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -117,14 +118,16 @@ public class Select extends HtmlTag {
 
         @Override
         public String render(RenderContext context) {
-            StringBuilder sb = new StringBuilder("<option value=\"").append(value).append("\"");
+            String safeValue = value == null ? "" : Encode.forHtmlAttribute(value);
+            String safeLabel = label == null ? "" : Encode.forHtml(label);
+            StringBuilder sb = new StringBuilder("<option value=\"").append(safeValue).append("\"");
             if (selected) {
                 sb.append(" selected");
             }
             if (disabled) {
                 sb.append(" disabled");
             }
-            sb.append(">").append(label).append("</option>");
+            sb.append(">").append(safeLabel).append("</option>");
             return sb.toString();
         }
 

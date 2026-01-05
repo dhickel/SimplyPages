@@ -72,12 +72,7 @@ public class Badge extends HtmlTag {
     }
 
     public Badge withClass(String className) {
-        String currentClass = attributes.stream()
-            .filter(attr -> "class".equals(attr.getName()))
-            .findFirst()
-            .map(attr -> attr.getValue())
-            .orElse("badge badge-primary");
-        this.withAttribute("class", currentClass + " " + className);
+        super.addClass(className);
         return this;
     }
 }

@@ -110,8 +110,13 @@ public class Code extends HtmlTag {
                 super.withChild(codeElement);
                 container.withChild(new HtmlTag("pre") {
                     @Override
+                    public String render(io.mindspice.simplypages.core.RenderContext context) {
+                        return Code.super.render(context);
+                    }
+
+                    @Override
                     public String render() {
-                        return Code.super.render();
+                        return render(io.mindspice.simplypages.core.RenderContext.empty());
                     }
                 });
 

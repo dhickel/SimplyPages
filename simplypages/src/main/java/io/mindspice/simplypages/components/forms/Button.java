@@ -71,12 +71,7 @@ public class Button extends HtmlTag {
     }
 
     public Button withClass(String className) {
-        String currentClass = attributes.stream()
-            .filter(attr -> "class".equals(attr.getName()))
-            .findFirst()
-            .map(attr -> attr.getValue())
-            .orElse("btn btn-primary");
-        this.withAttribute("class", currentClass + " " + className);
+        super.addClass(className);
         return this;
     }
 

@@ -1,5 +1,8 @@
 # Editing System Guide
 
+> Deprecated: This document is legacy and may conflict with current modal/OOB patterns.
+> Use `EDITING_SYSTEM_GUIDE.md` and `MODAL_OVERLAY_USAGE.md` instead.
+
 The Java HTML Framework includes a powerful editing system that enables in-place content editing, page building, and dynamic module management. Built on HTMX for smooth user experiences, the editing system uses a wrapper/decorator pattern to add editing capabilities to any module without modifying the original module code.
 
 ## Table of Contents

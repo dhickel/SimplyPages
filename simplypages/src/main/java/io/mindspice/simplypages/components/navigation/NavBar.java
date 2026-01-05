@@ -3,6 +3,7 @@ package io.mindspice.simplypages.components.navigation;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
+import org.owasp.encoder.Encode;
 
 /**
  * Navigation bar component.
@@ -52,6 +53,11 @@ public class NavBar extends HtmlTag {
 
     public NavBar addItem(String text, String href, boolean active) {
         itemsContainer.withChild(new NavItem(text, href, active));
+        return this;
+    }
+
+    public NavBar addItem(NavItem navItem) {
+        itemsContainer.withChild(navItem);
         return this;
     }
 
@@ -108,7 +114,9 @@ public class NavBar extends HtmlTag {
 
         @Override
         public String render(RenderContext context) {
-            StringBuilder sb = new StringBuilder("<a href=\"").append(href).append("\"");
+            String safeHref = href == null ? "" : Encode.forHtmlAttribute(href);
+            String safeText = text == null ? "" : Encode.forHtml(text);
+            StringBuilder sb = new StringBuilder("<a href=\"").append(safeHref).append("\"");
             sb.append(" class=\"navbar-item");
             if (active) {
                 sb.append(" active");
@@ -116,16 +124,16 @@ public class NavBar extends HtmlTag {
             sb.append("\"");
 
             if (hxGet != null) {
-                sb.append(" hx-get=\"").append(hxGet).append("\"");
+                sb.append(" hx-get=\"").append(Encode.forHtmlAttribute(hxGet)).append("\"");
             }
             if (hxTarget != null) {
-                sb.append(" hx-target=\"").append(hxTarget).append("\"");
+                sb.append(" hx-target=\"").append(Encode.forHtmlAttribute(hxTarget)).append("\"");
             }
             if (hxPushUrl) {
                 sb.append(" hx-push-url=\"true\"");
             }
 
-            sb.append(">").append(text).append("</a>");
+            sb.append(">").append(safeText).append("</a>");
             return sb.toString();
         }
 

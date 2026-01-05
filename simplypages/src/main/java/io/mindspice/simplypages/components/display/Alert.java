@@ -48,22 +48,12 @@ public class Alert extends HtmlTag {
     }
 
     public Alert dismissible() {
-        String currentClass = attributes.stream()
-            .filter(attr -> "class".equals(attr.getName()))
-            .findFirst()
-            .map(attr -> attr.getValue())
-            .orElse("alert");
-        this.withAttribute("class", currentClass + " alert-dismissible");
+        super.addClass("alert-dismissible");
         return this;
     }
 
     public Alert withClass(String className) {
-        String currentClass = attributes.stream()
-            .filter(attr -> "class".equals(attr.getName()))
-            .findFirst()
-            .map(attr -> attr.getValue())
-            .orElse("alert");
-        this.withAttribute("class", currentClass + " " + className);
+        super.addClass(className);
         return this;
     }
 }

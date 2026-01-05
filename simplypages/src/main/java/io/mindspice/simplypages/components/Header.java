@@ -1,8 +1,13 @@
 package io.mindspice.simplypages.components;
 
+import io.mindspice.simplypages.core.Attribute;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Header component for text headings with alignment and decoration options.
@@ -32,12 +37,17 @@ public class Header extends HtmlTag {
         }
     }
 
+    private String id;  // Optional - only applied to DOM if set
+    private HeaderLevel level;
+    private String text;
     private Component topBar;
     private Component bottomBar;
     private String alignment;
 
     public Header(HeaderLevel level, String text) {
         super(level.name().toLowerCase());
+        this.level = level;
+        this.text = text;
         this.withInnerText(text);
     }
 
@@ -63,6 +73,36 @@ public class Header extends HtmlTag {
 
     public static Header H6(String text) {
         return new Header(HeaderLevel.H6, text);
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * Sets the HTML id attribute for this header.
+     * <p>
+     * When set, this id will be applied to the DOM element, allowing
+     * targeting via CSS selectors, JavaScript, or HTMX.
+     * </p>
+     *
+     * @param id the HTML id attribute value
+     * @return this Header for method chaining
+     */
+    public Header withId(String id) {
+        this.id = id;
+        if (id != null) {
+            this.withAttribute("id", id);
+        }
+        return this;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public HeaderLevel getLevel() {
+        return level;
     }
 
     public Header withClass(String className) {
@@ -107,21 +147,42 @@ public class Header extends HtmlTag {
     }
 
     private void updateAlignmentClass() {
-        if (alignment != null) {
-            // Remove any existing alignment class
-            for (Alignment a : Alignment.values()) {
-                // This is tricky without access to attributes easily to remove specific class parts.
-                // But addClass appends. HtmlTag handles duplicates but not removal of conflicting classes easily.
-                // However, the original code tried to replace it.
-                // For simplicity, let's just append. CSS cascade usually takes last one.
-                // Or we can rely on HtmlTag.addClass to just add it.
-                // If we switch alignment, we might have multiple classes.
-                // The previous code parsed the class string.
-                // Let's stick to simple addClass for now, or if we want to be clean, we'd need better attribute management.
-                // Since this is a fix, let's just add it.
-                this.addClass(alignment);
+        if (alignment == null) {
+            return;
+        }
+
+        Optional<Attribute> classAttr = attributes.stream()
+            .filter(attr -> "class".equals(attr.getName()))
+            .findFirst();
+
+        List<String> classes = new ArrayList<>();
+        if (classAttr.isPresent()) {
+            String current = classAttr.get().getValue();
+            if (current != null && !current.isBlank()) {
+                for (String token : current.trim().split("\\s+")) {
+                    if (!isAlignmentClass(token)) {
+                        classes.add(token);
+                    }
+                }
             }
         }
+
+        if (!classes.contains(alignment)) {
+            classes.add(alignment);
+        }
+
+        if (!classes.isEmpty()) {
+            this.withAttribute("class", String.join(" ", classes));
+        }
+    }
+
+    private boolean isAlignmentClass(String className) {
+        for (Alignment value : Alignment.values()) {
+            if (value.getCssClass().equals(className)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -196,4 +257,5 @@ public class Header extends HtmlTag {
     public String render() {
         return render(RenderContext.empty());
     }
+
 }

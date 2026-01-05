@@ -382,7 +382,7 @@ Controller endpoints for HTMX return partial HTML (just the module/component HTM
 Extend `HtmlTag` for new HTML elements. Override `render()` for custom HTML generation. Use composition to build complex structures.
 
 ### Extension via Interfaces
-For cross-cutting concerns (like `Editable`, `Votable`, `Shareable`), use interfaces that components can implement.
+For cross-cutting concerns (like `Votable`, `Shareable`), use interfaces that components can implement.
 
 ### Builder Pattern Utilities
 Create builder classes for common page patterns to encapsulate repeated layout structures.
@@ -511,10 +511,39 @@ Use imperative mood ("Add feature" not "Added feature"), be specific, include co
 ### Open Source Plans
 Documentation, testing, example applications, licensing, community guidelines, semantic versioning
 
+## Current Development Plan
+
+**Active Plan**: See [EDITING_SYSTEM_PLAN.md](EDITING_SYSTEM_PLAN.md) for the current multiphase implementation plan.
+
+**⚠️ IMPORTANT**: Check [DEVELOPMENT_NOTES.md](DEVELOPMENT_NOTES.md) for:
+- **Known Bugs** (markdown toggle, button alignment)
+- **Active Issues** (z-index, button styling, width editing gaps)
+- **Design Decisions** and rationale
+- **Framework vs Implementation** gaps that need addressing
+
+### Editing System Implementation
+The framework is currently undergoing a major enhancement to add comprehensive inline editing capabilities for modules. This work is tracked in a detailed 9-phase plan:
+
+- ✅ **Phase 1-2 Complete**: Modal component and EditAdapter interface implemented
+- 📋 **Phases 3-9 Planned**: Auto-save, constraints, styling, module migration, auth, testing
+
+The plan includes:
+- **EditAdapter Interface**: Contract for making modules editable
+- **Modal System**: Overlay modals for editing UI
+- **EditModalBuilder**: Standardized modal construction
+- **ValidationResult**: Form validation framework
+- **HTMX Integration**: Seamless dynamic updates without page reloads
+
+See the plan file for detailed implementation steps, code examples, known issues, and session-by-session progress tracking.
+
 ## Resources
 
 ### Framework Documentation
 - This CLAUDE.md for comprehensive guidance
+- **[EDITING_SYSTEM_GUIDE.md](EDITING_SYSTEM_GUIDE.md)** - **Complete implementation guide for inline editing** (start here for editing features!)
+- [DEVELOPMENT_NOTES.md](DEVELOPMENT_NOTES.md) - **Living document** tracking bugs, issues, and design decisions
+- [EDITING_SYSTEM_PLAN.md](EDITING_SYSTEM_PLAN.md) - Editing system implementation plan (development history)
+- [MODAL_OVERLAY_USAGE.md](MODAL_OVERLAY_USAGE.md) - Correct modal overlay patterns
 - README.md for quick reference
 - Demo application at `http://localhost:8080`
 

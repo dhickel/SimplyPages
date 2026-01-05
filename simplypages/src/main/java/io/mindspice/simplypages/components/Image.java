@@ -10,15 +10,79 @@ import io.mindspice.simplypages.core.HtmlTag;
  */
 public class Image extends HtmlTag {
 
+    private String id;  // Optional - only applied to DOM if set
+    private String src;
+    private String alt;
+    private String width;
+    private String height;
+
     public Image(String src, String alt) {
         super("img", true); // self-closing tag
+        this.src = src;
+        this.alt = alt != null ? alt : "";
+        this.width = null;
+        this.height = null;
         validateImageUrl(src);
-        this.withAttribute("src", src);
-        this.withAttribute("alt", alt);
+        updateAttributes();
     }
 
     public Image(String src) {
         this(src, "");
+    }
+
+    public static Image create(String src, String alt) {
+        return new Image(src, alt);
+    }
+
+    public static Image create(String src) {
+        return new Image(src);
+    }
+
+    private void updateAttributes() {
+        this.withAttribute("src", src);
+        this.withAttribute("alt", alt);
+        if (width != null && !width.isEmpty()) {
+            this.withAttribute("width", width);
+        }
+        if (height != null && !height.isEmpty()) {
+            this.withAttribute("height", height);
+        }
+    }
+
+    // Getters
+    public String getId() {
+        return id;
+    }
+
+    public String getSrc() {
+        return src;
+    }
+
+    public String getAlt() {
+        return alt;
+    }
+
+    public String getWidth() {
+        return width;
+    }
+
+    public String getHeight() {
+        return height;
+    }
+
+    // Fluent setters
+    /**
+     * Sets the HTML id attribute for this image.
+     *
+     * @param id the HTML id attribute value
+     * @return this Image for method chaining
+     */
+    public Image withId(String id) {
+        this.id = id;
+        if (id != null) {
+            this.withAttribute("id", id);
+        }
+        return this;
     }
 
     public Image withClass(String className) {
@@ -39,11 +103,14 @@ public class Image extends HtmlTag {
      */
     public Image withSrc(String src) {
         validateImageUrl(src);
+        this.src = src;
         this.withAttribute("src", src);
         return this;
     }
 
     public Image withSize(String width, String height) {
+        this.width = width;
+        this.height = height;
         this.withAttribute("width", width);
         this.withAttribute("height", height);
         return this;
@@ -77,4 +144,5 @@ public class Image extends HtmlTag {
             );
         }
     }
+
 }

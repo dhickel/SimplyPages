@@ -21,9 +21,9 @@ import java.util.List;
  *
  * <h2>Features</h2>
  * <ul>
- *   <li><strong>Row Management:</strong> Add rows at bottom or insert between existing rows</li>
- *   <li><strong>Visual Separators:</strong> Dashed borders between rows with insert buttons</li>
- *   <li><strong>HTMX Integration:</strong> Dynamic row addition without page reload</li>
+ *   <li><strong>Row Management:</strong> Insert rows at any position using "Insert Row Below" pattern</li>
+ *   <li><strong>Visual Separators:</strong> Clean borders between rows with insert buttons</li>
+ *   <li><strong>HTMX Integration:</strong> Dynamic row insertion without page reload</li>
  *   <li><strong>Clean UI:</strong> Professional page builder interface</li>
  * </ul>
  *
@@ -74,10 +74,10 @@ import java.util.List;
  * }
  * }</pre>
  *
- * <h2>Add Row Flow</h2>
+ * <h2>Insert Row Flow</h2>
  * <ol>
- *   <li>User clicks "+ Insert Row Below" or "+ Add Row at Bottom"</li>
- *   <li>HTMX POST to `/api/pages/{pageId}/rows/insert` or `/api/pages/{pageId}/rows/add`</li>
+ *   <li>User clicks "+ Insert Row Below"</li>
+ *   <li>HTMX POST to `/api/pages/{pageId}/rows/insert`</li>
  *   <li>Server creates new empty row, saves to database</li>
  *   <li>Server returns new EditableRow HTML</li>
  *   <li>HTMX inserts row before the clicked button's section</li>
@@ -96,8 +96,6 @@ import java.util.List;
  *     [Module 3] [Edit] [Delete]
  *     [+ Add Module]
  *   [+ Insert Row Below]
- *
- *   [+ Add Row at Bottom]
  * </pre>
  *
  * @see EditableRow
@@ -151,52 +149,55 @@ public class EditablePage extends HtmlTag {
      */
     @Override
     public String render(RenderContext context) {
-        // Clear and rebuild page container
-        Div wrapper = new Div()
-                .withAttribute("id", "page-" + pageId)
-                .withClass("editable-page-wrapper");
+        children.clear();
 
         Div content = new Div().withClass("editable-page");
 
-        // Add each row with insert button after it
-        for (int i = 0; i < rows.size(); i++) {
-            EditableRow row = rows.get(i);
-
-            // Add the row
-            content.withChild(row);
-
-            // Add "Insert Row Below" button after each row
+        if (rows.isEmpty()) {
+            // Empty page - show a single "Add First Row" button
             Div insertRowSection = new Div()
-                    .withClass("insert-row-section");
+                    .withClass("insert-row-section empty-page-insert");
 
-            Button insertBtn = Button.create("+ Insert Row Below")
-                    .withStyle(Button.ButtonStyle.LINK);
+            Button insertBtn = Button.create("+ Add First Row")
+                    .withStyle(Button.ButtonStyle.SECONDARY);
 
-            insertBtn.withAttribute("hx-post", "/api/pages/" + pageId + "/rows/insert");
+            // Position 0 means insert at the beginning (first row)
+            insertBtn.withAttribute("hx-post", "/api/pages/" + pageId + "/rows/insert?position=0");
             insertBtn.withAttribute("hx-target", "closest .insert-row-section");
             insertBtn.withAttribute("hx-swap", "beforebegin");
 
             insertRowSection.withChild(insertBtn);
             content.withChild(insertRowSection);
+        } else {
+            // Add each row with insert button after it
+            for (int i = 0; i < rows.size(); i++) {
+                EditableRow row = rows.get(i);
+
+                // Add the row
+                content.withChild(row);
+
+                // Add "Insert Row Below" button after each row (including last)
+                // Include position context so server knows where to insert
+                Div insertRowSection = new Div()
+                        .withClass("insert-row-section");
+
+                Button insertBtn = Button.create("+ Insert Row Below")
+                        .withStyle(Button.ButtonStyle.LINK);
+
+                // Position is the index after which to insert (i+1 means insert after row i)
+                int insertPosition = i + 1;
+                insertBtn.withAttribute("hx-post", "/api/pages/" + pageId + "/rows/insert?position=" + insertPosition);
+                insertBtn.withAttribute("hx-target", "closest .insert-row-section");
+                insertBtn.withAttribute("hx-swap", "beforebegin");
+
+                insertRowSection.withChild(insertBtn);
+                content.withChild(insertRowSection);
+            }
         }
 
-        // Add final "Add Row at Bottom" button
-        Div finalAddSection = new Div()
-                .withClass("add-row-final");
+        super.withChild(content);
 
-        Button finalAddBtn = Button.create("+ Add Row at Bottom")
-                .withStyle(Button.ButtonStyle.PRIMARY);
-
-        finalAddBtn.withAttribute("hx-post", "/api/pages/" + pageId + "/rows/add");
-        finalAddBtn.withAttribute("hx-target", ".add-row-final");
-        finalAddBtn.withAttribute("hx-swap", "beforebegin");
-
-        finalAddSection.withChild(finalAddBtn);
-        content.withChild(finalAddSection);
-
-        wrapper.withChild(content);
-
-        return wrapper.render(context);
+        return super.render(context);
     }
 
     @Override

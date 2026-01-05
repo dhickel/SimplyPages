@@ -1,6 +1,11 @@
 package io.mindspice.simplypages.components;
 
+import io.mindspice.simplypages.core.Attribute;
 import io.mindspice.simplypages.core.HtmlTag;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Paragraph component for text content with alignment options.
@@ -34,17 +39,58 @@ public class Paragraph extends HtmlTag {
         public String getCssClass() {
             return cssClass;
         }
+
+        public static Alignment fromCssClass(String cssClass) {
+            for (Alignment a : values()) {
+                if (a.cssClass.equals(cssClass)) {
+                    return a;
+                }
+            }
+            return LEFT;
+        }
     }
 
+    private String id;  // Optional - only applied to DOM if set
+    private String text;
     private String alignment;
 
     public Paragraph(String text) {
         super("p");
+        this.text = text;
         this.withInnerText(text);
     }
 
     public Paragraph() {
         super("p");
+        this.text = "";
+    }
+
+    // Getters
+    public String getId() {
+        return id;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public String getAlignment() {
+        return alignment;
+    }
+
+    // Fluent setters
+    /**
+     * Sets the HTML id attribute for this paragraph.
+     *
+     * @param id the HTML id attribute value
+     * @return this Paragraph for method chaining
+     */
+    public Paragraph withId(String id) {
+        this.id = id;
+        if (id != null) {
+            this.withAttribute("id", id);
+        }
+        return this;
     }
 
     public Paragraph withClass(String className) {
@@ -56,7 +102,7 @@ public class Paragraph extends HtmlTag {
      * Aligns paragraph text to the left (default).
      */
     public Paragraph left() {
-        this.alignment = Alignment.LEFT.getCssClass();
+        setAlignmentInternal(Alignment.LEFT.getCssClass());
         return this;
     }
 
@@ -64,7 +110,7 @@ public class Paragraph extends HtmlTag {
      * Aligns paragraph text to the center.
      */
     public Paragraph center() {
-        this.alignment = Alignment.CENTER.getCssClass();
+        setAlignmentInternal(Alignment.CENTER.getCssClass());
         return this;
     }
 
@@ -72,7 +118,7 @@ public class Paragraph extends HtmlTag {
      * Aligns paragraph text to the right.
      */
     public Paragraph right() {
-        this.alignment = Alignment.RIGHT.getCssClass();
+        setAlignmentInternal(Alignment.RIGHT.getCssClass());
         return this;
     }
 
@@ -80,30 +126,58 @@ public class Paragraph extends HtmlTag {
      * Justifies paragraph text.
      */
     public Paragraph justify() {
-        this.alignment = Alignment.JUSTIFY.getCssClass();
+        setAlignmentInternal(Alignment.JUSTIFY.getCssClass());
         return this;
+    }
+
+    /**
+     * Internal method to set alignment and reset applied flag.
+     */
+    private void setAlignmentInternal(String newAlignment) {
+        this.alignment = newAlignment;
     }
 
     @Override
     public String render() {
-        // Apply alignment if set
         if (alignment != null) {
-            boolean hasClass = attributes.stream()
-                .anyMatch(attr -> "class".equals(attr.getName()));
-
-            if (hasClass) {
-                for (int i = 0; i < attributes.size(); i++) {
-                    if ("class".equals(attributes.get(i).getName())) {
-                        String currentClass = attributes.get(i).getValue();
-                        attributes.remove(i);
-                        this.withAttribute("class", currentClass + " " + alignment);
-                        break;
-                    }
-                }
-            } else {
-                this.withAttribute("class", alignment);
-            }
+            updateAlignmentClass();
         }
         return super.render();
     }
+
+    private void updateAlignmentClass() {
+        Optional<Attribute> classAttr = attributes.stream()
+            .filter(attr -> "class".equals(attr.getName()))
+            .findFirst();
+
+        List<String> classes = new ArrayList<>();
+        if (classAttr.isPresent()) {
+            String current = classAttr.get().getValue();
+            if (current != null && !current.isBlank()) {
+                for (String token : current.trim().split("\\s+")) {
+                    if (!isAlignmentClass(token)) {
+                        classes.add(token);
+                    }
+                }
+            }
+        }
+
+        if (!classes.contains(alignment)) {
+            classes.add(alignment);
+        }
+
+        if (!classes.isEmpty()) {
+            this.withAttribute("class", String.join(" ", classes));
+        }
+    }
+
+    private boolean isAlignmentClass(String className) {
+        for (Alignment value : Alignment.values()) {
+            if (value.getCssClass().equals(className)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

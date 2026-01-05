@@ -3,6 +3,7 @@ package io.mindspice.simplypages.components.display;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
+import org.owasp.encoder.Encode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,7 +73,7 @@ public class UnorderedList extends HtmlTag {
 
         @Override
         public String render(RenderContext context) {
-            String content = text != null ? text : component.render(context);
+            String content = text != null ? Encode.forHtml(text) : component.render(context);
             return "<li>" + content + "</li>";
         }
 
