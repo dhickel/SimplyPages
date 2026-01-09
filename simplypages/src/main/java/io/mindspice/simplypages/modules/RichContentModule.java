@@ -68,6 +68,11 @@ public class RichContentModule extends Module implements EditAdapter<RichContent
         return this;
     }
 
+    // Exposed for testing
+    public List<Component> getContentItems() {
+        return Collections.unmodifiableList(contentItems);
+    }
+
     @Override
     protected void buildContent() {
         // Build module structure
@@ -93,6 +98,39 @@ public class RichContentModule extends Module implements EditAdapter<RichContent
     public Component buildEditView() {
         Div editForm = new Div();
         editForm.withChild(FormFieldHelper.textField("Module Title", "title", title));
+
+        // Generate fields for each child component
+        for (int i = 0; i < contentItems.size(); i++) {
+            Component item = contentItems.get(i);
+            String prefix = "item_" + i + "_";
+            Div itemSection = new Div().withClass("edit-item-section");
+            itemSection.addStyle("margin-top", "1rem");
+            itemSection.addStyle("border-top", "1px solid #ccc");
+            itemSection.addStyle("padding-top", "1rem");
+
+            if (item instanceof Paragraph) {
+                Paragraph p = (Paragraph) item;
+                itemSection.withChild(new Paragraph("Paragraph " + (i + 1)).addStyle("font-weight", "bold"));
+                itemSection.withChild(FormFieldHelper.textAreaField("Text", prefix + "text", p.getText(), 3));
+            } else if (item instanceof Header) {
+                Header h = (Header) item;
+                itemSection.withChild(new Paragraph("Header " + (i + 1) + " (" + h.getLevel() + ")").addStyle("font-weight", "bold"));
+                itemSection.withChild(FormFieldHelper.textField("Text", prefix + "text", h.getText()));
+            } else if (item instanceof Image) {
+                Image img = (Image) item;
+                itemSection.withChild(new Paragraph("Image " + (i + 1)).addStyle("font-weight", "bold"));
+                itemSection.withChild(FormFieldHelper.textField("Source URL", prefix + "src", img.getSrc()));
+                itemSection.withChild(FormFieldHelper.textField("Alt Text", prefix + "alt", img.getAlt()));
+            } else if (item instanceof Link) {
+                Link link = (Link) item;
+                itemSection.withChild(new Paragraph("Link " + (i + 1)).addStyle("font-weight", "bold"));
+                itemSection.withChild(FormFieldHelper.textField("URL", prefix + "href", link.getHref()));
+                itemSection.withChild(FormFieldHelper.textField("Text", prefix + "text", link.getText()));
+            }
+
+            editForm.withChild(itemSection);
+        }
+
         return editForm;
     }
 
@@ -111,8 +149,69 @@ public class RichContentModule extends Module implements EditAdapter<RichContent
     public RichContentModule applyEdits(Map<String, String> formData) {
         if (formData.containsKey("title")) {
             this.title = formData.get("title");
-            rebuildContent();
         }
+
+        // Apply edits to children
+        for (int i = 0; i < contentItems.size(); i++) {
+            Component item = contentItems.get(i);
+            String prefix = "item_" + i + "_";
+
+            if (item instanceof Paragraph) {
+                String text = formData.get(prefix + "text");
+                if (text != null) {
+                    // Recreate Paragraph as it might be immutable or we prefer clean state
+                    // Actually Paragraph has internal state but let's check its API.
+                    // Paragraph has fluent setters but no setText. It has withInnerText but constructor sets text.
+                    // Let's replace the item in the list to be safe and consistent.
+                    Paragraph oldP = (Paragraph) item;
+                    Paragraph newP = new Paragraph(text);
+                    // Preserve other properties if needed?
+                    if (oldP.getId() != null) newP.withId(oldP.getId());
+                    if (oldP.getAlignment() != null) {
+                        switch (Paragraph.Alignment.fromCssClass(oldP.getAlignment())) {
+                            case LEFT -> newP.left();
+                            case CENTER -> newP.center();
+                            case RIGHT -> newP.right();
+                            case JUSTIFY -> newP.justify();
+                        }
+                    }
+                    contentItems.set(i, newP);
+                }
+            } else if (item instanceof Header) {
+                String text = formData.get(prefix + "text");
+                if (text != null) {
+                    Header oldH = (Header) item;
+                    // Header level is final in our Header class? Let's check.
+                    // Header has HeaderLevel level.
+                    // We need to preserve level.
+                    Header newH = new Header(oldH.getLevel(), text);
+                    if (oldH.getId() != null) newH.withId(oldH.getId());
+                    contentItems.set(i, newH);
+                }
+            } else if (item instanceof Image) {
+                String src = formData.get(prefix + "src");
+                String alt = formData.get(prefix + "alt");
+                if (src != null) {
+                    Image oldImg = (Image) item;
+                    Image newImg = Image.create(src, alt != null ? alt : oldImg.getAlt());
+                    if (oldImg.getId() != null) newImg.withId(oldImg.getId());
+                    if (oldImg.getWidth() != null) newImg.withSize(oldImg.getWidth(), oldImg.getHeight());
+                    contentItems.set(i, newImg);
+                }
+            } else if (item instanceof Link) {
+                String href = formData.get(prefix + "href");
+                String text = formData.get(prefix + "text");
+                if (href != null && text != null) {
+                    Link oldLink = (Link) item;
+                    Link newLink = Link.create(href, text);
+                    if (oldLink.getId() != null) newLink.withId(oldLink.getId());
+                    // Preserve HTMX props if any? Ideally yes but this is a simple implementation.
+                    contentItems.set(i, newLink);
+                }
+            }
+        }
+
+        rebuildContent();
         return this;
     }
 
