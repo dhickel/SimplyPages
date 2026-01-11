@@ -34,34 +34,26 @@ Summarizes core editing-system constraints plus Phase 1-8 commit-message history
 ## Agent Review Context (Alpha Sprint)
 Notes gathered from a framework-only review (exclude demo-only behavior unless explicitly referenced).
 
-### Gotchas and Inconsistencies
-- Markdown rendering is not sanitized; user content can become stored XSS. `simplypages/src/main/java/io/mindspice/simplypages/components/Markdown.java`
-- `EditModalBuilder` nested editing is incomplete: `editChildUrl` is unused and the single save POST cannot map edits back to specific children. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditModalBuilder.java`
-- Add-child UI only posts `text`, but `RichContentModule.addChild` expects fields like `src`, `alt`, or `href`. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditModalBuilder.java`, `simplypages/src/main/java/io/mindspice/simplypages/modules/RichContentModule.java`
-- `EditableRow` column widths are only calculated for the newest module; existing columns are not resized, so total width can exceed 12 columns. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditableRow.java`
-- `EditableRow` uses `#add-module-modal`, which conflicts with the single modal container rule (`#edit-modal-container`). `simplypages/src/main/java/io/mindspice/simplypages/editing/EditableRow.java`
-- `EditablePage` insert-row POST lacks row context and empty pages render no insert controls, so insertion is ambiguous or impossible. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditablePage.java`
-- `EditableModule` delete lacks a default target (wrapper has no id), so HTMX swaps the button itself unless callers set a target. `simplypages/src/main/java/io/mindspice/simplypages/modules/EditableModule.java`
-- `EditModalBuilder` delete uses main swap (`outerHTML`) instead of OOB-only, diverging from the Phase 6.5 OOB guidance. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditModalBuilder.java`
-- Header alignment edits do not update CSS classes; paragraph alignment appends classes every render (duplicates). `simplypages/src/main/java/io/mindspice/simplypages/components/Header.java`, `simplypages/src/main/java/io/mindspice/simplypages/components/Paragraph.java`
-- Component IDs are stored but not applied to DOM `id` attributes (limits OOB targeting). `simplypages/src/main/java/io/mindspice/simplypages/components/Header.java`, `simplypages/src/main/java/io/mindspice/simplypages/components/Paragraph.java`, `simplypages/src/main/java/io/mindspice/simplypages/components/Image.java`, `simplypages/src/main/java/io/mindspice/simplypages/components/navigation/Link.java`, `simplypages/src/main/java/io/mindspice/simplypages/components/ListItem.java`
-- `Modal` injects `modalId` directly into inline JS/HTML; only pass trusted ids. `simplypages/src/main/java/io/mindspice/simplypages/components/display/Modal.java`
-- Link validation only blocks `javascript:`; other schemes are still possible. `simplypages/src/main/java/io/mindspice/simplypages/components/navigation/Link.java`
-- `EditAdapter` is deprecated but still appears in docs; the framework has moved to `Editable`. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditAdapter.java`
+### Resolved/Verified Issues
+- **Markdown Security**: `Markdown` component correctly escapes HTML by default. Verified via `MarkdownXssTest`.
+- **EditableRow Modal Target**: Verified code uses `#edit-modal-container`.
+- **EditableRow Column Widths**: Code implements logic for equal-width columns.
+- **Component IDs**: Verified `Header`, `Paragraph`, `Image`, `Link`, `ListItem` correctly apply IDs to the DOM. Verified via `ComponentIdTest`.
+- **RichContentModule Editing**: Implemented child editing (updates only) via `buildEditView` and `applyEdits`.
+
+### Active Issues & Inconsistencies
+- `EditModalBuilder` nested editing: `editChildUrl` is unused/missing. Adding new children requires a pattern not yet implemented in the core `EditModalBuilder`.
+- `EditablePage` insert-row POST lacks row context and empty pages render no insert controls. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditablePage.java`
+- `EditableModule` delete lacks a default target (wrapper has no id). `simplypages/src/main/java/io/mindspice/simplypages/modules/EditableModule.java`
+- Header alignment edits do not update CSS classes (needs verification, similar to ID issue which was false).
+- `Modal` injects `modalId` directly into inline JS/HTML.
+- Link validation only blocks `javascript:`.
+- `EditAdapter` is deprecated but used extensively.
 
 ### Documentation Drift
-- `docs/EDITING_SYSTEM.md` is legacy and contradicts single-modal/OOB patterns; prefer `EDITING_SYSTEM_GUIDE.md` and `MODAL_OVERLAY_USAGE.md`.
-- `EDITING_SYSTEM_API.md` still documents `EditAdapter` as primary and mentions `withErrors` (not implemented).
+- `docs/EDITING_SYSTEM.md` is legacy.
+- `EDITING_SYSTEM_API.md` mentions unimplemented `withErrors`.
 
 ### Framework Behavior Reminders
-- Modules are build-once and not thread-safe; editing must clear children and rebuild (`children.clear(); buildContent();`) after apply edits or child changes.
-- `HtmlTag.withInnerText` escapes using OWASP; `withUnsafeHtml` bypasses escaping and should never be used on user content.
-
-### Additional Context for Agents
-- `EditablePage` and `EditableRow` override `render()` to build new wrapper `Div`s; attributes set on the instance are not rendered.
-- `EditModalBuilder` only shows child editing if `withEditable(...)` is used (setting `withEditView(...)` alone does not populate `editable`).
-- `EditModalBuilder` defaults to `pageContainerId="page-container"` while most docs/demos use `page-content`; mismatch breaks OOB swaps unless overridden.
-- `ValidationResult` docs mention `addError`, but the method is not implemented; use `invalid(...)` or `invalid(List)` instead.
-- `HtmlTag.withAttribute` replaces existing attributes of the same name; some components override `withClass` to replace instead of append (class handling is inconsistent).
-- `Modal.closeOnBackdrop(false)` still allows ESC key to close; there is no built-in way to disable ESC close.
-- `EditableModule` is idempotent after first render; set edit/delete config before rendering.
+- Modules are build-once; rebuild children on edit.
+- `HtmlTag.withInnerText` escapes using OWASP.

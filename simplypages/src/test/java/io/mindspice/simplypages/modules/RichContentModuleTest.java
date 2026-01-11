@@ -12,6 +12,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class RichContentModuleTest {
 
@@ -76,5 +77,35 @@ class RichContentModuleTest {
             .setModuleId("module-1");
 
         assertTrue("module-1".equals(module.getModuleId()));
+    }
+
+    @Test
+    @DisplayName("RichContentModule should update children via applyEdits")
+    void testRichContentApplyChildEdits() {
+        RichContentModule module = RichContentModule.create("Test Module")
+                .addParagraph(new Paragraph("Original Text"))
+                .addImage(Image.create("/old.png", "Old Alt"));
+
+        // Simulate form data for updating children
+        Map<String, String> formData = Map.of(
+                "title", "Updated Title",
+                "item_0_type", "PARAGRAPH",
+                "item_0_text", "Updated Text",
+                "item_1_type", "IMAGE",
+                "item_1_src", "/new.png",
+                "item_1_alt", "New Alt"
+        );
+
+        module.applyEdits(formData);
+
+        assertEquals("Updated Title", module.getTitle());
+        assertEquals(2, module.getContentItems().size());
+
+        Paragraph p = (Paragraph) module.getContentItems().get(0);
+        assertEquals("Updated Text", p.getText());
+
+        Image img = (Image) module.getContentItems().get(1);
+        assertEquals("/new.png", img.getSrc());
+        assertEquals("New Alt", img.getAlt());
     }
 }

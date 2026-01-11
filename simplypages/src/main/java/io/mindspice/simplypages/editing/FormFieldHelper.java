@@ -33,6 +33,19 @@ public final class FormFieldHelper {
     }
 
     /**
+     * Create a hidden input field.
+     *
+     * @param name The input name attribute
+     * @param value The current value
+     * @return A hidden input component
+     */
+    public static Component hiddenField(String name, String value) {
+        return TextInput.create(name)
+                .withValue(value != null ? value : "")
+                .withAttribute("type", "hidden");
+    }
+
+    /**
      * Create a labeled textarea field.
      *
      * @param label The field label

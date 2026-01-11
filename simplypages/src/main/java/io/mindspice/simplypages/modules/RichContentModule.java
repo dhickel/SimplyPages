@@ -68,6 +68,10 @@ public class RichContentModule extends Module implements EditAdapter<RichContent
         return this;
     }
 
+    public List<Component> getContentItems() {
+        return Collections.unmodifiableList(contentItems);
+    }
+
     @Override
     protected void buildContent() {
         // Build module structure
@@ -93,6 +97,30 @@ public class RichContentModule extends Module implements EditAdapter<RichContent
     public Component buildEditView() {
         Div editForm = new Div();
         editForm.withChild(FormFieldHelper.textField("Module Title", "title", title));
+
+        // Iterate through existing content items and generate edit fields
+        for (int i = 0; i < contentItems.size(); i++) {
+            Component item = contentItems.get(i);
+            String prefix = "item_" + i + "_";
+
+            if (item instanceof Paragraph p) {
+                editForm.withChild(FormFieldHelper.hiddenField(prefix + "type", "PARAGRAPH"));
+                editForm.withChild(FormFieldHelper.textAreaField("Paragraph " + (i + 1), prefix + "text", p.getText(), 3));
+            } else if (item instanceof Header h) {
+                editForm.withChild(FormFieldHelper.hiddenField(prefix + "type", "HEADER"));
+                editForm.withChild(FormFieldHelper.hiddenField(prefix + "level", h.getLevel().name()));
+                editForm.withChild(FormFieldHelper.textField("Header " + (i + 1), prefix + "text", h.getText()));
+            } else if (item instanceof Image img) {
+                editForm.withChild(FormFieldHelper.hiddenField(prefix + "type", "IMAGE"));
+                editForm.withChild(FormFieldHelper.textField("Image Source " + (i + 1), prefix + "src", img.getSrc()));
+                editForm.withChild(FormFieldHelper.textField("Alt Text", prefix + "alt", img.getAlt()));
+            } else if (item instanceof Link l) {
+                editForm.withChild(FormFieldHelper.hiddenField(prefix + "type", "LINK"));
+                editForm.withChild(FormFieldHelper.textField("Link Text " + (i + 1), prefix + "text", l.getText()));
+                editForm.withChild(FormFieldHelper.textField("URL", prefix + "href", l.getHref()));
+            }
+        }
+
         return editForm;
     }
 
@@ -111,8 +139,49 @@ public class RichContentModule extends Module implements EditAdapter<RichContent
     public RichContentModule applyEdits(Map<String, String> formData) {
         if (formData.containsKey("title")) {
             this.title = formData.get("title");
-            rebuildContent();
         }
+
+        // Reconstruct content items
+        List<Component> newItems = new ArrayList<>();
+        int index = 0;
+        while (true) {
+            String prefix = "item_" + index + "_";
+            if (!formData.containsKey(prefix + "type")) {
+                break; // No more items
+            }
+
+            String type = formData.get(prefix + "type");
+            switch (type) {
+                case "PARAGRAPH":
+                    String pText = formData.get(prefix + "text");
+                    newItems.add(new Paragraph(pText != null ? pText : ""));
+                    break;
+                case "HEADER":
+                    String hText = formData.get(prefix + "text");
+                    String levelStr = formData.get(prefix + "level");
+                    Header.HeaderLevel level = Header.HeaderLevel.valueOf(levelStr);
+                    newItems.add(new Header(level, hText != null ? hText : ""));
+                    break;
+                case "IMAGE":
+                    String src = formData.get(prefix + "src");
+                    String alt = formData.get(prefix + "alt");
+                    newItems.add(new Image(src != null ? src : "", alt != null ? alt : ""));
+                    break;
+                case "LINK":
+                    String lText = formData.get(prefix + "text");
+                    String href = formData.get(prefix + "href");
+                    newItems.add(new Link(href != null ? href : "", lText != null ? lText : ""));
+                    break;
+            }
+            index++;
+        }
+
+        if (!newItems.isEmpty()) {
+            this.contentItems.clear();
+            this.contentItems.addAll(newItems);
+        }
+
+        rebuildContent();
         return this;
     }
 
