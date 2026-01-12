@@ -35,18 +35,6 @@ Summarizes core editing-system constraints plus Phase 1-8 commit-message history
 Notes gathered from a framework-only review (exclude demo-only behavior unless explicitly referenced).
 
 ### Gotchas and Inconsistencies
-- Markdown rendering is not sanitized; user content can become stored XSS. `simplypages/src/main/java/io/mindspice/simplypages/components/Markdown.java`
-- `EditModalBuilder` nested editing is incomplete: `editChildUrl` is unused and the single save POST cannot map edits back to specific children. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditModalBuilder.java`
-- Add-child UI only posts `text`, but `RichContentModule.addChild` expects fields like `src`, `alt`, or `href`. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditModalBuilder.java`, `simplypages/src/main/java/io/mindspice/simplypages/modules/RichContentModule.java`
-- `EditableRow` column widths are only calculated for the newest module; existing columns are not resized, so total width can exceed 12 columns. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditableRow.java`
-- `EditableRow` uses `#add-module-modal`, which conflicts with the single modal container rule (`#edit-modal-container`). `simplypages/src/main/java/io/mindspice/simplypages/editing/EditableRow.java`
-- `EditablePage` insert-row POST lacks row context and empty pages render no insert controls, so insertion is ambiguous or impossible. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditablePage.java`
-- `EditableModule` delete lacks a default target (wrapper has no id), so HTMX swaps the button itself unless callers set a target. `simplypages/src/main/java/io/mindspice/simplypages/modules/EditableModule.java`
-- `EditModalBuilder` delete uses main swap (`outerHTML`) instead of OOB-only, diverging from the Phase 6.5 OOB guidance. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditModalBuilder.java`
-- Header alignment edits do not update CSS classes; paragraph alignment appends classes every render (duplicates). `simplypages/src/main/java/io/mindspice/simplypages/components/Header.java`, `simplypages/src/main/java/io/mindspice/simplypages/components/Paragraph.java`
-- Component IDs are stored but not applied to DOM `id` attributes (limits OOB targeting). `simplypages/src/main/java/io/mindspice/simplypages/components/Header.java`, `simplypages/src/main/java/io/mindspice/simplypages/components/Paragraph.java`, `simplypages/src/main/java/io/mindspice/simplypages/components/Image.java`, `simplypages/src/main/java/io/mindspice/simplypages/components/navigation/Link.java`, `simplypages/src/main/java/io/mindspice/simplypages/components/ListItem.java`
-- `Modal` injects `modalId` directly into inline JS/HTML; only pass trusted ids. `simplypages/src/main/java/io/mindspice/simplypages/components/display/Modal.java`
-- Link validation only blocks `javascript:`; other schemes are still possible. `simplypages/src/main/java/io/mindspice/simplypages/components/navigation/Link.java`
 - `EditAdapter` is deprecated but still appears in docs; the framework has moved to `Editable`. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditAdapter.java`
 
 ### Documentation Drift
