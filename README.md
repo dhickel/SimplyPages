@@ -1,6 +1,6 @@
-# SimplyPages (JHF)
+# SimplyPages
 
-**SimplyPages** (also known as JHF - Java HTML Framework) is a robust server-side framework for building modern, data-intensive web applications in pure Java. It combines the type safety and structure of Java with the dynamism of HTMX, eliminating the need for complex frontend build chains.
+**SimplyPages** is a robust server-side framework for building modern, data-intensive web applications in pure Java. It combines the type safety and structure of Java with the dynamism of HTMX, eliminating the need for complex frontend build chains.
 
 Designed for enterprise dashboards, research portals, and content management systems where data integrity, performance, and development velocity are paramount.
 
