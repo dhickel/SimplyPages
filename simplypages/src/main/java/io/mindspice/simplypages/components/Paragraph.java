@@ -131,18 +131,11 @@ public class Paragraph extends HtmlTag {
     }
 
     /**
-     * Internal method to set alignment and reset applied flag.
+     * Internal method to set alignment and update attributes immediately.
      */
     private void setAlignmentInternal(String newAlignment) {
         this.alignment = newAlignment;
-    }
-
-    @Override
-    public String render() {
-        if (alignment != null) {
-            updateAlignmentClass();
-        }
-        return super.render();
+        updateAlignmentClass();
     }
 
     private void updateAlignmentClass() {
