@@ -62,15 +62,15 @@ JHF simplifies this dramatically:
 // - JSON serialization/deserialization
 
 // JHF approach: Everything in type-safe Java
-Page page = Page.create()
-    .addRow(row -> row
-        .withChild(Column.create().withWidth(12)
-            .withChild(DataTable.create(User.class)
-                .withData(userService.findAll())
-                .withColumn("Name", User::getName)
-                .withColumn("Email", User::getEmail)
-                .withColumn("Role", User::getRole))))
-    .render();
+Page page = new Page();
+page.addRow(new Row()
+    .addColumn(new Column(12)
+        .addModule(DataModule.create(User.class)
+            .withData(userService.findAll())
+            .withColumn("Name", User::getName)
+            .withColumn("Email", User::getEmail)
+            .withColumn("Role", User::getRole))));
+return page.render();
 ```
 
 ### Key Benefits
@@ -170,39 +170,40 @@ Create a new class `WelcomePage.java` in your `pages` package:
 ```java
 package com.example.myapp.pages;
 
-import io.mindspice.jhf.components.*;
-import io.mindspice.jhf.layout.Page;
-import io.mindspice.jhf.layout.Row;
-import io.mindspice.jhf.layout.Column;
+import io.mindspice.simplypages.components.*;
+import io.mindspice.simplypages.layout.*;
 import org.springframework.stereotype.Component;
 
 @Component
 public class WelcomePage {
 
     public String buildPage() {
-        return Page.create()
-            .addRow(row -> row
-                .withChild(Column.create().withWidth(12)
-                    .withChild(Header.h1("Welcome to JHF!"))
-                    .withChild(Paragraph.create()
-                        .withInnerText("You just built your first page using the Java HTML Framework."))
-                    .withChild(Paragraph.create()
-                        .withInnerText("Everything you see here was generated using pure Java code."))))
-            .render();
+        Page page = new Page();
+
+        Row row = new Row();
+        Column col = new Column(12);
+
+        col.addModule(ContentModule.create()
+            .withTitle("Welcome to JHF!")
+            .withContent("You just built your first page using the Java HTML Framework. Everything you see here was generated using pure Java code."));
+
+        row.addColumn(col);
+        page.addRow(row);
+
+        return page.render();
     }
 }
 ```
 
 Let's break this down:
 
-1. **Page.create()**: Creates a new page container
-2. **addRow()**: Adds a horizontal row to the page (more on grid layout later)
-3. **Column.create().withWidth(12)**: Creates a full-width column (12 out of 12 columns)
-4. **Header.h1()**: Creates a level-1 heading (`<h1>` in HTML)
-5. **Paragraph.create().withInnerText()**: Creates a paragraph with text
-6. **render()**: Generates the final HTML string
+1. **new Page()**: Creates a new page container
+2. **new Row()**: Creates a horizontal row
+3. **new Column(12)**: Creates a full-width column (12 out of 12 columns)
+4. **ContentModule.create()**: Creates a module with title and content
+5. **render()**: Generates the final HTML string
 
-Notice the **fluent API** pattern: methods return `this` or the parent object, allowing chaining like `.withChild(...).withChild(...)`.
+Notice the **fluent API** pattern: methods return `this` or the parent object, allowing chaining.
 
 ### Step 2: Create a Controller
 
@@ -250,16 +251,7 @@ Start your Spring Boot application:
 
 Open your browser and navigate to: `http://localhost:8080/welcome`
 
-You should see:
-```
-Welcome to JHF!
-
-You just built your first page using the Java HTML Framework.
-
-Everything you see here was generated using pure Java code.
-```
-
-Congratulations! You just built your first JHF page.
+You should see your content displayed.
 
 ### What Just Happened? (Behind the Scenes)
 
@@ -272,71 +264,13 @@ Let's understand the flow:
 3. **Method Execution**: Spring calls `welcomePage.buildPage()`
 
 4. **JHF Rendering**:
-   - `Page.create()` creates a Page object
-   - Each component (`Header`, `Paragraph`) creates HTML tag objects
+   - `Page` creates a Page object
+   - Components create HTML tag objects
    - `render()` walks through all components and generates HTML string
 
 5. **HTML Response**: Spring returns the HTML string to the browser
 
 6. **Browser Rendering**: Your browser receives the HTML and displays it visually
-
-The generated HTML looks like this:
-
-```html
-<div class="page-content">
-  <div class="row">
-    <div class="col-12">
-      <h1>Welcome to JHF!</h1>
-      <p>You just built your first page using the Java HTML Framework.</p>
-      <p>Everything you see here was generated using pure Java code.</p>
-    </div>
-  </div>
-</div>
-```
-
-### Adding Some Style
-
-Let's make our page more visually appealing using JHF's built-in components:
-
-```java
-package com.example.myapp.pages;
-
-import io.mindspice.jhf.components.*;
-import io.mindspice.jhf.components.display.Alert;
-import io.mindspice.jhf.components.display.Card;
-import io.mindspice.jhf.layout.Page;
-import io.mindspice.jhf.layout.Row;
-import io.mindspice.jhf.layout.Column;
-import org.springframework.stereotype.Component;
-
-@Component
-public class WelcomePage {
-
-    public String buildPage() {
-        return Page.create()
-            .addRow(row -> row
-                .withChild(Column.create().withWidth(12)
-                    .withChild(Alert.success("Success! Your JHF application is running."))
-                    .withChild(Card.create()
-                        .withChild(Header.h1("Welcome to JHF!"))
-                        .withChild(Paragraph.create()
-                            .withInnerText("You just built your first page using the Java HTML Framework."))
-                        .withChild(Paragraph.create()
-                            .withInnerText("JHF provides:"))
-                        .withChild(new UnorderedList()
-                            .addItem("Type-safe component APIs")
-                            .addItem("Server-side HTML generation")
-                            .addItem("Minimal JavaScript required")
-                            .addItem("Seamless Spring Boot integration")))))
-            .render();
-    }
-}
-```
-
-Refresh your browser to see the styled page with:
-- A green success alert at the top
-- Content wrapped in a card (with border and padding)
-- A bulleted list of features
 
 ## Complete Working Example
 
@@ -345,76 +279,67 @@ Here's a slightly more complex example showing multiple components and layout:
 ```java
 package com.example.myapp.pages;
 
-import io.mindspice.jhf.components.*;
-import io.mindspice.jhf.components.display.*;
-import io.mindspice.jhf.components.navigation.Link;
-import io.mindspice.jhf.layout.*;
+import io.mindspice.simplypages.components.display.*;
+import io.mindspice.simplypages.components.navigation.Link;
+import io.mindspice.simplypages.layout.*;
+import io.mindspice.simplypages.modules.*;
 import org.springframework.stereotype.Component;
 
 @Component
 public class HomePage {
 
     public String buildPage() {
-        return Page.create()
-            // Header section
-            .addRow(row -> row
-                .withChild(Column.create().withWidth(12)
-                    .withChild(Header.h1("My JHF Application"))
-                    .withChild(Paragraph.create()
-                        .withInnerText("A modern web application built with Java HTML Framework"))))
+        Page page = new Page();
 
-            // Two-column content section
-            .addRow(row -> row
-                // Main content (2/3 width)
-                .withChild(Column.create().withWidth(8)
-                    .withChild(Card.create()
-                        .withChild(Header.h2("Getting Started"))
-                        .withChild(Paragraph.create()
-                            .withInnerText("JHF makes building web UIs simple for Java developers."))
-                        .withChild(Link.create("/docs", "Read the Documentation"))))
+        // Header Row
+        Row headerRow = new Row();
+        headerRow.addColumn(new Column(12)
+            .addModule(HeroModule.create()
+                .withTitle("My JHF Application")
+                .withDescription("A modern web application built with Java HTML Framework")));
+        page.addRow(headerRow);
 
-                // Sidebar (1/3 width)
-                .withChild(Column.create().withWidth(4)
-                    .withChild(InfoBox.create("Quick Links")
-                        .addItem("Home", "/")
-                        .addItem("About", "/about")
-                        .addItem("Contact", "/contact"))))
+        // Content Row
+        Row contentRow = new Row();
 
-            // Footer section
-            .addRow(row -> row
-                .withChild(Column.create().withWidth(12)
-                    .withChild(Divider.create())
-                    .withChild(Paragraph.create()
-                        .withInnerText("Built with JHF")
-                        .withClass("text-center"))))
-            .render();
+        // Main Content (8/12)
+        contentRow.addColumn(new Column(8)
+            .addModule(ContentModule.create()
+                .withTitle("Getting Started")
+                .withContent("JHF makes building web UIs simple for Java developers.")));
+
+        // Sidebar (4/12)
+        contentRow.addColumn(new Column(4)
+            .addModule(SimpleListModule.create()
+                .withTitle("Quick Links")
+                .addItem("Home", "/")
+                .addItem("About", "/about")
+                .addItem("Contact", "/contact")));
+
+        page.addRow(contentRow);
+
+        return page.render();
     }
 }
 ```
 
 This example demonstrates:
-- **Multi-row layouts**: Header, content, and footer sections
+- **Multi-row layouts**: Header and content rows
 - **Responsive grid**: 8/4 column split (66%/33% on desktop, stacks on mobile)
-- **Component composition**: Cards, links, lists nested inside columns
-- **CSS classes**: `.text-center` for centered text
+- **Component composition**: Modules nested inside columns
 
 ## Key Concepts Recap
 
 Before moving on, let's recap the key concepts you've learned:
 
 ### 1. Components
-Building blocks of your UI. Examples: `Header`, `Paragraph`, `Card`, `Link`
+Building blocks of your UI. Examples: `Button`, `Div`, `Card`, `Link`
 
 ### 2. Fluent API
-Methods that return `this` or the parent, enabling chaining:
-```java
-Card.create()
-    .withChild(Header.h2("Title"))
-    .withChild(Paragraph.create().withInnerText("Content"))
-```
+Methods that return `this` or the parent, enabling chaining.
 
 ### 3. Layout System
-`Page` → `Row` → `Column` → Components
+`Page` → `Row` → `Column` → Modules
 
 ### 4. Rendering
 Call `.render()` on a Page to generate the final HTML string
@@ -439,6 +364,13 @@ You've successfully created your first JHF application! In the next parts of thi
 - **Part 10: Building a Forum** - Complete tutorial building a discussion forum
 - **Part 11: Spring Integration** - Advanced Spring Boot integration patterns
 - **Part 12: Security** - Comprehensive security best practices
+- **Part 13: Templates and Dynamic Updates** - High performance dynamic rendering
+- **Part 14: Shells and Navigation** - Building application shells
+- **Part 15: Building Pages** - In-depth page construction
+- **Guides**:
+    - [Editing System Guide](../guides/EDITING_SYSTEM_GUIDE.md)
+    - [User Craftable Pages](../guides/02-user-craftable-pages.md)
+    - [Communal Pages](../guides/03-communal-pages.md)
 
 ---
 

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -314,25 +315,27 @@ public class DemoController {
     }
 
     private String loadDocContent(String path) {
-        if (path.contains("..")) {
-            return null; // Prevent path traversal
-        }
-
-        // If path ends with .md, use it as is for lookup, otherwise append .md
-        String lookupPath = path.endsWith(".md") ? path : path + ".md";
-        String cleanPath = path.endsWith(".md") ? path.substring(0, path.length() - 3) : path;
-
         try {
-            // 1. Try direct match
-            Resource resource = resourceResolver.getResource("classpath:static/docs/" + lookupPath);
+            File docsDir = new File("docs").getCanonicalFile();
+            File requestedFile = new File(docsDir, path).getCanonicalFile();
+
+            if (!requestedFile.toPath().startsWith(docsDir.toPath())) {
+                return null; // Path traversal attempt
+            }
+
+            String lookupPath = requestedFile.toPath().toString();
+            if (!lookupPath.endsWith(".md")) {
+                lookupPath += ".md";
+            }
+
+            Resource resource = resourceResolver.getResource("file:" + lookupPath);
             if (resource.exists()) {
                 return new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
             }
 
-            // 2. Recursive search for file name
-            String fileName = lookupPath.contains("/") ? lookupPath.substring(lookupPath.lastIndexOf('/') + 1) : lookupPath;
-            Resource[] resources = resourceResolver.getResources("classpath:static/docs/**/" + fileName);
-            if (resources.length > 0) {
+            String fileName = requestedFile.getName();
+            Resource[] resources = resourceResolver.getResources("file:docs/**/" + fileName);
+             if (resources.length > 0) {
                  return new String(resources[0].getInputStream().readAllBytes(), StandardCharsets.UTF_8);
             }
 
@@ -389,25 +392,33 @@ public class DemoController {
         }
 
         try {
-            Resource[] resources = resourceResolver.getResources("classpath:static/docs/**/*.md");
+            File docsDir = new File("docs/").getCanonicalFile();
+            Resource[] resources = resourceResolver.getResources("file:docs/**/*.md");
 
             // Group by parent directory name
             Map<String, List<String>> sections = new TreeMap<>();
 
             for (Resource res : resources) {
-                String relativePath = res.getURL().toString();
-                // Extract part after /docs/
-                if (relativePath.contains("/docs/")) {
-                    String part = relativePath.substring(relativePath.indexOf("/docs/") + 6);
+                File resourceFile = res.getFile().getCanonicalFile();
+
+                if (!resourceFile.toPath().startsWith(docsDir.toPath())) {
+                    continue; // Skip any file outside the docs directory
+                }
+
+                String fullPath = resourceFile.getPath();
+                // Find the index of "docs/" to correctly substring
+                int docsIndex = fullPath.lastIndexOf("docs/");
+                if (docsIndex != -1) {
+                    String relativePath = fullPath.substring(docsIndex + 5); // 5 is the length of "docs/"
                     String folder = "General";
-                    if (part.contains("/")) {
-                        folder = part.substring(0, part.lastIndexOf('/'));
+                    if (relativePath.contains("/")) {
+                        folder = relativePath.substring(0, relativePath.lastIndexOf('/'));
                         // Capitalize and format folder name
                         folder = Arrays.stream(folder.split("-"))
-                            .map(s -> s.substring(0, 1).toUpperCase() + s.substring(1))
-                            .collect(Collectors.joining(" "));
+                                      .map(s -> s.substring(0, 1).toUpperCase() + s.substring(1))
+                                      .collect(Collectors.joining(" "));
                     }
-                    sections.computeIfAbsent(folder, k -> new ArrayList<>()).add(part);
+                    sections.computeIfAbsent(folder, k -> new ArrayList<>()).add(relativePath);
                 }
             }
 

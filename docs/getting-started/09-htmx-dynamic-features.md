@@ -653,6 +653,10 @@ public String loadMoreItems(@RequestParam int page) {
 
 **Use Case**: Periodically update content (live stats, notifications)
 
+#### Simple Approach: Direct Component Re-rendering
+
+For simple stats without Modules, use direct component rendering:
+
 **Implementation**:
 ```java
 Div statsContainer = new Div()
@@ -674,6 +678,86 @@ public String refreshStats() {
     return buildStatsContent(stats).render();
 }
 ```
+
+#### Template Approach: Using Modules for Complex Stats
+
+When stats are displayed in a Module (more complex layout), use Templates with OOB swaps:
+
+**Page Setup**:
+```java
+// Define template with slots for stat values
+static final SlotKey<String> STAT_VALUE = SlotKey.of("stat_value");
+static final SlotKey<String> STAT_LABEL = SlotKey.of("stat_label");
+
+static final Template STAT_TEMPLATE = Template.of(
+    ContentModule.create()
+        .withModuleId("stats-module")  // Important: unique ID
+        .withTitle("Live Statistics")
+        .withCustomContent(
+            new HtmlTag("div").withClass("stats-grid")
+                .withChild(new HtmlTag("h3").withChild(Slot.of(STAT_LABEL)))
+                .withChild(new HtmlTag("p").withClass("stat-value")
+                    .withChild(Slot.of(STAT_VALUE)))
+        )
+);
+
+// Initial render
+@Override
+public String render() {
+    return Page.builder()
+        .addComponents(new Component() {
+            @Override
+            public String render(RenderContext context) {
+                return renderStats("Active Users", "1,234");
+            }
+        })
+        .build()
+        .render();
+}
+
+// Helper: render stats with current data
+public static String renderStats(String label, String value) {
+    return STAT_TEMPLATE.render(
+        RenderContext.builder()
+            .with(STAT_LABEL, label)
+            .with(STAT_VALUE, value)
+            .build()
+    );
+}
+```
+
+**Add Auto-Refresh Trigger**:
+```java
+// Wrap the template render in a TemplateComponent with HTMX attributes
+new TemplateComponent(STAT_TEMPLATE, context -> {
+    Stats stats = statsService.getLatest();
+    return RenderContext.builder()
+        .with(STAT_LABEL, "Active Users")
+        .with(STAT_VALUE, String.valueOf(stats.getActiveUsers()))
+        .build();
+})
+    .withAttribute("id", "stats-module")
+    .withAttribute("hx-get", "/api/live-stats")
+    .withAttribute("hx-trigger", "every 30s")
+    .withAttribute("hx-swap", "outerHTML")  // Replace entire module
+```
+
+**Spring Controller**:
+```java
+@GetMapping("/api/live-stats")
+@ResponseBody
+public String getLiveStats() {
+    Stats stats = statsService.getLatest();
+    return renderStats("Active Users", String.valueOf(stats.getActiveUsers()));
+}
+```
+
+**Key Difference:**
+- **Simple approach**: Use for basic HTML without Modules
+- **Template approach**: Use for Module-based stats that need frequent updates
+  - Cleaner separation of structure (Template) and data (RenderContext)
+  - Easy to reuse across multiple endpoints
+  - Handles complex nested components
 
 ### Pattern 3: Lazy Loading (On Scroll)
 
@@ -1099,6 +1183,295 @@ For complex dynamic updates, such as updating multiple parts of a page from a si
 Since Modules are now "build-once", you cannot simply re-instantiate a Module with new data and swap it if the Module relies on internal state. Instead, you define the Module structure as a `Template` with `SlotKey`s, and then render that Template with a new `RenderContext`.
 
 See [Part 13: Templates and Dynamic Updates](13-templates-and-dynamic-updates.md) for a deep dive into this pattern.
+
+### Pattern: Template-Based OOB Swaps
+
+#### What Are Out-of-Band (OOB) Swaps?
+
+Normally, HTMX takes the HTML response from a request and swaps it into the target element you specify with `hx-target`. But sometimes you want to update **multiple elements at once** from a single HTMX request.
+
+**Out-of-Band (OOB) Swaps** allow you to update multiple parts of your page in a single response. Instead of targeting one element, you return HTML for several elements, each marked with `hx-swap-oob="true"`. HTMX then places each response in its own target location.
+
+**Think of it like this:** A normal swap is like replacing one package delivery address. An OOB swap is like one delivery truck dropping off packages at multiple addresses at once.
+
+#### Why Use Templates with OOB Swaps?
+
+The challenge: You have a Module (like a dashboard widget) that was built once at page load. Now you want to update it with new data without reloading the page.
+
+**The Problem with Simple Re-rendering:**
+```java
+// ❌ WRONG: Modules are "build-once" - fields don't get updated
+Module m = myModule;
+m.withNewData(...);  // Fields don't change the rendered output
+m.render();          // Still shows old data!
+```
+
+**The Solution with Templates:**
+```java
+// ✅ CORRECT: Define structure as Template with SlotKeys
+// Then render with new RenderContext containing updated data
+
+// 1. Define template (static, done once)
+static final SlotKey<String> STAT_VALUE = SlotKey.of("stat_value");
+static final Template STAT_TEMPLATE = Template.of(
+    ContentModule.create()
+        .withTitle("Live Stat")
+        .withModuleId("stat-1")
+        .withCustomContent(
+            new HtmlTag("h2").withChild(Slot.of(STAT_VALUE))
+        )
+);
+
+// 2. Render with different data (done on each update)
+String html = STAT_TEMPLATE.render(
+    RenderContext.builder()
+        .with(STAT_VALUE, "42")
+        .build()
+);
+```
+
+#### Complete Example: Updating Multiple Dashboard Widgets
+
+**Initial Page (src/main/java/io/mindspice/demo/pages/DynamicUpdatesPage.java):**
+
+```java
+// Define templates with slots for data
+static final SlotKey<String> CARD_TITLE = SlotKey.of("card_title");
+static final SlotKey<String> CARD_BODY = SlotKey.of("card_body");
+
+static final Template CARD_TEMPLATE = Template.of(
+    ContentModule.create()
+        .withTitle("Card Module")
+        .withModuleId("card-module")  // ← Important: unique ID for OOB targeting
+        .withCustomContent(
+            new HtmlTag("div")
+                .withChild(new HtmlTag("h3").withChild(Slot.of(CARD_TITLE)))
+                .withChild(new HtmlTag("p").withChild(Slot.of(CARD_BODY)))
+        )
+);
+
+// Render initial content
+@Override
+public String render() {
+    return Page.builder()
+        .addComponents(Header.H1("Dashboard"))
+
+        // Initial widget 1
+        .addComponents(new Component() {
+            @Override
+            public String render(RenderContext context) {
+                return CARD_TEMPLATE.render(
+                    RenderContext.builder()
+                        .with(CARD_TITLE, "Initial Title")
+                        .with(CARD_BODY, "Initial content...")
+                        .build()
+                );
+            }
+        })
+
+        // Update button
+        .addComponents(
+            Form.create()
+                .withAttribute("hx-post", "/api/update-widget")
+                .withAttribute("hx-swap", "none")  // ← IMPORTANT: prevents form replacement
+                .addField("Title", TextInput.create("title"))
+                .addField("Body", TextInput.create("body"))
+                .addField("", Button.submit("Update"))
+        )
+        .build()
+        .render();
+}
+
+// Helper method for rendering
+public static String renderCard(String title, String body) {
+    return CARD_TEMPLATE.render(
+        RenderContext.builder()
+            .with(CARD_TITLE, title)
+            .with(CARD_BODY, body)
+            .build()
+    );
+}
+```
+
+**Spring Controller (src/main/java/io/mindspice/demo/DemoController.java):**
+
+```java
+@PostMapping("/api/update-widget")
+@ResponseBody
+public String updateWidget(
+        @RequestParam String title,
+        @RequestParam String body
+) {
+    // Generate new widget HTML with updated data
+    String html = DynamicUpdatesPage.renderCard(title, body);
+
+    // Add hx-swap-oob="true" to mark this as out-of-band swap
+    // This tells HTMX to find the element by ID and update it in place
+    return html.replace(
+        "id=\"card-module\"",
+        "id=\"card-module\" hx-swap-oob=\"true\""
+    );
+}
+```
+
+**Generated HTML:**
+
+Initial page includes:
+```html
+<!-- Initial card module with ID so HTMX can find it -->
+<div id="card-module" class="content-module">
+    <h2>Card Module</h2>
+    <div>
+        <h3>Initial Title</h3>
+        <p>Initial content...</p>
+    </div>
+</div>
+
+<!-- Form that triggers update -->
+<form hx-post="/api/update-widget" hx-swap="none">
+    <input type="text" name="title" placeholder="New title">
+    <input type="text" name="body" placeholder="New content">
+    <button type="submit">Update</button>
+</form>
+```
+
+When form is submitted, server returns:
+```html
+<!-- Same module ID, but marked as out-of-band swap -->
+<div id="card-module" hx-swap-oob="true" class="content-module">
+    <h2>Card Module</h2>
+    <div>
+        <h3>New Title</h3>
+        <p>New content...</p>
+    </div>
+</div>
+```
+
+HTMX sees `hx-swap-oob="true"` and:
+1. Finds element with `id="card-module"` on the page
+2. Replaces it with the new version
+3. No page reload needed!
+
+#### Updating Multiple Widgets from One Request
+
+**Real-world Scenario:** You have three dashboard widgets. Clicking "Refresh All" should update all three at once.
+
+**Spring Controller:**
+
+```java
+@PostMapping("/api/update-all-widgets")
+@ResponseBody
+public String updateAllWidgets() {
+    // Generate HTML for all three widgets
+    StringBuilder response = new StringBuilder();
+
+    // Widget 1 - marked for OOB swap
+    String card = DynamicUpdatesPage.renderCard("Updated Title 1", "Body 1")
+        .replace("id=\"card-module\"", "id=\"card-module\" hx-swap-oob=\"true\"");
+    response.append(card);
+
+    // Widget 2 - marked for OOB swap
+    String list = DynamicUpdatesPage.renderList(List.of("Item 1", "Item 2"))
+        .replace("id=\"list-module\"", "id=\"list-module\" hx-swap-oob=\"true\"");
+    response.append(list);
+
+    // Widget 3 - marked for OOB swap
+    String table = DynamicUpdatesPage.renderTable("Value A", "Value B", "Value C")
+        .replace("id=\"table-module\"", "id=\"table-module\" hx-swap-oob=\"true\"");
+    response.append(table);
+
+    return response.toString();  // All three widgets combined
+}
+```
+
+**Frontend:**
+
+```java
+Button.create("Refresh All")
+    .withAttribute("hx-post", "/api/update-all-widgets")
+    .withAttribute("hx-swap", "none")  // Don't replace button itself
+```
+
+**What Happens:**
+
+1. User clicks "Refresh All" button
+2. HTMX sends POST request to `/api/update-all-widgets`
+3. Server returns HTML with THREE modules, each with `hx-swap-oob="true"`
+4. HTMX finds each module by ID and updates them **all simultaneously**
+5. Single request, multiple updates! Much more efficient.
+
+#### When to Use Templates vs Simple Components
+
+**Use Templates when:**
+- ✅ Updating a Module with new data (stateful content)
+- ✅ Need to update multiple parts of page from single request
+- ✅ Module structure is complex (nested components, loops)
+- ✅ Want clean separation between structure and data
+
+**Use simple component re-rendering when:**
+- ✅ Updating small, stateless components (buttons, badges, counters)
+- ✅ Simple HTML without nested modules
+- ✅ Don't need to preserve module state
+
+**Decision Tree:**
+```
+Does the response include a Module?
+├─ YES → Use Template + OOB swap
+│       (Modules are build-once, use Templates)
+└─ NO → Use simple component rendering
+        (Simple HTML, no state issues)
+```
+
+#### Debugging OOB Swaps
+
+**Common Issues:**
+
+**Issue 1: Module doesn't update**
+```
+❌ Element ID doesn't match
+// Page has:
+<div id="card-module">...</div>
+
+// Response has:
+<div id="card-Module" hx-swap-oob="true">...</div>  // Wrong case!
+```
+
+**Solution:** IDs must match exactly (case-sensitive)
+
+**Issue 2: Form is replaced instead of updated**
+```
+❌ Using hx-swap="innerHTML" instead of "none"
+
+Form.create()
+    .withAttribute("hx-post", "/api/update")
+    .withAttribute("hx-swap", "innerHTML")  // Wrong! Replaces form
+    .addField("Name", TextInput.create("name"));
+```
+
+**Solution:** Use `hx-swap="none"` for forms doing OOB updates
+```java
+Form.create()
+    .withAttribute("hx-post", "/api/update")
+    .withAttribute("hx-swap", "none")  // ✅ Correct
+    .addField("Name", TextInput.create("name"));
+```
+
+**Issue 3: Multiple modules not all updating**
+```
+Response has:
+<div id="card-module" hx-swap-oob="true">...</div>
+<div id="list-module">...</div>  // ← Missing hx-swap-oob="true"!
+```
+
+**Solution:** Add `hx-swap-oob="true"` to ALL modules being updated
+
+#### Live Demo
+
+Visit **[/demo/dynamic-updates](/demo/dynamic-updates)** to see this pattern in action:
+- Example 1: Update individual widgets with targeted OOB swaps
+- Example 2: Update forum module with new posts
+- Source code available in `src/main/java/io/mindspice/demo/pages/DynamicUpdatesPage.java`
+- Controller endpoints in `src/main/java/io/mindspice/demo/DemoController.java`
 
 ## Key Takeaways
 

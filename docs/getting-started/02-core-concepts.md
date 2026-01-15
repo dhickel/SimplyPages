@@ -187,63 +187,225 @@ If you have many profile cards, create a `ProfileCardModule`:
 
 ```java
 public class ProfileCardModule extends Module {
-    private String userId;
-    private String name;
-    private String bio;
-    private int posts;
-    private int followers;
-    private String memberSince;
+    // Define SlotKeys for dynamic content (like method parameters)
+    public static final SlotKey<String> USER_ID = SlotKey.of("userId");
+    public static final SlotKey<String> NAME = SlotKey.of("name");
+    public static final SlotKey<String> BIO = SlotKey.of("bio");
+    public static final SlotKey<Integer> POSTS = SlotKey.of("posts");
+    public static final SlotKey<Integer> FOLLOWERS = SlotKey.of("followers");
+    public static final SlotKey<String> MEMBER_SINCE = SlotKey.of("memberSince");
 
     @Override
     protected void buildContent() {
         this.withChild(new Div()
             .withClass("profile-header")
-            .withChild(Image.create("/avatars/" + userId + ".jpg", name)
-                .withClass("avatar"))
-            .withChild(Header.h3(name).withClass("profile-name")));
+            .withChild(new Div()  // Image path needs special handling with Slot
+                .withClass("avatar-container")
+                .withChild(Slot.of(USER_ID)))  // You'd typically wrap this more elegantly
+            .withChild(Header.h3()
+                .withChild(Slot.of(NAME))
+                .withClass("profile-name")));
 
         this.withChild(Paragraph.create()
-            .withInnerText(bio)
+            .withChild(Slot.of(BIO))
             .withClass("profile-bio"));
 
         this.withChild(new Div()
             .withClass("profile-stats")
-            .withChild(Badge.create(posts + " Posts"))
-            .withChild(Badge.create(followers + " Followers"))
-            .withChild(Badge.create("Member since " + memberSince)));
-
-        this.withChild(Link.create("/profile/" + userId, "View Full Profile")
-            .withClass("btn btn-primary"));
+            .withChild(Badge.create()
+                .withChild(Slot.of(POSTS)))
+            .withChild(Badge.create()
+                .withChild(Slot.of(FOLLOWERS)))
+            .withChild(Badge.create()
+                .withChild(Slot.of(MEMBER_SINCE))));
     }
+}
+```
 
-    // Fluent configuration methods
-    public ProfileCardModule withUserId(String userId) {
-        this.userId = userId;
-        return this;
-    }
+Now we create a Template (compiled once) and render with different data each time:
 
-    public ProfileCardModule withName(String name) {
+```java
+// Compile the template once (in a static initializer or early in app lifecycle)
+public static final Template PROFILE_TEMPLATE = Template.of(new ProfileCardModule());
+
+// Render with data at request time
+String html = PROFILE_TEMPLATE.render(
+    RenderContext.builder()
+        .with(ProfileCardModule.NAME, "John Doe")
+        .with(ProfileCardModule.BIO, "Senior Java Developer with 10 years experience")
+        .with(ProfileCardModule.POSTS, 120)
+        .with(ProfileCardModule.FOLLOWERS, 45)
+        .with(ProfileCardModule.MEMBER_SINCE, "2020")
+        .build()
+);
+```
+
+**Why SlotKeys instead of instance fields?**
+- **Immutability**: Once the Template is built, it's locked. Fields can't change.
+- **Thread-safety**: Templates are safe to share across requests.
+- **Performance**: No component tree traversal for each render, just string interpolation.
+- **Type-safety**: SlotKeys are typed (`SlotKey<String>`, `SlotKey<Integer>`), so you get compile-time checking.
+
+We'll cover module creation in detail in Part 4, and deep dive into Templates in [Part 13: Templates and Dynamic Updates](13-templates-and-dynamic-updates.md).
+
+## Understanding Templates
+
+**Templates are like compiled Java classes for your UI.** They're a powerful pattern for dynamic content that you need to understand before building production applications.
+
+### The Problem: Why We Need Templates
+
+Consider a typical module with instance fields:
+
+```java
+// Old pattern - instance fields (DON'T DO THIS anymore)
+public class UserCardModule extends Module {
+    private String name;
+    private String email;
+
+    public UserCardModule withName(String name) {
         this.name = name;
         return this;
     }
 
-    // ... other setters
+    // ... more methods
 }
+
+// Usage
+UserCardModule card = new UserCardModule()
+    .withName("Alice")
+    .withEmail("alice@example.com");
+String html = card.render();  // Works once
+String html2 = card.render(); // Problem: What if I want different data?
 ```
 
-Now usage is clean and reusable:
+**The issue**: Modules use a "build-once" lifecycle. Once `buildContent()` runs, the module structure is locked. You cannot change a field and re-render expecting different output. The module doesn't rebuild—it just renders the same structure again.
+
+### The Solution: Templates and SlotKeys
+
+Templates separate **structure** (built once) from **data** (provided at render time):
 
 ```java
-ProfileCardModule card = new ProfileCardModule()
-    .withUserId("john")
-    .withName("John Doe")
-    .withBio("Senior Java Developer with 10 years experience")
-    .withPosts(120)
-    .withFollowers(45)
-    .withMemberSince("2020");
+// Modern pattern - SlotKeys and Templates
+public class UserCardModule extends Module {
+    public static final SlotKey<String> NAME = SlotKey.of("name");
+    public static final SlotKey<String> EMAIL = SlotKey.of("email");
+
+    @Override
+    protected void buildContent() {
+        this.withChild(Header.h2().withChild(Slot.of(NAME)));
+        this.withChild(Paragraph.create().withChild(Slot.of(EMAIL)));
+    }
+}
+
+// Compile template once
+public static final Template USER_TEMPLATE = Template.of(new UserCardModule());
+
+// Render with different data each time
+String html1 = USER_TEMPLATE.render(
+    RenderContext.builder()
+        .with(UserCardModule.NAME, "Alice")
+        .with(UserCardModule.EMAIL, "alice@example.com")
+        .build()
+);
+
+String html2 = USER_TEMPLATE.render(
+    RenderContext.builder()
+        .with(UserCardModule.NAME, "Bob")
+        .with(UserCardModule.EMAIL, "bob@example.com")
+        .build()
+);
 ```
 
-We'll cover module creation in detail in Part 4.
+### How Templates Work
+
+**Think of it like Java compilation**:
+
+1. **Source Code** (your component structure with Slots)
+   ```java
+   Header.h2().withChild(Slot.of(NAME))
+   ```
+
+2. **Compilation** (Template.of() pre-processes the tree)
+   - Walks the component tree
+   - Builds static HTML fragments (`<h2>`, `</h2>`)
+   - Notes where dynamic slots are (`Slot.of(NAME)`)
+   - Stores everything as compiled segments
+
+3. **Execution** (template.render(context) fills in the blanks)
+   - Concatenates static fragments
+   - Looks up values from RenderContext
+   - Inserts them into the HTML
+   - Returns the result
+
+**Benefits**:
+- **Performance**: No tree traversal on every render, just string concatenation
+- **Thread-safe**: Templates are immutable after compilation, safe to share across requests
+- **Type-safe**: SlotKeys enforce type checking at compile time
+- **Predictable**: Structure doesn't change, only data does
+
+### SlotKey Analogy
+
+Think of **SlotKeys like method parameters**:
+
+```java
+// Java method with parameters
+public void greetUser(String name, int age) {
+    System.out.println("Hello " + name + ", age " + age);
+}
+
+greetUser("Alice", 30);  // Data at call time
+greetUser("Bob", 25);    // Different data, same code
+
+// Template with SlotKeys (similar concept)
+public static final SlotKey<String> NAME = SlotKey.of("name");
+public static final SlotKey<Integer> AGE = SlotKey.of("age");
+
+// Template structure (like the method body)
+Template template = Template.of(
+    Paragraph.create()
+        .withChild(Slot.of(NAME))
+        .withChild(Slot.of(AGE))
+);
+
+// Render with data (like calling the method)
+String html1 = template.render(
+    RenderContext.builder()
+        .with(NAME, "Alice")
+        .with(AGE, 30)
+        .build()
+);
+
+String html2 = template.render(
+    RenderContext.builder()
+        .with(NAME, "Bob")
+        .with(AGE, 25)
+        .build()
+);
+```
+
+### When to Use Templates
+
+**Use Templates when**:
+- Rendering the same structure with different data multiple times
+- Building dynamic content that changes per request
+- Using HTMX for live updates (out-of-band swaps)
+- Performance matters (fewer tree traversals)
+
+**Simple components don't need Templates**:
+```java
+// Fine as-is - no template needed
+return Card.create()
+    .withClass("notification")
+    .withChild(Alert.success("All systems operational"));
+```
+
+**Common use cases**:
+- User cards, product listings, data tables
+- Forum posts, comments, social feeds
+- Dashboard widgets with live stats
+- Search results, filter results
+
+For a deep dive with advanced patterns, see [Part 13: Templates and Dynamic Updates](13-templates-and-dynamic-updates.md).
 
 ## Pages
 
@@ -300,6 +462,8 @@ Understanding the rendering flow helps you build efficient UIs and avoid common 
 
 ### The Rendering Pipeline
 
+**Standard Components** (one-time render):
+
 1. **Construction**: Create component objects
    ```java
    Paragraph p = Paragraph.create();
@@ -326,6 +490,54 @@ Understanding the rendering flow helps you build efficient UIs and avoid common 
    @ResponseBody
    public String getPage() {
        return card.render();
+   }
+   ```
+
+6. **Browser Display**: Browser receives HTML and renders visually
+
+**Templates** (compile once, render many times):
+
+1. **Construction**: Create component structure with Slots
+   ```java
+   Module module = new UserModule();
+   ```
+
+2. **Compilation** (Template.of()): Pre-process component tree
+   ```java
+   Template compiled = Template.of(module);
+   // - Walks component tree
+   // - Pre-generates static HTML fragments
+   // - Identifies dynamic Slots
+   // - Stores optimized segments
+   ```
+
+3. **Configuration** (RenderContext): Prepare data for slots
+   ```java
+   RenderContext context = RenderContext.builder()
+       .with(UserModule.NAME, "Alice")
+       .with(UserModule.EMAIL, "alice@example.com")
+       .build();
+   ```
+
+4. **Rendering** (template.render(context)): Fill in the blanks
+   ```java
+   String html = compiled.render(context);
+   // - Concatenates static fragments
+   // - Inserts values from context
+   // - Returns HTML string
+   ```
+
+5. **Spring Response**: Return rendered HTML
+   ```java
+   @GetMapping("/user/{id}")
+   public String getUserCard(@PathVariable String id) {
+       User user = userService.findById(id);
+       return USER_TEMPLATE.render(
+           RenderContext.builder()
+               .with(UserModule.NAME, user.getName())
+               .with(UserModule.EMAIL, user.getEmail())
+               .build()
+       );
    }
    ```
 
@@ -690,6 +902,87 @@ Div container = Div.create()
 - **Inner Text**: Simple text-only content
 - **Children**: Mixed content (text + components)
 
+### 6. Why My Module Fields Don't Update (The Template Solution)
+
+**Problem**: You change a field on a Module and re-render, expecting different output. Nothing changes.
+
+```java
+// FRUSTRATING - This doesn't work as expected
+public class StatCardModule extends Module {
+    private int count;
+
+    public StatCardModule withCount(int count) {
+        this.count = count;
+        return this;
+    }
+
+    @Override
+    protected void buildContent() {
+        this.withChild(Header.h2().withInnerText("Count: " + count));
+    }
+}
+
+// Usage
+StatCardModule card = new StatCardModule().withCount(5);
+String html1 = card.render();  // <h2>Count: 5</h2> ✓
+
+card.withCount(10);  // Changed the field
+String html2 = card.render();  // STILL <h2>Count: 5</h2> ✗ No change!
+```
+
+**Why this happens**: Modules use a **build-once** lifecycle. The first time you call `render()`, `buildContent()` runs and locks the structure. Subsequent renders skip `buildContent()` and just render the locked structure. Changing fields afterwards has no effect.
+
+**The Solution - Use Templates and SlotKeys**:
+
+```java
+// CORRECT - Use Templates for dynamic content
+public class StatCardModule extends Module {
+    public static final SlotKey<Integer> COUNT = SlotKey.of("count");
+
+    @Override
+    protected void buildContent() {
+        // Use Slot instead of direct field access
+        this.withChild(Header.h2()
+            .withChild(new Span().withInnerText("Count: "))
+            .withChild(Slot.of(COUNT)));
+    }
+}
+
+// Compile the template once (typically as a static field)
+public static final Template STAT_TEMPLATE = Template.of(new StatCardModule());
+
+// Render with different data each time
+String html1 = STAT_TEMPLATE.render(
+    RenderContext.builder()
+        .with(StatCardModule.COUNT, 5)
+        .build()
+);  // <h2>Count: 5</h2>
+
+String html2 = STAT_TEMPLATE.render(
+    RenderContext.builder()
+        .with(StatCardModule.COUNT, 10)
+        .build()
+);  // <h2>Count: 10</h2> ✓ Works!
+```
+
+**Key Difference**:
+- **Fields**: Structure is locked after first build. Changing fields is ignored.
+- **SlotKeys + Templates**: Structure is locked, but data is flexible. Change the RenderContext, get different output.
+
+**When to Use Each**:
+
+| Scenario | Solution | Why |
+|----------|----------|-----|
+| Rendering once per request | Either approach | Both work fine |
+| Rendering same structure, different data | Templates + SlotKeys | Performance, immutability, thread-safety |
+| Dynamic HTMX updates | Templates + SlotKeys | Data changes, not structure |
+| Simple static content | Either approach | Overhead not justified |
+| Building lists of items | Templates + SlotKeys | Compile once, render many |
+
+**Rule of Thumb**: If you catch yourself thinking "I want to re-render this with new data," reach for Templates and SlotKeys.
+
+For comprehensive Template patterns, see [Part 13: Templates and Dynamic Updates](13-templates-and-dynamic-updates.md).
+
 ## Understanding the Component Lifecycle
 
 ### Component Creation
@@ -735,11 +1028,12 @@ Finally:
 1. **Everything is a Component**: All JHF elements implement `Component` interface
 2. **Fluent API Everywhere**: Method chaining is the idiomatic style
 3. **Components vs Modules**: Components for low-level, modules for high-level patterns
-4. **Lazy Building**: Modules use `buildContent()` called during rendering
-5. **Render Once**: Avoid calling `render()` multiple times on the same object
-6. **Use withClass()**: Always use `withClass()` for CSS classes, not `withAttribute("class", ...)`
-7. **Grid for Modules, CSS for Components**: Different sizing mechanisms for different abstractions
-8. **Separation of Concerns**: Keep rendering logic in page classes, not controllers
+4. **Build-Once Lifecycle**: Modules build their structure once, then reuse it
+5. **Templates for Dynamic Content**: Use Templates and SlotKeys for rendering same structure with different data
+6. **Render Once**: Avoid calling `render()` multiple times on the same object (or use Templates instead)
+7. **Use withClass()**: Always use `withClass()` for CSS classes, not `withAttribute("class", ...)`
+8. **Grid for Modules, CSS for Components**: Different sizing mechanisms for different abstractions
+9. **Separation of Concerns**: Keep rendering logic in page classes, not controllers
 
 ## Practice Exercise
 
