@@ -3,7 +3,10 @@ package io.mindspice.simplypages.editing;
 import io.mindspice.simplypages.components.display.Modal;
 import io.mindspice.simplypages.components.forms.Button;
 import io.mindspice.simplypages.components.Div;
+import io.mindspice.simplypages.components.Header;
 import io.mindspice.simplypages.core.Component;
+import io.mindspice.simplypages.core.HtmlTag;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -43,8 +46,11 @@ public class EditModalBuilder {
     private String title = "Edit Module";
     private String moduleId;
     private Component editView;
+    private Editable<?> editable;
     private String saveUrl;
     private String deleteUrl;
+    private String childEditUrl;
+    private String childDeleteUrl;
     private boolean showDelete = true;
     private String pageContainerId = "page-content";
     private String modalContainerId = "edit-modal-container";
@@ -94,6 +100,41 @@ public class EditModalBuilder {
      */
     public EditModalBuilder withEditView(Component editView) {
         this.editView = editView;
+        return this;
+    }
+
+    /**
+     * Set the editable object to enable child editing.
+     *
+     * @param editable The editable object (e.g., module)
+     * @return this for chaining
+     */
+    public EditModalBuilder withEditable(Editable<?> editable) {
+        this.editable = editable;
+        return this;
+    }
+
+    /**
+     * Set the URL pattern for editing a child item.
+     * Use {id} as placeholder for child ID.
+     *
+     * @param url The URL pattern (e.g. "/api/modules/123/items/{id}/edit")
+     * @return this for chaining
+     */
+    public EditModalBuilder withChildEditUrl(String url) {
+        this.childEditUrl = url;
+        return this;
+    }
+
+    /**
+     * Set the URL pattern for deleting a child item.
+     * Use {id} as placeholder for child ID.
+     *
+     * @param url The URL pattern (e.g. "/api/modules/123/items/{id}/delete")
+     * @return this for chaining
+     */
+    public EditModalBuilder withChildDeleteUrl(String url) {
+        this.childDeleteUrl = url;
         return this;
     }
 
@@ -189,6 +230,13 @@ public class EditModalBuilder {
             modalBody.withChild(propertiesSection);
         }
 
+        if (editable != null) {
+            List<EditableChild> children = editable.getEditableChildren();
+            if (!children.isEmpty()) {
+                modalBody.withChild(buildChildrenSection(children));
+            }
+        }
+
         Div footer = buildFooter();
 
         return Modal.create()
@@ -196,6 +244,54 @@ public class EditModalBuilder {
                 .withBody(modalBody)
                 .withFooter(footer)
                 .closeOnBackdrop(false); // Prevent accidental closes
+    }
+
+    private Component buildChildrenSection(List<EditableChild> children) {
+        Div section = new Div().withClass("edit-children-section mt-4");
+        section.withChild(Header.H4("Content Items").withClass("mb-3"));
+
+        Div list = new Div().withClass("list-group");
+
+        for (EditableChild child : children) {
+            Div itemRow = new Div()
+                    .withClass("list-group-item d-flex justify-content-between align-items-center p-2");
+
+            Div info = new Div();
+            info.withChild(new Div().withInnerText(child.getLabel()).withClass("fw-bold"));
+            if (child.getSummary() != null) {
+                info.withChild(new Div().withInnerText(child.getSummary()).withClass("text-muted small text-truncate").addStyle("max-width", "200px"));
+            }
+            itemRow.withChild(info);
+
+            Div actions = new Div().withClass("btn-group btn-group-sm");
+
+            if (childEditUrl != null) {
+                String url = childEditUrl.replace("{id}", child.getId());
+                HtmlTag editBtn = Button.create("Edit")
+                        .withStyle(Button.ButtonStyle.SECONDARY)
+                        .withAttribute("hx-get", url)
+                        .withAttribute("hx-target", "#" + modalContainerId) // Nested edit typically replaces modal content
+                        .withAttribute("hx-swap", "innerHTML");
+                actions.withChild(editBtn);
+            }
+
+            if (childDeleteUrl != null) {
+                String url = childDeleteUrl.replace("{id}", child.getId());
+                HtmlTag deleteBtn = Button.create("Delete")
+                        .withStyle(Button.ButtonStyle.DANGER)
+                        .withAttribute("hx-delete", url)
+                        .withAttribute("hx-confirm", "Delete this item?")
+                        .withAttribute("hx-target", "#" + modalContainerId) // Reload modal to reflect change
+                        .withAttribute("hx-swap", "innerHTML");
+                actions.withChild(deleteBtn);
+            }
+
+            itemRow.withChild(actions);
+            list.withChild(itemRow);
+        }
+
+        section.withChild(list);
+        return section;
     }
 
     /**

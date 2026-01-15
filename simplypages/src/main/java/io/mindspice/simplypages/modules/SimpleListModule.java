@@ -7,7 +7,8 @@ import io.mindspice.simplypages.components.Paragraph;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.Module;
-import io.mindspice.simplypages.editing.EditAdapter;
+import io.mindspice.simplypages.editing.Editable;
+import io.mindspice.simplypages.editing.EditableChild;
 import io.mindspice.simplypages.editing.FormFieldHelper;
 import io.mindspice.simplypages.editing.ValidationResult;
 
@@ -31,7 +32,7 @@ import java.util.*;
  *     .addItem(ListItem.create("Second item"));
  * </pre>
  */
-public class SimpleListModule extends Module implements EditAdapter<SimpleListModule> {
+public class SimpleListModule extends Module implements Editable<SimpleListModule> {
 
     private final List<ListItem> items = new ArrayList<>();
 
@@ -50,15 +51,38 @@ public class SimpleListModule extends Module implements EditAdapter<SimpleListMo
     }
 
     public SimpleListModule removeItem(String itemId) {
-        items.removeIf(item -> item.getId().equals(itemId));
+        items.removeIf(item -> {
+            String id = item.getId();
+            return id != null && id.equals(itemId);
+        });
         return this;
     }
 
     public ListItem findItem(String itemId) {
         return items.stream()
-                .filter(item -> item.getId().equals(itemId))
+                .filter(item -> {
+                    String id = item.getId();
+                    return id != null && id.equals(itemId);
+                })
                 .findFirst()
                 .orElse(null);
+    }
+
+    // Editable implementation
+    @Override
+    public List<EditableChild> getEditableChildren() {
+        List<EditableChild> children = new ArrayList<>();
+        for (int i = 0; i < items.size(); i++) {
+            ListItem item = items.get(i);
+            String id = item.getId();
+            if (id == null) {
+                // If item has no ID, assign a stable one based on index for editing purposes
+                id = "item-" + i;
+                item.withId(id);
+            }
+            children.add(new EditableChild(id, "ListItem", item.getText()));
+        }
+        return children;
     }
 
     public List<ListItem> getItems() {
@@ -95,7 +119,7 @@ public class SimpleListModule extends Module implements EditAdapter<SimpleListMo
         }
     }
 
-    // ===== EditAdapter Implementation (Module Properties) =====
+    // ===== Editable Implementation (Module Properties) =====
 
     @Override
     public Component buildEditView() {

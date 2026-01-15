@@ -7,7 +7,8 @@ import io.mindspice.simplypages.components.Paragraph;
 import io.mindspice.simplypages.components.navigation.Link;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.Module;
-import io.mindspice.simplypages.editing.EditAdapter;
+import io.mindspice.simplypages.editing.Editable;
+import io.mindspice.simplypages.editing.EditableChild;
 import io.mindspice.simplypages.editing.FormFieldHelper;
 import io.mindspice.simplypages.editing.ValidationResult;
 
@@ -17,7 +18,7 @@ import java.util.*;
  * Rich content module that can contain paragraphs, images, and links.
  * Demonstrates container module pattern with multiple component types as children.
  */
-public class RichContentModule extends Module implements EditAdapter<RichContentModule> {
+public class RichContentModule extends Module implements Editable<RichContentModule> {
 
     private final List<Component> contentItems = new ArrayList<>();
 
@@ -88,7 +89,47 @@ public class RichContentModule extends Module implements EditAdapter<RichContent
         super.withChild(moduleContainer);
     }
 
-    // EditAdapter implementation
+    // Editable implementation
+    @Override
+    public List<EditableChild> getEditableChildren() {
+        List<EditableChild> children = new ArrayList<>();
+        for (int i = 0; i < contentItems.size(); i++) {
+            Component item = contentItems.get(i);
+            String type = item.getClass().getSimpleName();
+            String summary = getSummary(item);
+            children.add(new EditableChild("child-" + i, type, summary));
+        }
+        return children;
+    }
+
+    private String getSummary(Component item) {
+        if (item instanceof Paragraph) { return "Text Paragraph"; }
+        if (item instanceof Header) { return "Header " + ((Header) item).getLevel().name(); }
+        if (item instanceof Image) { return "Image"; }
+        if (item instanceof Link) { return "Link: " + ((Link) item).getText(); }
+        return "Content Item";
+    }
+
+    public Component getChild(String id) {
+        try {
+            int index = Integer.parseInt(id.replace("child-", ""));
+            return contentItems.get(index);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public void removeChild(String id) {
+        try {
+            int index = Integer.parseInt(id.replace("child-", ""));
+            if (index >= 0 && index < contentItems.size()) {
+                contentItems.remove(index);
+            }
+        } catch (Exception e) {
+            // Ignore invalid ID
+        }
+    }
+
     @Override
     public Component buildEditView() {
         Div editForm = new Div();
