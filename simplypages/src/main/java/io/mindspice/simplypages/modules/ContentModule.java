@@ -8,7 +8,7 @@ import io.mindspice.simplypages.components.Markdown;
 import io.mindspice.simplypages.components.Paragraph;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
-import io.mindspice.simplypages.editing.EditAdapter;
+import io.mindspice.simplypages.editing.Editable;
 import io.mindspice.simplypages.editing.FormFieldHelper;
 import io.mindspice.simplypages.editing.ValidationResult;
 
@@ -19,7 +19,7 @@ import java.util.Map;
 /**
  * Module for displaying content (text, markdown, etc.)
  */
-public class ContentModule extends Module implements EditAdapter<ContentModule> {
+public class ContentModule extends Module implements Editable<ContentModule> {
 
     private String content;
     private boolean useMarkdown = true;
@@ -82,7 +82,7 @@ public class ContentModule extends Module implements EditAdapter<ContentModule> 
         super.withChild(contentWrapper);
     }
 
-    // ===== EditAdapter Implementation =====
+    // ===== Editable Implementation =====
 
     @Override
     public Component buildEditView() {

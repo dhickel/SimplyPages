@@ -8,7 +8,7 @@ import io.mindspice.simplypages.components.forms.TextInput;
 import io.mindspice.simplypages.core.Component;
 
 /**
- * Helper for building consistent form fields in EditAdapter implementations.
+ * Helper for building consistent form fields in Editable implementations.
  */
 public final class FormFieldHelper {
 

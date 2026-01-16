@@ -1,6 +1,8 @@
 package io.mindspice.simplypages.editing;
 
+import io.mindspice.simplypages.components.Header;
 import io.mindspice.simplypages.components.display.Modal;
+import io.mindspice.simplypages.components.display.UnorderedList;
 import io.mindspice.simplypages.components.forms.Button;
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.core.Component;
@@ -12,7 +14,7 @@ import java.util.regex.Pattern;
  * <p>This builder simplifies the creation of edit modals with a consistent
  * layout and behavior. It handles:</p>
  * <ul>
- *   <li>Entity property editing (via {@link EditAdapter#buildEditView()})</li>
+ *   <li>Entity property editing (via {@link Editable#buildEditView()})</li>
  *   <li>Footer layout (delete on left, cancel/save on right)</li>
  *   <li>HTMX attributes for dynamic updates</li>
  * </ul>
@@ -22,12 +24,12 @@ import java.util.regex.Pattern;
  * {@literal @}GetMapping("/api/modules/{id}/edit")
  * public String editModule(@PathVariable String id) {
  *     Module module = findModule(id);
- *     EditAdapter adapter = (EditAdapter) module;
+ *     Editable<?> editable = (Editable<?>) module;
  *
  *     return EditModalBuilder.create()
  *         .withTitle("Edit Content Module")
  *         .withModuleId(id)
- *         .withEditView(adapter.buildEditView())
+ *         .withEditable(editable)
  *         .withSaveUrl("/api/modules/" + id + "/update")
  *         .withDeleteUrl("/api/modules/" + id + "/delete")
  *         .build()
@@ -43,8 +45,11 @@ public class EditModalBuilder {
     private String title = "Edit Module";
     private String moduleId;
     private Component editView;
+    private Editable<?> editable;
     private String saveUrl;
     private String deleteUrl;
+    private String childEditUrl;
+    private String childDeleteUrl;
     private boolean showDelete = true;
     private String pageContainerId = "page-content";
     private String modalContainerId = "edit-modal-container";
@@ -94,6 +99,30 @@ public class EditModalBuilder {
      */
     public EditModalBuilder withEditView(Component editView) {
         this.editView = editView;
+        return this;
+    }
+
+    /**
+     * Set the editable component to generate the view from.
+     *
+     * @param editable The editable component
+     * @return this for chaining
+     */
+    public EditModalBuilder withEditable(Editable<?> editable) {
+        this.editable = editable;
+        if (this.editView == null) {
+            this.editView = editable.buildEditView();
+        }
+        return this;
+    }
+
+    public EditModalBuilder withChildEditUrl(String url) {
+        this.childEditUrl = url;
+        return this;
+    }
+
+    public EditModalBuilder withChildDeleteUrl(String url) {
+        this.childDeleteUrl = url;
         return this;
     }
 
@@ -189,6 +218,10 @@ public class EditModalBuilder {
             modalBody.withChild(propertiesSection);
         }
 
+        if (editable != null && !editable.getEditableChildren().isEmpty()) {
+            modalBody.withChild(buildChildList());
+        }
+
         Div footer = buildFooter();
 
         return Modal.create()
@@ -196,6 +229,51 @@ public class EditModalBuilder {
                 .withBody(modalBody)
                 .withFooter(footer)
                 .closeOnBackdrop(false); // Prevent accidental closes
+    }
+
+    private Div buildChildList() {
+        Div section = new Div().withClass("edit-children-section mt-3");
+        section.withChild(Header.H5("Child Elements").withClass("mb-2"));
+
+        UnorderedList list = new UnorderedList().withClass("list-group");
+
+        for (EditableChild child : editable.getEditableChildren()) {
+            Div itemContent = new Div().withClass("d-flex justify-content-between align-items-center w-100");
+            itemContent.withChild(new Div().withInnerText(child.getTitle()));
+
+            Div actions = new Div().withClass("btn-group btn-group-sm");
+
+            if (childEditUrl != null) {
+                String url = childEditUrl.replace("{id}", child.getId());
+                Button editBtn = Button.create("Edit")
+                        .withStyle(Button.ButtonStyle.SECONDARY)
+                        .withClass("btn-sm");
+                editBtn.withAttribute("hx-get", url);
+                editBtn.withAttribute("hx-target", "#" + modalContainerId); // Replace modal content
+                editBtn.withAttribute("hx-swap", "innerHTML");
+                actions.withChild(editBtn);
+            }
+
+            if (childDeleteUrl != null) {
+                String url = childDeleteUrl.replace("{id}", child.getId());
+                Button deleteBtn = Button.create("Delete")
+                        .withStyle(Button.ButtonStyle.DANGER)
+                        .withClass("btn-sm");
+                deleteBtn.withAttribute("hx-delete", url);
+                deleteBtn.withAttribute("hx-target", "#" + modalContainerId); // Refresh modal to show updated list
+                deleteBtn.withAttribute("hx-confirm", "Delete this item?");
+                actions.withChild(deleteBtn);
+            }
+
+            itemContent.withChild(actions);
+
+            io.mindspice.simplypages.components.ListItem li = new io.mindspice.simplypages.components.ListItem();
+            li.withClass("list-group-item");
+            li.withChild(itemContent);
+            list.withChild(li);
+        }
+        section.withChild(list);
+        return section;
     }
 
     /**

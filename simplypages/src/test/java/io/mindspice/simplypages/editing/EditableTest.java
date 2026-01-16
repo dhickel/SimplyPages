@@ -10,19 +10,18 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class EditAdapterTest {
+class EditableTest {
 
     @Test
-    @DisplayName("EditAdapter default validate should return valid result")
-    void testDefaultValidate() {
+    @DisplayName("Editable implementations should be testable")
+    void testEditableImplementation() {
         TestModule module = new TestModule();
-
+        // Since validate is not default, we just test that our test implementation works
         ValidationResult result = module.validate(Map.of());
-
         assertTrue(result.isValid());
     }
 
-    private static class TestModule extends Module implements EditAdapter<TestModule> {
+    private static class TestModule extends Module implements Editable<TestModule> {
         private TestModule() {
             super("div");
         }
@@ -30,6 +29,11 @@ class EditAdapterTest {
         @Override
         public Component buildEditView() {
             return new Div();
+        }
+
+        @Override
+        public ValidationResult validate(Map<String, String> formData) {
+            return ValidationResult.valid();
         }
 
         @Override

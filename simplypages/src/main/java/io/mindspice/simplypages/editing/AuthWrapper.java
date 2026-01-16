@@ -22,10 +22,10 @@ import java.util.function.Supplier;
  *         () -> canUserEdit(id, principal.getName()),
  *         () -> {
  *             Module module = findModule(id);
- *             EditAdapter<?> adapter = (EditAdapter<?>) module;
+ *             Editable<?> editable = (Editable<?>) module;
  *             return EditModalBuilder.create()
  *                 .withTitle("Edit Module")
- *                 .withEditView(adapter.buildEditView())
+ *                 .withEditable(editable)
  *                 .withSaveUrl("/api/modules/" + id + "/update")
  *                 .build()
  *                 .render();

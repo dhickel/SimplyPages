@@ -7,7 +7,8 @@ import io.mindspice.simplypages.components.Paragraph;
 import io.mindspice.simplypages.components.navigation.Link;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.Module;
-import io.mindspice.simplypages.editing.EditAdapter;
+import io.mindspice.simplypages.editing.Editable;
+import io.mindspice.simplypages.editing.EditableChild;
 import io.mindspice.simplypages.editing.FormFieldHelper;
 import io.mindspice.simplypages.editing.ValidationResult;
 
@@ -17,7 +18,7 @@ import java.util.*;
  * Rich content module that can contain paragraphs, images, and links.
  * Demonstrates container module pattern with multiple component types as children.
  */
-public class RichContentModule extends Module implements EditAdapter<RichContentModule> {
+public class RichContentModule extends Module implements Editable<RichContentModule> {
 
     private final List<Component> contentItems = new ArrayList<>();
 
@@ -88,7 +89,7 @@ public class RichContentModule extends Module implements EditAdapter<RichContent
         super.withChild(moduleContainer);
     }
 
-    // EditAdapter implementation
+    // Editable implementation
     @Override
     public Component buildEditView() {
         Div editForm = new Div();
@@ -114,6 +115,19 @@ public class RichContentModule extends Module implements EditAdapter<RichContent
             rebuildContent();
         }
         return this;
+    }
+
+    @Override
+    public List<EditableChild> getEditableChildren() {
+        List<EditableChild> children = new ArrayList<>();
+        for (int i = 0; i < contentItems.size(); i++) {
+            Component item = contentItems.get(i);
+            String type = item.getClass().getSimpleName();
+            String id = "child-" + i;
+            String title = type + " " + (i + 1);
+            children.add(new EditableChild(id, item, title));
+        }
+        return children;
     }
 
 }
