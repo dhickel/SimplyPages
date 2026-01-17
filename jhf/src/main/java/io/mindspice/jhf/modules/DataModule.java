@@ -1,5 +1,7 @@
 package io.mindspice.jhf.modules;
 
+import io.mindspice.jhf.core.Module;
+
 import io.mindspice.jhf.components.Header;
 import io.mindspice.jhf.components.display.DataTable;
 import io.mindspice.jhf.core.HtmlTag;

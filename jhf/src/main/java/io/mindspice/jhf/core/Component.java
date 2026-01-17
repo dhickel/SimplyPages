@@ -61,20 +61,28 @@ package io.mindspice.jhf.core;
  */
 public interface Component {
     /**
-     * Renders this component to an HTML string.
+     * Renders this component to an HTML string using the provided context.
      *
      * <p>This method is responsible for generating the complete HTML representation
-     * of the component, including all nested children and attributes.</p>
+     * of the component, including all nested children and attributes, resolving any
+     * dynamic slots from the context.</p>
      *
-     * <p>The rendering process typically:</p>
-     * <ol>
-     *   <li>Generates opening tag with attributes</li>
-     *   <li>Renders inner text (if any)</li>
-     *   <li>Recursively renders all child components</li>
-     *   <li>Generates closing tag</li>
-     * </ol>
+     * @param context the context containing values for dynamic slots
+     * @return HTML string representation of this component
+     */
+    default String render(RenderContext context) {
+        return render();
+    }
+
+    /**
+     * Renders this component to an HTML string with an empty context.
+     *
+     * <p>This is a convenience method that delegates to {@link #render(RenderContext)}
+     * with {@link RenderContext#empty()}.</p>
      *
      * @return HTML string representation of this component
      */
-    String render();
+    default String render() {
+        return render(RenderContext.empty());
+    }
 }
