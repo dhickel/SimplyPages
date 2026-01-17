@@ -333,7 +333,7 @@ Understanding the rendering flow helps you build efficient UIs and avoid common 
 
 ### Lazy Building in Modules
 
-Modules use a **lazy building pattern** to avoid re-rendering issues:
+Modules use a **lazy building pattern** with a "build-once" lifecycle. This ensures that a module's structure is computed only once and then reused, which is essential for performance and the new **Template** system.
 
 ```java
 public abstract class Module extends HtmlTag {
@@ -352,7 +352,9 @@ public abstract class Module extends HtmlTag {
 }
 ```
 
-The `buildContent()` method is called **only once**, during the first `render()` call. This prevents duplicate children and ensures consistent output.
+The `buildContent()` method is called **only once**, during the first `render()` or `build()` call.
+
+**Important for Dynamic Content**: Since `buildContent()` only runs once, you cannot update the structure of a Module by changing its fields and re-rendering. Instead, you should use **Slots** and **Templates** for dynamic content (covered in detail in [Part 13: Templates and Dynamic Updates](13-templates-and-dynamic-updates.md)).
 
 ### Construction vs Rendering
 
@@ -366,10 +368,7 @@ Card card = Card.create();  // Object created, but no HTML yet
 String html = card.render();  // HTML generated NOW
 ```
 
-For modules, `buildContent()` runs during render time, not construction time. This allows you to:
-- Pass dynamic data to modules
-- Configure modules after creation
-- Avoid premature rendering
+For modules, `buildContent()` runs during the first render time. This allows you to configure modules after creation, but before the structure is locked in.
 
 ## Best Practices
 
