@@ -8,6 +8,8 @@ import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.Module;
 import io.mindspice.simplypages.editing.EditAdapter;
+import io.mindspice.simplypages.editing.Editable;
+import io.mindspice.simplypages.editing.EditableChild;
 import io.mindspice.simplypages.editing.FormFieldHelper;
 import io.mindspice.simplypages.editing.ValidationResult;
 
@@ -31,7 +33,7 @@ import java.util.*;
  *     .addItem(ListItem.create("Second item"));
  * </pre>
  */
-public class SimpleListModule extends Module implements EditAdapter<SimpleListModule> {
+public class SimpleListModule extends Module implements Editable<SimpleListModule>, EditAdapter<SimpleListModule> {
 
     private final List<ListItem> items = new ArrayList<>();
 
@@ -95,7 +97,7 @@ public class SimpleListModule extends Module implements EditAdapter<SimpleListMo
         }
     }
 
-    // ===== EditAdapter Implementation (Module Properties) =====
+    // ===== Editable Implementation (Module Properties) =====
 
     @Override
     public Component buildEditView() {
@@ -123,6 +125,21 @@ public class SimpleListModule extends Module implements EditAdapter<SimpleListMo
         rebuildContent();
 
         return this;
+    }
+
+    @Override
+    public List<EditableChild> getEditableChildren() {
+        List<EditableChild> children = new ArrayList<>();
+        for (int i = 0; i < items.size(); i++) {
+            ListItem item = items.get(i);
+            String itemId = item.getId() != null ? item.getId() : "item-" + i;
+            String label = item.getText() != null && !item.getText().isEmpty() ? item.getText() : "Item " + (i + 1);
+            if (label.length() > 30) {
+                label = label.substring(0, 27) + "...";
+            }
+            children.add(EditableChild.create(itemId, label, item));
+        }
+        return children;
     }
 
 }

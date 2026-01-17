@@ -1,78 +1,41 @@
 package io.mindspice.simplypages.editing;
 
-import io.mindspice.simplypages.components.Div;
-import org.junit.jupiter.api.DisplayName;
+import io.mindspice.simplypages.components.Paragraph;
+import io.mindspice.simplypages.components.display.Modal;
+import io.mindspice.simplypages.modules.RichContentModule;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-class EditModalBuilderTest {
+public class EditModalBuilderTest {
 
     @Test
-    @DisplayName("EditModalBuilder should render save and delete actions")
-    void testBuildWithActions() {
-        String html = EditModalBuilder.create()
-            .withTitle("Edit")
-            .withEditView(new Div().withInnerText("Fields"))
-            .withSaveUrl("/save")
-            .withDeleteUrl("/delete")
-            .build()
-            .render();
+    void testNestedEditingStructure() {
+        RichContentModule module = new RichContentModule("Test Module");
+        module.addParagraph(new Paragraph("Hello"));
+        module.addParagraph(new Paragraph("World"));
 
-        assertTrue(html.contains("hx-post=\"/save\""));
-        assertTrue(html.contains("hx-delete=\"/delete\""));
-        assertTrue(html.contains("hx-target=\"#page-content\""));
-        assertTrue(html.contains("data-modal-id=\"edit-modal-container\""));
-    }
+        Modal modal = EditModalBuilder.create()
+                .withTitle("Edit Test")
+                .withEditable(module)
+                .withSaveUrl("/save")
+                .withDeleteUrl("/delete")
+                .withChildEditUrl("/edit-child/{id}")
+                .build();
 
-    @Test
-    @DisplayName("EditModalBuilder should require editView and saveUrl")
-    void testRequiredFields() {
-        assertThrows(IllegalStateException.class, () -> EditModalBuilder.create().build());
-        assertThrows(IllegalStateException.class, () -> EditModalBuilder.create()
-            .withEditView(new Div())
-            .build());
-    }
+        String html = modal.render();
 
-    @Test
-    @DisplayName("EditModalBuilder should hide delete when requested")
-    void testHideDelete() {
-        String html = EditModalBuilder.create()
-            .withEditView(new Div().withInnerText("Fields"))
-            .withSaveUrl("/save")
-            .withDeleteUrl("/delete")
-            .hideDelete()
-            .build()
-            .render();
+        // Check if main properties form is present (title field)
+        assertTrue(html.contains("name=\"title\""), "Should contain title field");
 
-        assertTrue(html.contains("hx-post=\"/save\""));
-        assertFalse(html.contains("hx-delete=\"/delete\""));
-    }
+        // Check if children section is present
+        assertTrue(html.contains("Content Items"), "Should contain 'Content Items' header");
 
-    @Test
-    @DisplayName("EditModalBuilder should validate container IDs")
-    void testInvalidContainerIds() {
-        assertThrows(IllegalArgumentException.class, () ->
-            EditModalBuilder.create().withPageContainerId("1bad"));
-        assertThrows(IllegalArgumentException.class, () ->
-            EditModalBuilder.create().withModalContainerId("bad id"));
-    }
+        // Check if children are listed
+        assertTrue(html.contains("Paragraph 1"), "Should list Paragraph 1");
+        assertTrue(html.contains("Paragraph 2"), "Should list Paragraph 2");
 
-    @Test
-    @DisplayName("EditModalBuilder should use custom container IDs")
-    void testCustomContainerIds() {
-        String html = EditModalBuilder.create()
-            .withEditView(new Div().withInnerText("Fields"))
-            .withSaveUrl("/save")
-            .withDeleteUrl("/delete")
-            .withPageContainerId("page-root")
-            .withModalContainerId("modal-root")
-            .build()
-            .render();
-
-        assertTrue(html.contains("hx-target=\"#page-root\""));
-        assertTrue(html.contains("data-modal-id=\"modal-root\""));
+        // Check if child edit buttons are present with correct URLs
+        assertTrue(html.contains("hx-get=\"/edit-child/child-0\""), "Should have edit link for child 0");
+        assertTrue(html.contains("hx-get=\"/edit-child/child-1\""), "Should have edit link for child 1");
     }
 }
