@@ -148,6 +148,8 @@ public class ShellBuilder {
             html.append("    <script src=\"/webjars/htmx.org/dist/htmx.min.js\" defer></script>\n");
         }
 
+        html.append("    <script src=\"/js/framework.js\" defer></script>\n");
+
         html.append("</head>\n");
         html.append("<body>\n");
 

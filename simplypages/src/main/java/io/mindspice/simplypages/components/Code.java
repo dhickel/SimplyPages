@@ -30,6 +30,7 @@ public class Code extends HtmlTag {
     private String language;
     private String title;
     private boolean isBlock;
+    private boolean contentBuilt = false;
 
     private Code(String code, boolean isBlock) {
         super(isBlock ? "pre" : "code");
@@ -37,6 +38,7 @@ public class Code extends HtmlTag {
         this.isBlock = isBlock;
         if (!isBlock) {
             this.withAttribute("class", "code-inline");
+            this.withInnerText(code);  // Set content immediately for inline
         } else {
             this.withAttribute("class", "code-block");
         }
@@ -90,50 +92,33 @@ public class Code extends HtmlTag {
     @Override
     public String render() {
         if (isBlock) {
+            // Build the code element
+            HtmlTag codeElement = new HtmlTag("code");
+            if (language != null) {
+                codeElement.withAttribute("class", "language-" + language);
+            }
+            codeElement.withInnerText(code);
+
+            // Build the pre element manually
+            StringBuilder preHtml = new StringBuilder();
+            preHtml.append("<pre class=\"code-block\">");
+            preHtml.append(codeElement.render());
+            preHtml.append("</pre>");
+
             // Wrap in container if title is present
             if (title != null) {
-                HtmlTag container = new HtmlTag("div")
-                    .withAttribute("class", "code-container");
-
-                HtmlTag titleDiv = new HtmlTag("div")
-                    .withAttribute("class", "code-title")
-                    .withInnerText(title);
-                container.withChild(titleDiv);
-
-                // Build the pre > code structure
-                HtmlTag codeElement = new HtmlTag("code");
-                if (language != null) {
-                    codeElement.withAttribute("class", "language-" + language);
-                }
-                codeElement.withInnerText(code);
-
-                super.withChild(codeElement);
-                container.withChild(new HtmlTag("pre") {
-                    @Override
-                    public String render(io.mindspice.simplypages.core.RenderContext context) {
-                        return Code.super.render(context);
-                    }
-
-                    @Override
-                    public String render() {
-                        return render(io.mindspice.simplypages.core.RenderContext.empty());
-                    }
-                });
-
-                return container.render();
+                StringBuilder containerHtml = new StringBuilder();
+                containerHtml.append("<div class=\"code-container\">");
+                containerHtml.append("<div class=\"code-title\">").append(title).append("</div>");
+                containerHtml.append(preHtml);
+                containerHtml.append("</div>");
+                return containerHtml.toString();
             } else {
-                // No title, just pre > code
-                HtmlTag codeElement = new HtmlTag("code");
-                if (language != null) {
-                    codeElement.withAttribute("class", "language-" + language);
-                }
-                codeElement.withInnerText(code);
-                super.withChild(codeElement);
-                return super.render();
+                // No title, just return the pre element
+                return preHtml.toString();
             }
         } else {
-            // Inline code
-            super.withInnerText(code);
+            // Inline code (content already set in constructor)
             return super.render();
         }
     }

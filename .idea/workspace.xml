@@ -6,46 +6,16 @@
   <component name="ChangeListManager">
     <list default="true" id="7458035e-2a44-4ace-b3c3-43ca67179f0a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/REMEDIATION_PLAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/REMEDIATION_PLAN.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/EditingDemoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/EditingDemoController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/builders/BannerBuilderTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/builders/BannerBuilderTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/BasicComponentsTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/BasicComponentsTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/DividerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/DividerTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/ImageTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/ImageTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/ListItemTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/ListItemTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/OrderedListTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/OrderedListTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/UnorderedListTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/UnorderedListTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/ButtonTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/ButtonTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/CheckboxTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/CheckboxTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/FormTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/FormTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/RadioGroupTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/RadioGroupTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/SelectTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/SelectTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/TextAreaTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/TextAreaTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/TextInputTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/TextInputTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/media/AudioTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/media/AudioTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/media/GalleryTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/media/GalleryTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/media/VideoTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/media/VideoTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/navigation/LinkTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/navigation/LinkTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/core/HtmlTagTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/core/HtmlTagTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/core/RenderContextTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/core/RenderContextTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/core/SlotKeyTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/core/SlotKeyTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/core/SlotTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/core/SlotTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/core/StyleTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/core/StyleTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/core/TemplateTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/core/TemplateTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/editing/AuthWrapperTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/editing/AuthWrapperTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/editing/EditModalBuilderTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/editing/EditModalBuilderTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/editing/EditablePageTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/editing/EditablePageTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/editing/EditableRowTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/editing/EditableRowTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/editing/ValidationResultTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/editing/ValidationResultTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/layout/ColumnTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/layout/ColumnTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/layout/GridTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/layout/GridTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/layout/RowTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/layout/RowTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/modules/AdditionalModulesTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/modules/AdditionalModulesTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/modules/ContentModuleTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/modules/ContentModuleTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/modules/FormModuleTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/modules/FormModuleTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/modules/MoreModulesTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/modules/MoreModulesTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/modules/RichContentModuleTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/modules/RichContentModuleTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/modules/SimpleListModuleTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/modules/SimpleListModuleTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/ShellBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/demo/ShellBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/framework.css" beforeDir="false" afterPath="$PROJECT_DIR$/demo/framework.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/demo/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/pages/NewComponentsPage.java" beforeDir="false" afterPath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/pages/NewComponentsPage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/pages/NewModulesPage.java" beforeDir="false" afterPath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/pages/NewModulesPage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/ShellBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/ShellBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/Code.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/Code.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/display/Spinner.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/display/Spinner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/resources/static/css/framework.css" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/resources/static/css/framework.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,7 +58,7 @@
     "Spring Boot.DemoApplication.executor": "Coverage",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/home/hickelpickle/Code/Java/cannasite/java-html-framework",
+    "last_opened_file_path": "/home/hickelpickle/Code/Java/cannasite/java-html-framework/demo/src/main/resources",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -99,6 +69,11 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/demo/src/main/resources" />
+    </key>
+  </component>
   <component name="RunManager" selected="JUnit.simplypages in simplypages">
     <configuration name="simplypages in simplypages" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="simplypages" />

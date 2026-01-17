@@ -204,14 +204,16 @@ public class NewModulesPage implements DemoPage {
                             .withAttribution("Professor of Botany, UC Berkeley")
                             .withDate("January 2024");
 
+                    row.withChild(quote1);
+                })
+                .addComponents(Spacer.vertical().medium())
+                .addRow(row -> {
                     QuoteModule quote2 = QuoteModule.create()
                             .withQuote("Collaborative research yields better results.")
                             .withAuthor("Dr. John Doe")
                             .large()
                             .centered();
 
-                    row.withChild(quote1);
-                    row.withChild(Spacer.vertical().medium());
                     row.withChild(quote2);
                 })
 

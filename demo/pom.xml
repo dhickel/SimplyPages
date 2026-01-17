@@ -26,7 +26,7 @@
         <dependency>
             <groupId>io.mindspice</groupId>
             <artifactId>simplypages</artifactId>
-            <version>0.1.1</version>
+            <version>0.2.1</version>
         </dependency>
 
         <!-- Spring Boot Starter for web applications -->
@@ -50,10 +50,33 @@
     </dependencies>
 
     <build>
+        <finalName>simplypages-demo</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-docs</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/classes/static/docs</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../docs</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

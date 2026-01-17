@@ -78,29 +78,32 @@ public class Spinner extends HtmlTag {
     }
 
     @Override
-    protected Stream<Component> getChildrenStream() {
-        Stream.Builder<Component> builder = Stream.builder();
-
-        // Spinner element
-        HtmlTag spinnerElement = new HtmlTag("div")
-            .withAttribute("class", "spinner-border");
-
-        // Screen reader text
-        HtmlTag srText = new HtmlTag("span")
-            .withAttribute("class", "sr-only")
-            .withInnerText("Loading...");
-        spinnerElement.withChild(srText);
-
-        builder.add(spinnerElement);
-
-        // Optional message
+    public String render() {
+        // If there's a message, wrap in a container
         if (message != null && !message.isEmpty()) {
+            HtmlTag wrapper = new HtmlTag("div").withAttribute("class", "spinner-wrapper");
+
+            // The spinner itself
+            HtmlTag spinner = new HtmlTag("div");
+            String classes = "spinner " + size.getCssClass();
+            if (color != null) {
+                classes += " spinner-" + color;
+            }
+            spinner.withAttribute("class", classes);
+            spinner.withAttribute("role", "status");
+            spinner.withAttribute("aria-label", "Loading");
+
+            // Message
             HtmlTag messageDiv = new HtmlTag("div")
                 .withAttribute("class", "spinner-message")
                 .withInnerText(message);
-            builder.add(messageDiv);
-        }
 
-        return Stream.concat(builder.build(), super.getChildrenStream());
+            wrapper.withChild(spinner);
+            wrapper.withChild(messageDiv);
+            return wrapper.render();
+        } else {
+            // Just the spinner
+            return super.render();
+        }
     }
 }

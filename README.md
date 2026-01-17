@@ -332,10 +332,14 @@ Component (interface)
 5. Spring serves HTML to browser
 6. HTMX handles dynamic updates
 
+## Documentation
+
+Full documentation is available in the [`docs/`](docs/) directory and can be viewed in the demo application.
+
 ## Running the Demo
 
 ```bash
-cd simplypages-demo
+cd demo
 ../mvnw spring-boot:run
 ```
 

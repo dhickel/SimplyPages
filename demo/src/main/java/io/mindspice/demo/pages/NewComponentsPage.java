@@ -2,6 +2,7 @@ package io.mindspice.demo.pages;
 
 import io.mindspice.simplypages.components.*;
 import io.mindspice.simplypages.components.display.*;
+import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.layout.Page;
 import io.mindspice.simplypages.layout.Row;
 import org.springframework.stereotype.Component;
@@ -215,9 +216,16 @@ public class NewComponentsPage implements DemoPage {
                 )))
                 .addRow(row -> {
                     Div demo = new Div().withClass("demo-box");
-                    demo.withChild(new Paragraph("Inline code example: ").withInnerText("Use "));
-                    demo.withChild(Code.inline("System.out.println()"));
-                    demo.withChild(new Paragraph(" to print."));
+
+                    // Create inline paragraph with code - use manual code tag
+                    Paragraph inlinePara = new Paragraph();
+                    inlinePara.withChild(new io.mindspice.simplypages.components.TextNode("Inline code example: Use "));
+                    HtmlTag inlineCode = new HtmlTag("code")
+                            .withAttribute("class", "code-inline")
+                            .withInnerText("System.out.println()");
+                    inlinePara.withChild(inlineCode);
+                    inlinePara.withChild(new io.mindspice.simplypages.components.TextNode(" to print."));
+                    demo.withChild(inlinePara);
 
                     demo.withChild(Spacer.vertical().medium());
                     demo.withChild(new Paragraph("Code block:"));
