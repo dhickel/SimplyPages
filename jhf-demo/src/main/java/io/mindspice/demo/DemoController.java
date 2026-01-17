@@ -5,6 +5,10 @@ import io.mindspice.jhf.builders.AccountBarBuilder;
 import io.mindspice.jhf.builders.ShellBuilder;
 import io.mindspice.jhf.builders.SideNavBuilder;
 import io.mindspice.jhf.builders.TopBannerBuilder;
+import io.mindspice.jhf.core.Component;
+import io.mindspice.jhf.components.Div;
+import io.mindspice.jhf.components.Header;
+import io.mindspice.jhf.components.navigation.Link;
 import io.mindspice.jhf.components.forum.ForumPost;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -15,6 +19,20 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.TreeMap;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 import java.util.List;
 
@@ -179,7 +197,7 @@ public class DemoController {
                 .withAccountBar(
                         AccountBarBuilder.create()
                                 .addLeftLink("Home", "/home")
-                                .addLeftLink("Docs", "https://github.com/mindspice/java-html-framework")
+                                .addLeftLink("Docs", "/docs/getting-started/01-introduction")
                                 .addRightAccountWidget("/api/account-status")
                                 .build()
                 )
@@ -243,6 +261,166 @@ public class DemoController {
     ) {
         return renderWithShellIfNeeded(hxRequest, homePage, response);
     }
+
+    private final PathMatchingResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver();
+    private final Map<String, String> docsCache = new ConcurrentHashMap<>();
+    private Map<String, List<String>> cachedDocsStructure = null;
+
+    @GetMapping(value = {"/docs/**", "/docs"})
+    @ResponseBody
+    public String docs(
+            HttpServletResponse response,
+            @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+            jakarta.servlet.http.HttpServletRequest request
+    ) {
+        String requestUri = request.getRequestURI();
+        // Handle /docs or /docs/ safely
+        String path = "";
+        if (requestUri.length() > "/docs/".length()) {
+             path = requestUri.substring("/docs/".length());
+        }
+
+        // Normalize path: handle empty and default to introduction
+        if (path.isEmpty() || path.equals("/")) {
+            path = "getting-started/01-introduction.md";
+        }
+
+        // Support both with and without .md
+        // We will store in cache using the provided path, but load logic needs to be smart
+        String markdown = docsCache.computeIfAbsent(path, this::loadDocContent);
+
+        if (markdown == null) {
+            response.setStatus(404);
+            return "Documentation not found: " + path;
+        }
+
+        String title = path.contains("/") ? path.substring(path.lastIndexOf('/') + 1) : path;
+        // Basic title formatting
+        title = title.replace("-", " ").replace(".md", "");
+        title = title.substring(0, 1).toUpperCase() + title.substring(1);
+
+        Component sidebar = getDocsNavigation();
+        DocsPage docsPage = new DocsPage(title, markdown, sidebar);
+
+        // Tell caches to store separate versions based on HX-Request header
+        response.setHeader("Vary", "HX-Request");
+
+        // If this is an HTMX request from the sidebar navigation, return just the content
+        if (hxRequest != null) {
+            return docsPage.renderContent();
+        }
+
+        // For direct navigation, build full shell with page content
+        return renderWithShellIfNeeded(null, docsPage, response);
+    }
+
+    private String loadDocContent(String path) {
+        if (path.contains("..")) {
+            return null; // Prevent path traversal
+        }
+
+        // If path ends with .md, use it as is for lookup, otherwise append .md
+        String lookupPath = path.endsWith(".md") ? path : path + ".md";
+        String cleanPath = path.endsWith(".md") ? path.substring(0, path.length() - 3) : path;
+
+        try {
+            // 1. Try direct match
+            Resource resource = resourceResolver.getResource("classpath:static/docs/" + lookupPath);
+            if (resource.exists()) {
+                return new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            }
+
+            // 2. Recursive search for file name
+            String fileName = lookupPath.contains("/") ? lookupPath.substring(lookupPath.lastIndexOf('/') + 1) : lookupPath;
+            Resource[] resources = resourceResolver.getResources("classpath:static/docs/**/" + fileName);
+            if (resources.length > 0) {
+                 return new String(resources[0].getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private Component getDocsNavigation() {
+        Map<String, List<String>> structure = getDocsStructure();
+        Div navContainer = new Div().withClass("docs-nav");
+
+        // Helper to add links with HTMX attributes for in-place content updates
+        java.util.function.BiConsumer<Div, String> addLink = (container, filePath) -> {
+            String fileName = filePath.contains("/") ? filePath.substring(filePath.lastIndexOf('/') + 1) : filePath;
+            String title = fileName.replace(".md", "").replace("-", " ");
+            if (title.matches("^\\d+\\s.*")) {
+                title = title.replaceAll("^\\d+\\s", "");
+            }
+            title = title.substring(0, 1).toUpperCase() + title.substring(1);
+
+            container.withChild(
+                new Div().withClass("mb-1").withChild(
+                    new Link("/docs/" + filePath, title)
+                        .withClass("text-decoration-none text-dark")
+                        .withHxGet("/docs/" + filePath)
+                        .withHxTarget("#docs-content")
+                        .withHxSwap("innerHTML scroll:top")
+                        .withHxPushUrl(true)
+                )
+            );
+        };
+
+        // Build navigation from cached structure
+        if (structure.containsKey("Getting Started")) {
+            navContainer.withChild(Header.H4("Getting Started").withClass("mb-2 mt-3"));
+            structure.get("Getting Started").stream().sorted().forEach(file -> addLink.accept(navContainer, file));
+        }
+
+        structure.forEach((section, files) -> {
+            if (!section.equals("Getting Started")) {
+                navContainer.withChild(Header.H4(section).withClass("mb-2 mt-4"));
+                files.stream().sorted().forEach(file -> addLink.accept(navContainer, file));
+            }
+        });
+
+        return navContainer;
+    }
+
+    private synchronized Map<String, List<String>> getDocsStructure() {
+        if (cachedDocsStructure != null) {
+            return cachedDocsStructure;
+        }
+
+        try {
+            Resource[] resources = resourceResolver.getResources("classpath:static/docs/**/*.md");
+
+            // Group by parent directory name
+            Map<String, List<String>> sections = new TreeMap<>();
+
+            for (Resource res : resources) {
+                String relativePath = res.getURL().toString();
+                // Extract part after /docs/
+                if (relativePath.contains("/docs/")) {
+                    String part = relativePath.substring(relativePath.indexOf("/docs/") + 6);
+                    String folder = "General";
+                    if (part.contains("/")) {
+                        folder = part.substring(0, part.lastIndexOf('/'));
+                        // Capitalize and format folder name
+                        folder = Arrays.stream(folder.split("-"))
+                            .map(s -> s.substring(0, 1).toUpperCase() + s.substring(1))
+                            .collect(Collectors.joining(" "));
+                    }
+                    sections.computeIfAbsent(folder, k -> new ArrayList<>()).add(part);
+                }
+            }
+
+            cachedDocsStructure = sections;
+            return cachedDocsStructure;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new TreeMap<>();
+        }
+    }
+
 
     @GetMapping("/home")
     @ResponseBody
@@ -604,7 +782,7 @@ public class DemoController {
     @GetMapping("/demo/advanced/layout")
     @ResponseBody
     public String getAdvancedLayout(@RequestParam("complex") boolean complex) {
-        return advancedRenderingPage.renderPatternASection(complex).render(null);
+        return advancedRenderingPage.renderPatternAInner(complex).render(null);
     }
 
     // Wiki demo session state
