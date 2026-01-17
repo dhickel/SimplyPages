@@ -34,8 +34,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 
-import java.util.List;
-
 /**
  * Main demo controller for the Java HTML Framework.
  *
@@ -226,6 +224,7 @@ public class DemoController {
                                 .addLink("Page Layouts", "/page-layouts", "📄")
                                 .addLink("HTMX", "/htmx", "⚡")
                                 .addLink("Dynamic Updates", "/demo/dynamic-updates", "🔄")
+                                .addLink("Editing System", "/editing-demo", "✏️")
                                 .addLink("Advanced Rendering", "/advanced-rendering", "🚀")
                                 .addLink("Custom", "/custom", "🔧")
                                 .addLink("Shell Demo", "/shell-demo", "🐚")

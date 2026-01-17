@@ -26,7 +26,7 @@
         <dependency>
             <groupId>io.mindspice</groupId>
             <artifactId>jhf</artifactId>
-            <version>0.0.5</version>
+            <version>0.1.0</version>
         </dependency>
 
         <!-- Spring Boot Starter for web applications -->

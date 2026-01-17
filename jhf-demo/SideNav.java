@@ -2,13 +2,17 @@ package io.mindspice.jhf.components.navigation;
 
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
-import io.mindspice.jhf.core.RenderContext;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Side navigation component specifically designed for vertical navigation.
  * Supports sections and nested items.
  */
 public class SideNav extends HtmlTag {
+
+    private final List<Object> items = new ArrayList<>(); // Can be NavItem or Section
 
     public SideNav() {
         super("nav");
@@ -20,32 +24,40 @@ public class SideNav extends HtmlTag {
     }
 
     public SideNav addItem(String text, String href) {
-        this.withChild(new NavItem(text, href, false));
+        items.add(new NavItem(text, href, false));
         return this;
     }
 
     public SideNav addItem(String text, String href, boolean active) {
-        this.withChild(new NavItem(text, href, active));
+        items.add(new NavItem(text, href, active));
         return this;
     }
 
     public SideNav addItem(NavItem navItem) {
-        this.withChild(navItem);
+        items.add(navItem);
         return this;
     }
 
     public SideNav addSection(String title) {
-        this.withChild(new Section(title));
+        items.add(new Section(title));
+        return this;
+    }
+
+    public SideNav withClass(String className) {
+        String currentClass = "sidenav";
+        this.withAttribute("class", currentClass + " " + className);
         return this;
     }
 
     @Override
-    public SideNav withClass(String className) {
-        super.addClass(className);
-        return this;
+    public String render() {
+        items.forEach(item -> {
+            if (item instanceof Component) {
+                super.withChild((Component) item);
+            }
+        });
+        return super.render();
     }
-
-    // Removed getChildrenStream override. We just add items/sections as children directly.
 
     public static class NavItem implements Component {
         private final String text;
@@ -83,7 +95,7 @@ public class SideNav extends HtmlTag {
         }
 
         @Override
-        public String render(RenderContext context) {
+        public String render() {
             StringBuilder sb = new StringBuilder("<a href=\"").append(href).append("\"");
             sb.append(" class=\"sidenav-item");
             if (active) {
@@ -110,11 +122,6 @@ public class SideNav extends HtmlTag {
             sb.append(text).append("</a>");
             return sb.toString();
         }
-
-        @Override
-        public String render() {
-            return render(RenderContext.empty());
-        }
     }
 
     public static class Section implements Component {
@@ -125,13 +132,8 @@ public class SideNav extends HtmlTag {
         }
 
         @Override
-        public String render(RenderContext context) {
-            return "<div class=\"sidenav-section\">" + title + "</div>";
-        }
-
-        @Override
         public String render() {
-            return render(RenderContext.empty());
+            return "<div class=\"sidenav-section\">" + title + "</div>";
         }
     }
 }
