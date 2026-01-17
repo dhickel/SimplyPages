@@ -2,9 +2,11 @@ package io.mindspice.jhf.components.display;
 
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
+import io.mindspice.jhf.core.RenderContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Ordered list component.
@@ -32,9 +34,9 @@ public class OrderedList extends HtmlTag {
         return this;
     }
 
+    @Override
     public OrderedList withClass(String className) {
-        String currentClass = "list";
-        this.withAttribute("class", currentClass + " " + className);
+        super.addClass(className);
         return this;
     }
 
@@ -49,9 +51,11 @@ public class OrderedList extends HtmlTag {
     }
 
     @Override
-    public String render() {
-        items.forEach(item -> super.withChild(item));
-        return super.render();
+    protected Stream<Component> getChildrenStream() {
+        return Stream.concat(
+            super.getChildrenStream(),
+            items.stream().map(item -> (Component) item)
+        );
     }
 
     private static class ListItem implements Component {
@@ -69,9 +73,14 @@ public class OrderedList extends HtmlTag {
         }
 
         @Override
-        public String render() {
-            String content = text != null ? text : component.render();
+        public String render(RenderContext context) {
+            String content = text != null ? text : component.render(context);
             return "<li>" + content + "</li>";
+        }
+
+        @Override
+        public String render() {
+            return render(RenderContext.empty());
         }
     }
 }

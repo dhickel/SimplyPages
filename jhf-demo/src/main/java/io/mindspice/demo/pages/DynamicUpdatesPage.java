@@ -34,7 +34,6 @@ public class DynamicUpdatesPage implements DemoPage {
                                     .withChild(new HtmlTag("h3").withChild(Slot.of(CARD_TITLE)))
                                     .withChild(new HtmlTag("p").withChild(Slot.of(CARD_BODY)))
                     )
-                    .withAttribute("hx-swap-oob", "true")
     );
 
     public static final Template LIST_TEMPLATE = Template.of(
@@ -44,7 +43,6 @@ public class DynamicUpdatesPage implements DemoPage {
                     .withCustomContent(
                             new HtmlTag("ul").withClass("list-group").withChild(Slot.of(LIST_CONTENT))
                     )
-                    .withAttribute("hx-swap-oob", "true")
     );
 
     public static final Template TABLE_TEMPLATE = Template.of(
@@ -61,7 +59,6 @@ public class DynamicUpdatesPage implements DemoPage {
                                     ))
                                     .withChild(new HtmlTag("tbody").withChild(Slot.of(TABLE_BODY)))
                     )
-                    .withAttribute("hx-swap-oob", "true")
     );
 
 
@@ -111,8 +108,11 @@ public class DynamicUpdatesPage implements DemoPage {
                                                     .withAttribute("class", "form-layout")
                                                     // Dropdown
                                                     .withChild(new HtmlTag("div").withClass("form-group")
-                                                            .withChild(new HtmlTag("label").withInnerText("Target Module"))
-                                                            .withChild(new HtmlTag("select").withAttribute("name", "target")
+                                                            .withChild(new HtmlTag("label").withAttribute("for", "target").withInnerText("Target Module"))
+                                                            .withChild(new HtmlTag("select")
+                                                                    .withAttribute("name", "target")
+                                                                    .withAttribute("id", "target")
+                                                                    .withClass("form-control")
                                                                     .withChild(new HtmlTag("option").withAttribute("value", "card").withInnerText("Card Module"))
                                                                     .withChild(new HtmlTag("option").withAttribute("value", "list").withInnerText("List Module"))
                                                                     .withChild(new HtmlTag("option").withAttribute("value", "table").withInnerText("Table Module"))
@@ -154,7 +154,7 @@ public class DynamicUpdatesPage implements DemoPage {
                                                     .withAttribute("hx-swap", "outerHTML") // Replace the entire module, not just inner content
                                                     .withAttribute("hx-on::after-request", "this.reset()") // Reset form
                                                     .withClass("form-layout")
-                                                    .withChild(createInput("content", "Write a post..."))
+                                                    .withChild(createInput("content", "New Post Content", "Write a post..."))
                                                     .withChild(new HtmlTag("button")
                                                             .withAttribute("type", "submit")
                                                             .withClass("btn btn-success")
@@ -169,11 +169,21 @@ public class DynamicUpdatesPage implements DemoPage {
     }
 
     private io.mindspice.jhf.core.Component createInput(String name, String label) {
+        return createInput(name, label, "");
+    }
+
+    private io.mindspice.jhf.core.Component createInput(String name, String label, String placeholder) {
         return new HtmlTag("div").withClass("form-group")
-                .withChild(new HtmlTag("label").withInnerText(label))
+                .withChild(new HtmlTag("label")
+                        .withAttribute("for", name)
+                        .withInnerText(label)
+                        .addStyle("margin-bottom", "0.5rem")
+                        .addStyle("display", "block"))
                 .withChild(new HtmlTag("input")
                         .withAttribute("type", "text")
                         .withAttribute("name", name)
+                        .withAttribute("id", name)
+                        .withAttribute("placeholder", placeholder)
                         .withAttribute("class", "form-control")
                 );
     }

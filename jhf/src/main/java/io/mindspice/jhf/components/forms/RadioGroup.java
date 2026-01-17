@@ -2,9 +2,11 @@ package io.mindspice.jhf.components.forms;
 
 import io.mindspice.jhf.components.Div;
 import io.mindspice.jhf.core.HtmlTag;
+import io.mindspice.jhf.core.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Radio button group component.
@@ -48,9 +50,8 @@ public class RadioGroup extends Div {
     }
 
     @Override
-    public String render() {
-        children.clear();
-        for (RadioOption option : options) {
+    protected Stream<Component> getChildrenStream() {
+        Stream<Component> optionsStream = options.stream().map(option -> {
             Div optionWrapper = new Div().withClass("radio-option");
 
             String id = name + "-" + option.value.replaceAll("[^a-zA-Z0-9]", "-");
@@ -76,10 +77,10 @@ public class RadioGroup extends Div {
                 .withInnerText(option.label);
 
             optionWrapper.withChild(input).withChild(label);
-            super.withChild(optionWrapper);
-        }
+            return optionWrapper;
+        });
 
-        return super.render();
+        return Stream.concat(optionsStream, super.getChildrenStream());
     }
 
     private static class RadioOption {

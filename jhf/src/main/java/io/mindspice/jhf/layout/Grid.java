@@ -4,8 +4,6 @@ import io.mindspice.jhf.core.Attribute;
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
 
-import java.util.List;
-
 /**
  * Grid layout for creating responsive grid layouts.
  */
@@ -23,6 +21,7 @@ public class Grid extends HtmlTag {
         super("div");
         this.baseClass = baseClass;
         this.addClass(baseClass);
+        updateClasses();
     }
 
     public static Grid create() {
@@ -31,11 +30,13 @@ public class Grid extends HtmlTag {
 
     public Grid withColumns(int columns) {
         this.columns = columns;
+        updateClasses();
         return this;
     }
 
     public Grid withGap(String gap) {
         this.gap = gap;
+        updateClasses();
         return this;
     }
 
@@ -51,11 +52,9 @@ public class Grid extends HtmlTag {
         return this;
     }
 
-    @Override
-    public String render() {
+    private void updateClasses() {
         // Logic to update grid classes based on state
-        // We need to remove old grid-cols/gap classes to prevent accumulation if re-rendered
-        // But we can't easily find "old" classes without regex on the current class string.
+        // We need to remove old grid-cols/gap classes to prevent accumulation.
 
         String currentClass = attributes.stream()
                 .filter(attr -> "class".equals(attr.getName()))
@@ -66,15 +65,18 @@ public class Grid extends HtmlTag {
         // Clean up old grid layout classes
         currentClass = currentClass.replaceAll("grid-cols-\\d+", "").replaceAll("gap-\\w+", "").trim();
 
-        // Ensure base class is present if it was somehow removed (unlikely but safe)
-        // Actually, we trust baseClass is there or user removed it intentionally.
-        // But let's follow the pattern of adding layout classes.
+        // Remove extra spaces potentially created by replaceAll
+        currentClass = currentClass.replaceAll("\\s+", " ");
 
-        String newClass = currentClass + " grid-cols-" + columns + " gap-" + gap;
+        // Rebuild class string
+        // Ensure base class is present if not
+        if (!currentClass.contains(baseClass)) {
+            currentClass = (baseClass + " " + currentClass).trim();
+        }
 
-        // Update the attribute directly to replace the cleaned string
+        String newClass = (currentClass + " grid-cols-" + columns + " gap-" + gap).trim();
+
+        // Update the attribute directly
         this.withAttribute("class", newClass);
-
-        return super.render();
     }
 }

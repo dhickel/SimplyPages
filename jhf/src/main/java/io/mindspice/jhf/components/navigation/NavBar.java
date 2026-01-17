@@ -2,9 +2,7 @@ package io.mindspice.jhf.components.navigation;
 
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
-
-import java.util.ArrayList;
-import java.util.List;
+import io.mindspice.jhf.core.RenderContext;
 
 /**
  * Navigation bar component.
@@ -12,12 +10,19 @@ import java.util.List;
  */
 public class NavBar extends HtmlTag {
 
-    private final List<NavItem> items = new ArrayList<>();
-    private String brand;
+    private final HtmlTag itemsContainer;
+    private HtmlTag brandDiv;
 
     public NavBar() {
         super("nav");
         this.withAttribute("class", "navbar");
+        this.itemsContainer = new HtmlTag("div").withAttribute("class", "navbar-items");
+        // We add itemsContainer to children. Brand will be added before it if set.
+        // But since we want brand first, we can manage order in constructor or addBrand logic.
+        // Let's add itemsContainer now, and if brand is added, we insert it at 0?
+        // HtmlTag doesn't support insert.
+        // So we'll add itemsContainer.
+        this.withChild(itemsContainer);
     }
 
     public static NavBar create() {
@@ -25,53 +30,48 @@ public class NavBar extends HtmlTag {
     }
 
     public NavBar withBrand(String brand) {
-        this.brand = brand;
+        if (brandDiv == null) {
+            brandDiv = new HtmlTag("div")
+                .withAttribute("class", "navbar-brand")
+                .withInnerText(brand);
+            // We need brand to be first.
+            // Since we can't insert, we'll cheat:
+            // Re-add itemsContainer after brand?
+            // Accessing protected children via inheritance.
+            this.children.add(0, brandDiv);
+        } else {
+            brandDiv.withInnerText(brand);
+        }
         return this;
     }
 
     public NavBar addItem(String text, String href) {
-        items.add(new NavItem(text, href));
+        itemsContainer.withChild(new NavItem(text, href));
         return this;
     }
 
     public NavBar addItem(String text, String href, boolean active) {
-        items.add(new NavItem(text, href, active));
+        itemsContainer.withChild(new NavItem(text, href, active));
         return this;
     }
 
     public NavBar vertical() {
-        this.withAttribute("class", "navbar navbar-vertical");
+        this.addClass("navbar-vertical");
         return this;
     }
 
     public NavBar horizontal() {
-        this.withAttribute("class", "navbar navbar-horizontal");
-        return this;
-    }
-
-    public NavBar withClass(String className) {
-        String currentClass = "navbar";
-        this.withAttribute("class", currentClass + " " + className);
+        this.addClass("navbar-horizontal");
         return this;
     }
 
     @Override
-    public String render() {
-        // Add brand if present
-        if (brand != null) {
-            HtmlTag brandDiv = new HtmlTag("div")
-                .withAttribute("class", "navbar-brand")
-                .withInnerText(brand);
-            super.withChild(brandDiv);
-        }
-
-        // Add items container
-        HtmlTag itemsContainer = new HtmlTag("div").withAttribute("class", "navbar-items");
-        items.forEach(item -> itemsContainer.withChild(item));
-        super.withChild(itemsContainer);
-
-        return super.render();
+    public NavBar withClass(String className) {
+        super.addClass(className);
+        return this;
     }
+
+    // Removed getChildrenStream override
 
     public static class NavItem implements Component {
         private final String text;
@@ -107,7 +107,7 @@ public class NavBar extends HtmlTag {
         }
 
         @Override
-        public String render() {
+        public String render(RenderContext context) {
             StringBuilder sb = new StringBuilder("<a href=\"").append(href).append("\"");
             sb.append(" class=\"navbar-item");
             if (active) {
@@ -127,6 +127,11 @@ public class NavBar extends HtmlTag {
 
             sb.append(">").append(text).append("</a>");
             return sb.toString();
+        }
+
+        @Override
+        public String render() {
+            return render(RenderContext.empty());
         }
     }
 }

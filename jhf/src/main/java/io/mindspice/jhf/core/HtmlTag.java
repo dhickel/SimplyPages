@@ -381,7 +381,7 @@ public class HtmlTag implements Component {
      * @param value the CSS property value (e.g., "300px", "50%")
      * @return this HtmlTag instance for method chaining
      */
-    protected HtmlTag addStyle(String property, String value) {
+    public HtmlTag addStyle(String property, String value) {
         // Find existing style attribute
         Optional<String> existingStyle = attributes.stream()
                 .filter(attr -> "style".equals(attr.getName()))

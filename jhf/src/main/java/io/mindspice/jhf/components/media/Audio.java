@@ -10,7 +10,7 @@ public class Audio extends HtmlTag {
     public Audio(String src) {
         super("audio");
         this.withAttribute("src", src);
-        this.withAttribute("class", "audio");
+        this.addClass("audio");
     }
 
     public static Audio create(String src) {
@@ -19,6 +19,13 @@ public class Audio extends HtmlTag {
 
     public Audio withControls() {
         this.withAttribute("controls", "");
+        return this;
+    }
+
+    public Audio withControls(boolean controls) {
+        if (controls) {
+            this.withAttribute("controls", "");
+        }
         return this;
     }
 
@@ -42,9 +49,9 @@ public class Audio extends HtmlTag {
         return this;
     }
 
+    @Override
     public Audio withClass(String className) {
-        String currentClass = "audio";
-        this.withAttribute("class", currentClass + " " + className);
+        super.addClass(className);
         return this;
     }
 }

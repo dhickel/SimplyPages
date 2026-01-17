@@ -2,6 +2,7 @@ package io.mindspice.jhf.components.display;
 
 import io.mindspice.jhf.core.Component;
 import io.mindspice.jhf.core.HtmlTag;
+import io.mindspice.jhf.core.RenderContext;
 import org.owasp.encoder.Encode;
 
 import java.util.ArrayList;
@@ -13,15 +14,28 @@ import java.util.List;
  */
 public class Table extends HtmlTag {
 
-    private final List<String> headers = new ArrayList<>();
-    private final List<Row> rows = new ArrayList<>();
-    private boolean striped = false;
-    private boolean bordered = false;
-    private boolean hoverable = false;
+    private final HtmlTag thead;
+    private final HtmlTag tbody;
+    private final HtmlTag headerRow;
 
     public Table() {
         super("table");
-        this.withAttribute("class", "table");
+        this.addClass("table");
+
+        // Initialize structure
+        this.thead = new HtmlTag("thead");
+        this.headerRow = new HtmlTag("tr");
+        this.thead.withChild(headerRow);
+
+        this.tbody = new HtmlTag("tbody");
+
+        // Add to children immediately so they are always rendered
+        // Note: We add thead/tbody even if empty, but CSS usually hides empty ones or we can check before render.
+        // However, for simplicity and statefulness, we add them.
+        // If strict 'no empty thead' is needed, we can toggle visibility or add conditionally in a specialized render.
+        // But standard HtmlTag behavior is to render what's in children.
+        this.withChild(thead);
+        this.withChild(tbody);
     }
 
     public static Table create() {
@@ -29,71 +43,55 @@ public class Table extends HtmlTag {
     }
 
     public Table withHeaders(String... headerLabels) {
-        headers.addAll(List.of(headerLabels));
+        // Clear existing headers to avoid duplication if called multiple times
+        // Since HtmlTag children list is not easily cleared by type, we assume this is called once or we clear children of headerRow
+        // But HtmlTag doesn't expose clearChildren().
+        // We will just append for now, assuming standard usage.
+        for (String h : headerLabels) {
+            HtmlTag th = new HtmlTag("th").withInnerText(h);
+            headerRow.withChild(th);
+        }
         return this;
     }
 
     public Table addRow(String... cellValues) {
-        rows.add(new Row(cellValues));
+        tbody.withChild(new Row(cellValues));
         return this;
     }
 
     public Table addRow(Component... cellComponents) {
-        rows.add(new Row(cellComponents));
+        tbody.withChild(new Row(cellComponents));
+        return this;
+    }
+
+    // Helper to add a Row object directly (e.g. from lambda)
+    public Table addRow(Row row) {
+        tbody.withChild(row);
         return this;
     }
 
     public Table striped() {
-        this.striped = true;
+        this.addClass("table-striped");
         return this;
     }
 
     public Table bordered() {
-        this.bordered = true;
+        this.addClass("table-bordered");
         return this;
     }
 
     public Table hoverable() {
-        this.hoverable = true;
-        return this;
-    }
-
-    public Table withClass(String className) {
-        String currentClass = "table";
-        this.withAttribute("class", currentClass + " " + className);
+        this.addClass("table-hover");
         return this;
     }
 
     @Override
-    public String render() {
-        // Build class string
-        StringBuilder classBuilder = new StringBuilder("table");
-        if (striped) classBuilder.append(" table-striped");
-        if (bordered) classBuilder.append(" table-bordered");
-        if (hoverable) classBuilder.append(" table-hover");
-        this.withAttribute("class", classBuilder.toString());
-
-        // Add header if present
-        if (!headers.isEmpty()) {
-            HtmlTag thead = new HtmlTag("thead");
-            HtmlTag headerRow = new HtmlTag("tr");
-            headers.forEach(h -> {
-                HtmlTag th = new HtmlTag("th").withInnerText(h);
-                headerRow.withChild(th);
-            });
-            thead.withChild(headerRow);
-            super.withChild(thead);
-        }
-
-        // Add rows
-        if (!rows.isEmpty()) {
-            HtmlTag tbody = new HtmlTag("tbody");
-            rows.forEach(row -> tbody.withChild(row));
-            super.withChild(tbody);
-        }
-
-        return super.render();
+    public Table withClass(String className) {
+        super.addClass(className);
+        return this;
     }
+
+    // Removed getChildrenStream override as we now manage children statefully
 
     public static class Row implements Component {
         private final List<Cell> cells = new ArrayList<>();
@@ -111,11 +109,16 @@ public class Table extends HtmlTag {
         }
 
         @Override
-        public String render() {
+        public String render(RenderContext context) {
             StringBuilder sb = new StringBuilder("<tr>");
-            cells.forEach(cell -> sb.append(cell.render()));
+            cells.forEach(cell -> sb.append(cell.render(context)));
             sb.append("</tr>");
             return sb.toString();
+        }
+
+        @Override
+        public String render() {
+            return render(RenderContext.empty());
         }
     }
 
@@ -134,9 +137,14 @@ public class Table extends HtmlTag {
         }
 
         @Override
-        public String render() {
-            String content = textValue != null ? Encode.forHtml(textValue) : componentValue.render();
+        public String render(RenderContext context) {
+            String content = textValue != null ? Encode.forHtml(textValue) : componentValue.render(context);
             return "<td>" + content + "</td>";
+        }
+
+        @Override
+        public String render() {
+            return render(RenderContext.empty());
         }
     }
 }
