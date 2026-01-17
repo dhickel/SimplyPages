@@ -110,9 +110,9 @@ public class TextInput extends HtmlTag {
 
     public TextInput withClass(String className) {
         String currentClass = attributes.stream()
-            .filter(attr -> "class".equals(attr.toString().split("=")[0].trim()))
+            .filter(attr -> "class".equals(attr.getName()))
             .findFirst()
-            .map(attr -> attr.toString().split("=")[1].replaceAll("\"", "").trim())
+            .map(attr -> attr.getValue())
             .orElse("form-input");
         this.withAttribute("class", currentClass + " " + className);
         return this;

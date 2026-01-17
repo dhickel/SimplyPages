@@ -72,6 +72,7 @@ public class Select extends HtmlTag {
 
     @Override
     public String render() {
+        children.clear();
         // Add all options as children before rendering
         options.forEach(option -> super.withChild(option));
         return super.render();

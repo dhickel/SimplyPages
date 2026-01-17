@@ -59,9 +59,9 @@ public class Alert extends HtmlTag {
 
     public Alert withClass(String className) {
         String currentClass = attributes.stream()
-            .filter(attr -> attr.toString().contains("class="))
+            .filter(attr -> "class".equals(attr.getName()))
             .findFirst()
-            .map(attr -> attr.toString().split("=")[1].replaceAll("\"", "").trim())
+            .map(attr -> attr.getValue())
             .orElse("alert");
         this.withAttribute("class", currentClass + " " + className);
         return this;
