@@ -1,7 +1,7 @@
-# Java HTML Framework (JHF) - Claude Init
+# SimplyPages - Claude Init
 
 ## Project Overview
-JHF is a lightweight, domain-specific framework for building server-side rendered web applications with minimal JavaScript. Built for data-heavy applications like research portals, community platforms, and content management systems. Foundation for the Cannabis Research Portal, planned for eventual open source release.
+SimplyPages is a lightweight, domain-specific framework for building server-side rendered web applications with minimal JavaScript. Built for data-heavy applications like research portals, community platforms, and content management systems. Planned for eventual open source release.
 
 ## Framework Philosophy
 
@@ -13,7 +13,7 @@ JHF is a lightweight, domain-specific framework for building server-side rendere
 - **Composable Architecture**: Build complex UIs from simple, reusable primitives using composition.
 - **Domain-Specific Optimization**: Optimized for data display, forms, forums, and content-heavy applications.
 
-### When to Use JHF
+### When to Use SimplyPages
 - Research portals with heavy data visualization
 - Community platforms (forums, discussions, journals)
 - Content management systems with user-generated content
@@ -59,7 +59,7 @@ Module (abstract class extends HtmlTag)
 ### Package Structure
 
 ```
-io.mindspice.jhf/
+io.mindspice.simplypages/
 ├── core/
 │   ├── Component.java         # Base interface for all renderable elements
 │   ├── HtmlTag.java          # Abstract base class for HTML elements
@@ -107,7 +107,7 @@ The `Markdown` component renders rich text content server-side using CommonMark 
 
 ### Sizing System
 
-JHF uses a **two-tier sizing system** with clear separation of concerns:
+SimplyPages uses a **two-tier sizing system** with clear separation of concerns:
 
 #### 1. Grid-Based Layout (Primary for Modules)
 Use the **12-column grid system** for module layout via `Column.withWidth(1-12)`:
@@ -228,7 +228,7 @@ The `Page` class provides a builder pattern for constructing complete pages. Use
 
 ### Grid System
 
-JHF uses a **12-column responsive grid system** for page layouts. This is the **primary mechanism for sizing modules**.
+SimplyPages uses a **12-column responsive grid system** for page layouts. This is the **primary mechanism for sizing modules**.
 
 **Core Concepts**:
 - **Row**: Flexbox container for columns (CSS class: `.row`)
@@ -395,7 +395,7 @@ Create builder classes for common page patterns to encapsulate repeated layout s
 - **Desktop**: > 769px
 
 ### Responsive Behavior
-All JHF components and layouts are responsive by default using mobile-first design:
+All SimplyPages components and layouts are responsive by default using mobile-first design:
 - Sidebar: Fixed 250px on desktop, off-canvas on mobile
 - Grid: Auto-adjusts column widths, stacks on mobile
 - Top Banner: Horizontal on desktop, vertical on mobile
@@ -458,7 +458,7 @@ Commit after completing each discrete feature or fix with clear, descriptive mes
 ```
 
 ### Using as Library
-Install to local Maven repo with `./mvnw clean install`, then add dependency with groupId `io.mindspice` and artifactId `java-html-framework`.
+Install to local Maven repo with `./mvnw clean install`, then add dependency with groupId `io.mindspice` and artifactId `simplypages`.
 
 ## Development Guidelines
 
@@ -506,7 +506,7 @@ Use imperative mood ("Add feature" not "Added feature"), be specific, include co
 
 **Developer Experience**: Component playground, documentation generation, hot reload, testing utilities, performance profiling
 
-**Cannabis Portal Specific**: Research data templates, voting/rating, user reputation, version control for collaborative pages, advanced forum features, grow journal timeline, strain comparison
+**Domain-Specific Features**: Research data templates, voting/rating, user reputation, version control for collaborative pages, advanced forum features, journal timeline, comparison tools
 
 ### Open Source Plans
 Documentation, testing, example applications, licensing, community guidelines, semantic versioning
@@ -522,9 +522,6 @@ Documentation, testing, example applications, licensing, community guidelines, s
 - [Spring Boot Reference](https://docs.spring.io/spring-boot/docs/current/reference/html/)
 - [HTMX Documentation](https://htmx.org/docs/)
 - [CommonMark Spec](https://commonmark.org/)
-
-### Cannabis Portal Context
-- `/home/hickelpickle/Code/Java/cannasite/CLAUDE.md` - Main portal documentation
 
 ## Maintenance Philosophy
 Designed for Java developers with limited web experience. Avoid over-abstraction and complex patterns. Prefer explicit over implicit behavior. Keep dependency count minimal. Favor server-side rendering over client-side complexity. Make the common case easy, advanced cases possible.

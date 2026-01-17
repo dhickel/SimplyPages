@@ -1,6 +1,6 @@
-package io.mindspice.jhf.components.forum;
+package io.mindspice.simplypages.components.forum;
 
-import io.mindspice.jhf.core.HtmlTag;
+import io.mindspice.simplypages.core.HtmlTag;
 
 /**
  * List of forum posts component.
