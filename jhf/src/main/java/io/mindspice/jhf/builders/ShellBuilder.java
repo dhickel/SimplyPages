@@ -1,8 +1,8 @@
 package io.mindspice.jhf.builders;
 
-import io.mindspice.jhf.components.navigation.SideNav;
-import io.mindspice.jhf.core.Component;
-import io.mindspice.jhf.core.HtmlTag;
+import io.mindspice.simplypages.components.navigation.SideNav;
+import io.mindspice.simplypages.core.Component;
+import io.mindspice.simplypages.core.HtmlTag;
 
 /**
  * Comprehensive builder for creating the entire application shell/layout.

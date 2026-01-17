@@ -236,6 +236,24 @@ public abstract class Module extends HtmlTag {
     }
 
     /**
+     * Gets the unique identifier for this module.
+     *
+     * @return the module ID, or null if not set
+     */
+    public String getModuleId() {
+        return this.moduleId;
+    }
+
+    /**
+     * Gets the title for this module.
+     *
+     * @return the module title, or null if not set
+     */
+    public String getTitle() {
+        return this.title;
+    }
+
+    /**
      * Sets the title for this module.
      *
      * <p>The title is typically rendered as a header (H2) at the top of the module.
@@ -353,6 +371,18 @@ public abstract class Module extends HtmlTag {
      * }</pre>
      */
     protected abstract void buildContent();
+
+    /**
+     * Rebuilds module content after edits.
+     *
+     * <p>This clears existing children, resets the build state, and rebuilds
+     * content immediately.</p>
+     */
+    protected void rebuildContent() {
+        children.clear();
+        built = false;
+        build();
+    }
 
     /**
      * Ensures the module content is built.

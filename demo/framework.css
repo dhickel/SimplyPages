@@ -1538,3 +1538,216 @@ img {
     .d-md-inline { display: inline; }
     .d-md-flex { display: flex; }
 }
+
+/* ===== Modal System ===== */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.2s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a202c;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #718096;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: #2d3748;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Mobile: Full screen */
+@media (max-width: 768px) {
+    .modal-container {
+        max-width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+        margin: 0;
+    }
+
+    .modal-backdrop {
+        padding: 0;
+    }
+}
+
+/* ===== Editing System Styles ===== */
+
+/* Editable module wrapper */
+.editable-module-wrapper {
+    position: relative;
+    margin-bottom: 24px;
+}
+
+/* Editable row wrapper */
+.editable-row-wrapper {
+    position: relative;
+    margin-bottom: 32px;
+    padding: 16px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.editable-row-wrapper:hover {
+    background-color: #f7fafc;
+}
+
+/* Edit toolbar - larger, better hover */
+.edit-toolbar {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+}
+
+.edit-toolbar-btn {
+    font-size: 1.8rem;
+    padding: 8px 12px;
+    opacity: 0.6;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.edit-toolbar-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Add module section - less loud */
+.add-module-section {
+    margin: 16px 0;
+    text-align: center;
+}
+
+.add-module-section .btn {
+    background-color: #e2e8f0;
+    color: #4a5568;
+    border: 2px dashed #cbd5e0;
+    padding: 12px 24px;
+    font-weight: 500;
+}
+
+.add-module-section .btn:hover {
+    background-color: #cbd5e0;
+    border-color: #a0aec0;
+    transform: translateY(-1px);
+}
+
+/* Insert row section - subtle */
+.insert-row-section {
+    margin: 24px 0;
+    padding: 16px 0;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+}
+
+.insert-row-section .btn {
+    color: #718096;
+    background: transparent;
+    font-size: 0.9rem;
+    border: 1px solid #e2e8f0;
+}
+
+.insert-row-section .btn:hover {
+    background-color: #f7fafc;
+    border-color: #cbd5e0;
+}
+
+/* Editable page wrapper */
+.editable-page-wrapper {
+    position: relative;
+}
+
+.editable-page {
+    min-height: 200px;
+}
+
+/* Form fields in modals - better spacing */
+.modal-body .form-field {
+    margin-bottom: 24px;
+}
+
+.modal-body .form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.modal-body .form-input,
+.modal-body .form-textarea,
+.modal-body .form-select {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #cbd5e0;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.modal-body .form-input:focus,
+.modal-body .form-textarea:focus,
+.modal-body .form-select:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}

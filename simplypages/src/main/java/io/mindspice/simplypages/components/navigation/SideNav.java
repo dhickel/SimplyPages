@@ -3,6 +3,7 @@ package io.mindspice.simplypages.components.navigation;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
+import org.owasp.encoder.Encode;
 
 /**
  * Side navigation component specifically designed for vertical navigation.
@@ -84,7 +85,9 @@ public class SideNav extends HtmlTag {
 
         @Override
         public String render(RenderContext context) {
-            StringBuilder sb = new StringBuilder("<a href=\"").append(href).append("\"");
+            String safeHref = href == null ? "" : Encode.forHtmlAttribute(href);
+            String safeText = text == null ? "" : Encode.forHtml(text);
+            StringBuilder sb = new StringBuilder("<a href=\"").append(safeHref).append("\"");
             sb.append(" class=\"sidenav-item");
             if (active) {
                 sb.append(" active");
@@ -92,10 +95,10 @@ public class SideNav extends HtmlTag {
             sb.append("\"");
 
             if (hxGet != null) {
-                sb.append(" hx-get=\"").append(hxGet).append("\"");
+                sb.append(" hx-get=\"").append(Encode.forHtmlAttribute(hxGet)).append("\"");
             }
             if (hxTarget != null) {
-                sb.append(" hx-target=\"").append(hxTarget).append("\"");
+                sb.append(" hx-target=\"").append(Encode.forHtmlAttribute(hxTarget)).append("\"");
             }
             if (hxPushUrl) {
                 sb.append(" hx-push-url=\"true\"");
@@ -104,10 +107,10 @@ public class SideNav extends HtmlTag {
             sb.append(">");
 
             if (icon != null) {
-                sb.append("<span class=\"sidenav-icon\">").append(icon).append("</span>");
+                sb.append("<span class=\"sidenav-icon\">").append(Encode.forHtml(icon)).append("</span>");
             }
 
-            sb.append(text).append("</a>");
+            sb.append(safeText).append("</a>");
             return sb.toString();
         }
 
@@ -126,7 +129,8 @@ public class SideNav extends HtmlTag {
 
         @Override
         public String render(RenderContext context) {
-            return "<div class=\"sidenav-section\">" + title + "</div>";
+            String safeTitle = title == null ? "" : Encode.forHtml(title);
+            return "<div class=\"sidenav-section\">" + safeTitle + "</div>";
         }
 
         @Override

@@ -54,7 +54,7 @@ public class TopNavBuilder {
                 .withHxGet(link.path)
                 .withHxTarget(contentTarget)
                 .withHxPushUrl();
-            navbar.addItem(link.name, link.path, link.active);
+            navbar.addItem(item);
         }
 
         return navbar;

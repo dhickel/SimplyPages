@@ -7,8 +7,6 @@ import io.mindspice.simplypages.components.Markdown;
 
 import java.util.stream.Stream;
 
-import java.util.stream.Stream;
-
 /**
  * Comment component for displaying individual comments.
  */

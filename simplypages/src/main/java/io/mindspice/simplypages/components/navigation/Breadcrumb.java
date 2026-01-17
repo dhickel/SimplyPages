@@ -3,6 +3,7 @@ package io.mindspice.simplypages.components.navigation;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
+import org.owasp.encoder.Encode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +63,8 @@ public class Breadcrumb extends HtmlTag {
 
         @Override
         public String render(RenderContext context) {
+            String safeText = text == null ? "" : Encode.forHtml(text);
+            String safeHref = href == null ? "" : Encode.forHtmlAttribute(href);
             StringBuilder sb = new StringBuilder("<li class=\"breadcrumb-item");
             if (active) {
                 sb.append(" active\" aria-current=\"page");
@@ -69,9 +72,9 @@ public class Breadcrumb extends HtmlTag {
             sb.append("\">");
 
             if (active || href == null) {
-                sb.append(text);
+                sb.append(safeText);
             } else {
-                sb.append("<a href=\"").append(href).append("\">").append(text).append("</a>");
+                sb.append("<a href=\"").append(safeHref).append("\">").append(safeText).append("</a>");
             }
 
             sb.append("</li>");

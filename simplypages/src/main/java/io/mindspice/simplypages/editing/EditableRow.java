@@ -9,6 +9,7 @@ import io.mindspice.simplypages.core.Module;
 import io.mindspice.simplypages.core.RenderContext;
 import io.mindspice.simplypages.layout.Column;
 import io.mindspice.simplypages.layout.Row;
+import io.mindspice.simplypages.modules.EditableModule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -108,6 +109,9 @@ public class EditableRow extends HtmlTag {
     private final List<ModuleInfo> modules = new ArrayList<>();
     private EditMode editMode = EditMode.OWNER_EDIT;  // Default for page builder
 
+    // Permission flags (Phase 6.5)
+    private boolean canAddModule = true;
+
     /**
      * Internal class to track module information.
      */
@@ -175,11 +179,23 @@ public class EditableRow extends HtmlTag {
     }
 
     /**
+     * Sets whether modules can be added to this row (Phase 6.5).
+     * If false, the "Add Module" button will not be displayed.
+     *
+     * @param canAddModule true to allow adding modules, false to lock row
+     * @return this EditableRow for method chaining
+     */
+    public EditableRow withCanAddModule(boolean canAddModule) {
+        this.canAddModule = canAddModule;
+        return this;
+    }
+
+    /**
      * Adds an editable module to this row.
      * <p>
-     * The module is automatically wrapped in EditableModule with
-     * appropriate edit/delete URLs. Column width is calculated
-     * to distribute modules evenly across the 12-column grid.
+     * The module is tracked and will be wrapped in EditableModule at render time
+     * with appropriate edit/delete URLs. Column width is calculated during render
+     * to ensure all modules share the 12-column grid evenly.
      * </p>
      * <p>
      * <strong>Note:</strong> For simplicity, this implementation uses
@@ -197,27 +213,11 @@ public class EditableRow extends HtmlTag {
             throw new IllegalStateException("Maximum modules per row (" + maxModulesPerRow + ") reached");
         }
 
-        // Track the module
+        // Track the module (columns built at render time for correct width calculation)
         modules.add(new ModuleInfo(module, moduleId));
 
-        // Wrap module in EditableModule
-        EditableModule editableModule = EditableModule.wrap(module)
-                .withModuleId(moduleId)
-                .withEditUrl("/api/pages/" + pageId + "/modules/" + moduleId + "/edit")
-                .withDeleteUrl("/api/pages/" + pageId + "/modules/" + moduleId + "/delete")
-                .withEditMode(editMode);
-
-        // Calculate column width for equal distribution
-        // Note: This is approximate - 12 / 3 = 4 (works), 12 / 2 = 6 (works), etc.
-        int moduleCount = modules.size();
-        int colWidth = 12 / moduleCount;
-
-        // Add this module to the row
-        Column col = Column.create()
-                .withWidth(colWidth)
-                .withChild(editableModule);
-
-        wrappedRow.addColumn(col);
+        // Set module ID on the wrapped module
+        module.withModuleId(moduleId);
 
         return this;
     }
@@ -227,16 +227,35 @@ public class EditableRow extends HtmlTag {
      */
     @Override
     public String render(RenderContext context) {
-        // Build wrapper div
-        Div wrapper = new Div()
-                .withAttribute("id", "row-" + rowId)
-                .withClass("editable-row-wrapper");
+        children.clear();
 
-        // Add the row with modules
-        wrapper.withChild(wrappedRow);
+        // Build a fresh row with all modules at proper column widths
+        Row row = new Row();
 
-        // Add "Add Module" button if space available
-        if (modules.size() < maxModulesPerRow) {
+        if (!modules.isEmpty()) {
+            // Calculate equal column width for all modules
+            int colWidth = 12 / modules.size();
+
+            for (ModuleInfo info : modules) {
+                // Wrap module in EditableModule
+                EditableModule editableModule = EditableModule.wrap(info.module)
+                        .withEditUrl("/api/pages/" + pageId + "/modules/" + info.moduleId + "/edit")
+                        .withDeleteUrl("/api/pages/" + pageId + "/modules/" + info.moduleId + "/delete")
+                        .withEditMode(editMode);
+
+                // Create column with calculated width
+                Column col = Column.create()
+                        .withWidth(colWidth)
+                        .withChild(editableModule);
+
+                row.addColumn(col);
+            }
+        }
+
+        super.withChild(row);
+
+        // Add "Add Module" button if space available AND adding is permitted
+        if (canAddModule && modules.size() < maxModulesPerRow) {
             Div addModuleSection = new Div()
                     .withClass("add-module-section");
 
@@ -244,14 +263,14 @@ public class EditableRow extends HtmlTag {
                     .withStyle(Button.ButtonStyle.SECONDARY);
 
             addBtn.withAttribute("hx-get", "/api/pages/" + pageId + "/rows/" + rowId + "/add-module-form");
-            addBtn.withAttribute("hx-target", "#add-module-modal");
+            addBtn.withAttribute("hx-target", "#edit-modal-container");
             addBtn.withAttribute("hx-swap", "innerHTML");
 
             addModuleSection.withChild(addBtn);
-            wrapper.withChild(addModuleSection);
+            super.withChild(addModuleSection);
         }
 
-        return wrapper.render(context);
+        return super.render(context);
     }
 
     @Override
