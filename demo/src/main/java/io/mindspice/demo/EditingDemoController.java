@@ -14,7 +14,6 @@ import io.mindspice.simplypages.components.forms.Checkbox;
 import io.mindspice.simplypages.components.forms.Select;
 import io.mindspice.simplypages.components.forms.TextArea;
 import io.mindspice.simplypages.components.forms.TextInput;
-import io.mindspice.simplypages.editing.EditAdapter;
 import io.mindspice.simplypages.editing.Editable;
 import io.mindspice.simplypages.editing.EditMode;
 import io.mindspice.simplypages.editing.EditModalBuilder;
