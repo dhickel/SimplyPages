@@ -13,7 +13,6 @@ import io.mindspice.simplypages.core.HtmlTag;
  */
 public class Link extends HtmlTag {
 
-    private String id;  // Optional - only applied to DOM if set
     private String href;
     private String text;
 
@@ -31,10 +30,6 @@ public class Link extends HtmlTag {
     }
 
     // Getters
-    public String getId() {
-        return id;
-    }
-
     public String getHref() {
         return href;
     }
@@ -50,11 +45,9 @@ public class Link extends HtmlTag {
      * @param id the HTML id attribute value
      * @return this Link for method chaining
      */
+    @Override
     public Link withId(String id) {
-        this.id = id;
-        if (id != null) {
-            this.withAttribute("id", id);
-        }
+        super.withId(id);
         return this;
     }
 

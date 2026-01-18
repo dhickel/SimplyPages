@@ -15,6 +15,12 @@ public class Div extends HtmlTag {
     }
 
     @Override
+    public Div withId(String id) {
+        super.withId(id);
+        return this;
+    }
+
+    @Override
     public Div withAttribute(String name, String value) {
         super.withAttribute(name, value);
         return this;

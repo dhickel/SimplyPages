@@ -58,8 +58,9 @@ public class Form extends HtmlTag {
         return this;
     }
 
+    @Override
     public Form withId(String id) {
-        this.withAttribute("id", id);
+        super.withId(id);
         return this;
     }
 

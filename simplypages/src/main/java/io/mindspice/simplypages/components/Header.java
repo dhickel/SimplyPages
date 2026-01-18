@@ -37,7 +37,6 @@ public class Header extends HtmlTag {
         }
     }
 
-    private String id;  // Optional - only applied to DOM if set
     private HeaderLevel level;
     private String text;
     private Component topBar;
@@ -75,10 +74,6 @@ public class Header extends HtmlTag {
         return new Header(HeaderLevel.H6, text);
     }
 
-    public String getId() {
-        return id;
-    }
-
     /**
      * Sets the HTML id attribute for this header.
      * <p>
@@ -89,11 +84,9 @@ public class Header extends HtmlTag {
      * @param id the HTML id attribute value
      * @return this Header for method chaining
      */
+    @Override
     public Header withId(String id) {
-        this.id = id;
-        if (id != null) {
-            this.withAttribute("id", id);
-        }
+        super.withId(id);
         return this;
     }
 

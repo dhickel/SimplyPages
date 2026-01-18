@@ -10,7 +10,6 @@ import io.mindspice.simplypages.core.HtmlTag;
  */
 public class Image extends HtmlTag {
 
-    private String id;  // Optional - only applied to DOM if set
     private String src;
     private String alt;
     private String width;
@@ -50,10 +49,6 @@ public class Image extends HtmlTag {
     }
 
     // Getters
-    public String getId() {
-        return id;
-    }
-
     public String getSrc() {
         return src;
     }
@@ -77,11 +72,9 @@ public class Image extends HtmlTag {
      * @param id the HTML id attribute value
      * @return this Image for method chaining
      */
+    @Override
     public Image withId(String id) {
-        this.id = id;
-        if (id != null) {
-            this.withAttribute("id", id);
-        }
+        super.withId(id);
         return this;
     }
 

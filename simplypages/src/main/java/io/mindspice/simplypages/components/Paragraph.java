@@ -50,7 +50,6 @@ public class Paragraph extends HtmlTag {
         }
     }
 
-    private String id;  // Optional - only applied to DOM if set
     private String text;
     private String alignment;
 
@@ -66,10 +65,6 @@ public class Paragraph extends HtmlTag {
     }
 
     // Getters
-    public String getId() {
-        return id;
-    }
-
     public String getText() {
         return text;
     }
@@ -85,11 +80,9 @@ public class Paragraph extends HtmlTag {
      * @param id the HTML id attribute value
      * @return this Paragraph for method chaining
      */
+    @Override
     public Paragraph withId(String id) {
-        this.id = id;
-        if (id != null) {
-            this.withAttribute("id", id);
-        }
+        super.withId(id);
         return this;
     }
 
