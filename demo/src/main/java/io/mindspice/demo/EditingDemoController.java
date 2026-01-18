@@ -15,12 +15,15 @@ import io.mindspice.simplypages.components.forms.Select;
 import io.mindspice.simplypages.components.forms.TextArea;
 import io.mindspice.simplypages.components.forms.TextInput;
 import io.mindspice.simplypages.editing.EditAdapter;
+import io.mindspice.simplypages.editing.Editable;
 import io.mindspice.simplypages.editing.EditMode;
 import io.mindspice.simplypages.editing.EditModalBuilder;
 import io.mindspice.simplypages.layout.Column;
 import io.mindspice.simplypages.layout.Container;
 import io.mindspice.simplypages.layout.Row;
 import io.mindspice.simplypages.modules.ContentModule;
+import io.mindspice.simplypages.modules.SimpleListModule;
+import io.mindspice.simplypages.components.ListItem;
 import io.mindspice.simplypages.modules.EditableModule;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
@@ -173,6 +176,14 @@ public class EditingDemoController {
         row4.modules.add(markdownDemo);
         pageData.rows.add(row4);
 
+        DemoRow row5 = new DemoRow("row-5", 4);
+        DemoModule listDemo = new DemoModule("module-9", "Nested Editing Demo",
+                "Simple List Module", 12);
+        // Using 'content' field to store serialized list for demo simplicity or just ignoring it
+        listDemo.content = "Item 1,Item 2,Item 3";
+        row5.modules.add(listDemo);
+        pageData.rows.add(row5);
+
         pages.put(PAGE_ID, pageData);
         pendingEdits.put(PAGE_ID, new ArrayList<>());
     }
@@ -235,16 +246,32 @@ public class EditingDemoController {
             Row moduleRow = new Row();
 
             for (DemoModule module : demoRow.modules) {
-                ContentModule contentModule = ContentModule.create()
-                        .withModuleId(module.id)
-                        .withTitle(module.title)
-                        .withContent(module.content);
+                io.mindspice.simplypages.core.Module displayModule;
 
-                if (!module.useMarkdown) {
-                    contentModule.disableMarkdown();
+                if (module.title.equals("Nested Editing Demo")) {
+                     SimpleListModule listModule = SimpleListModule.create()
+                            .withModuleId(module.id)
+                            .withTitle(module.title);
+
+                     if (module.content != null && !module.content.isEmpty()) {
+                         for (String item : module.content.split(",")) {
+                             listModule.addItem(ListItem.create(item.trim()));
+                         }
+                     }
+                     displayModule = listModule;
+                } else {
+                    ContentModule contentModule = ContentModule.create()
+                            .withModuleId(module.id)
+                            .withTitle(module.title)
+                            .withContent(module.content);
+
+                    if (!module.useMarkdown) {
+                        contentModule.disableMarkdown();
+                    }
+                    displayModule = contentModule;
                 }
 
-                EditableModule editableModule = EditableModule.wrap(contentModule)
+                EditableModule editableModule = EditableModule.wrap(displayModule)
                         .withEditUrl("/editing-demo/edit/" + module.id)
                         .withDeleteUrl("/editing-demo/delete/" + module.id)
                         .withDeleteTarget("#" + PAGE_CONTAINER_ID)
@@ -558,16 +585,29 @@ public class EditingDemoController {
     }
 
     private String buildEditModal(DemoModule module, EditMode mode) {
-        ContentModule contentMod = ContentModule.create()
-                .withModuleId(module.id)
-                .withTitle(module.title)
-                .withContent(module.content);
+        Editable<?> editable;
 
-        if (!module.useMarkdown) {
-            contentMod.disableMarkdown();
+        if (module.title.equals("Nested Editing Demo")) {
+            SimpleListModule listModule = SimpleListModule.create()
+                    .withModuleId(module.id)
+                    .withTitle(module.title);
+             if (module.content != null && !module.content.isEmpty()) {
+                 for (String item : module.content.split(",")) {
+                     listModule.addItem(ListItem.create(item.trim()));
+                 }
+             }
+             editable = listModule;
+        } else {
+            ContentModule contentMod = ContentModule.create()
+                    .withModuleId(module.id)
+                    .withTitle(module.title)
+                    .withContent(module.content);
+            if (!module.useMarkdown) {
+                contentMod.disableMarkdown();
+            }
+            editable = contentMod;
         }
 
-        EditAdapter<ContentModule> adapter = contentMod;
         Div combinedForm = new Div();
 
         if (mode == EditMode.USER_EDIT) {
@@ -575,8 +615,10 @@ public class EditingDemoController {
                     .withClass("mb-3"));
         }
 
-        combinedForm.withChild(adapter.buildEditView());
+        // Add module property fields
+        combinedForm.withChild(editable.buildEditView());
 
+        // Custom extra fields for demo (width)
         Div widthGroup = new Div().withClass("form-field mt-4");
         widthGroup.withChild(new Paragraph("Module Width:").withClass("form-label"));
         widthGroup.withChild(Select.create("width")
@@ -590,9 +632,12 @@ public class EditingDemoController {
         EditModalBuilder builder = EditModalBuilder.create()
                 .withTitle("Edit Module")
                 .withModuleId(module.id)
-                .withEditView(combinedForm)
+                .withEditView(combinedForm) // Pass the combined form directly
+                .withEditable(editable)     // Pass editable to enable child editing if supported
                 .withSaveUrl(buildSaveUrl(module.id, mode))
                 .withDeleteUrl(buildDeleteUrl(module.id, mode))
+                .withChildEditUrl("/editing-demo/edit-child/" + module.id + "/{id}")
+                .withChildDeleteUrl("/editing-demo/delete-child/" + module.id + "/{id}")
                 .withPageContainerId(PAGE_CONTAINER_ID)
                 .withModalContainerId(MODAL_CONTAINER_ID);
 
