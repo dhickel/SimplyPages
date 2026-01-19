@@ -99,6 +99,7 @@ public class DemoController {
     private final StickySidebarDemoPage stickySidebarDemoPage;
     private final DynamicUpdatesPage dynamicUpdatesPage;
     private final AdvancedRenderingPage advancedRenderingPage;
+    private final JavadocsPage javadocsPage;
 
     @Autowired
     public DemoController(
@@ -124,7 +125,8 @@ public class DemoController {
             ScrollingDemoPage scrollingDemoPage,
             StickySidebarDemoPage stickySidebarDemoPage,
             DynamicUpdatesPage dynamicUpdatesPage,
-            AdvancedRenderingPage advancedRenderingPage
+            AdvancedRenderingPage advancedRenderingPage,
+            JavadocsPage javadocsPage
     ) {
         this.homePage = homePage;
         this.componentsPage = componentsPage;
@@ -149,6 +151,7 @@ public class DemoController {
         this.stickySidebarDemoPage = stickySidebarDemoPage;
         this.dynamicUpdatesPage = dynamicUpdatesPage;
         this.advancedRenderingPage = advancedRenderingPage;
+        this.javadocsPage = javadocsPage;
     }
 
     /**
@@ -196,6 +199,7 @@ public class DemoController {
                         AccountBarBuilder.create()
                                 .addLeftLink("Home", "/home")
                                 .addLeftLink("Docs", "/docs/getting-started/01-introduction")
+                                .addLeftLink("Javadocs", "/javadocs-view")
                                 .addRightAccountWidget("/api/account-status")
                                 .build()
                 )
@@ -554,6 +558,15 @@ public class DemoController {
             HttpServletResponse response
     ) {
         return renderWithShellIfNeeded(hxRequest, dynamicUpdatesPage, response);
+    }
+
+    @GetMapping("/javadocs-view")
+    @ResponseBody
+    public String javadocsView(
+            @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+            HttpServletResponse response
+    ) {
+        return renderWithShellIfNeeded(hxRequest, javadocsPage, response);
     }
 
     @GetMapping("/advanced-rendering")

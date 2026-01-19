@@ -18,7 +18,7 @@ import io.mindspice.simplypages.editing.Editable;
 import io.mindspice.simplypages.editing.EditMode;
 import io.mindspice.simplypages.editing.EditModalBuilder;
 import io.mindspice.simplypages.layout.Column;
-import io.mindspice.simplypages.layout.Container;
+import io.mindspice.simplypages.layout.Page;
 import io.mindspice.simplypages.layout.Row;
 import io.mindspice.simplypages.modules.ContentModule;
 import io.mindspice.simplypages.modules.SimpleListModule;
@@ -215,7 +215,7 @@ public class EditingDemoController {
             return Alert.danger("Page not found").render();
         }
 
-        Container content = Container.create();
+        Page content = Page.builder().build();
 
         content.withChild(Header.H1("Editing Demo (Phase 6.5 Patterns)").withClass("mb-3"));
 

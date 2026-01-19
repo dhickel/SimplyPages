@@ -30,14 +30,25 @@ if ! command -v sshpass &> /dev/null; then
     exit 1
 fi
 
-# Build locally first (tests run as part of package)
-echo "Step 1: Testing and building project locally..."
-./mvnw clean package
+# Generate Javadocs and Build
+echo "Step 1: Generating Javadocs..."
+./mvnw clean javadoc:javadoc -pl simplypages
+echo "✓ Javadocs generated"
+echo ""
+
+echo "Step 2: Copying Javadocs to demo..."
+mkdir -p demo/src/main/resources/static/javadocs
+cp -r simplypages/target/reports/apidocs/* demo/src/main/resources/static/javadocs/
+echo "✓ Javadocs copied"
+echo ""
+
+echo "Step 3: Testing and building project locally..."
+./mvnw package
 echo "✓ Build complete"
 echo ""
 
 # Select built demo jar
-echo "Step 2: Locating built demo jar..."
+echo "Step 4: Locating built demo jar..."
 shopt -s nullglob
 all_jars=(demo/target/*.jar)
 shopt -u nullglob
@@ -58,14 +69,14 @@ JAR_PATH="${demo_jars[0]}"
 echo "✓ Using jar: $JAR_PATH"
 echo ""
 
-echo "Step 3: Transferring jar to remote..."
+echo "Step 5: Transferring jar to remote..."
 sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no \
     "$JAR_PATH" \
     "$SSH_HOST:$REMOTE_PATH/"
 echo "✓ Jar transferred"
 echo ""
 
-echo "Step 4: Restarting remote service..."
+echo "Step 6: Restarting remote service..."
 sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no "$SSH_HOST" \
     "cd $REMOTE_PATH && { ./sp_demo.sh stop || true; ./sp_demo.sh start; }"
 echo "✓ Remote service restarted"

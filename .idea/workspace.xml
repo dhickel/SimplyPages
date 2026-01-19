@@ -6,16 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="7458035e-2a44-4ace-b3c3-43ca67179f0a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo/ShellBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/demo/ShellBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo/framework.css" beforeDir="false" afterPath="$PROJECT_DIR$/demo/framework.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/demo/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/pages/NewComponentsPage.java" beforeDir="false" afterPath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/pages/NewComponentsPage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/pages/NewModulesPage.java" beforeDir="false" afterPath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/pages/NewModulesPage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/DemoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/DemoController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy.sh" beforeDir="false" afterPath="$PROJECT_DIR$/deploy.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/simplypages/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/ShellBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/ShellBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/Code.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/Code.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/display/Spinner.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/display/Spinner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/resources/static/css/framework.css" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/resources/static/css/framework.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/editing/ModuleEditHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/editing/ModuleEditHandler.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,31 +38,31 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "JUnit.simplypages in simplypages.executor": "Coverage",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "1227",
-    "RequestMappingsPanelWidth1": "1226",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "Spring Boot.DemoApplication.executor": "Coverage",
-    "junie.onboarding.icon.badge.shown": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/home/hickelpickle/Code/Java/cannasite/java-html-framework/demo/src/main/resources",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;JUnit.simplypages in simplypages.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;1227&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;1226&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Spring Boot.DemoApplication.executor&quot;: &quot;Coverage&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/hickelpickle/Code/Java/cannasite/java-html-framework/demo/src/main/resources&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/demo/src/main/resources" />
