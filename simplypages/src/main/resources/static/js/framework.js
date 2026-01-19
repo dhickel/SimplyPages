@@ -1,116 +1,113 @@
 /**
  * SimplyPages Framework JavaScript
  * Provides interactive functionality for components and modules
+ * Uses event delegation for better performance and HTMX compatibility
  */
 
-/**
- * Initialize all interactive components
- */
-function initializeComponents() {
-    initializeTabs();
-    initializeAccordion();
-    initializeCallouts();
-}
+// Global event delegation for all components
+document.addEventListener('click', function(event) {
+    // 1. Accordion
+    const accordionHeader = event.target.closest('.accordion-header');
+    if (accordionHeader) {
+        handleAccordion(accordionHeader);
+        return;
+    }
 
-/**
- * Tabs functionality
- */
-function initializeTabs() {
-    // Remove existing event listeners by cloning nodes (prevents duplicate listeners)
-    const tabButtons = document.querySelectorAll('.tab-button');
+    // 2. Tabs
+    const tabButton = event.target.closest('.tab-button');
+    if (tabButton) {
+        handleTabs(tabButton);
+        return;
+    }
 
-    tabButtons.forEach(button => {
-        // Clone to remove old listeners
-        const newButton = button.cloneNode(true);
-        button.parentNode.replaceChild(newButton, button);
-
-        newButton.addEventListener('click', function() {
-            const panelId = this.getAttribute('aria-controls');
-            const tabsContainer = this.closest('.tabs-container');
-
-            if (!tabsContainer) return;
-
-            // Deactivate all tabs and panels in this container
-            tabsContainer.querySelectorAll('.tab-button').forEach(btn => {
-                btn.classList.remove('active');
-                btn.setAttribute('aria-selected', 'false');
-            });
-
-            tabsContainer.querySelectorAll('.tab-panel').forEach(panel => {
-                panel.classList.remove('active');
-            });
-
-            // Activate clicked tab and corresponding panel
-            this.classList.add('active');
-            this.setAttribute('aria-selected', 'true');
-
-            const targetPanel = document.getElementById(panelId);
-            if (targetPanel) {
-                targetPanel.classList.add('active');
-            }
-        });
-    });
-}
-
-/**
- * Accordion functionality
- */
-function initializeAccordion() {
-    const accordionHeaders = document.querySelectorAll('.accordion-header');
-
-    accordionHeaders.forEach(header => {
-        // Clone to remove old listeners
-        const newHeader = header.cloneNode(true);
-        header.parentNode.replaceChild(newHeader, header);
-
-        newHeader.addEventListener('click', function() {
-            const isActive = this.classList.contains('active');
-            const content = this.nextElementSibling;
-
-            if (!content) return;
-
-            // Toggle active state
-            this.classList.toggle('active');
-            content.classList.toggle('expanded');
-
-            // Update ARIA attributes
-            this.setAttribute('aria-expanded', !isActive);
-        });
-    });
-}
-
-/**
- * Callout dismissible functionality
- */
-function initializeCallouts() {
-    const calloutCloseButtons = document.querySelectorAll('.callout-close');
-
-    calloutCloseButtons.forEach(button => {
-        // Clone to remove old listeners
-        const newButton = button.cloneNode(true);
-        button.parentNode.replaceChild(newButton, button);
-
-        newButton.addEventListener('click', function() {
-            const callout = this.closest('.callout');
-            if (callout) {
-                callout.style.display = 'none';
-            }
-        });
-    });
-}
-
-// Initialize on DOM ready
-document.addEventListener('DOMContentLoaded', initializeComponents);
-
-// Re-initialize after HTMX swaps content
-document.body.addEventListener('htmx:afterSwap', function(event) {
-    initializeComponents();
-    // Scroll to top on navigation
-    window.scrollTo({top: 0, behavior: 'instant'});
+    // 3. Callout Dismiss
+    const calloutClose = event.target.closest('.callout-close');
+    if (calloutClose) {
+        handleCallout(calloutClose);
+        return;
+    }
 });
 
-// Also handle browser back/forward
-window.addEventListener('popstate', function() {
-    // Re-initialize components after browser navigation
-    setTimeout(initializeComponents, 100);
+/**
+ * Handle Accordion Logic
+ * - Toggles active/expanded state
+ * - Respects data-single-expand="true" on parent
+ */
+function handleAccordion(header) {
+    const accordionItem = header.closest('.accordion-item');
+    const content = header.nextElementSibling;
+    const accordion = header.closest('.accordion');
+
+    if (!content || !content.classList.contains('accordion-content')) return;
+
+    // Check for single expansion mode
+    if (accordion && accordion.getAttribute('data-single-expand') === 'true') {
+        // If we are opening a closed item, close all others first
+        if (!header.classList.contains('active')) {
+            const allHeaders = accordion.querySelectorAll('.accordion-header');
+            const allContents = accordion.querySelectorAll('.accordion-content');
+
+            allHeaders.forEach(h => {
+                h.classList.remove('active');
+                h.setAttribute('aria-expanded', 'false');
+            });
+            allContents.forEach(c => c.classList.remove('expanded'));
+        }
+    }
+
+    // Toggle current state
+    header.classList.toggle('active');
+    content.classList.toggle('expanded');
+
+    // Update ARIA
+    const isExpanded = content.classList.contains('expanded');
+    header.setAttribute('aria-expanded', isExpanded);
+}
+
+/**
+ * Handle Tabs Logic
+ * - Switches active tab and panel
+ * - Accessibility attributes
+ */
+function handleTabs(button) {
+    const panelId = button.getAttribute('aria-controls');
+    const tabsContainer = button.closest('.tabs-container');
+
+    if (!tabsContainer) return;
+
+    // Deactivate all tabs and panels in this container
+    tabsContainer.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-selected', 'false');
+    });
+
+    tabsContainer.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.remove('active');
+    });
+
+    // Activate clicked tab and corresponding panel
+    button.classList.add('active');
+    button.setAttribute('aria-selected', 'true');
+
+    const targetPanel = document.getElementById(panelId);
+    if (targetPanel) {
+        targetPanel.classList.add('active');
+    }
+}
+
+/**
+ * Handle Callout Dismiss Logic
+ * - Hides the callout
+ */
+function handleCallout(button) {
+    const callout = button.closest('.callout');
+    if (callout) {
+        callout.style.display = 'none';
+    }
+}
+
+// HTMX specific handling (only for history/scroll, components work automatically now)
+document.body.addEventListener('htmx:afterSwap', function(event) {
+    // Scroll to top on navigation
+    window.scrollTo({top: 0, behavior: 'instant'});
 });

@@ -23,6 +23,6 @@ class CrudOperationsTest {
         assertTrue(html.contains("hx-post=\"/save\""));
         assertTrue(html.contains("hx-delete=\"/delete\""));
         assertTrue(html.contains("hx-swap=\"none\""));
-        assertTrue(html.contains("hx-include=\".modal-body input, .modal-body textarea, .modal-body select\""));
+        assertTrue(html.contains("hx-include=\".edit-properties-section input, .edit-properties-section textarea, .edit-properties-section select\""));
     }
 }

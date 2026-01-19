@@ -58,7 +58,6 @@ import java.util.Map;
  *     }
  * }
  * }</pre>
- * </p>
  *
  * @param <T> the type of module this handler manages
  */
@@ -85,7 +84,6 @@ public interface ModuleEditHandler<T> {
      *     <li>USER_EDIT: Save changes to approval queue, return approval pending message</li>
      *     <li>OWNER_EDIT: Save changes directly, return updated module</li>
      * </ul>
-     * </p>
      *
      * @param moduleId the unique identifier of the module being updated
      * @param editData the submitted edit data (form field name → value)
@@ -102,7 +100,6 @@ public interface ModuleEditHandler<T> {
      *     <li>USER_EDIT: Submit deletion request for approval, return confirmation message</li>
      *     <li>OWNER_EDIT: Delete immediately, return empty component</li>
      * </ul>
-     * </p>
      *
      * @param moduleId the unique identifier of the module to delete
      * @param editMode the edit mode (USER_EDIT or OWNER_EDIT)

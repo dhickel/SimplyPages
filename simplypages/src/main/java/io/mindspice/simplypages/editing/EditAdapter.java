@@ -52,7 +52,9 @@ import java.util.Map;
  * </pre>
  *
  * @param <T> The module type (self-referential for fluent API)
+ * @deprecated Use {@link Editable} instead.
  */
+@Deprecated
 public interface EditAdapter<T extends Module> {
     /**
      * Build the edit form UI for this module.
