@@ -7,7 +7,8 @@ import io.mindspice.simplypages.components.Paragraph;
 import io.mindspice.simplypages.components.navigation.Link;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.Module;
-import io.mindspice.simplypages.editing.EditAdapter;
+import io.mindspice.simplypages.editing.Editable;
+import io.mindspice.simplypages.editing.EditableChild;
 import io.mindspice.simplypages.editing.FormFieldHelper;
 import io.mindspice.simplypages.editing.ValidationResult;
 
@@ -17,13 +18,14 @@ import java.util.*;
  * Rich content module that can contain paragraphs, images, and links.
  * Demonstrates container module pattern with multiple component types as children.
  */
-public class RichContentModule extends Module implements EditAdapter<RichContentModule> {
+public class RichContentModule extends Module implements Editable<RichContentModule> {
 
     private final List<Component> contentItems = new ArrayList<>();
 
     public RichContentModule(String title) {
         super("div");
         this.title = title;
+        // Need to initialize children list if not done in declaration
     }
 
     public static RichContentModule create(String title) {
@@ -88,7 +90,7 @@ public class RichContentModule extends Module implements EditAdapter<RichContent
         super.withChild(moduleContainer);
     }
 
-    // EditAdapter implementation
+    // Editable implementation
     @Override
     public Component buildEditView() {
         Div editForm = new Div();
@@ -116,4 +118,27 @@ public class RichContentModule extends Module implements EditAdapter<RichContent
         return this;
     }
 
+    @Override
+    public List<EditableChild> getEditableChildren() {
+        List<EditableChild> children = new ArrayList<>();
+        for (int i = 0; i < contentItems.size(); i++) {
+            Component item = contentItems.get(i);
+            String type = item.getClass().getSimpleName();
+            String label = type + " " + (i + 1);
+
+            // Try to extract more meaningful label
+            if (item instanceof Paragraph) {
+                // accessing inner text isn't directly exposed on Component interface easily,
+                // but if we cast we might get it. For now simple label is safer.
+                 label = "Paragraph " + (i + 1);
+            } else if (item instanceof Header) {
+                 label = "Header " + (i + 1);
+            } else if (item instanceof Image) {
+                 label = "Image " + (i + 1);
+            }
+
+            children.add(EditableChild.create("child-" + i, label, item));
+        }
+        return children;
+    }
 }

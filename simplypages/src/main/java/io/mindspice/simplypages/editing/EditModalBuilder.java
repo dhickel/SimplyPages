@@ -3,8 +3,10 @@ package io.mindspice.simplypages.editing;
 import io.mindspice.simplypages.components.display.Modal;
 import io.mindspice.simplypages.components.forms.Button;
 import io.mindspice.simplypages.components.Div;
+import io.mindspice.simplypages.components.Header;
 import io.mindspice.simplypages.core.Component;
 import java.util.regex.Pattern;
+import java.util.List;
 
 /**
  * Helper for building standardized edit modals.
@@ -12,28 +14,11 @@ import java.util.regex.Pattern;
  * <p>This builder simplifies the creation of edit modals with a consistent
  * layout and behavior. It handles:</p>
  * <ul>
- *   <li>Entity property editing (via {@link EditAdapter#buildEditView()})</li>
+ *   <li>Entity property editing (via {@link Editable#buildEditView()} or {@link EditAdapter#buildEditView()})</li>
+ *   <li>Nested child editing (via {@link Editable#getEditableChildren()})</li>
  *   <li>Footer layout (delete on left, cancel/save on right)</li>
  *   <li>HTMX attributes for dynamic updates</li>
  * </ul>
- *
- * <h3>Usage Example</h3>
- * <pre>
- * {@literal @}GetMapping("/api/modules/{id}/edit")
- * public String editModule(@PathVariable String id) {
- *     Module module = findModule(id);
- *     EditAdapter adapter = (EditAdapter) module;
- *
- *     return EditModalBuilder.create()
- *         .withTitle("Edit Content Module")
- *         .withModuleId(id)
- *         .withEditView(adapter.buildEditView())
- *         .withSaveUrl("/api/modules/" + id + "/update")
- *         .withDeleteUrl("/api/modules/" + id + "/delete")
- *         .build()
- *         .render();
- * }
- * </pre>
  */
 public class EditModalBuilder {
 
@@ -43,150 +28,105 @@ public class EditModalBuilder {
     private String title = "Edit Module";
     private String moduleId;
     private Component editView;
+    private Editable<?> editable;
     private String saveUrl;
     private String deleteUrl;
+    private String childEditUrl;
+    private String childDeleteUrl;
     private boolean showDelete = true;
     private String pageContainerId = "page-content";
     private String modalContainerId = "edit-modal-container";
 
-    /**
-     * Private constructor. Use create() factory method.
-     */
     private EditModalBuilder() {
     }
 
-    /**
-     * Create a new EditModalBuilder instance.
-     *
-     * @return A new builder instance
-     */
     public static EditModalBuilder create() {
         return new EditModalBuilder();
     }
 
-    /**
-     * Set the modal title.
-     *
-     * @param title The modal title
-     * @return this for chaining
-     */
     public EditModalBuilder withTitle(String title) {
         this.title = title;
         return this;
     }
 
-    /**
-     * Set the module ID being edited.
-     *
-     * @param moduleId The module identifier
-     * @return this for chaining
-     */
     public EditModalBuilder withModuleId(String moduleId) {
         this.moduleId = moduleId;
         return this;
     }
 
-    /**
-     * Set the edit view component (form fields) directly.
-     *
-     * @param editView The edit form component
-     * @return this for chaining
-     */
     public EditModalBuilder withEditView(Component editView) {
         this.editView = editView;
         return this;
     }
 
-    /**
-     * Set the save endpoint URL.
-     *
-     * <p>The save button will POST to this URL with form data.</p>
-     *
-     * @param saveUrl The save endpoint URL
-     * @return this for chaining
-     */
+    public EditModalBuilder withEditable(Editable<?> editable) {
+        this.editable = editable;
+        return this;
+    }
+
     public EditModalBuilder withSaveUrl(String saveUrl) {
         this.saveUrl = saveUrl;
         return this;
     }
 
-    /**
-     * Set the delete endpoint URL.
-     *
-     * <p>The delete button will DELETE to this URL.</p>
-     *
-     * @param deleteUrl The delete endpoint URL
-     * @return this for chaining
-     */
     public EditModalBuilder withDeleteUrl(String deleteUrl) {
         this.deleteUrl = deleteUrl;
         return this;
     }
 
-    /**
-     * Hide the delete button.
-     *
-     * <p>Use this when adding new modules or when deletion is not allowed.</p>
-     *
-     * @return this for chaining
-     */
+    public EditModalBuilder withChildEditUrl(String childEditUrl) {
+        this.childEditUrl = childEditUrl;
+        return this;
+    }
+
+    public EditModalBuilder withChildDeleteUrl(String childDeleteUrl) {
+        this.childDeleteUrl = childDeleteUrl;
+        return this;
+    }
+
     public EditModalBuilder hideDelete() {
         this.showDelete = false;
         return this;
     }
 
-    /**
-     * Set the page container ID for HTMX target.
-     *
-     * <p>Default is "page-content".</p>
-     *
-     * @param pageContainerId The page container element ID
-     * @return this for chaining
-     */
     public EditModalBuilder withPageContainerId(String pageContainerId) {
         if (pageContainerId == null || !VALID_ID_PATTERN.matcher(pageContainerId).matches()) {
-            throw new IllegalArgumentException(
-                "Page container ID must start with a letter and contain only letters, numbers, hyphens, and underscores. Got: "
-                    + pageContainerId);
+            throw new IllegalArgumentException("Invalid page container ID");
         }
         this.pageContainerId = pageContainerId;
         return this;
     }
 
-    /**
-     * Set the modal container ID for HTMX target.
-     *
-     * <p>Default is "edit-modal-container".</p>
-     *
-     * @param modalContainerId The modal container element ID
-     * @return this for chaining
-     */
     public EditModalBuilder withModalContainerId(String modalContainerId) {
         if (modalContainerId == null || !VALID_ID_PATTERN.matcher(modalContainerId).matches()) {
-            throw new IllegalArgumentException(
-                "Modal container ID must start with a letter and contain only letters, numbers, hyphens, and underscores. Got: "
-                    + modalContainerId);
+            throw new IllegalArgumentException("Invalid modal container ID");
         }
         this.modalContainerId = modalContainerId;
         return this;
     }
 
-    /**
-     * Build the Modal component.
-     *
-     * @return Modal component ready to render
-     * @throws IllegalStateException if required fields are missing
-     */
     public Modal build() {
+        // Use editable's view if editView not manually set
+        if (editView == null && editable != null) {
+            this.editView = editable.buildEditView();
+        }
+
         validateRequiredFields();
 
         Div modalBody = new Div();
 
+        // Main properties section
         if (editView != null) {
             Div propertiesSection = new Div()
                     .withClass("edit-properties-section")
                     .withChild(editView);
             modalBody.withChild(propertiesSection);
+        }
+
+        // Child editing section (if applicable)
+        if (editable != null && !editable.getEditableChildren().isEmpty()) {
+            Div childrenSection = buildChildrenSection();
+            modalBody.withChild(childrenSection);
         }
 
         Div footer = buildFooter();
@@ -195,65 +135,91 @@ public class EditModalBuilder {
                 .withTitle(title)
                 .withBody(modalBody)
                 .withFooter(footer)
-                .closeOnBackdrop(false); // Prevent accidental closes
+                .closeOnBackdrop(false);
     }
 
-    /**
-     * Build the modal footer with action buttons.
-     *
-     * @return Footer component
-     */
+    private Div buildChildrenSection() {
+        Div section = new Div().withClass("edit-children-section mt-4");
+        section.withChild(Header.H4("Content Items").withClass("mb-3"));
+
+        Div list = new Div().withClass("list-group");
+
+        for (EditableChild child : editable.getEditableChildren()) {
+             Div item = new Div()
+                    .withClass("list-group-item d-flex justify-content-between align-items-center p-2");
+
+             Component label = new Div().withInnerText(child.getLabel() != null ? child.getLabel() : "Item " + child.getId());
+             item.withChild(label);
+
+             Div actions = new Div().withClass("btn-group btn-group-sm");
+
+             if (childEditUrl != null) {
+                 String url = childEditUrl.replace("{id}", child.getId());
+                 Component editBtn = Button.create("Edit")
+                         .withStyle(Button.ButtonStyle.SECONDARY)
+                         .withAttribute("hx-get", url)
+                         .withAttribute("hx-target", "#" + modalContainerId)
+                         .withAttribute("hx-swap", "innerHTML");
+                 actions.withChild(editBtn);
+             }
+
+             if (childDeleteUrl != null) {
+                 String url = childDeleteUrl.replace("{id}", child.getId());
+                  Component deleteBtn = Button.create("Delete")
+                         .withStyle(Button.ButtonStyle.DANGER)
+                         .withAttribute("hx-delete", url)
+                         .withAttribute("hx-confirm", "Delete this item?")
+                         .withAttribute("hx-target", "#" + modalContainerId);
+                 actions.withChild(deleteBtn);
+             }
+
+             item.withChild(actions);
+             list.withChild(item);
+        }
+
+        section.withChild(list);
+        return section;
+    }
+
     private Div buildFooter() {
         Div footer = new Div().withClass("d-flex justify-content-between w-100");
 
-        // Left side: Delete button (if enabled)
         Div leftButtons = new Div();
         if (showDelete && deleteUrl != null) {
-            Button deleteBtn = Button.create("Delete")
+            Button deleteBtn = Button.create("Delete Module")
                     .withStyle(Button.ButtonStyle.DANGER);
-
             deleteBtn.withAttribute("hx-delete", deleteUrl);
-            deleteBtn.withAttribute("hx-confirm", "Are you sure you want to delete this module? This cannot be undone.");
+            deleteBtn.withAttribute("hx-confirm", "Are you sure you want to delete this module?");
             deleteBtn.withAttribute("hx-target", "#" + pageContainerId);
             deleteBtn.withAttribute("hx-swap", "none");
-
             leftButtons.withChild(deleteBtn);
         }
         footer.withChild(leftButtons);
 
-        // Right side: Cancel + Save buttons
         Div rightButtons = new Div().withClass("d-flex gap-2");
 
-        // Cancel button
-        Button cancelBtn = Button.create("Cancel")
+        Button cancelBtn = Button.create("Close")
                 .withStyle(Button.ButtonStyle.SECONDARY);
         cancelBtn.withAttribute("data-modal-id", modalContainerId);
         cancelBtn.withAttribute("onclick", "document.getElementById(this.dataset.modalId).innerHTML = ''");
         rightButtons.withChild(cancelBtn);
 
-        // Save button (use regular button, not submit, so HTMX can intercept)
-        Button saveBtn = Button.create("Save Changes")
+        Button saveBtn = Button.create("Save Properties")
                 .withStyle(Button.ButtonStyle.PRIMARY);
-
         saveBtn.withAttribute("hx-post", saveUrl);
         saveBtn.withAttribute("hx-swap", "none");
-        saveBtn.withAttribute("hx-include", ".modal-body input, .modal-body textarea, .modal-body select");
+        // Only include inputs from properties section
+        saveBtn.withAttribute("hx-include", ".edit-properties-section input, .edit-properties-section textarea, .edit-properties-section select");
 
         rightButtons.withChild(saveBtn);
-
         footer.withChild(rightButtons);
 
         return footer;
     }
 
-    /**
-     * Validate that all required fields are set.
-     *
-     * @throws IllegalStateException if validation fails
-     */
     private void validateRequiredFields() {
-        if (editView == null) {
-            throw new IllegalStateException("editView is required");
+        if (editView == null && editable == null) {
+            throw new IllegalStateException("Either editView or editable must be provided");
         }
         if (saveUrl == null) {
             throw new IllegalStateException("saveUrl is required");
