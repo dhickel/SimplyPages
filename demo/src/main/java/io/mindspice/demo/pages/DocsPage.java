@@ -40,11 +40,7 @@ public class DocsPage implements DemoPage {
      * This is used when the sidebar navigation updates the content in-place.
      */
     public String renderContent() {
-        return new io.mindspice.simplypages.components.Div()
-            .withAttribute("id", "docs-content")
-            .withChild(Header.H1(title))
-            .withChild(ContentModule.create()
-                .withContent(markdownContent))
-            .render();
+        return Header.H1(title).render()
+               + ContentModule.create().withContent(markdownContent).render();
     }
 }
