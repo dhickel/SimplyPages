@@ -640,11 +640,175 @@ public class EditingDemoController {
                 .withPageContainerId(PAGE_CONTAINER_ID)
                 .withModalContainerId(MODAL_CONTAINER_ID);
 
+        if (module.title.equals("Nested Editing Demo")) {
+            builder.withChildAddUrl("/editing-demo/add-child/" + module.id);
+        }
+
         if (!module.canDelete) {
             builder.hideDelete();
         }
 
         return builder.build().render();
+    }
+
+    @GetMapping("/edit-child/{moduleId}/{itemId}")
+    @ResponseBody
+    public String editChild(
+            @PathVariable String moduleId,
+            @PathVariable String itemId
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            return Modal.create().withTitle("Error").withBody(Alert.danger("Module not found")).render();
+        }
+
+        String itemText = findItemText(module, itemId);
+        if (itemText == null) {
+             return Modal.create().withTitle("Error").withBody(Alert.danger("Item not found")).render();
+        }
+
+        Div form = new Div();
+        Div group = new Div().withClass("form-field");
+        group.withChild(new Paragraph("Item Text:").withClass("form-label"));
+        group.withChild(TextInput.create("text").withValue(itemText));
+        form.withChild(group);
+
+        return EditModalBuilder.create()
+                .withTitle("Edit Item")
+                .withEditView(form)
+                .withSaveUrl("/editing-demo/save-child/" + moduleId + "/" + itemId)
+                .withDeleteUrl("/editing-demo/delete-child/" + moduleId + "/" + itemId)
+                .withModalContainerId(MODAL_CONTAINER_ID)
+                .build()
+                .render();
+    }
+
+    @PostMapping("/save-child/{moduleId}/{itemId}")
+    @ResponseBody
+    public String saveChild(
+            @PathVariable String moduleId,
+            @PathVariable String itemId,
+            @RequestParam Map<String, String> formData
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            return Alert.danger("Module not found").render();
+        }
+
+        updateItemText(module, itemId, formData.get("text"));
+        return buildOobResponse();
+    }
+
+    @DeleteMapping("/delete-child/{moduleId}/{itemId}")
+    @ResponseBody
+    public String deleteChild(
+            @PathVariable String moduleId,
+            @PathVariable String itemId
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            return Alert.danger("Module not found").render();
+        }
+
+        removeItem(module, itemId);
+        return buildOobResponse();
+    }
+
+    @GetMapping("/add-child/{moduleId}")
+    @ResponseBody
+    public String addChildModal(@PathVariable String moduleId) {
+        Div form = new Div();
+        Div group = new Div().withClass("form-field");
+        group.withChild(new Paragraph("Item Text:").withClass("form-label"));
+        group.withChild(TextInput.create("text").withPlaceholder("Enter item text..."));
+        form.withChild(group);
+
+        Div footer = new Div().withClass("d-flex justify-content-end gap-2");
+        Button cancelBtn = Button.create("Cancel").withStyle(Button.ButtonStyle.SECONDARY);
+        cancelBtn.withAttribute("onclick", "document.getElementById('" + MODAL_CONTAINER_ID + "').innerHTML = ''");
+        footer.withChild(cancelBtn);
+
+        Button addBtn = Button.create("Add Item").withStyle(Button.ButtonStyle.PRIMARY);
+        addBtn.withAttribute("hx-post", "/editing-demo/add-child/" + moduleId);
+        addBtn.withAttribute("hx-swap", "none");
+        addBtn.withAttribute("hx-include", ".modal-body input");
+        footer.withChild(addBtn);
+
+        return Modal.create()
+                .withTitle("Add New Item")
+                .withBody(form)
+                .withFooter(footer)
+                .render();
+    }
+
+    @PostMapping("/add-child/{moduleId}")
+    @ResponseBody
+    public String addChild(
+            @PathVariable String moduleId,
+            @RequestParam("text") String text
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            return Alert.danger("Module not found").render();
+        }
+
+        addItem(module, text);
+        return buildOobResponse();
+    }
+
+    private String findItemText(DemoModule module, String itemId) {
+        if (module.content == null || module.content.isEmpty()) return null;
+        String[] items = module.content.split(",");
+        int index = parseIndex(itemId);
+        if (index >= 0 && index < items.length) {
+            return items[index].trim();
+        }
+        return null;
+    }
+
+    private void updateItemText(DemoModule module, String itemId, String newText) {
+        if (module.content == null) return;
+        List<String> items = new ArrayList<>();
+        for (String s : module.content.split(",")) items.add(s.trim());
+
+        int index = parseIndex(itemId);
+        if (index >= 0 && index < items.size()) {
+            items.set(index, safeListItemText(newText));
+            module.content = String.join(",", items);
+        }
+    }
+
+    private void removeItem(DemoModule module, String itemId) {
+        if (module.content == null) return;
+        List<String> items = new ArrayList<>();
+        for (String s : module.content.split(",")) items.add(s.trim());
+
+        int index = parseIndex(itemId);
+        if (index >= 0 && index < items.size()) {
+            items.remove(index);
+            module.content = String.join(",", items);
+        }
+    }
+
+    private void addItem(DemoModule module, String text) {
+        if (module.content == null) module.content = "";
+        List<String> items = new ArrayList<>();
+        if (!module.content.isEmpty()) {
+            for (String s : module.content.split(",")) items.add(s.trim());
+        }
+        items.add(safeListItemText(text));
+        module.content = String.join(",", items);
+    }
+
+    private int parseIndex(String itemId) {
+        if (itemId.startsWith("item-")) {
+            try {
+                return Integer.parseInt(itemId.substring(5));
+            } catch (NumberFormatException e) {
+                return -1;
+            }
+        }
+        return -1;
     }
 
     private String buildSaveUrl(String moduleId, EditMode mode) {
@@ -733,6 +897,11 @@ public class EditingDemoController {
 
     private String safeText(String value) {
         return HtmlUtils.htmlEscape(value == null ? "" : value);
+    }
+
+    private String safeListItemText(String value) {
+        if (value == null) return "";
+        return HtmlUtils.htmlEscape(value).replace(",", "&#44;");
     }
 
     private int parseWidth(String width, int fallback) {
