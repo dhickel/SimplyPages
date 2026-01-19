@@ -1,0 +1,135 @@
+[33mcommit d8e1dfe3c60dc1dfbff9e91891710b57c4e12572[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mjules/editing-system-phase7a-9757616417665712194[m[33m, [m[1;31morigin/jules/editing-system-phase7a-9757616417665712194[m[33m)[m
+Author: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>
+Date:   Sun Jan 18 06:45:23 2026 +0000
+
+    Refactor EditingDemoController to use Editable interface and demo nested editing
+    
+    - Added 'Nested Editing Demo' (SimpleListModule) to `/editing-demo` page.
+    - Updated `EditingDemoController` to use `Editable` interface instead of `EditAdapter`.
+    - Configured child edit/delete URLs in `EditModalBuilder`.
+    - Fixed `CrudOperationsTest` to match updated `EditModalBuilder` class structure.
+
+[33mcommit d2a001931110308af1e0c23e2fda1c5799b22e55[m
+Author: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>
+Date:   Sun Jan 18 05:58:13 2026 +0000
+
+    Refactor EditingDemoController to use Editable interface and demo nested editing
+    
+    - Added 'Nested Editing Demo' (SimpleListModule) to `/editing-demo` page.
+    - Updated `EditingDemoController` to use `Editable` interface instead of `EditAdapter`.
+    - Configured child edit/delete URLs in `EditModalBuilder`.
+    - Fixed `CrudOperationsTest` to match updated `EditModalBuilder` class structure.
+
+[33mcommit f473d9eebcd7b3e36ae1d6f9c77d2f157b6a15c9[m
+Author: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>
+Date:   Sun Jan 18 05:41:43 2026 +0000
+
+    Implement Editable interface and nested editing support
+    
+    - Introduced `Editable<T>` interface and `EditableChild` wrapper to replace `EditAdapter` (Phase 7a).
+    - Updated `EditModalBuilder` to support nested child editing and render child edit lists.
+    - Migrated `RichContentModule`, `ContentModule`, and `SimpleListModule` to `Editable` interface.
+    - Deprecated `EditAdapter` but maintained support in `ContentModule` and `SimpleListModule` for backward compatibility with existing demo controllers.
+    - Added `EditModalBuilderTest` to verify nested editing structure rendering.
+    - Added `MarkdownSecurityTest` to verify XSS prevention in `Markdown` component.
+
+[33mcommit 9467837c758292d04c3006be3dfa116c0337883e[m
+Author: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>
+Date:   Sat Jan 17 12:45:02 2026 +0000
+
+    Implement Editable interface and nested editing support
+    
+    - Introduced `Editable<T>` interface and `EditableChild` wrapper to replace `EditAdapter` (Phase 7a).
+    - Updated `EditModalBuilder` to support nested child editing and render child edit lists.
+    - Migrated `RichContentModule`, `ContentModule`, and `SimpleListModule` to `Editable` interface.
+    - Deprecated `EditAdapter` but maintained support in `ContentModule` and `SimpleListModule` for backward compatibility with existing demo controllers.
+    - Added `EditModalBuilderTest` to verify nested editing structure rendering.
+    - Added `MarkdownSecurityTest` to verify XSS prevention in `Markdown` component.
+
+[33mcommit e103cf4ac89c1cdceb47911b3d318c11ea0d4596[m[33m ([m[1;32mjavadoc-demo[m[33m)[m
+Author: dhickel <dwight.hickel@gmail.com>
+Date:   Sat Jan 17 02:00:04 2026 -0500
+
+    Remove accidentally committed node_modules and package files
+    
+    - Delete node_modules/ directory that was mistakenly tracked
+    - Remove package.json and package-lock.json from version control
+    - Update .gitignore to prevent future commits of npm artifacts
+
+[33mcommit 20cbb98e26b4e263ad4f28e1fa3a5fa4712d7052[m
+Author: dhickel <dwight.hickel@gmail.com>
+Date:   Sat Jan 17 01:10:26 2026 -0500
+
+    Condensed and improved documentation as AI had been working on a competeing version. Small bug fix on UI.
+
+[33mcommit 6ffb67bfb933328d6fba04b00965b8cff1c5a296[m
+Author: dhickel <dwight.hickel@gmail.com>
+Date:   Sat Jan 17 01:10:14 2026 -0500
+
+    Improved architecture of editing system using adapter interfaces, basic authorization. Repo readed for alpha. AI generated test suit, documentation improvements. Test controller for live testing of edit features.
+
+[33mcommit 2af060c6d58edddd4f4c268fe28ca79c5e1cfdc0[m
+Author: dhickel <dwight.hickel@gmail.com>
+Date:   Sat Jan 17 01:10:02 2026 -0500
+
+    Rebrand framework from JHF(working title)  to SimplyPages
+
+[33mcommit 1688414156ed27e0a1193115c0b670263daac6f5[m
+Author: dhickel <dwight.hickel@gmail.com>
+Date:   Sat Jan 17 01:09:53 2026 -0500
+
+    Implementation of editing syste, including demo pages showing user editable pages.
+
+[33mcommit 776e4bfefe84a0b290f7dbcdfcd1c17c65083633[m
+Author: dhickel <dwight.hickel@gmail.com>
+Date:   Sat Jan 17 01:09:37 2026 -0500
+
+    Added the ability to view the documentation via the demo site, via rendering using markdown component.
+
+[33mcommit 459ebf282e7c640e023dddf0e4ec8754a88fe294[m
+Author: dhickel <dwight.hickel@gmail.com>
+Date:   Sat Jan 17 01:09:29 2026 -0500
+
+    Fixes in rendering logic, proper implementation of dynamic patterns. Cleaned up AI jank, and overlooked areas of dynamic refactoring.
+
+[33mcommit 7a44098748c52e4d63f8946ec69afc2dba5cc8e9[m
+Author: dhickel <dwight.hickel@gmail.com>
+Date:   Sat Jan 17 01:09:21 2026 -0500
+
+    Implement templating into dynamic rendering, using SlotKeys and RenderContext. Regression fixes.
+
+[33mcommit 345753c315f8c845c7c5e893a5648e39895e8d0c[m
+Author: dhickel <dwight.hickel@gmail.com>
+Date:   Sat Jan 17 01:09:20 2026 -0500
+
+    Improved dynamic rendering approach
+
+[33mcommit 82353832429c0f0412d1fbe88cf670896344f979[m
+Author: dhickel <dwight.hickel@gmail.com>
+Date:   Sat Jan 17 01:09:13 2026 -0500
+
+    Security and bug fixes via AI review. API refactoring to remove redudancy, duplication and clashing/misleading approaches to rendering.
+
+[33mcommit d1b984fe97eca72dc40dd1d40a8d0cec66b508bf[m
+Author: dhickel <dwight.hickel@gmail.com>
+Date:   Sat Jan 17 01:08:58 2026 -0500
+
+    Claude refactor into multi-module project to better support demo project and decouple.
+
+[33mcommit 9ab33eed3b363ba387fedd64bd390e9d9b3578bf[m
+Author: dhickel <dwight.hickel@gmail.com>
+Date:   Sat Jan 17 01:08:46 2026 -0500
+
+    Claude generated documentation
+
+[33mcommit 57aa8066f7afee0cbc43a2903937ae60f4a3458d[m
+Author: dhickel <dwight.hickel@gmail.com>
+Date:   Sat Jan 17 01:08:40 2026 -0500
+
+    Inital refactor into own repo, security fixes.
+
+[33mcommit 83dc4d039663cbd376090a4cd4a586d7fae8c140[m
+Author: dhickel <dwight.hickel@gmail.com>
+Date:   Fri Dec 19 12:52:09 2025 -0500
+
+    init
