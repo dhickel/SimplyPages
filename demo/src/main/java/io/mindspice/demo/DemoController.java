@@ -363,6 +363,7 @@ public class DemoController {
                         .withHxTarget("#docs-content")
                         .withHxSwap("innerHTML show:top")
                         .withHxPushUrl(true)
+                        .withAttribute("hx-on::after-swap", "setTimeout(() => window.scrollTo(0,0), 0)")
                 )
             );
         };
