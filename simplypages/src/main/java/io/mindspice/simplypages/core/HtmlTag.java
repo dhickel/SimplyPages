@@ -157,6 +157,9 @@ public class HtmlTag implements Component {
     /** Whether the innerText contains trusted HTML that should not be escaped */
     protected boolean trustedHtml = false;
 
+    /** The HTML id of the element */
+    protected String id;
+
     /**
      * Creates a new HTML tag with the specified name and self-closing flag.
      *
@@ -178,6 +181,29 @@ public class HtmlTag implements Component {
      */
     public HtmlTag(String tagName) {
         this(tagName, false);
+    }
+
+    /**
+     * Gets the HTML id of this element.
+     *
+     * @return the id, or null if not set
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * Sets the HTML id attribute for this tag.
+     *
+     * @param id the HTML id attribute value
+     * @return this HtmlTag instance for method chaining
+     */
+    public HtmlTag withId(String id) {
+        this.id = id;
+        if (id != null) {
+            this.withAttribute("id", id);
+        }
+        return this;
     }
 
     /**
@@ -527,6 +553,12 @@ public class HtmlTag implements Component {
     @Override
     public String render(RenderContext context) {
         StringBuilder sb = new StringBuilder("<").append(tagName);
+
+        // Ensure id is rendered if set via reflection/field
+        if (id != null && attributes.stream().noneMatch(attr -> "id".equals(attr.getName()))) {
+            sb.append(new Attribute("id", id).render());
+        }
+
         sb.append(attributes.stream().map(Attribute::render).collect(Collectors.joining()));
 
         if (selfClosing) {

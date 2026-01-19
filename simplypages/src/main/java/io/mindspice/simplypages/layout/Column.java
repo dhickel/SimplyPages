@@ -45,6 +45,12 @@ public class Column extends HtmlTag {
         return this;
     }
 
+    @Override
+    public Column withId(String id) {
+        super.withId(id);
+        return this;
+    }
+
     public Column withClass(String className) {
         String currentClass = "col";
         this.withAttribute("class", currentClass + " " + className);

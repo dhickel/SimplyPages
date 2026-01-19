@@ -48,8 +48,9 @@ public class TextInput extends HtmlTag {
         return this;
     }
 
+    @Override
     public TextInput withId(String id) {
-        this.withAttribute("id", id);
+        super.withId(id);
         return this;
     }
 

@@ -27,8 +27,9 @@ public class Select extends HtmlTag {
         return new Select(name);
     }
 
+    @Override
     public Select withId(String id) {
-        this.withAttribute("id", id);
+        super.withId(id);
         return this;
     }
 

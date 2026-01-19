@@ -60,8 +60,9 @@ public class Button extends HtmlTag {
         return this;
     }
 
+    @Override
     public Button withId(String id) {
-        this.withAttribute("id", id);
+        super.withId(id);
         return this;
     }
 

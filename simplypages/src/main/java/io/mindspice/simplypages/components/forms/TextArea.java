@@ -17,8 +17,9 @@ public class TextArea extends HtmlTag {
         return new TextArea(name);
     }
 
+    @Override
     public TextArea withId(String id) {
-        this.withAttribute("id", id);
+        super.withId(id);
         return this;
     }
 

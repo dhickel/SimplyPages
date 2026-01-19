@@ -17,6 +17,12 @@ public class Row extends HtmlTag {
         Arrays.stream(components).forEach(this::withChild);
         return this;
     }
+
+    @Override
+    public Row withId(String id) {
+        super.withId(id);
+        return this;
+    }
     
     @Override
     public Row withChild(Component component) {

@@ -44,6 +44,12 @@ public class Container extends HtmlTag {
         return this;
     }
 
+    @Override
+    public Container withId(String id) {
+        super.withId(id);
+        return this;
+    }
+
     public Container withClass(String className) {
         String currentClass = "container";
         this.withAttribute("class", currentClass + " " + className);

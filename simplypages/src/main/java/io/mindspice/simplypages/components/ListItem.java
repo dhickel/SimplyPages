@@ -15,7 +15,6 @@ import io.mindspice.simplypages.core.RenderContext;
  */
 public class ListItem extends HtmlTag {
 
-    private String id;  // Optional - only applied to DOM if set
     private String text;
 
     public ListItem() {
@@ -38,21 +37,15 @@ public class ListItem extends HtmlTag {
      * @param id the HTML id attribute value
      * @return this ListItem for method chaining
      */
+    @Override
     public ListItem withId(String id) {
-        this.id = id;
-        if (id != null) {
-            this.withAttribute("id", id);
-        }
+        super.withId(id);
         return this;
     }
 
     public ListItem withText(String text) {
         this.text = text;
         return this;
-    }
-
-    public String getId() {
-        return id;
     }
 
     public String getText() {
