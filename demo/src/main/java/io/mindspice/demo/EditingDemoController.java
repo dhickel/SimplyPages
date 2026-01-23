@@ -640,11 +640,76 @@ public class EditingDemoController {
                 .withPageContainerId(PAGE_CONTAINER_ID)
                 .withModalContainerId(MODAL_CONTAINER_ID);
 
+        if (module.title.equals("Nested Editing Demo")) {
+            builder.withChildAddUrl("/editing-demo/add-child-modal/" + module.id);
+        }
+
         if (!module.canDelete) {
             builder.hideDelete();
         }
 
         return builder.build().render();
+    }
+
+    @GetMapping("/add-child-modal/{moduleId}")
+    @ResponseBody
+    public String showAddChildModal(@PathVariable String moduleId) {
+        Div body = new Div();
+
+        Div itemGroup = new Div().withClass("form-field");
+        itemGroup.withChild(new Paragraph("Item Content:").withClass("form-label"));
+        itemGroup.withChild(TextInput.create("item").withPlaceholder("Item text"));
+        body.withChild(itemGroup);
+
+        Div footer = new Div().withClass("d-flex justify-content-end gap-2");
+        Button cancelBtn = Button.create("Cancel").withStyle(Button.ButtonStyle.SECONDARY);
+        // On cancel, reload the parent edit modal instead of closing
+        cancelBtn.withAttribute("hx-get", "/editing-demo/edit/" + moduleId);
+        cancelBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+        cancelBtn.withAttribute("hx-swap", "innerHTML");
+        footer.withChild(cancelBtn);
+
+        Button addBtn = Button.create("Add Item").withStyle(Button.ButtonStyle.PRIMARY);
+        addBtn.withAttribute("hx-post", "/editing-demo/add-child/" + moduleId);
+        addBtn.withAttribute("hx-swap", "innerHTML");
+        addBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+        addBtn.withAttribute("hx-include", ".modal-body input");
+        footer.withChild(addBtn);
+
+        return Modal.create()
+                .withTitle("Add Item")
+                .withBody(body)
+                .withFooter(footer)
+                .render();
+    }
+
+    @PostMapping("/add-child/{moduleId}")
+    @ResponseBody
+    public String addChild(
+            @PathVariable String moduleId,
+            @RequestParam("item") String item
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            return Modal.create().withTitle("Error")
+                    .withBody(Alert.danger("Module not found"))
+                    .render();
+        }
+
+        if (module.content == null || module.content.isEmpty()) {
+            module.content = safeText(item);
+        } else {
+            module.content += "," + safeText(item);
+        }
+
+        String modalHtml = buildEditModal(module, module.editMode);
+
+        String updatePage = renderPageContent().replace(
+                "<div id=\"" + PAGE_CONTAINER_ID + "\">",
+                "<div hx-swap-oob=\"true\" id=\"" + PAGE_CONTAINER_ID + "\">"
+        );
+
+        return modalHtml + updatePage;
     }
 
     private String buildSaveUrl(String moduleId, EditMode mode) {
