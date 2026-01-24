@@ -583,6 +583,65 @@ public class EditingDemoController {
         return buildOobResponse();
     }
 
+    @GetMapping("/add-child-modal/{moduleId}")
+    @ResponseBody
+    public String showAddChildModal(@PathVariable String moduleId) {
+        Div body = new Div();
+        body.withChild(new Paragraph("Enter text for the new item:").withClass("mb-2"));
+        body.withChild(TextInput.create("itemText").withPlaceholder("Item text...").withClass("w-100"));
+
+        Div footer = new Div().withClass("d-flex justify-content-end gap-2");
+        Button cancelBtn = Button.create("Cancel").withStyle(Button.ButtonStyle.SECONDARY);
+        // Return to the edit modal
+        cancelBtn.withAttribute("hx-get", "/editing-demo/edit/" + moduleId);
+        cancelBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+        cancelBtn.withAttribute("hx-swap", "innerHTML");
+        footer.withChild(cancelBtn);
+
+        Button addBtn = Button.create("Add Item").withStyle(Button.ButtonStyle.PRIMARY);
+        addBtn.withAttribute("hx-post", "/editing-demo/add-child/" + moduleId);
+        addBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID); // Return to edit modal
+        addBtn.withAttribute("hx-swap", "innerHTML");
+        addBtn.withAttribute("hx-include", ".modal-body input");
+        footer.withChild(addBtn);
+
+        return Modal.create()
+                .withTitle("Add Item")
+                .withBody(body)
+                .withFooter(footer)
+                .render();
+    }
+
+    @PostMapping("/add-child/{moduleId}")
+    @ResponseBody
+    public String addChild(
+            @PathVariable String moduleId,
+            @RequestParam("itemText") String itemText
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            return Modal.create().withTitle("Error")
+                    .withBody(Alert.danger("Module not found"))
+                    .render();
+        }
+
+        String safeText = safeText(itemText);
+        if (safeText.isEmpty()) {
+            return Modal.create().withTitle("Error")
+                    .withBody(Alert.warning("Item text cannot be empty"))
+                    .render();
+        }
+
+        if (module.content == null || module.content.isEmpty()) {
+            module.content = safeText;
+        } else {
+            module.content += "," + safeText;
+        }
+
+        // Return to the edit modal
+        return buildEditModal(module, resolveEditMode(null, module));
+    }
+
     private String buildEditModal(DemoModule module, EditMode mode) {
         Editable<?> editable;
 
@@ -637,6 +696,7 @@ public class EditingDemoController {
                 .withDeleteUrl(buildDeleteUrl(module.id, mode))
                 .withChildEditUrl("/editing-demo/edit-child/" + module.id + "/{id}")
                 .withChildDeleteUrl("/editing-demo/delete-child/" + module.id + "/{id}")
+                .withChildAddUrl("/editing-demo/add-child-modal/" + module.id)
                 .withPageContainerId(PAGE_CONTAINER_ID)
                 .withModalContainerId(MODAL_CONTAINER_ID);
 
