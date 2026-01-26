@@ -33,6 +33,7 @@ public class EditModalBuilder {
     private String deleteUrl;
     private String childEditUrl;
     private String childDeleteUrl;
+    private String childAddUrl;
     private boolean showDelete = true;
     private String pageContainerId = "page-content";
     private String modalContainerId = "edit-modal-container";
@@ -84,6 +85,11 @@ public class EditModalBuilder {
         return this;
     }
 
+    public EditModalBuilder withChildAddUrl(String childAddUrl) {
+        this.childAddUrl = childAddUrl;
+        return this;
+    }
+
     public EditModalBuilder hideDelete() {
         this.showDelete = false;
         return this;
@@ -124,7 +130,7 @@ public class EditModalBuilder {
         }
 
         // Child editing section (if applicable)
-        if (editable != null && !editable.getEditableChildren().isEmpty()) {
+        if (editable != null && (!editable.getEditableChildren().isEmpty() || childAddUrl != null)) {
             Div childrenSection = buildChildrenSection();
             modalBody.withChild(childrenSection);
         }
@@ -178,6 +184,19 @@ public class EditModalBuilder {
         }
 
         section.withChild(list);
+
+        if (childAddUrl != null) {
+            Div addAction = new Div().withClass("mt-2 text-end");
+            Button addBtn = Button.create("Add Item")
+                    .withStyle(Button.ButtonStyle.SECONDARY)
+                    .small();
+            addBtn.withAttribute("hx-get", childAddUrl);
+            addBtn.withAttribute("hx-target", "#" + modalContainerId);
+            addBtn.withAttribute("hx-swap", "innerHTML");
+            addAction.withChild(addBtn);
+            section.withChild(addAction);
+        }
+
         return section;
     }
 
