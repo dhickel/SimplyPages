@@ -102,4 +102,21 @@ class EditableRowTest {
         assertTrue(html.contains("editMode=USER_EDIT"));
         assertFalse(html.contains("editMode=OWNER_EDIT"));
     }
+
+    @Test
+    @DisplayName("EditableRow should respect custom column widths")
+    void testCustomColumnWidths() {
+        EditableRow row = EditableRow.wrap(new Row(), "row-1", "page-1")
+            .addEditableModule(ContentModule.create().withTitle("Custom").withContent("Body"), "module-1", 8)
+            .addEditableModule(ContentModule.create().withTitle("Auto").withContent("Body"), "module-2");
+
+        String html = row.render();
+
+        // Check for col-8 (custom)
+        assertTrue(html.contains("col col-8"), "Should contain custom width col-8");
+
+        // Check for col-4 (auto calculated: (12 - 8) / 1 = 4)
+        assertTrue(html.contains("col col-4"), "Should contain auto calculated width col-4");
+        assertFalse(html.contains("col col-6"), "Should not contain incorrect default width col-6");
+    }
 }
