@@ -118,10 +118,16 @@ public class EditableRow extends HtmlTag {
     private static class ModuleInfo {
         final Module module;
         final String moduleId;
+        final Integer width;
 
         ModuleInfo(Module module, String moduleId) {
+            this(module, moduleId, null);
+        }
+
+        ModuleInfo(Module module, String moduleId, Integer width) {
             this.module = module;
             this.moduleId = moduleId;
+            this.width = width;
         }
     }
 
@@ -191,17 +197,7 @@ public class EditableRow extends HtmlTag {
     }
 
     /**
-     * Adds an editable module to this row.
-     * <p>
-     * The module is tracked and will be wrapped in EditableModule at render time
-     * with appropriate edit/delete URLs. Column width is calculated during render
-     * to ensure all modules share the 12-column grid evenly.
-     * </p>
-     * <p>
-     * <strong>Note:</strong> For simplicity, this implementation uses
-     * fixed equal-width columns. If you need more control over individual
-     * column widths, build the row manually with Column components.
-     * </p>
+     * Adds an editable module to this row with auto-calculated width.
      *
      * @param module the module to add
      * @param moduleId unique identifier for this module
@@ -209,12 +205,25 @@ public class EditableRow extends HtmlTag {
      * @throws IllegalStateException if max modules limit reached
      */
     public EditableRow addEditableModule(Module module, String moduleId) {
+        return addEditableModule(module, moduleId, null);
+    }
+
+    /**
+     * Adds an editable module to this row with a specific column width.
+     *
+     * @param module the module to add
+     * @param moduleId unique identifier for this module
+     * @param width the grid column width (1-12)
+     * @return this EditableRow for method chaining
+     * @throws IllegalStateException if max modules limit reached
+     */
+    public EditableRow addEditableModule(Module module, String moduleId, Integer width) {
         if (modules.size() >= maxModulesPerRow) {
             throw new IllegalStateException("Maximum modules per row (" + maxModulesPerRow + ") reached");
         }
 
-        // Track the module (columns built at render time for correct width calculation)
-        modules.add(new ModuleInfo(module, moduleId));
+        // Track the module
+        modules.add(new ModuleInfo(module, moduleId, width));
 
         // Set module ID on the wrapped module
         module.withModuleId(moduleId);
@@ -233,8 +242,24 @@ public class EditableRow extends HtmlTag {
         Row row = new Row();
 
         if (!modules.isEmpty()) {
-            // Calculate equal column width for all modules
-            int colWidth = 12 / modules.size();
+            // Calculate width distribution
+            int totalExplicitWidth = 0;
+            int implicitCount = 0;
+
+            for (ModuleInfo info : modules) {
+                if (info.width != null && info.width > 0) {
+                    totalExplicitWidth += info.width;
+                } else {
+                    implicitCount++;
+                }
+            }
+
+            int autoWidth = 0;
+            if (implicitCount > 0) {
+                int remainingSpace = 12 - totalExplicitWidth;
+                // Ensure at least width 1 for implicit modules, even if it overflows
+                autoWidth = Math.max(1, remainingSpace / implicitCount);
+            }
 
             for (ModuleInfo info : modules) {
                 // Wrap module in EditableModule
@@ -243,9 +268,12 @@ public class EditableRow extends HtmlTag {
                         .withDeleteUrl("/api/pages/" + pageId + "/modules/" + info.moduleId + "/delete")
                         .withEditMode(editMode);
 
+                // Determine width
+                int width = (info.width != null && info.width > 0) ? info.width : autoWidth;
+
                 // Create column with calculated width
                 Column col = Column.create()
-                        .withWidth(colWidth)
+                        .withWidth(width)
                         .withChild(editableModule);
 
                 row.addColumn(col);
