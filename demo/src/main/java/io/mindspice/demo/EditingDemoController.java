@@ -583,6 +583,153 @@ public class EditingDemoController {
         return buildOobResponse();
     }
 
+    @GetMapping("/edit-child/{moduleId}/{childId}")
+    @ResponseBody
+    public String editChildModal(
+            @PathVariable String moduleId,
+            @PathVariable String childId
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            return Alert.danger("Module not found").render();
+        }
+
+        int index = parseChildIndex(childId);
+        List<String> items = parseListContent(module.content);
+        if (index < 0 || index >= items.size()) {
+             return Alert.danger("Item not found").render();
+        }
+
+        String currentValue = items.get(index);
+
+        Div body = new Div();
+        body.withChild(new Paragraph("Edit Item").withClass("mb-2"));
+        body.withChild(TextInput.create("value").withValue(currentValue));
+
+        Div footer = new Div().withClass("d-flex justify-content-end gap-2");
+        Button cancelBtn = Button.create("Cancel").withStyle(Button.ButtonStyle.SECONDARY);
+        // On cancel, reload the main module edit modal
+        cancelBtn.withAttribute("hx-get", "/editing-demo/edit/" + moduleId);
+        cancelBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+        cancelBtn.withAttribute("hx-swap", "innerHTML");
+        footer.withChild(cancelBtn);
+
+        Button saveBtn = Button.create("Save").withStyle(Button.ButtonStyle.PRIMARY);
+        saveBtn.withAttribute("hx-post", "/editing-demo/save-child/" + moduleId + "/" + childId);
+        saveBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+        saveBtn.withAttribute("hx-swap", "innerHTML");
+        saveBtn.withAttribute("hx-include", ".modal-body input");
+        footer.withChild(saveBtn);
+
+        return Modal.create()
+                .withTitle("Edit Item")
+                .withBody(body)
+                .withFooter(footer)
+                .render();
+    }
+
+    @PostMapping("/save-child/{moduleId}/{childId}")
+    @ResponseBody
+    public String saveChild(
+            @PathVariable String moduleId,
+            @PathVariable String childId,
+            @RequestParam("value") String value
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module != null) {
+            int index = parseChildIndex(childId);
+            List<String> items = parseListContent(module.content);
+            if (index >= 0 && index < items.size()) {
+                items.set(index, safeText(value));
+                module.content = String.join(",", items);
+            }
+        }
+        return editModule(moduleId, null);
+    }
+
+    @DeleteMapping("/delete-child/{moduleId}/{childId}")
+    @ResponseBody
+    public String deleteChild(
+            @PathVariable String moduleId,
+            @PathVariable String childId
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module != null) {
+            int index = parseChildIndex(childId);
+            List<String> items = parseListContent(module.content);
+            if (index >= 0 && index < items.size()) {
+                items.remove(index);
+                module.content = String.join(",", items);
+            }
+        }
+        // Return the updated edit modal
+        return editModule(moduleId, null);
+    }
+
+    @GetMapping("/add-child-modal/{moduleId}")
+    @ResponseBody
+    public String addChildModal(@PathVariable String moduleId) {
+         Div body = new Div();
+         body.withChild(new Paragraph("New Item").withClass("mb-2"));
+         body.withChild(TextInput.create("value").withPlaceholder("Item text"));
+
+         Div footer = new Div().withClass("d-flex justify-content-end gap-2");
+         Button cancelBtn = Button.create("Cancel").withStyle(Button.ButtonStyle.SECONDARY);
+         cancelBtn.withAttribute("hx-get", "/editing-demo/edit/" + moduleId);
+         cancelBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+         cancelBtn.withAttribute("hx-swap", "innerHTML");
+         footer.withChild(cancelBtn);
+
+         Button addBtn = Button.create("Add").withStyle(Button.ButtonStyle.PRIMARY);
+         addBtn.withAttribute("hx-post", "/editing-demo/add-child/" + moduleId);
+         addBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+         addBtn.withAttribute("hx-swap", "innerHTML");
+         addBtn.withAttribute("hx-include", ".modal-body input");
+         footer.withChild(addBtn);
+
+         return Modal.create()
+                 .withTitle("Add New Item")
+                 .withBody(body)
+                 .withFooter(footer)
+                 .render();
+    }
+
+    @PostMapping("/add-child/{moduleId}")
+    @ResponseBody
+    public String addChild(
+            @PathVariable String moduleId,
+            @RequestParam("value") String value
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module != null) {
+            List<String> items = parseListContent(module.content);
+            items.add(safeText(value));
+            module.content = String.join(",", items);
+        }
+        return editModule(moduleId, null);
+    }
+
+    private int parseChildIndex(String childId) {
+        if (childId == null || !childId.startsWith("item-")) {
+            return -1;
+        }
+        try {
+            return Integer.parseInt(childId.substring(5));
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    private List<String> parseListContent(String content) {
+        List<String> list = new ArrayList<>();
+        if (content != null && !content.isEmpty()) {
+            for (String s : content.split(",")) {
+                list.add(s.trim());
+            }
+        }
+        return list;
+    }
+
     private String buildEditModal(DemoModule module, EditMode mode) {
         Editable<?> editable;
 
@@ -637,6 +784,7 @@ public class EditingDemoController {
                 .withDeleteUrl(buildDeleteUrl(module.id, mode))
                 .withChildEditUrl("/editing-demo/edit-child/" + module.id + "/{id}")
                 .withChildDeleteUrl("/editing-demo/delete-child/" + module.id + "/{id}")
+                .withChildAddUrl("/editing-demo/add-child-modal/" + module.id)
                 .withPageContainerId(PAGE_CONTAINER_ID)
                 .withModalContainerId(MODAL_CONTAINER_ID);
 
