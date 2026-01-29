@@ -637,6 +637,7 @@ public class EditingDemoController {
                 .withDeleteUrl(buildDeleteUrl(module.id, mode))
                 .withChildEditUrl("/editing-demo/edit-child/" + module.id + "/{id}")
                 .withChildDeleteUrl("/editing-demo/delete-child/" + module.id + "/{id}")
+                .withChildAddUrl("/editing-demo/add-child-modal/" + module.id)
                 .withPageContainerId(PAGE_CONTAINER_ID)
                 .withModalContainerId(MODAL_CONTAINER_ID);
 
@@ -668,6 +669,178 @@ public class EditingDemoController {
                 "<div hx-swap-oob=\"true\" id=\"" + PAGE_CONTAINER_ID + "\">"
         );
         return clearModal + updatePage;
+    }
+
+    private String buildParentModalResponse(DemoModule module, EditMode mode) {
+        String modalContent = buildEditModal(module, mode);
+        String updatePage = renderPageContent().replace(
+                "<div id=\"" + PAGE_CONTAINER_ID + "\">",
+                "<div hx-swap-oob=\"true\" id=\"" + PAGE_CONTAINER_ID + "\">"
+        );
+        return modalContent + updatePage;
+    }
+
+    @GetMapping("/add-child-modal/{moduleId}")
+    @ResponseBody
+    public String addChildModal(@PathVariable String moduleId) {
+        Div body = new Div();
+        Div group = new Div().withClass("form-field");
+        group.withChild(new Paragraph("New Item Content:").withClass("form-label"));
+        group.withChild(TextInput.create("content"));
+        body.withChild(group);
+
+        Div footer = new Div().withClass("d-flex justify-content-end gap-2");
+        Button cancelBtn = Button.create("Cancel").withStyle(Button.ButtonStyle.SECONDARY);
+        cancelBtn.withAttribute("hx-get", "/editing-demo/edit/" + moduleId);
+        cancelBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+        cancelBtn.withAttribute("hx-swap", "innerHTML");
+        footer.withChild(cancelBtn);
+
+        Button addBtn = Button.create("Add Item").withStyle(Button.ButtonStyle.PRIMARY);
+        addBtn.withAttribute("hx-post", "/editing-demo/add-child/" + moduleId);
+        addBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+        addBtn.withAttribute("hx-swap", "innerHTML");
+        addBtn.withAttribute("hx-include", ".modal-body input");
+        footer.withChild(addBtn);
+
+        return Modal.create()
+                .withTitle("Add Item")
+                .withBody(body)
+                .withFooter(footer)
+                .render();
+    }
+
+    @PostMapping("/add-child/{moduleId}")
+    @ResponseBody
+    public String addChild(
+            @PathVariable String moduleId,
+            @RequestParam("content") String content
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            return Alert.danger("Module not found").render();
+        }
+
+        if (module.content == null || module.content.isEmpty()) {
+            module.content = safeText(content);
+        } else {
+            module.content += "," + safeText(content);
+        }
+
+        return buildParentModalResponse(module, resolveEditMode(null, module));
+    }
+
+    @GetMapping("/edit-child/{moduleId}/{itemId}")
+    @ResponseBody
+    public String editChildModal(
+            @PathVariable String moduleId,
+            @PathVariable String itemId
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            return Alert.danger("Module not found").render();
+        }
+
+        int index = parseIndex(itemId);
+        if (index < 0) {
+            return Alert.danger("Invalid item ID").render();
+        }
+
+        String[] items = module.content != null ? module.content.split(",") : new String[0];
+        if (index >= items.length) {
+            return Alert.danger("Item not found").render();
+        }
+
+        Div body = new Div();
+        Div group = new Div().withClass("form-field");
+        group.withChild(new Paragraph("Item Content:").withClass("form-label"));
+        group.withChild(TextInput.create("content").withValue(items[index].trim()));
+        body.withChild(group);
+
+        Div footer = new Div().withClass("d-flex justify-content-end gap-2");
+        Button cancelBtn = Button.create("Cancel").withStyle(Button.ButtonStyle.SECONDARY);
+        cancelBtn.withAttribute("hx-get", "/editing-demo/edit/" + moduleId);
+        cancelBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+        cancelBtn.withAttribute("hx-swap", "innerHTML");
+        footer.withChild(cancelBtn);
+
+        Button saveBtn = Button.create("Save Item").withStyle(Button.ButtonStyle.PRIMARY);
+        saveBtn.withAttribute("hx-post", "/editing-demo/save-child/" + moduleId + "/" + index);
+        saveBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+        saveBtn.withAttribute("hx-swap", "innerHTML");
+        saveBtn.withAttribute("hx-include", ".modal-body input");
+        footer.withChild(saveBtn);
+
+        return Modal.create()
+                .withTitle("Edit Item")
+                .withBody(body)
+                .withFooter(footer)
+                .render();
+    }
+
+    @PostMapping("/save-child/{moduleId}/{index}")
+    @ResponseBody
+    public String saveChild(
+            @PathVariable String moduleId,
+            @PathVariable int index,
+            @RequestParam("content") String content
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            return Alert.danger("Module not found").render();
+        }
+
+        String[] items = module.content != null ? module.content.split(",") : new String[0];
+        if (index < 0 || index >= items.length) {
+            return Alert.danger("Item not found").render();
+        }
+
+        items[index] = safeText(content);
+        module.content = String.join(",", items);
+
+        return buildParentModalResponse(module, resolveEditMode(null, module));
+    }
+
+    @DeleteMapping("/delete-child/{moduleId}/{itemId}")
+    @ResponseBody
+    public String deleteChild(
+            @PathVariable String moduleId,
+            @PathVariable String itemId
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            return Alert.danger("Module not found").render();
+        }
+
+        int index = parseIndex(itemId);
+        if (index < 0) {
+             return Alert.danger("Invalid item ID").render();
+        }
+
+        List<String> itemList = new ArrayList<>();
+        if (module.content != null && !module.content.isEmpty()) {
+            for (String s : module.content.split(",")) {
+                itemList.add(s);
+            }
+        }
+
+        if (index < itemList.size()) {
+            itemList.remove(index);
+            module.content = String.join(",", itemList);
+        }
+
+        return buildParentModalResponse(module, resolveEditMode(null, module));
+    }
+
+    private int parseIndex(String itemId) {
+        try {
+            if (itemId.startsWith("item-")) {
+                return Integer.parseInt(itemId.substring(5));
+            }
+            return Integer.parseInt(itemId);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
 
     private Map<String, String> buildChangeSet(Map<String, String> formData) {
