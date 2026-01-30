@@ -401,6 +401,63 @@ public class EditingDemoController {
         return showAddModuleModal(rowId);
     }
 
+    @GetMapping("/add-child-form/{moduleId}")
+    @ResponseBody
+    public String showAddChildForm(@PathVariable String moduleId) {
+        Div body = new Div();
+
+        Div textGroup = new Div().withClass("form-field");
+        textGroup.withChild(new Paragraph("Item Text:").withClass("form-label"));
+        textGroup.withChild(TextInput.create("text").withPlaceholder("Enter item text"));
+        body.withChild(textGroup);
+
+        Div footer = new Div().withClass("d-flex justify-content-end gap-2");
+
+        // Cancel returns to the main edit modal
+        Button cancelBtn = Button.create("Cancel").withStyle(Button.ButtonStyle.SECONDARY);
+        cancelBtn.withAttribute("hx-get", "/editing-demo/edit/" + moduleId);
+        cancelBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+        cancelBtn.withAttribute("hx-swap", "innerHTML");
+        footer.withChild(cancelBtn);
+
+        Button addBtn = Button.create("Add Item").withStyle(Button.ButtonStyle.PRIMARY);
+        addBtn.withAttribute("hx-post", "/editing-demo/add-child/" + moduleId);
+        addBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID); // Replace modal content with parent edit modal
+        addBtn.withAttribute("hx-swap", "innerHTML");
+        addBtn.withAttribute("hx-include", ".modal-body input");
+        footer.withChild(addBtn);
+
+        return Modal.create()
+                .withTitle("Add Item")
+                .withBody(body)
+                .withFooter(footer)
+                .render();
+    }
+
+    @PostMapping("/add-child/{moduleId}")
+    @ResponseBody
+    public String addChild(
+            @PathVariable String moduleId,
+            @RequestParam("text") String text
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            return Modal.create().withTitle("Error")
+                    .withBody(Alert.danger("Module not found"))
+                    .render();
+        }
+
+        // For SimpleListModule demo, content is comma-separated list
+        if (module.content == null || module.content.isEmpty()) {
+            module.content = text;
+        } else {
+            module.content += "," + text;
+        }
+
+        // Return the parent edit modal to restore context
+        return buildEditModal(module, module.editMode);
+    }
+
     @GetMapping("/add-module-modal/{rowId}")
     @ResponseBody
     public String showAddModuleModal(@PathVariable String rowId) {
@@ -637,6 +694,7 @@ public class EditingDemoController {
                 .withDeleteUrl(buildDeleteUrl(module.id, mode))
                 .withChildEditUrl("/editing-demo/edit-child/" + module.id + "/{id}")
                 .withChildDeleteUrl("/editing-demo/delete-child/" + module.id + "/{id}")
+                .withChildAddUrl("/editing-demo/add-child-form/" + module.id)
                 .withPageContainerId(PAGE_CONTAINER_ID)
                 .withModalContainerId(MODAL_CONTAINER_ID);
 
