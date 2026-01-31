@@ -637,6 +637,7 @@ public class EditingDemoController {
                 .withDeleteUrl(buildDeleteUrl(module.id, mode))
                 .withChildEditUrl("/editing-demo/edit-child/" + module.id + "/{id}")
                 .withChildDeleteUrl("/editing-demo/delete-child/" + module.id + "/{id}")
+                .withChildAddUrl("/editing-demo/add-child/" + module.id)
                 .withPageContainerId(PAGE_CONTAINER_ID)
                 .withModalContainerId(MODAL_CONTAINER_ID);
 
