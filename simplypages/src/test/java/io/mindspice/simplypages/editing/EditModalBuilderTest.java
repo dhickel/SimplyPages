@@ -38,4 +38,25 @@ public class EditModalBuilderTest {
         assertTrue(html.contains("hx-get=\"/edit-child/child-0\""), "Should have edit link for child 0");
         assertTrue(html.contains("hx-get=\"/edit-child/child-1\""), "Should have edit link for child 1");
     }
+
+    @Test
+    void testAddChildButton() {
+        RichContentModule module = new RichContentModule("Test Module");
+
+        Modal modal = EditModalBuilder.create()
+                .withTitle("Edit Test")
+                .withEditable(module)
+                .withSaveUrl("/save")
+                .withChildAddUrl("/add-child")
+                .build();
+
+        String html = modal.render();
+
+        // Check if 'Content Items' header is present even if list empty (because add button exists)
+        assertTrue(html.contains("Content Items"), "Should contain 'Content Items' header");
+
+        // Check if Add Item button is present
+        assertTrue(html.contains("hx-get=\"/add-child\""), "Should have add child button");
+        assertTrue(html.contains("+ Add Item"), "Should have correct button text");
+    }
 }
