@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.HtmlUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -637,6 +638,7 @@ public class EditingDemoController {
                 .withDeleteUrl(buildDeleteUrl(module.id, mode))
                 .withChildEditUrl("/editing-demo/edit-child/" + module.id + "/{id}")
                 .withChildDeleteUrl("/editing-demo/delete-child/" + module.id + "/{id}")
+                .withChildAddUrl("/editing-demo/add-child/" + module.id)
                 .withPageContainerId(PAGE_CONTAINER_ID)
                 .withModalContainerId(MODAL_CONTAINER_ID);
 
@@ -826,5 +828,158 @@ public class EditingDemoController {
         return shell.replaceAll("<div id=\"content-area\"[^>]*>", "<div id=\"content-area\">")
                 .replace("<div id=\"content-area\"></div>",
                         "<div id=\"content-area\">" + content + "</div>");
+    }
+
+    @GetMapping("/edit-child/{moduleId}/{itemId}")
+    @ResponseBody
+    public String editChild(@PathVariable String moduleId, @PathVariable String itemId) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            return Modal.create().withTitle("Error").withBody(Alert.danger("Module not found")).render();
+        }
+
+        List<String> items = new ArrayList<>();
+        if (module.content != null && !module.content.isEmpty()) {
+            items.addAll(Arrays.asList(module.content.split(",")));
+        }
+
+        int index = -1;
+        try {
+            index = Integer.parseInt(itemId.replace("item-", ""));
+        } catch (NumberFormatException e) {
+            return Modal.create().withTitle("Error").withBody(Alert.danger("Invalid item ID")).render();
+        }
+
+        if (index < 0 || index >= items.size()) {
+            return Modal.create().withTitle("Error").withBody(Alert.danger("Item not found")).render();
+        }
+
+        String currentValue = items.get(index).trim();
+
+        Div form = new Div();
+        form.withChild(new Paragraph("Item Text:").withClass("form-label"));
+        form.withChild(TextInput.create("text").withValue(currentValue));
+
+        Div footer = new Div().withClass("d-flex justify-content-end gap-2");
+        Button cancelBtn = Button.create("Cancel").withStyle(Button.ButtonStyle.SECONDARY);
+        cancelBtn.withAttribute("hx-get", "/editing-demo/edit/" + moduleId);
+        cancelBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+        cancelBtn.withAttribute("hx-swap", "innerHTML");
+        footer.withChild(cancelBtn);
+
+        Button saveBtn = Button.create("Save Item").withStyle(Button.ButtonStyle.PRIMARY);
+        saveBtn.withAttribute("hx-post", "/editing-demo/save-child/" + moduleId + "/" + itemId);
+        saveBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+        saveBtn.withAttribute("hx-swap", "innerHTML");
+        saveBtn.withAttribute("hx-include", ".modal-body input");
+        footer.withChild(saveBtn);
+
+        return Modal.create()
+                .withTitle("Edit Item")
+                .withBody(form)
+                .withFooter(footer)
+                .render();
+    }
+
+    @PostMapping("/save-child/{moduleId}/{itemId}")
+    @ResponseBody
+    public String saveChild(@PathVariable String moduleId, @PathVariable String itemId, @RequestParam("text") String text) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) return Alert.danger("Module not found").render();
+
+        List<String> items = new ArrayList<>();
+        if (module.content != null && !module.content.isEmpty()) {
+            items.addAll(Arrays.asList(module.content.split(",")));
+        }
+
+        int index = Integer.parseInt(itemId.replace("item-", ""));
+        if (index >= 0 && index < items.size()) {
+            items.set(index, safeText(text));
+        }
+
+        module.content = String.join(",", items);
+
+        String parentModal = buildEditModal(module, module.editMode);
+        String pageUpdate = renderPageContent().replace(
+                "<div id=\"" + PAGE_CONTAINER_ID + "\">",
+                "<div hx-swap-oob=\"true\" id=\"" + PAGE_CONTAINER_ID + "\">"
+        );
+        return parentModal + pageUpdate;
+    }
+
+    @DeleteMapping("/delete-child/{moduleId}/{itemId}")
+    @ResponseBody
+    public String deleteChild(@PathVariable String moduleId, @PathVariable String itemId) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) return "";
+
+        List<String> items = new ArrayList<>();
+        if (module.content != null && !module.content.isEmpty()) {
+            items.addAll(Arrays.asList(module.content.split(",")));
+        }
+
+        int index = Integer.parseInt(itemId.replace("item-", ""));
+        if (index >= 0 && index < items.size()) {
+            items.remove(index);
+        }
+
+        module.content = String.join(",", items);
+
+        String parentModal = buildEditModal(module, module.editMode);
+        String pageUpdate = renderPageContent().replace(
+                "<div id=\"" + PAGE_CONTAINER_ID + "\">",
+                "<div hx-swap-oob=\"true\" id=\"" + PAGE_CONTAINER_ID + "\">"
+        );
+        return parentModal + pageUpdate;
+    }
+
+    @GetMapping("/add-child/{moduleId}")
+    @ResponseBody
+    public String addChildModal(@PathVariable String moduleId) {
+        Div form = new Div();
+        form.withChild(new Paragraph("New Item Text:").withClass("form-label"));
+        form.withChild(TextInput.create("text").withPlaceholder("Item text"));
+
+        Div footer = new Div().withClass("d-flex justify-content-end gap-2");
+        Button cancelBtn = Button.create("Cancel").withStyle(Button.ButtonStyle.SECONDARY);
+        cancelBtn.withAttribute("hx-get", "/editing-demo/edit/" + moduleId);
+        cancelBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+        cancelBtn.withAttribute("hx-swap", "innerHTML");
+        footer.withChild(cancelBtn);
+
+        Button addBtn = Button.create("Add Item").withStyle(Button.ButtonStyle.PRIMARY);
+        addBtn.withAttribute("hx-post", "/editing-demo/add-child/" + moduleId);
+        addBtn.withAttribute("hx-target", "#" + MODAL_CONTAINER_ID);
+        addBtn.withAttribute("hx-swap", "innerHTML");
+        addBtn.withAttribute("hx-include", ".modal-body input");
+        footer.withChild(addBtn);
+
+        return Modal.create()
+                .withTitle("Add New Item")
+                .withBody(form)
+                .withFooter(footer)
+                .render();
+    }
+
+    @PostMapping("/add-child/{moduleId}")
+    @ResponseBody
+    public String saveNewChild(@PathVariable String moduleId, @RequestParam("text") String text) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) return "";
+
+        List<String> items = new ArrayList<>();
+        if (module.content != null && !module.content.isEmpty()) {
+            items.addAll(Arrays.asList(module.content.split(",")));
+        }
+        items.add(safeText(text));
+
+        module.content = String.join(",", items);
+
+        String parentModal = buildEditModal(module, module.editMode);
+        String pageUpdate = renderPageContent().replace(
+                "<div id=\"" + PAGE_CONTAINER_ID + "\">",
+                "<div hx-swap-oob=\"true\" id=\"" + PAGE_CONTAINER_ID + "\">"
+        );
+        return parentModal + pageUpdate;
     }
 }

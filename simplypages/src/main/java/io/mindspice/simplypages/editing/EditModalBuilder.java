@@ -33,6 +33,7 @@ public class EditModalBuilder {
     private String deleteUrl;
     private String childEditUrl;
     private String childDeleteUrl;
+    private String childAddUrl;
     private boolean showDelete = true;
     private String pageContainerId = "page-content";
     private String modalContainerId = "edit-modal-container";
@@ -81,6 +82,11 @@ public class EditModalBuilder {
 
     public EditModalBuilder withChildDeleteUrl(String childDeleteUrl) {
         this.childDeleteUrl = childDeleteUrl;
+        return this;
+    }
+
+    public EditModalBuilder withChildAddUrl(String childAddUrl) {
+        this.childAddUrl = childAddUrl;
         return this;
     }
 
@@ -178,6 +184,18 @@ public class EditModalBuilder {
         }
 
         section.withChild(list);
+
+        if (childAddUrl != null) {
+            Div addSection = new Div().withClass("mt-3 d-flex justify-content-end");
+            Component addBtn = Button.create("Add Item")
+                    .withStyle(Button.ButtonStyle.SECONDARY)
+                    .withAttribute("hx-get", childAddUrl)
+                    .withAttribute("hx-target", "#" + modalContainerId)
+                    .withAttribute("hx-swap", "innerHTML");
+            addSection.withChild(addBtn);
+            section.withChild(addSection);
+        }
+
         return section;
     }
 
