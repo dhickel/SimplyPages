@@ -165,14 +165,31 @@ This pattern demonstrates how to build navigation systems where clicking links u
     4. **Separate Content Rendering Method**: Create a method to render just the content portion:
     ```java
     public String renderContent() {
-        return new Div()
-            .withAttribute("id", "docs-content")
-            .withChild(Header.H1(title))
-            .withChild(ContentModule.create()
-                .withContent(markdownContent))
-            .render();
+        return Header.H1(title).render() +
+               ContentModule.create().withContent(markdownContent).render();
     }
     ```
+
+    > **Important Note on `hx-swap="innerHTML"`**:
+    > When using `innerHTML`, the server response should *only* contain the new inner content. It should **not** include the parent element with the target ID.
+    >
+    > **Incorrect Response for `hx-target="#docs-content"`**:
+    > ```html
+    > <!-- This will result in a nested div and break subsequent swaps -->
+    > <div id="docs-content">
+    >   <h1>New Title</h1>
+    >   <p>New content...</p>
+    > </div>
+    > ```
+    >
+    > **Correct Response for `hx-target="#docs-content"`**:
+    > ```html
+    > <!-- Only the inner elements -->
+    > <h1>New Title</h1>
+    > <p>New content...</p>
+    > ```
+    >
+    > If you need to replace the target element itself, use `hx-swap="outerHTML"`.
 
 * **Key Benefits**:
     * **No Page Reloads**: Navigation feels instant - only content area updates
