@@ -7,16 +7,31 @@ import io.mindspice.simplypages.core.HtmlTag;
 /**
  * Builder for creating top banners with optional image, title, subtitle, and custom styling.
  *
- * <p>Example usage:</p>
+ * @deprecated Use {@link BannerBuilder} instead with {@link BannerBuilder.BannerLayout#HORIZONTAL}
+ * layout for equivalent functionality. BannerBuilder provides the same features plus additional
+ * layout modes (CENTERED, LEFT, RIGHT, IMAGE_OVERLAY) and more styling options.
+ *
+ * <p>Migration example:</p>
  * <pre>{@code
+ * // Old (deprecated):
  * TopBannerBuilder.create()
  *     .withTitle("Research Portal")
  *     .withSubtitle("Open source research platform")
- *     .withImage("/images/logo.png")
+ *     .withImage("/images/logo.png", "Logo")
+ *     .withBackgroundColor("#2c3e50")
+ *     .build();
+ *
+ * // New (recommended):
+ * BannerBuilder.create()
+ *     .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
+ *     .withTitle("Research Portal")
+ *     .withSubtitle("Open source research platform")
+ *     .withImage("/images/logo.png", "Logo")
  *     .withBackgroundColor("#2c3e50")
  *     .build();
  * }</pre>
  */
+@Deprecated(since = "1.0", forRemoval = true)
 public class TopBannerBuilder {
 
     private String title;

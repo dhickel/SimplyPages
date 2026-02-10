@@ -2,9 +2,9 @@ package io.mindspice.demo;
 
 import io.mindspice.demo.pages.*;
 import io.mindspice.simplypages.builders.AccountBarBuilder;
+import io.mindspice.simplypages.builders.BannerBuilder;
 import io.mindspice.simplypages.builders.ShellBuilder;
 import io.mindspice.simplypages.builders.SideNavBuilder;
-import io.mindspice.simplypages.builders.TopBannerBuilder;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.components.Header;
@@ -187,7 +187,8 @@ public class DemoController {
         String shell = ShellBuilder.create()
                 .withPageTitle("Java HTML Framework - Demo")
                 .withTopBanner(
-                        TopBannerBuilder.create()
+                        BannerBuilder.create()
+                                .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
                                 .withTitle("Java HTML Framework")
                                 .withSubtitle("Build server-side rendered web apps with pure Java • Minimal JavaScript • Type-safe components")
                                 .withBackgroundColor("#2c3e50")
@@ -711,7 +712,8 @@ public class DemoController {
         return ShellBuilder.create()
                 .withPageTitle("Custom Shell Demo")
                 .withTopBanner(
-                        TopBannerBuilder.create()
+                        BannerBuilder.create()
+                                .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
                                 .withTitle("Custom Shell")
                                 .build()
                 )

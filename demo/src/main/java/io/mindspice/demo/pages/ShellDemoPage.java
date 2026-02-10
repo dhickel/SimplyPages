@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * <p>Shows how to use:</p>
  * <ul>
  *   <li>ShellBuilder - Complete application shell</li>
- *   <li>TopBannerBuilder - Flexible top banners with images</li>
+ *   <li>BannerBuilder - Flexible banners with multiple layout modes</li>
  *   <li>AccountBarBuilder - Secondary navigation with left/right alignment</li>
  *   <li>Collapsible sidebar functionality</li>
  * </ul>
@@ -40,7 +40,8 @@ public class ShellDemoPage implements DemoPage {
                         ShellBuilder.create()
                             .withPageTitle("My Application")
                             .withTopBanner(
-                                TopBannerBuilder.create()
+                                BannerBuilder.create()
+                                    .withLayout(BannerLayout.HORIZONTAL)
                                     .withTitle("App Name")
                                     .withSubtitle("Tagline")
                                     .withImage("/logo.png", "Logo")
@@ -128,7 +129,6 @@ public class ShellDemoPage implements DemoPage {
                         * Flexible text alignment
                         * Custom colors (background, text)
                         * Responsive (adapts to mobile)
-                        * Legacy `TopBannerBuilder` still supported
                         """)))
 
                 // AccountBarBuilder with AccountWidget
@@ -245,7 +245,8 @@ public class ShellDemoPage implements DemoPage {
                             return ShellBuilder.create()
                                 .withPageTitle("Research Portal")
                                 .withTopBanner(
-                                    TopBannerBuilder.create()
+                                    BannerBuilder.create()
+                                        .withLayout(BannerLayout.HORIZONTAL)
                                         .withImage("/images/research-logo.png", "Logo")
                                         .withTitle("Research Portal")
                                         .withSubtitle("Open source research platform")

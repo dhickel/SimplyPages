@@ -8,6 +8,14 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Tests for TopBannerBuilder.
+ *
+ * @deprecated TopBannerBuilder is deprecated in favor of BannerBuilder.
+ * These tests remain for backward compatibility verification.
+ * See {@link BannerBuilderTest} for tests of the new BannerBuilder API.
+ */
+@Deprecated(since = "1.0", forRemoval = true)
 class TopBannerBuilderTest {
 
     @Test

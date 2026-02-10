@@ -1,9 +1,9 @@
 package io.mindspice.demo;
 
 
+import io.mindspice.simplypages.builders.BannerBuilder;
 import io.mindspice.simplypages.builders.ShellBuilder;
 import io.mindspice.simplypages.builders.SideNavBuilder;
-import io.mindspice.simplypages.builders.TopBannerBuilder;
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.components.Header;
 import io.mindspice.simplypages.components.Paragraph;
@@ -800,7 +800,8 @@ public class EditingDemoController {
         String shell = ShellBuilder.create()
                 .withPageTitle("JHF Editing Demo")
                 .withTopBanner(
-                        TopBannerBuilder.create()
+                        BannerBuilder.create()
+                                .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
                                 .withTitle("Java HTML Framework - Editing Demo")
                                 .withSubtitle("Phase 6.5 patterns with permissions, row locking, and approval workflow")
                                 .withClass("banner-full-width")

@@ -69,16 +69,17 @@ This generates a complete HTML page with:
 | `withAdditionalJS(String)` | Add custom JS link | Optional |
 | `build()` | Generate final HTML | **Required** |
 
-## TopBannerBuilder
+## BannerBuilder
 
-The top banner is your application's header branding area.
+The banner is your application's header branding area with flexible layout options.
 
-### Creating a Top Banner
+### Creating a Banner
 
 ```java
-import io.mindspice.jhf.builders.TopBannerBuilder;
+import io.mindspice.jhf.builders.BannerBuilder;
 
-String banner = TopBannerBuilder.create()
+String banner = BannerBuilder.create()
+    .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
     .withTitle("My Application")
     .withSubtitle("Building amazing things")
     .build();
@@ -86,28 +87,34 @@ String banner = TopBannerBuilder.create()
 
 Generates:
 ```html
-<div class="top-banner">
+<div class="banner banner-horizontal">
     <h1>My Application</h1>
     <p class="subtitle">Building amazing things</p>
 </div>
 ```
 
-### TopBannerBuilder Methods
+### BannerBuilder Methods
 
 ```java
-TopBannerBuilder.create()
-    .withTitle(String)              // Main title (h1)
-    .withSubtitle(String)           // Subtitle text (p)
-    .withImageUrl(String)           // Background image URL
-    .withClass(String)              // Add CSS class
-    .withStyle(String, String)      // Add inline style
-    .build();                       // Generate HTML
+BannerBuilder.create()
+    .withLayout(BannerLayout)        // Layout mode (HORIZONTAL, CENTERED, LEFT, RIGHT, IMAGE_OVERLAY)
+    .withTitle(String)               // Main title (h1)
+    .withSubtitle(String)            // Subtitle text (p)
+    .withImage(String, String)       // Image URL and alt text (for HORIZONTAL layout)
+    .withBackgroundImage(String)     // Background image (for IMAGE_OVERLAY layout)
+    .withTextAlignment(TextAlignment)// Text alignment (for IMAGE_OVERLAY: LEFT, CENTER, RIGHT)
+    .withMinHeight(int)              // Minimum height in pixels
+    .withBackgroundColor(String)     // Background color
+    .withTextColor(String)           // Text color
+    .withClass(String)               // Add CSS class
+    .build();                        // Generate HTML
 ```
 
 ### Example: Banner with Background Image
 
 ```java
-String banner = TopBannerBuilder.create()
+String banner = BannerBuilder.create()
+    .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
     .withTitle("Welcome to Our Platform")
     .withSubtitle("Your journey starts here")
     .withImageUrl("/images/banner-bg.jpg")
@@ -118,7 +125,8 @@ String banner = TopBannerBuilder.create()
 ### Example: Minimal Banner
 
 ```java
-String banner = TopBannerBuilder.create()
+String banner = BannerBuilder.create()
+    .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
     .withTitle("Dashboard")
     .build();
 ```
@@ -126,7 +134,8 @@ String banner = TopBannerBuilder.create()
 ### Example: Styled Banner
 
 ```java
-String banner = TopBannerBuilder.create()
+String banner = BannerBuilder.create()
+    .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
     .withTitle("Admin Panel")
     .withClass("admin-header")
     .withStyle("background-color", "#2c3e50")
@@ -322,7 +331,8 @@ Collapsible navigation features:
 
 ```java
 // Build shell components
-String topBanner = TopBannerBuilder.create()
+String topBanner = BannerBuilder.create()
+    .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
     .withTitle("My Application")
     .withSubtitle("Welcome back!")
     .build();
@@ -359,7 +369,8 @@ String shellHtml = ShellBuilder.create()
 ### Example 2: E-Commerce Shell
 
 ```java
-String topBanner = TopBannerBuilder.create()
+String topBanner = BannerBuilder.create()
+    .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
     .withTitle("ShopNow")
     .withImageUrl("/images/store-banner.jpg")
     .withClass("store-banner")
@@ -406,7 +417,8 @@ String shellHtml = ShellBuilder.create()
 ### Example 3: Admin Dashboard Shell
 
 ```java
-String topBanner = TopBannerBuilder.create()
+String topBanner = BannerBuilder.create()
+    .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
     .withTitle("Admin Panel")
     .withClass("admin-header")
     .withStyle("background-color", "#2c3e50")
@@ -485,7 +497,8 @@ public class ShellService {
     }
 
     private String buildTopBanner() {
-        return TopBannerBuilder.create()
+        return BannerBuilder.create()
+    .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
             .withTitle("My Application")
             .withSubtitle("Building amazing things")
             .build();
@@ -731,7 +744,8 @@ Override framework.css with your own styles:
 Add logo to top banner:
 
 ```java
-String topBanner = TopBannerBuilder.create()
+String topBanner = BannerBuilder.create()
+    .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
     .withChild(Image.create("/images/logo.png", "Company Logo")
         .withClass("logo")
         .withMaxWidth("150px"))
@@ -799,7 +813,7 @@ public String buildShell(String pageContent) {
 
 1. **Shell = Frame**: Persistent wrapper around changing page content
 2. **ShellBuilder**: Combines banner, account bar, sidebar, and content
-3. **TopBannerBuilder**: Create branded header banners
+3. **BannerBuilder**: Create flexible header banners with multiple layout modes
 4. **AccountBarBuilder**: Build secondary navigation bars
 5. **SideNavBuilder**: Construct primary navigation sidebars
 6. **Responsive**: Mobile-friendly by default (stacks, off-canvas)

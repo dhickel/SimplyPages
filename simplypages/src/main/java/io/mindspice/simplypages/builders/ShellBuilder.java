@@ -12,7 +12,8 @@ import io.mindspice.simplypages.core.HtmlTag;
  * <pre>{@code
  * ShellBuilder.create()
  *     .withTopBanner(
- *         TopBannerBuilder.create()
+ *         BannerBuilder.create()
+ *             .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
  *             .withTitle("My App")
  *             .withImage("/logo.png", "Logo")
  *             .build()
