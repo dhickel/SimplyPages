@@ -1,405 +1,235 @@
 # SimplyPages
 
-A lightweight framework for building server-side rendered web pages with minimal JavaScript. Built specifically for data-heavy applications like scientific portals, research databases, and content management systems.
+SimplyPages is a Java-first server-side rendering framework for teams that want predictable HTML output, minimal frontend complexity, and direct control over rendering behavior.
 
-**Part of the SimplyWeb Suite** - Use SimplyPages with SimplyJdbc for full-stack Java web development.
+It is built for practical web apps: admin portals, internal tools, content-heavy systems, and data views where server-rendered HTML is a better fit than client-heavy stacks.
 
-## Philosophy
+## Table of Contents
 
-- **Server-First**: All rendering happens on the server. No complex frontend build process.
-- **Java-Native**: Build your entire UI in Java using fluent, type-safe APIs.
-- **Minimal JavaScript**: Uses HTMX for dynamic updates, avoiding heavy JavaScript frameworks.
-- **Domain-Specific**: Optimized for data display, forms, forums, and content-heavy applications.
-- **Composable**: Build complex UIs from simple, reusable components and modules.
+1. [Why Use It](#why-use-it)
+2. [Install](#install)
+3. [Static Page (Build Once, Serve Fast)](#1-static-page-build-once-serve-fast)
+4. [Dynamic Page (Template + SlotKey + RenderContext)](#2-dynamic-page-template--slotkey--rendercontext)
+5. [Editable Module Flow (Minimal)](#3-editable-module-flow-minimal)
+6. [Custom Components and Modules (Scaffolding)](#4-custom-components-and-modules-scaffolding)
+7. [Documentation](#documentation)
+8. [Build and Test](#build-and-test)
+9. [Docs TOC](#docs-toc)
 
-## Key Features
+## Why Use It
 
-### 🎨 Comprehensive Component Library
+- Server rendering first, not as an afterthought.
+- UI composition in Java with fluent APIs.
+- Strong dynamic rendering model with `Template`, `SlotKey`, and `RenderContext`.
+- HTMX-friendly fragment update workflows.
+- Editable module patterns for real-world content operations.
 
-- **Forms**: TextInput, TextArea, Select, RadioGroup, Checkbox, Button, Form
-- **Display**: Table, DataTable, Card, CardGrid, Alert, Badge, Tag, Label, InfoBox
-- **Media**: Gallery, Image, Video, Audio
-- **Forum**: ForumPost, PostList, Comment, CommentThread
-- **Navigation**: Link, NavBar, SideNav, Breadcrumb
-- **Lists**: UnorderedList, OrderedList
-
-### 🧩 Module System
-
-High-level components that combine primitives into functional units:
-
-- **ContentModule**: Display formatted text and Markdown
-- **FormModule**: Complete forms with structure and styling
-- **GalleryModule**: Image galleries with captions
-- **DataModule**: Type-safe data table displays
-- **ForumModule**: Discussion threads and posts
-
-### 📐 Flexible Layout System
-
-- **Row/Column Grid**: 12-column responsive grid system
-- **Grid Layout**: CSS Grid-based layouts with configurable columns
-- **Container**: Constrained-width content containers
-- **Section**: Semantic section divisions
-
-### 🎯 Type Safety
-
-All components are strongly typed, providing compile-time safety and IDE autocomplete support.
-
-## Quick Start
-
-### Installation
-
-Add to your `pom.xml`:
+## Install
 
 ```xml
 <dependency>
-    <groupId>io.mindspice</groupId>
-    <artifactId>simplypages</artifactId>
-    <version>0.1.0</version>
+  <groupId>io.mindspice</groupId>
+  <artifactId>simplypages</artifactId>
+  <version>0.1.0</version>
 </dependency>
 ```
 
-### 1. Basic Page
+## 1) Static Page (Build Once, Serve Fast)
 
 ```java
-import io.mindspice.simplypages.layout.Page;
-import io.mindspice.simplypages.components.Header;
-import io.mindspice.simplypages.components.Markdown;
+@Service
+public class StaticPageService {
+    private String homeHtml;
 
-@GetMapping("/example")
+    @PostConstruct
+    void init() {
+        homeHtml = Page.builder()
+            .addComponents(Header.H1("Welcome"))
+            .addComponents(new Paragraph("This page was built once at startup."))
+            .build()
+            .render();
+    }
+
+    public String homeHtml() {
+        return homeHtml;
+    }
+}
+
+@GetMapping("/")
 @ResponseBody
-public String examplePage() {
-    Page page = Page.builder()
-        .addComponents(Header.H1("Hello World"))
-        .addRow(row -> row.withChild(
-            new Markdown("This is **Markdown** content!")
-        ))
-        .build();
-
-    return page.render();
+public String home(StaticPageService staticPages) {
+    return staticPages.homeHtml();
 }
 ```
 
-### 2. Form Example
+## 2) Dynamic Page (Template + SlotKey + RenderContext)
 
 ```java
-import io.mindspice.simplypages.components.forms.*;
+public final class UserCardView {
+    public static final SlotKey<String> USER_NAME = SlotKey.of("user_name");
+    public static final SlotKey<String> USER_ROLE = SlotKey.of("user_role");
 
-Form contactForm = Form.create()
-    .addField("Name", TextInput.create("name")
-        .withPlaceholder("Enter your name")
-        .required())
-    .addField("Email", TextInput.email("email")
-        .required())
-    .addField("Message", TextArea.create("message")
-        .withRows(5))
-    .addField("", Button.submit("Send"));
+    public static final Template USER_CARD_TEMPLATE = Template.of(
+        new Div().withClass("user-card")
+            .withChild(new HtmlTag("h2").withInnerText(USER_NAME))
+            .withChild(new Paragraph().withChild(Slot.of(USER_ROLE)))
+    );
+
+    private UserCardView() {}
+}
+
+@GetMapping("/users/{id}/card")
+@ResponseBody
+public String userCard(@PathVariable String id) {
+    User user = userService.load(id);
+
+    RenderContext ctx = RenderContext.builder()
+        .with(UserCardView.USER_NAME, user.name())
+        .with(UserCardView.USER_ROLE, user.role())
+        .build();
+
+    return UserCardView.USER_CARD_TEMPLATE.render(ctx);
+}
 ```
 
-### 3. Data Table
+This pattern keeps structure stable and pushes per-request variability into typed slot values.
+
+## 3) Editable Module Flow (Minimal)
 
 ```java
-import io.mindspice.simplypages.modules.DataModule;
+@GetMapping("/modules/{id}/edit")
+@ResponseBody
+public String editModule(@PathVariable String id, Principal principal) {
+    ContentModule module = moduleService.loadContentModule(id);
 
-DataTable<Product> table = DataTable.create(Product.class)
-    .addColumn("Name", Product::getName)
-    .addColumn("Category", Product::getCategory)
-    .addColumn("Price", p -> String.format("$%.2f", p.getPrice()))
-    .withData(productList)
-    .striped()
-    .hoverable();
+    return AuthWrapper.requireForEdit(
+        () -> authChecker.canEdit(id, principal.getName()),
+        () -> EditModalBuilder.create()
+            .withTitle("Edit Module")
+            .withModuleId(id)
+            .withEditable(module)
+            .withSaveUrl("/modules/" + id + "/save")
+            .withDeleteUrl("/modules/" + id + "/delete")
+            .withPageContainerId("page-content")
+            .withModalContainerId("edit-modal-container")
+            .build()
+            .render()
+    );
+}
+
+@PostMapping("/modules/{id}/save")
+@ResponseBody
+public String saveModule(@PathVariable String id, @RequestParam Map<String, String> formData) {
+    ContentModule module = moduleService.loadContentModule(id);
+
+    ValidationResult vr = module.validate(formData);
+    if (!vr.isValid()) {
+        return Alert.danger(String.join(", ", vr.errors())).render();
+    }
+
+    module.applyEdits(formData);
+    moduleService.save(module);
+
+    String closeModal = "<div id=\"edit-modal-container\" hx-swap-oob=\"true\"></div>";
+    String updateModule = "<div id=\"" + id + "\" hx-swap-oob=\"true\">" + module.render() + "</div>";
+    return closeModal + updateModule;
+}
 ```
 
-### 4. Module Usage
+## 4) Custom Components and Modules (Scaffolding)
+
+Keep custom primitives small and modules focused.
 
 ```java
-import io.mindspice.simplypages.modules.ContentModule;
+// Custom primitive component (scaffolding)
+public class StatusPill extends HtmlTag {
+    public StatusPill() { super("span"); }
 
-ContentModule module = ContentModule.create()
-    .withTitle("Welcome")
-    .withContent("""
-        ## Getting Started
+    public static StatusPill create(String label) {
+        StatusPill pill = new StatusPill();
+        pill.withClass("status-pill");
+        pill.withInnerText(label);
+        return pill;
+    }
+}
 
-        Use this framework to build data-heavy applications
-        with minimal JavaScript and maximum type safety.
-    """);
+// Custom module (scaffolding)
+public class ProfileSummaryModule extends Module {
+    private String titleText;
+
+    public ProfileSummaryModule() {
+        super("div");
+        withClass("profile-summary-module");
+    }
+
+    public static ProfileSummaryModule create() { return new ProfileSummaryModule(); }
+
+    public ProfileSummaryModule withTitleText(String titleText) {
+        this.titleText = titleText;
+        return this;
+    }
+
+    @Override
+    protected void buildContent() {
+        if (titleText != null) {
+            super.withChild(Header.H3(titleText));
+        }
+        super.withChild(StatusPill.create("Active"));
+    }
+}
 ```
-
-### 5. Two-Column Layout
-
-```java
-import io.mindspice.simplypages.layout.*;
-
-Page page = Page.builder()
-    .addRow(row -> row
-        .withChild(Column.create().withWidth(8).withChild(
-            new Markdown("Main content area")
-        ))
-        .withChild(Column.create().withWidth(4).withChild(
-            new Markdown("Sidebar")
-        ))
-    )
-    .build();
-```
-
-## Component Categories
-
-### Form Components
-
-Build complex forms with validation and HTMX support:
-
-```java
-Form.create()
-    .addField("Username", TextInput.create("username"))
-    .addField("Password", TextInput.password("password"))
-    .addField("Role", Select.create("role")
-        .addOption("admin", "Administrator")
-        .addOption("user", "User"))
-    .addField("", Button.submit("Login"))
-    .withHxPost("/login");
-```
-
-### Display Components
-
-Show data in various formats:
-
-```java
-// Alert
-Alert.success("Saved successfully!");
-
-// Badge
-Badge.primary("NEW");
-
-// InfoBox
-InfoBox.create()
-    .withIcon("📊")
-    .withTitle("Total Users")
-    .withValue("1,234");
-
-// Card
-Card.create()
-    .withHeader("Title")
-    .withBody("Content")
-    .withFooter("Footer");
-```
-
-### Forum Components
-
-Build discussion platforms:
-
-```java
-ForumPost.create()
-    .withAuthor("User123")
-    .withTimestamp("2 hours ago")
-    .withTitle("Discussion Topic")
-    .withContent("Post content in Markdown")
-    .withReplies(12)
-    .withLikes(34);
-```
-
-### Media Components
-
-Display images, videos, and galleries:
-
-```java
-Gallery.create()
-    .withColumns(3)
-    .addImage("/img1.jpg", "Alt text", "Caption")
-    .addImage("/img2.jpg", "Alt text", "Caption");
-```
-
-## Navigation
-
-### Top Navigation
-
-```java
-NavBar topNav = NavBar.create()
-    .withBrand("My Portal")
-    .addItem("Home", "/home", true)  // active
-    .addItem("About", "/about")
-    .horizontal();
-```
-
-### Side Navigation
-
-```java
-SideNav sideNav = SideNav.create()
-    .addSection("Main")
-    .addItem("Dashboard", "/dashboard", true)
-    .addItem("Settings", "/settings")
-    .addSection("Data")
-    .addItem("Reports", "/reports");
-```
-
-### Navigation Builders
-
-```java
-// Top navigation builder
-NavBar topNav = TopNavBuilder.create()
-    .withBrand("My Portal")
-    .addPortal("Home", "/home", true)
-    .addPortal("Forums", "/forums")
-    .addPortal("Articles", "/articles")
-    .build();
-
-// Side navigation builder
-SideNav sideNav = SideNavBuilder.create()
-    .addSection("Content")
-    .addLink("Articles", "/articles", "📄")
-    .addLink("Resources", "/resources", "📚")
-    .addSection("Community")
-    .addLink("Discussions", "/forum", "💬")
-    .build();
-```
-
-## Styling
-
-### CSS Framework
-
-The framework includes a comprehensive CSS framework with:
-
-- Responsive grid system (12 columns)
-- Form styling with focus states
-- Button variants (primary, secondary, success, danger, warning, info)
-- Table styles (striped, bordered, hoverable)
-- Card components
-- Alert styles
-- Navigation components
-- Typography utilities
-- Spacing utilities
-
-### Utility Classes
-
-```css
-/* Text alignment */
-.text-left, .text-center, .text-right
-
-/* Font sizes */
-.text-sm, .text-base, .text-lg, .text-xl
-
-/* Font weights */
-.font-light, .font-normal, .font-medium, .font-semibold, .font-bold
-
-/* Spacing */
-.p-sm, .p-medium, .p-lg (padding)
-.m-sm, .m-medium, .m-lg (margin)
-
-/* Grid gaps */
-.gap-sm, .gap-medium, .gap-lg
-```
-
-## HTMX Integration
-
-All components support HTMX attributes for dynamic updates:
-
-```java
-Link.create("/page", "Click me")
-    .withHxGet("/dynamic-content")
-    .withHxTarget("#content-area")
-    .withHxPushUrl(true);
-
-Form.create()
-    .withHxPost("/submit")
-    .withHxTarget("#result")
-    .withHxSwap("outerHTML");
-```
-
-## Architecture
-
-### Component Hierarchy
-
-```
-Component (interface)
-├── HtmlTag (base class)
-│   ├── Basic Components (Div, Paragraph, Header, Image)
-│   ├── Form Components (TextInput, TextArea, Select, etc.)
-│   ├── Display Components (Table, Card, Alert, etc.)
-│   ├── Navigation Components (Link, NavBar, SideNav)
-│   └── Layout Components (Row, Column, Grid, Container)
-└── Module (abstract class)
-    ├── ContentModule
-    ├── FormModule
-    ├── GalleryModule
-    ├── DataModule
-    └── ForumModule
-```
-
-### Rendering Flow
-
-1. Build components using fluent APIs
-2. Components generate HTML strings via `render()` method
-3. ShellBuilder generates complete HTML shell structure
-4. Controller returns HTML to Spring
-5. Spring serves HTML to browser
-6. HTMX handles dynamic updates
 
 ## Documentation
 
-Full documentation is available in the [`docs/`](docs/) directory and can be viewed in the demo application.
+Start at `docs/README.md`.
 
-## Running the Demo
+Recommended sequence:
+
+1. `docs/fundamentals/01-web-and-htmx-primer.md`
+2. `docs/getting-started/01-installation-and-first-static-page.md`
+3. `docs/getting-started/02-dynamic-pages-with-slotkey-rendercontext.md`
+4. `docs/getting-started/03-editing-system-first-implementation.md`
+
+## Build and Test
 
 ```bash
-cd demo
-../mvnw spring-boot:run
+./mvnw clean install
+./mvnw test
+./mvnw -pl simplypages test
+./mvnw -pl demo spring-boot:run
 ```
 
-Navigate to `http://localhost:8080` to see the interactive demo showcasing all components.
+## Docs TOC
 
-## Demo Pages
-
-- **Home**: Framework overview and features
-- **Forms**: Form components and examples
-- **Tables**: Data table demonstrations
-- **Gallery**: Image gallery with media components
-- **Forum**: Discussion and comment components
-- **Cards**: Card layouts and info boxes
-- **Alerts**: Notifications, badges, and tags
-- **Modules**: Module system examples
-- **Layouts**: Grid and layout system demonstrations
-- **Editing**: In-place editing system with approval workflow
-
-## Dependencies
-
-- Spring Boot 3.2.3 (optional - for demo only)
-- HTMX 1.9.10 (via WebJars)
-- CommonMark 0.21.0 (Markdown rendering)
-- OWASP Encoder 1.2.3 (security)
-
-## Design Principles
-
-1. **Simplicity Over Complexity**: Avoid over-abstraction, keep it simple
-2. **Type Safety**: Leverage Java's type system for compile-time guarantees
-3. **Minimal JavaScript**: Server-side rendering with progressive enhancement
-4. **Developer Experience**: Fluent APIs, clear naming, good defaults
-5. **Composability**: Small pieces combine into larger wholes
-6. **Domain Focus**: Optimized for data-heavy, content-rich applications
-
-## SimplyWeb Suite
-
-SimplyPages is part of the **SimplyWeb Suite** of Java libraries:
-
-- **SimplyJdbc** - Simple, type-safe database access
-- **SimplyPages** - Build web pages in Java (this library)
-- **Future**: SimplyServer, SimplyAuth, and more
-
-Use them independently or together for full-stack Java web development.
-
-## Future Enhancements
-
-- Responsive utilities for mobile/tablet/desktop
-- Form validation framework
-- Component theming system
-- Additional chart/graph components
-- File upload components
-- Pagination component
-- Search/filter components
-- Date picker components
-- Rich text editor integration
-
-## License
-
-Open source - designed for data-heavy web applications including research portals, community platforms, and content management systems.
-
-## Contributing
-
-This is a prototype framework. Feedback and contributions welcome as the framework evolves based on real-world usage.
+- `docs/README.md`
+- `docs/INDEX.md`
+- Fundamentals:
+  - `docs/fundamentals/01-web-and-htmx-primer.md`
+  - `docs/fundamentals/02-simplypages-mental-model.md`
+  - `docs/fundamentals/03-css-fundamentals.md`
+- Getting Started:
+  - `docs/getting-started/README.md`
+  - `docs/getting-started/01-installation-and-first-static-page.md`
+  - `docs/getting-started/02-dynamic-pages-with-slotkey-rendercontext.md`
+  - `docs/getting-started/03-editing-system-first-implementation.md`
+- Core:
+  - `docs/core/01-components-htmltag-and-module-lifecycle.md`
+  - `docs/core/02-layout-page-row-column-grid.md`
+  - `docs/core/03-template-rendercontext-slotkey-reference.md`
+  - `docs/core/04-rendering-pipeline-high-and-low-level.md`
+  - `docs/core/05-css-defaults-overrides-and-structure.md`
+- Patterns:
+  - `docs/patterns/01-static-page-serving-patterns.md`
+  - `docs/patterns/02-dynamic-fragment-caching-patterns.md`
+  - `docs/patterns/03-htmx-endpoint-and-swap-patterns.md`
+  - `docs/patterns/04-editing-workflows-owner-user-approval.md`
+- Security:
+  - `docs/security/01-security-boundaries-and-safe-rendering.md`
+  - `docs/security/02-authwrapper-authorizationchecker-integration.md`
+- Operations:
+  - `docs/operations/01-performance-threading-and-cache-lifecycles.md`
+  - `docs/operations/02-testing-and-troubleshooting-playbook.md`
+- Reference:
+  - `docs/reference/components-and-modules-catalog.md`
+  - `docs/reference/builders-shell-nav-banner-accountbar.md`
+  - `docs/reference/editing-api-reference.md`
