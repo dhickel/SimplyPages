@@ -60,4 +60,27 @@ class SlotKeyMapTest {
         SlotKeyMap map = SlotKeyMap.create();
         assertTrue(map.isEmpty());
     }
+
+    @Test
+    @DisplayName("SlotKeyMap should bridge to and from RenderContext")
+    void testRenderContextBridge() {
+        SlotKey<String> title = SlotKey.of("title");
+        SlotKey<Integer> count = SlotKey.of("count");
+
+        RenderContext context = RenderContext.empty()
+            .put(title, "Hello")
+            .put(count, 7);
+
+        SlotKeyMap map = SlotKeyMap.fromRenderContext(context);
+        assertEquals("Hello", map.getValue("title", String.class).orElse(""));
+        assertEquals(7, map.getValue("count", Integer.class).orElse(0));
+
+        RenderContext roundTrip = map.toRenderContext(Map.of(
+            "title", title,
+            "count", count
+        ));
+
+        assertEquals("Hello", roundTrip.get(title).orElse(""));
+        assertEquals(7, roundTrip.get(count).orElse(0));
+    }
 }

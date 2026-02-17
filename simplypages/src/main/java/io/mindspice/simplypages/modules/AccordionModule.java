@@ -112,7 +112,7 @@ public class AccordionModule extends Module {
      */
     public AccordionModule withFirstExpanded() {
         if (!items.isEmpty()) {
-            items.get(0).setExpanded(true);
+            items.getFirst().setExpanded(true);
         }
         return this;
     }

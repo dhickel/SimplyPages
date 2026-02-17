@@ -32,3 +32,8 @@ _archive/
 node_modules/
 package.json
 package-lock.json
+.internal-dev/*
+
+# Generated demo documentation (copied during Maven build)
+demo/src/main/resources/static/docs/
+demo/src/main/resources/static/javadocs/

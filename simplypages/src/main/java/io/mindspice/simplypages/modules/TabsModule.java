@@ -94,7 +94,7 @@ public class TabsModule extends Module {
         this.tabs.add(new Tab(label, content));
         // First tab is active by default
         if (tabs.size() == 1) {
-            tabs.get(0).setActive(true);
+            tabs.getFirst().setActive(true);
         }
         return this;
     }
@@ -109,7 +109,7 @@ public class TabsModule extends Module {
         this.tabs.add(new Tab(label, content));
         // First tab is active by default
         if (tabs.size() == 1) {
-            tabs.get(0).setActive(true);
+            tabs.getFirst().setActive(true);
         }
         return this;
     }

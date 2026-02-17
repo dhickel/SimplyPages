@@ -31,15 +31,24 @@ public class Template {
 
         @Override
         public void render(RenderContext context, StringBuilder sb) {
-             Optional<?> valOpt = context.get(key);
-             if (valOpt.isPresent()) {
-                 Object val = valOpt.get();
-                 if (val instanceof Component) {
-                     sb.append(((Component) val).render(context));
-                 } else {
-                     sb.append(Encode.forHtml(val.toString()));
-                 }
-             }
+            Optional<SlotEntry> entryOpt = context.getEntry(key);
+            if (entryOpt.isPresent()) {
+                SlotEntry entry = entryOpt.get();
+                switch (entry) {
+                    case SlotEntry.CompiledEntry compiled -> sb.append(compiled.html());
+                    case SlotEntry.LiveEntry live -> {
+                        String rendered = renderValue(live.value(), context);
+                        if (context.getPolicy() == RenderContext.RenderPolicy.COMPILE_ON_FIRST_HIT) {
+                            context.putCompiled(key, rendered);
+                        }
+                        sb.append(rendered);
+                    }
+                }
+                return;
+            }
+
+            // Defaults are always live-rendered and never persisted as compiled entries.
+            context.get(key).ifPresent(val -> sb.append(renderValue(val, context)));
         }
     }
 
@@ -48,7 +57,24 @@ public class Template {
         TextSlotSegment(SlotKey<String> key) { this.key = key; }
         @Override
         public void render(RenderContext context, StringBuilder sb) {
-             context.get(key).ifPresent(val -> sb.append(Encode.forHtml(val)));
+            Optional<SlotEntry> entryOpt = context.getEntry(key);
+            if (entryOpt.isPresent()) {
+                SlotEntry entry = entryOpt.get();
+                switch (entry) {
+                    case SlotEntry.CompiledEntry compiled -> sb.append(compiled.html());
+                    case SlotEntry.LiveEntry live -> {
+                        String rendered = live.value() == null ? "" : Encode.forHtml(live.value().toString());
+                        if (context.getPolicy() == RenderContext.RenderPolicy.COMPILE_ON_FIRST_HIT) {
+                            context.putCompiled(key, rendered);
+                        }
+                        sb.append(rendered);
+                    }
+                }
+                return;
+            }
+
+            // Defaults are always live-rendered and never persisted as compiled entries.
+            context.get(key).ifPresent(val -> sb.append(Encode.forHtml(val)));
         }
     }
 
@@ -70,45 +96,47 @@ public class Template {
     }
 
     private void compile(Component component) {
-        if (component instanceof Module) {
-            ((Module) component).build();
+        switch (component) {
+            case Module module -> {
+                module.build();
+                compileModuleAsTag(module);
+            }
+            case Slot<?> slot -> segments.add(new SlotSegment(slot.getKey()));
+            case HtmlTag tag -> compileTag(tag);
+            default -> segments.add(new ComponentSegment(component));
         }
+    }
 
-        if (component instanceof Slot) {
-            segments.add(new SlotSegment(((Slot<?>) component).getKey()));
-        } else if (component instanceof HtmlTag) {
-            HtmlTag tag = (HtmlTag) component;
+    private void compileModuleAsTag(Module module) {
+        compileTag(module);
+    }
 
-            StringBuilder sb = new StringBuilder();
-            sb.append("<").append(tag.tagName);
-            for (Attribute attr : tag.attributes) {
-                sb.append(attr.render());
-            }
-            if (tag.selfClosing) {
-                sb.append(" />");
-                segments.add(new StringSegment(sb.toString()));
-                return;
-            }
-            sb.append(">");
+    private void compileTag(HtmlTag tag) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<").append(tag.tagName);
+        for (Attribute attr : tag.attributes) {
+            sb.append(attr.render());
+        }
+        if (tag.selfClosing) {
+            sb.append(" />");
             segments.add(new StringSegment(sb.toString()));
-
-            if (tag.innerTextSlot != null) {
-                segments.add(new TextSlotSegment(tag.innerTextSlot));
-            } else if (!tag.innerText.isEmpty()) {
-                String text = tag.trustedHtml ? tag.innerText : Encode.forHtml(tag.innerText);
-                segments.add(new StringSegment(text));
-            }
-
-            for (Component child : tag.children) {
-                compile(child);
-            }
-
-            segments.add(new StringSegment("</" + tag.tagName + ">"));
-
-        } else {
-            // Opaque component
-            segments.add(new ComponentSegment(component));
+            return;
         }
+        sb.append(">");
+        segments.add(new StringSegment(sb.toString()));
+
+        if (tag.innerTextSlot != null) {
+            segments.add(new TextSlotSegment(tag.innerTextSlot));
+        } else if (!tag.innerText.isEmpty()) {
+            String text = tag.trustedHtml ? tag.innerText : Encode.forHtml(tag.innerText);
+            segments.add(new StringSegment(text));
+        }
+
+        for (Component child : tag.children) {
+            compile(child);
+        }
+
+        segments.add(new StringSegment("</" + tag.tagName + ">"));
     }
 
     private void optimize() {
@@ -139,5 +167,15 @@ public class Template {
              segment.render(context, sb);
          }
          return sb.toString();
+    }
+
+    private static String renderValue(Object val, RenderContext context) {
+        if (val == null) {
+            return "";
+        }
+        if (val instanceof Component component) {
+            return component.render(context);
+        }
+        return Encode.forHtml(val.toString());
     }
 }

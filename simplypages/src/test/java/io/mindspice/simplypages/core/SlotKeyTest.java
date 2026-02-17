@@ -26,7 +26,7 @@ class SlotKeyTest {
     void testSlotKeyNameAndDefaults() {
         SlotKey<String> key = SlotKey.of("title", "fallback");
 
-        assertEquals("title", key.getName());
+        assertEquals("title", key.name());
         assertEquals("fallback", key.getDefault(RenderContext.empty()));
         assertTrue(key.toString().contains("title"));
     }

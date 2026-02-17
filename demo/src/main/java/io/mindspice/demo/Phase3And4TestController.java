@@ -9,7 +9,7 @@ import io.mindspice.simplypages.components.forms.Button;
 import io.mindspice.simplypages.components.forms.Select;
 import io.mindspice.simplypages.components.forms.TextArea;
 import io.mindspice.simplypages.components.forms.TextInput;
-import io.mindspice.simplypages.editing.EditAdapter;
+import io.mindspice.simplypages.editing.Editable;
 import io.mindspice.simplypages.editing.EditModalBuilder;
 import io.mindspice.simplypages.layout.Column;
 import io.mindspice.simplypages.layout.Container;
@@ -234,7 +234,7 @@ public class Phase3And4TestController {
                 .withTitle(module.title)
                 .withContent(module.content);
 
-        EditAdapter<ContentModule> adapter = contentMod;
+        Editable<ContentModule> adapter = contentMod;
 
         // Build combined form (module fields + width field)
         Div combinedForm = new Div();

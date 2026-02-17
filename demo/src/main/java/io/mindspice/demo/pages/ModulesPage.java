@@ -216,7 +216,7 @@ public class ModulesPage implements DemoPage {
                                 for (Map.Entry<String, Integer> entry : stats.entrySet()) {
                                     row.withChild(InfoBox.create()
                                         .withTitle(entry.getKey())
-                                        .withValue(entry.getValue().toString()));
+                                        .withValue(entry.value().toString()));
                                 }
                                 super.withChild(row);
                             }

@@ -9,7 +9,7 @@ import io.mindspice.simplypages.components.display.Modal;
 import io.mindspice.simplypages.components.forms.Button;
 import io.mindspice.simplypages.components.forms.TextArea;
 import io.mindspice.simplypages.components.forms.TextInput;
-import io.mindspice.simplypages.editing.EditAdapter;
+import io.mindspice.simplypages.editing.Editable;
 import io.mindspice.simplypages.editing.EditModalBuilder;
 import io.mindspice.simplypages.editing.ValidationResult;
 import io.mindspice.simplypages.layout.Container;
@@ -24,12 +24,12 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Test controller for Phase 1-2: Modal Component and EditAdapter Interface.
+ * Test controller for Phase 1-2: Modal Component and Editable interface.
  *
  * <p>This controller provides test pages to verify:</p>
  * <ul>
  *   <li>Modal component rendering and functionality</li>
- *   <li>EditAdapter interface with ContentModule</li>
+ *   <li>Editable interface with ContentModule</li>
  *   <li>EditModalBuilder helper</li>
  *   <li>ValidationResult handling</li>
  * </ul>
@@ -66,7 +66,7 @@ public class Phase1And2TestController {
         modules.put("test-1", new TestModuleData(
                 "test-1",
                 "Sample Content Module",
-                "# Welcome to Phase 1-2 Testing\n\nThis module demonstrates:\n- Modal rendering\n- EditAdapter interface\n- Form validation\n\n**Click the edit button to test editing!**"
+                "# Welcome to Phase 1-2 Testing\n\nThis module demonstrates:\n- Modal rendering\n- Editable interface\n- Form validation\n\n**Click the edit button to test editing!**"
         ));
 
         modules.put("test-2", new TestModuleData(
@@ -91,7 +91,7 @@ public class Phase1And2TestController {
         // Description
         Div description = new Div().withClass("mb-4");
         description.withChild(new Paragraph(
-                "This page tests the Modal component and EditAdapter interface. " +
+                "This page tests the Modal component and Editable interface. " +
                 "Click the buttons below to test different features."
         ));
         content.withChild(description);
@@ -124,7 +124,7 @@ public class Phase1And2TestController {
 
         // Test modules section
         Section modulesSection = Section.create().withClass("mb-5");
-        modulesSection.withChild(Header.H2("Test Modules (EditAdapter)").withClass("mb-3"));
+        modulesSection.withChild(Header.H2("Test Modules (Editable)").withClass("mb-3"));
 
         for (TestModuleData data : modules.values()) {
             Div moduleWrapper = new Div()
@@ -288,7 +288,7 @@ public class Phase1And2TestController {
     }
 
     /**
-     * Test endpoint: Edit module using EditAdapter.
+     * Test endpoint: Edit module using Editable.
      */
     @GetMapping("/edit/{moduleId}")
     @ResponseBody
@@ -298,9 +298,9 @@ public class Phase1And2TestController {
             return Alert.danger("Module not found: " + moduleId).render();
         }
 
-        // Create module and cast to EditAdapter
+        // Create module and cast to Editable
         ContentModule module = createModuleFromData(data);
-        EditAdapter<ContentModule> adapter = module;
+        Editable<ContentModule> adapter = module;
 
         // Use EditModalBuilder
         return EditModalBuilder.create()
@@ -338,7 +338,7 @@ public class Phase1And2TestController {
 
         // Create module and apply edits
         ContentModule module = createModuleFromData(data);
-        EditAdapter<ContentModule> adapter = module;
+        Editable<ContentModule> adapter = module;
 
         // Validate
         ValidationResult validation = adapter.validate(formData);

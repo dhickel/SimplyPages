@@ -22,7 +22,7 @@ import io.mindspice.simplypages.core.HtmlTag;
  * BannerBuilder.create()
  *     .withLayout(BannerLayout.CENTERED)
  *     .withTitle("Welcome")
- *     .withSubtitle("Cannabis Research Portal")
+ *     .withSubtitle("Research Portal")
  *     .build();
  *
  * // Banner with background image overlay

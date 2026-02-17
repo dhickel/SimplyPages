@@ -65,4 +65,37 @@ class RenderContextTest {
 
         assertEquals("alice", context.get(key).orElse(""));
     }
+
+    @Test
+    @DisplayName("RenderContext should support compile policy")
+    void testPolicySupport() {
+        RenderContext context = RenderContext.empty()
+            .withPolicy(RenderContext.RenderPolicy.COMPILE_ON_FIRST_HIT);
+
+        assertEquals(RenderContext.RenderPolicy.COMPILE_ON_FIRST_HIT, context.getPolicy());
+    }
+
+    @Test
+    @DisplayName("RenderContext should support compiled entries")
+    void testCompiledEntries() {
+        SlotKey<String> key = SlotKey.of("title");
+        RenderContext context = RenderContext.empty()
+            .putCompiled(key, "<b>cached</b>");
+
+        assertTrue(context.isCompiled(key));
+        assertEquals("<b>cached</b>", context.getCompiled(key).orElse(""));
+        assertFalse(context.get(key).isPresent());
+    }
+
+    @Test
+    @DisplayName("RenderContext put should invalidate compiled entry")
+    void testPutInvalidatesCompiledEntry() {
+        SlotKey<String> key = SlotKey.of("title");
+        RenderContext context = RenderContext.empty()
+            .putCompiled(key, "<b>cached</b>")
+            .put(key, "live");
+
+        assertFalse(context.isCompiled(key));
+        assertEquals("live", context.get(key).orElse(""));
+    }
 }

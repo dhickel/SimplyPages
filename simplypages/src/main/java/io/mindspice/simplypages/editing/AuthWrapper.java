@@ -19,10 +19,10 @@ import java.util.function.Supplier;
  * @ResponseBody
  * public String editModule(@PathVariable String id, Principal principal) {
  *     return AuthWrapper.requireForEdit(
- *         () -> canUserEdit(id, principal.getName()),
+ *         () -> canUserEdit(id, principal.name()),
  *         () -> {
  *             Module module = findModule(id);
- *             EditAdapter<?> adapter = (EditAdapter<?>) module;
+ *             Editable<?> adapter = (Editable<?>) module;
  *             return EditModalBuilder.create()
  *                 .withTitle("Edit Module")
  *                 .withEditView(adapter.buildEditView())

@@ -3,22 +3,21 @@ package io.mindspice.simplypages.core;
 /**
  * Wraps a slot value with runtime type information for safety.
  */
-public final class TypedValue {
-    private final Class<?> type;
-    private final Object value;
+public record TypedValue(Class<?> type, Object value) {
 
-    private TypedValue(Class<?> type, Object value) {
-        this.type = type;
-        this.value = value;
-    }
-
-    public static <T> TypedValue of(Class<T> type, T value) {
+    public TypedValue {
+        if (type == null) {
+            throw new IllegalArgumentException("type cannot be null");
+        }
         if (value != null && !type.isInstance(value)) {
             throw new IllegalArgumentException(
                 String.format("Type mismatch: expected %s, got %s",
                     type.getName(), value.getClass().getName())
             );
         }
+    }
+
+    public static <T> TypedValue of(Class<T> type, T value) {
         return new TypedValue(type, value);
     }
 
@@ -32,10 +31,6 @@ public final class TypedValue {
 
     public static TypedValue integer(Integer value) {
         return of(Integer.class, value);
-    }
-
-    public Class<?> getType() {
-        return type;
     }
 
     @SuppressWarnings("unchecked")

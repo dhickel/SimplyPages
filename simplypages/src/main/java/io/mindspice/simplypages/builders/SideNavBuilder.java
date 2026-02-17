@@ -11,7 +11,7 @@ import java.util.List;
  */
 public class SideNavBuilder {
 
-    private final List<Object> items = new ArrayList<>(); // Can be NavLink or Section
+    private final List<NavItemEntry> items = new ArrayList<>();
     private String contentTarget = "#content-area";
 
     private SideNavBuilder() {}
@@ -53,45 +53,28 @@ public class SideNavBuilder {
     public SideNav build() {
         SideNav sideNav = SideNav.create();
 
-        for (Object item : items) {
-            if (item instanceof Section section) {
-                sideNav.addSection(section.title);
-            } else if (item instanceof NavLink link) {
-                SideNav.NavItem navItem = new SideNav.NavItem(link.name, link.path, link.active)
-                    .withHxGet(link.path)
+        for (NavItemEntry item : items) {
+            switch (item) {
+                case Section section -> sideNav.addSection(section.title());
+                case NavLink link -> {
+                    SideNav.NavItem navItem = new SideNav.NavItem(link.name(), link.path(), link.active())
+                    .withHxGet(link.path())
                     .withHxTarget(contentTarget)
                     .withHxPushUrl();
 
-                if (link.icon != null) {
-                    navItem.withIcon(link.icon);
-                }
+                    if (link.icon() != null) {
+                        navItem.withIcon(link.icon());
+                    }
 
-                sideNav.addItem(navItem);
+                    sideNav.addItem(navItem);
+                }
             }
         }
 
         return sideNav;
     }
 
-    private static class Section {
-        String title;
-
-        Section(String title) {
-            this.title = title;
-        }
-    }
-
-    private static class NavLink {
-        String name;
-        String path;
-        boolean active;
-        String icon;
-
-        NavLink(String name, String path, boolean active, String icon) {
-            this.name = name;
-            this.path = path;
-            this.active = active;
-            this.icon = icon;
-        }
-    }
+    private sealed interface NavItemEntry permits Section, NavLink { }
+    private record Section(String title) implements NavItemEntry { }
+    private record NavLink(String name, String path, boolean active, String icon) implements NavItemEntry { }
 }

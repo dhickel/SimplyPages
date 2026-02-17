@@ -140,12 +140,12 @@ public class Paragraph extends HtmlTag {
 
     private void updateAlignmentClass() {
         Optional<Attribute> classAttr = attributes.stream()
-            .filter(attr -> "class".equals(attr.getName()))
+            .filter(attr -> "class".equals(attr.name()))
             .findFirst();
 
         List<String> classes = new ArrayList<>();
         if (classAttr.isPresent()) {
-            String current = classAttr.get().getValue();
+            String current = classAttr.get().value();
             if (current != null && !current.isBlank()) {
                 for (String token : current.trim().split("\\s+")) {
                     if (!isAlignmentClass(token)) {

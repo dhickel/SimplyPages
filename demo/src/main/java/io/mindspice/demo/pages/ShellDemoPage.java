@@ -70,7 +70,7 @@ public class ShellDemoPage implements DemoPage {
                 .addComponents(Header.H2("BannerBuilder - Flexible Banner System (NEW!)"))
                 .addRow(row -> row.withChild(new Markdown(
                         """
-                        The new `BannerBuilder` replaces `TopBannerBuilder` with **5 flexible layout modes**:
+                        `BannerBuilder` provides **5 flexible layout modes**:
 
                         ### Layout Modes
 

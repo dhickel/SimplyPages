@@ -130,71 +130,77 @@ public class ShellBuilder {
      * This generates a full HTML document string.
      */
     public String build() {
-        StringBuilder html = new StringBuilder();
+        HtmlTag html = new HtmlTag("html").withAttribute("lang", "en");
 
-        // HTML head
-        html.append("<!DOCTYPE html>\n");
-        html.append("<html lang=\"en\">\n");
-        html.append("<head>\n");
-        html.append("    <meta charset=\"UTF-8\">\n");
-        html.append("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
-        html.append("    <title>").append(pageTitle).append("</title>\n");
-        html.append("    <link rel=\"stylesheet\" href=\"/css/framework.css\">\n");
+        HtmlTag head = new HtmlTag("head")
+            .withChild(new HtmlTag("meta", true).withAttribute("charset", "UTF-8"))
+            .withChild(new HtmlTag("meta", true).withAttribute("name", "viewport")
+                .withAttribute("content", "width=device-width, initial-scale=1.0"))
+            .withChild(new HtmlTag("title").withInnerText(pageTitle))
+            .withChild(new HtmlTag("link", true).withAttribute("rel", "stylesheet")
+                .withAttribute("href", "/css/framework.css"));
 
         if (customCss != null) {
-            html.append("    <link rel=\"stylesheet\" href=\"").append(customCss).append("\">\n");
+            head.withChild(new HtmlTag("link", true).withAttribute("rel", "stylesheet")
+                .withAttribute("href", customCss));
         }
-
         if (includeHtmx) {
-            html.append("    <script src=\"/webjars/htmx.org/dist/htmx.min.js\" defer></script>\n");
+            head.withChild(new HtmlTag("script")
+                .withAttribute("src", "/webjars/htmx.org/dist/htmx.min.js")
+                .withAttribute("defer", ""));
         }
+        head.withChild(new HtmlTag("script")
+            .withAttribute("src", "/js/framework.js")
+            .withAttribute("defer", ""));
 
-        html.append("    <script src=\"/js/framework.js\" defer></script>\n");
+        HtmlTag body = buildShellContent();
+        appendInlineScripts(body);
 
-        html.append("</head>\n");
-        html.append("<body>\n");
+        html.withChild(head).withChild(body);
+        return "<!DOCTYPE html>\n" + html.render();
+    }
 
-        // Top banner (header)
+    /**
+     * Build just the body content (for use in existing HTML templates).
+     */
+    public Component buildBody() {
+        return new HtmlTag("div")
+            .withAttribute("class", "shell-body")
+            .withChild(buildMainContainer(false));
+    }
+
+    private HtmlTag buildShellContent() {
+        HtmlTag body = new HtmlTag("body");
+
         if (topBanner != null) {
-            HtmlTag header = new HtmlTag("header")
+            body.withChild(new HtmlTag("header")
                 .withAttribute("class", "main-header")
-                .withChild(topBanner);
-            html.append(header.render());
+                .withChild(topBanner));
         }
-
-        // Account bar
         if (accountBar != null) {
-            html.append(accountBar.render());
+            body.withChild(accountBar);
         }
 
-        // Main container
-        HtmlTag mainContainer = new HtmlTag("div");
-        String containerClass = "main-container";
-        if (sideNav != null) {
-            containerClass += " has-sidebar";
-        }
-        if (collapsibleSideNav) {
-            containerClass += " collapsible-sidebar";
-        }
-        mainContainer.withAttribute("class", containerClass);
+        body.withChild(buildMainContainer(true));
+        return body;
+    }
 
-        // Side navigation
+    private HtmlTag buildMainContainer(boolean includeAriaLabel) {
+        HtmlTag mainContainer = new HtmlTag("div").withAttribute("class", getContainerClass());
+
         if (sideNav != null) {
-            HtmlTag aside = new HtmlTag("aside");
-            String asideClass = "main-sidebar";
-            if (collapsibleSideNav) {
-                asideClass += " collapsible";
-            }
-            aside.withAttribute("class", asideClass)
+            HtmlTag aside = new HtmlTag("aside")
+                .withAttribute("class", getAsideClass())
                 .withAttribute("id", "main-sidebar");
 
-            // Add collapse button for collapsible sidebar
             if (collapsibleSideNav) {
                 HtmlTag collapseBtn = new HtmlTag("button")
                     .withAttribute("class", "sidebar-toggle")
                     .withAttribute("onclick", "toggleSidebar()")
-                    .withAttribute("aria-label", "Toggle sidebar")
                     .withInnerText("☰");
+                if (includeAriaLabel) {
+                    collapseBtn.withAttribute("aria-label", "Toggle sidebar");
+                }
                 aside.withChild(collapseBtn);
             }
 
@@ -202,27 +208,21 @@ public class ShellBuilder {
             mainContainer.withChild(aside);
         }
 
-        // Content wrapper
-        HtmlTag contentWrapper = new HtmlTag("main")
-            .withAttribute("class", "content-wrapper");
-
-        HtmlTag contentArea = new HtmlTag("div")
-            .withAttribute("id", contentTarget);
-
+        HtmlTag contentArea = new HtmlTag("div").withAttribute("id", contentTarget);
         if (includeHtmx) {
             contentArea.withAttribute("hx-get", "/home")
                 .withAttribute("hx-trigger", "load");
         }
 
-        contentWrapper.withChild(contentArea);
-        mainContainer.withChild(contentWrapper);
+        mainContainer.withChild(new HtmlTag("main")
+            .withAttribute("class", "content-wrapper")
+            .withChild(contentArea));
+        return mainContainer;
+    }
 
-        html.append(mainContainer.render());
-
-        // Add collapse script if needed
+    private void appendInlineScripts(HtmlTag body) {
         if (collapsibleSideNav) {
-            html.append("""
-                <script>
+            body.withChild(new HtmlTag("script").withUnsafeHtml("""
                 function toggleSidebar() {
                     const sidebar = document.getElementById('main-sidebar');
                     const container = document.querySelector('.main-container');
@@ -242,14 +242,11 @@ public class ShellBuilder {
                         document.querySelector('.main-container').classList.add('sidebar-collapsed');
                     }
                 });
-                </script>
-                """);
+                """));
         }
 
-        // Add HTMX event handlers for navigation state management
         if (includeHtmx) {
-            html.append("""
-                <script>
+            body.withChild(new HtmlTag("script").withUnsafeHtml("""
                 // Update active navigation link when content changes
                 document.body.addEventListener('htmx:afterSettle', function(event) {
                     // Remove active class from all nav items
@@ -264,35 +261,11 @@ public class ShellBuilder {
                         activeLink.classList.add('active');
                     }
                 });
-                </script>
-                """);
+                """));
         }
-
-        html.append("</body>\n");
-        html.append("</html>");
-
-        return html.toString();
     }
 
-    /**
-     * Build just the body content (for use in existing HTML templates).
-     */
-    public Component buildBody() {
-        HtmlTag body = new HtmlTag("div")
-            .withAttribute("class", "shell-body");
-
-        if (topBanner != null) {
-            HtmlTag header = new HtmlTag("header")
-                .withAttribute("class", "main-header")
-                .withChild(topBanner);
-            body.withChild(header);
-        }
-
-        if (accountBar != null) {
-            body.withChild(accountBar);
-        }
-
-        HtmlTag mainContainer = new HtmlTag("div");
+    private String getContainerClass() {
         String containerClass = "main-container";
         if (sideNav != null) {
             containerClass += " has-sidebar";
@@ -300,45 +273,14 @@ public class ShellBuilder {
         if (collapsibleSideNav) {
             containerClass += " collapsible-sidebar";
         }
-        mainContainer.withAttribute("class", containerClass);
+        return containerClass;
+    }
 
-        if (sideNav != null) {
-            HtmlTag aside = new HtmlTag("aside");
-            String asideClass = "main-sidebar";
-            if (collapsibleSideNav) {
-                asideClass += " collapsible";
-            }
-            aside.withAttribute("class", asideClass)
-                .withAttribute("id", "main-sidebar");
-
-            if (collapsibleSideNav) {
-                HtmlTag collapseBtn = new HtmlTag("button")
-                    .withAttribute("class", "sidebar-toggle")
-                    .withAttribute("onclick", "toggleSidebar()")
-                    .withInnerText("☰");
-                aside.withChild(collapseBtn);
-            }
-
-            aside.withChild(sideNav);
-            mainContainer.withChild(aside);
+    private String getAsideClass() {
+        String asideClass = "main-sidebar";
+        if (collapsibleSideNav) {
+            asideClass += " collapsible";
         }
-
-        HtmlTag contentWrapper = new HtmlTag("main")
-            .withAttribute("class", "content-wrapper");
-
-        HtmlTag contentArea = new HtmlTag("div")
-            .withAttribute("id", contentTarget);
-
-        if (includeHtmx) {
-            contentArea.withAttribute("hx-get", "/home")
-                .withAttribute("hx-trigger", "load");
-        }
-
-        contentWrapper.withChild(contentArea);
-        mainContainer.withChild(contentWrapper);
-
-        body.withChild(mainContainer);
-
-        return body;
+        return asideClass;
     }
 }

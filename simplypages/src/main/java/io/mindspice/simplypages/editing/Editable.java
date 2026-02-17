@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * Interface for modules that support editing, including nested child components.
  * <p>
- * This replaces the deprecated {@link EditAdapter}.
+ * This replaces the primary editing contract.
  * </p>
  *
  * @param <T> The module type

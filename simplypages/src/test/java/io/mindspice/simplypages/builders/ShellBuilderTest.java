@@ -18,7 +18,12 @@ class ShellBuilderTest {
             .build();
 
         String html = ShellBuilder.create()
-            .withTopBanner(TopBannerBuilder.create().withTitle("Portal").build())
+            .withTopBanner(
+                BannerBuilder.create()
+                    .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
+                    .withTitle("Portal")
+                    .build()
+            )
             .withAccountBar(AccountBarBuilder.create().addLeftLink("Home", "/").build())
             .withSideNav(sideNav, true)
             .withContentTarget("page-content")

@@ -7,7 +7,6 @@ import io.mindspice.simplypages.components.Paragraph;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.Module;
-import io.mindspice.simplypages.editing.EditAdapter;
 import io.mindspice.simplypages.editing.Editable;
 import io.mindspice.simplypages.editing.EditableChild;
 import io.mindspice.simplypages.editing.FormFieldHelper;
@@ -33,7 +32,7 @@ import java.util.*;
  *     .addItem(ListItem.create("Second item"));
  * </pre>
  */
-public class SimpleListModule extends Module implements Editable<SimpleListModule>, EditAdapter<SimpleListModule> {
+public class SimpleListModule extends Module implements Editable<SimpleListModule> {
 
     private final List<ListItem> items = new ArrayList<>();
 

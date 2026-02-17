@@ -93,7 +93,7 @@ return page.render();
 
 ### Prerequisites
 
-- Java 17 or higher
+- Java 25 or higher
 - Maven or Gradle
 - Spring Boot application (JHF integrates seamlessly)
 - Your favorite Java IDE (IntelliJ IDEA, Eclipse, VS Code)
@@ -142,7 +142,7 @@ my-app/
 ### IDE Setup (Optional)
 
 For the best experience:
-- **IntelliJ IDEA**: Enable Spring support, Java 17+ syntax
+- **IntelliJ IDEA**: Enable Spring support, Java 25+ syntax
 - **Eclipse**: Install Spring Tools Suite (STS)
 - **VS Code**: Install Java Extension Pack and Spring Boot Extensions
 

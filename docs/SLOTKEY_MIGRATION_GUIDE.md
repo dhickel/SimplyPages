@@ -1,77 +1,88 @@
-# Migration Guide: Old to New SlotKey System
+# Migration Guide: Slot Runtime Refactor
 
 ## Overview
 
-The framework now uses immutable modules with `renderDynamic(SlotKeyMap)` for thread-safe rendering. Build your structure once and pass data at render time instead of mutating modules.
+Template rendering now uses a mutable `RenderContext` as the canonical runtime store.
+`RenderContext` can hold live slot values and compiled slot HTML entries, controlled by a render policy.
 
-## Module Changes
+## What Changed
 
-### Before (Mutable)
+1. `RenderContext` is now mutable and request-scoped.
+2. Slot entries are represented as explicit live/compiled variants internally.
+3. Render policy is configured on `RenderContext`:
+   - `RenderContext.RenderPolicy.NEVER_COMPILE`
+   - `RenderContext.RenderPolicy.COMPILE_ON_FIRST_HIT`
+4. `Template.render(context)` can compile explicit live slot values on first render when policy is enabled.
+5. Slot defaults (`SlotKey.of(name, default)` and provider defaults) are rendered live and are not persisted as compiled entries.
 
-```java
-ContentModule module = ContentModule.create()
-    .withTitle("My Title")
-    .withContent("My Content");
+## API Migration
 
-String html = module.render();
-
-// Later... (unsafe on shared instances)
-module.setTitle("New Title");
-String html2 = module.render();
-```
-
-### After (Immutable)
+### Before
 
 ```java
-// Build once (shared template)
-ContentModule module = ContentModule.create()
-    .withDefaultTitle("Default Title")
-    .build();  // Immutable after this
+RenderContext context = RenderContext.builder()
+    .with(TITLE, "My Title")
+    .build();
 
-// Render with data (thread-safe)
-SlotKeyMap data1 = SlotKeyMap.create()
-    .putString("title", "My Title")
-    .putString("content", "My Content");
-String html1 = module.renderDynamic(data1);
-
-// Render again with different data (safe)
-SlotKeyMap data2 = SlotKeyMap.create()
-    .putString("title", "New Title");
-String html2 = module.renderDynamic(data2);
+String html = TEMPLATE.render(context);
 ```
 
-## Custom Modules
-
-If you have custom modules, follow this pattern:
-
-1. Remove mutable fields (title, content, etc.)
-2. Add `SlotKey` fields (final)
-3. Remove setters that mutate state after build
-4. Add build-time default setters (e.g., `withDefaultTitle`)
-5. Register slots in `buildContent()`
-6. Build component structure with slot references or render-time composition
-
-Example:
+### After (same baseline behavior)
 
 ```java
-public class MyModule extends Module {
-    private final SlotKey<String> titleSlot = SlotKey.of("title");
+RenderContext context = RenderContext.builder()
+    .with(TITLE, "My Title")
+    .build();
 
-    public MyModule withDefaultTitle(String title) {
-        setBuildTimeDefault("title", title);
-        return this;
-    }
-
-    @Override
-    protected void buildContent() {
-        registerSlot("title", String.class, titleSlot, "Default");
-        super.withChild(Header.H2().withInnerText(titleSlot));
-    }
-}
+String html = TEMPLATE.render(context); // default policy: NEVER_COMPILE
 ```
 
-## Key Takeaways
+### Enable compile-on-first-hit
 
-- Modules are build-once and immutable after `build()`.
-- Use `SlotKeyMap` + `renderDynamic` for per-request data.
-- Avoid mutating module fields after build.
+```java
+RenderContext context = RenderContext.builder()
+    .withPolicy(RenderContext.RenderPolicy.COMPILE_ON_FIRST_HIT)
+    .with(TITLE, "My Title")
+    .with(CONTENT, contentComponent)
+    .build();
+
+String first = TEMPLATE.render(context);  // renders live, then compiles explicit entries
+String second = TEMPLATE.render(context); // uses compiled entries when present
+```
+
+### Invalidate compiled slots by writing live values
+
+```java
+context.put(TITLE, "Updated Title"); // replaces prior compiled/live entry for TITLE
+String html = TEMPLATE.render(context);
+```
+
+### Manual compiled entry injection
+
+```java
+context.putCompiled(CONTENT, "<div>Pre-rendered trusted html</div>");
+```
+
+## `SlotKeyMap` Status
+
+`SlotKeyMap` remains available as a legacy utility and bridge.
+It is not the canonical runtime rendering model.
+
+Bridge helpers:
+
+```java
+SlotKeyMap map = SlotKeyMap.fromRenderContext(context);
+
+RenderContext rebuilt = map.toRenderContext(Map.of(
+    "title", TITLE,
+    "content", CONTENT
+));
+```
+
+## Checklist for Existing Code
+
+1. Continue using `Template.render(RenderContext)` as the main render entrypoint.
+2. If you want caching behavior, set policy to `COMPILE_ON_FIRST_HIT`.
+3. Use `put(...)` to update values and invalidate old compiled entries.
+4. Keep defaults for fallback behavior, but do not rely on defaults being compiled/persisted.
+

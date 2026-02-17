@@ -11,7 +11,7 @@ Previously, components like `Module` often mixed static configuration (title, la
 
 ### 2. SlotKey and RenderContext
 - **`SlotKey<T>`**: A typed key representing a dynamic insertion point. It can have a default value or provider.
-- **`RenderContext`**: An immutable map-like container holding values for `SlotKey`s for a specific request.
+- **`RenderContext`**: A mutable, request-scoped container holding explicit slot entries (live or compiled) and render policy.
 
 ### 3. Slots
 - **`Slot` Component**: A component that renders a value from the `RenderContext` based on a `SlotKey`.
@@ -62,6 +62,27 @@ public String dashboard(@RequestParam String user) {
     return pageTemplate.render(context);
 }
 ```
+
+### Render Policy and Compiled Slots
+
+`RenderContext` supports policy-based slot compilation:
+
+- `NEVER_COMPILE` (default): all explicit slot values render live each request.
+- `COMPILE_ON_FIRST_HIT`: explicit live slot values render once, then persist as compiled HTML entries.
+
+```java
+RenderContext context = RenderContext.builder()
+    .withPolicy(RenderContext.RenderPolicy.COMPILE_ON_FIRST_HIT)
+    .with(MyPage.USER_NAME, user)
+    .with(MyPage.MAIN_CONTENT, new Card().withBody("Your Dashboard"))
+    .build();
+
+String html = pageTemplate.render(context);
+```
+
+Notes:
+- Writing a new live value with `context.put(key, value)` replaces any previous compiled entry for that key.
+- Slot defaults are always rendered live and are not persisted as compiled entries.
 
 ## Changes to Module System
 

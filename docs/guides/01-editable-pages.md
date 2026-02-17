@@ -42,14 +42,14 @@ editable
     .withCanDelete(false);
 ```
 
-## The EditAdapter
+## The Editable
 
-Modules must implement `EditAdapter` to define how they are edited. `ContentModule` implements this out of the box.
+Modules must implement `Editable` to define how they are edited. `ContentModule` implements this out of the box.
 
-To make a custom module editable, implement `EditAdapter<T>`.
+To make a custom module editable, implement `Editable<T>`.
 
 ```java
-public class MyModule extends Module implements EditAdapter<MyModule> {
+public class MyModule extends Module implements Editable<MyModule> {
 
     @Override
     public Component buildEditView() {
@@ -100,7 +100,7 @@ public String save(@PathVariable String moduleId, @RequestParam Map<String, Stri
 
 ## Advanced: Validation
 
-The `EditAdapter` also supports validation.
+The `Editable` also supports validation.
 
 ```java
 @Override

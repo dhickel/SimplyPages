@@ -126,15 +126,12 @@ public class RichContentModule extends Module implements Editable<RichContentMod
             String type = item.getClass().getSimpleName();
             String label = type + " " + (i + 1);
 
-            // Try to extract more meaningful label
-            if (item instanceof Paragraph) {
-                // accessing inner text isn't directly exposed on Component interface easily,
-                // but if we cast we might get it. For now simple label is safer.
-                 label = "Paragraph " + (i + 1);
-            } else if (item instanceof Header) {
-                 label = "Header " + (i + 1);
-            } else if (item instanceof Image) {
-                 label = "Image " + (i + 1);
+            switch (item) {
+                case Paragraph ignored -> label = "Paragraph " + (i + 1);
+                case Header ignored -> label = "Header " + (i + 1);
+                case Image ignored -> label = "Image " + (i + 1);
+                default -> {
+                }
             }
 
             children.add(EditableChild.create("child-" + i, label, item));

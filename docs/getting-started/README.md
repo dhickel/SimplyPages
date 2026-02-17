@@ -17,7 +17,7 @@ This documentation is designed for **Java developers with minimal to no web deve
 
 ### Prerequisites
 
-- Java 17 or higher
+- Java 25 or higher
 - Basic Java knowledge (classes, interfaces, generics)
 - Spring Boot experience (intermediate level)
 - Maven or Gradle
@@ -106,7 +106,7 @@ This guide is organized into 12 sequential parts. We recommend reading them in o
 
 - Application shell architecture
 - **ShellBuilder**: Complete page structure generation
-- **TopBannerBuilder**: Header branding
+- **BannerBuilder**: Header branding
 - **AccountBarBuilder**: Secondary navigation
 - **SideNavBuilder**: Primary navigation sidebar
 - Collapsible sidebar (desktop/mobile)

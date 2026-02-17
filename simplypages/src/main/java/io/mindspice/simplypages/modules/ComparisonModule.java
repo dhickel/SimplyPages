@@ -50,7 +50,7 @@ public class ComparisonModule extends Module {
             this.highlighted = highlighted;
         }
 
-        public String getName() { return name; }
+        public String name() { return name; }
         public boolean isHighlighted() { return highlighted; }
     }
 
@@ -163,7 +163,7 @@ public class ComparisonModule extends Module {
         for (ComparisonColumn column : columns) {
             HtmlTag th = new HtmlTag("th")
                 .withAttribute("class", column.isHighlighted() ? "comparison-col-highlighted" : "")
-                .withInnerText(column.getName());
+                .withInnerText(column.name());
             headerRow.withChild(th);
         }
 

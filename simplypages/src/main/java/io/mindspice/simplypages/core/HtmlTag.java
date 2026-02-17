@@ -234,7 +234,7 @@ public class HtmlTag implements Component {
      */
     public HtmlTag withAttribute(String name, String value) {
         // Remove any existing attribute with the same name to prevent duplicates
-        attributes.removeIf(attr -> attr.getName().equals(name));
+        attributes.removeIf(attr -> attr.name().equals(name));
         // Add the new attribute
         attributes.add(new Attribute(name, value));
         return this;
@@ -364,12 +364,12 @@ public class HtmlTag implements Component {
      */
     public HtmlTag addClass(String className) {
         Optional<Attribute> classAttr = attributes.stream()
-                .filter(attr -> "class".equals(attr.getName()))
+                .filter(attr -> "class".equals(attr.name()))
                 .findFirst();
 
         if (classAttr.isPresent()) {
             Attribute attr = classAttr.get();
-            String current = attr.getValue();
+            String current = attr.value();
             // Check if class already exists to avoid duplicates
             boolean exists = false;
             for (String c : current.split("\\s+")) {
@@ -410,8 +410,8 @@ public class HtmlTag implements Component {
     public HtmlTag addStyle(String property, String value) {
         // Find existing style attribute
         Optional<String> existingStyle = attributes.stream()
-                .filter(attr -> "style".equals(attr.getName()))
-                .map(Attribute::getValue)
+                .filter(attr -> "style".equals(attr.name()))
+                .map(Attribute::value)
                 .findFirst();
 
         String newStyle;
@@ -555,7 +555,7 @@ public class HtmlTag implements Component {
         StringBuilder sb = new StringBuilder("<").append(tagName);
 
         // Ensure id is rendered if set via reflection/field
-        if (id != null && attributes.stream().noneMatch(attr -> "id".equals(attr.getName()))) {
+        if (id != null && attributes.stream().noneMatch(attr -> "id".equals(attr.name()))) {
             sb.append(new Attribute("id", id).render());
         }
 

@@ -6,20 +6,24 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="simplypages-demo" />
         <module name="simplypages" />
+        <module name="simplypages-demo" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="java-html-framework" target="1.5" />
       <module name="jhf" target="17" />
       <module name="jhf-demo" target="17" />
+      <module name="simplypages-demo.main" target="25" />
+      <module name="simplypages-demo.test" target="21" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="jhf-demo" options="-parameters" />
       <module name="simplypages-demo" options="-parameters" />
+      <module name="simplypages-demo.main" options="-parameters" />
+      <module name="simplypages-demo.test" options="-parameters" />
     </option>
   </component>
 </project>

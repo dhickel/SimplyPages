@@ -57,8 +57,8 @@ public class Grid extends HtmlTag {
         // We need to remove old grid-cols/gap classes to prevent accumulation.
 
         String currentClass = attributes.stream()
-                .filter(attr -> "class".equals(attr.getName()))
-                .map(Attribute::getValue)
+                .filter(attr -> "class".equals(attr.name()))
+                .map(Attribute::value)
                 .findFirst()
                 .orElse("");
 

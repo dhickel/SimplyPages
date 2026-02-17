@@ -7,7 +7,7 @@ import io.mindspice.simplypages.components.display.Alert;
 import io.mindspice.simplypages.components.display.Modal;
 import io.mindspice.simplypages.components.forms.Button;
 import io.mindspice.simplypages.editing.AuthWrapper;
-import io.mindspice.simplypages.editing.EditAdapter;
+import io.mindspice.simplypages.editing.Editable;
 import io.mindspice.simplypages.editing.EditModalBuilder;
 import io.mindspice.simplypages.editing.ValidationResult;
 import io.mindspice.simplypages.layout.Column;
@@ -254,7 +254,7 @@ public class Phase8TestController {
                         module.disableMarkdown();
                     }
 
-                    EditAdapter<ContentModule> adapter = module;
+                    Editable<ContentModule> adapter = module;
 
                     return EditModalBuilder.create()
                             .withTitle("Edit Module")
@@ -297,7 +297,7 @@ public class Phase8TestController {
                         module.disableMarkdown();
                     }
 
-                    EditAdapter<ContentModule> adapter = module;
+                    Editable<ContentModule> adapter = module;
 
                     // Validate
                     ValidationResult validation = adapter.validate(formData);

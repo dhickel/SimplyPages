@@ -2,9 +2,9 @@
 
 **Package**: `io.mindspice.simplypages.editing`
 
-## EditAdapter Interface
+## Editable Interface
 
-The `EditAdapter` interface allows modules to be editable by defining the contract for building edit forms, applying changes, and validating input.
+The `Editable` interface allows modules to be editable by defining the contract for building edit forms, applying changes, and validating input.
 
 ### Methods
 

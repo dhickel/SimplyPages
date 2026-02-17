@@ -14,7 +14,7 @@ import java.util.List;
  * <p>This builder simplifies the creation of edit modals with a consistent
  * layout and behavior. It handles:</p>
  * <ul>
- *   <li>Entity property editing (via {@link Editable#buildEditView()} or {@link EditAdapter#buildEditView()})</li>
+ *   <li>Entity property editing (via {@link Editable#buildEditView()} or {@link Editable#buildEditView()})</li>
  *   <li>Nested child editing (via {@link Editable#getEditableChildren()})</li>
  *   <li>Footer layout (delete on left, cancel/save on right)</li>
  *   <li>HTMX attributes for dynamic updates</li>

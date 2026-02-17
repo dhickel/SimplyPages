@@ -1,6 +1,5 @@
 package io.mindspice.simplypages.core;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -73,14 +72,54 @@ public class SlotKeyMap {
         return map;
     }
 
+    /**
+     * Legacy bridge: convert explicit entries from a render context into a string-key map.
+     * Slot names are derived from {@link SlotKey#name()}.
+     */
+    public static SlotKeyMap fromRenderContext(RenderContext context) {
+        SlotKeyMap map = new SlotKeyMap();
+        context.getEntries().forEach((slotKey, entry) -> {
+            String name = slotKey.name();
+            switch (entry) {
+                case SlotEntry.LiveEntry live -> {
+                    if (live.value() != null) {
+                        map.put(name, live.type(), live.value());
+                    }
+                }
+                case SlotEntry.CompiledEntry compiled -> map.putString(name, compiled.html());
+            }
+        });
+        return map;
+    }
+
+    /**
+     * Legacy bridge: convert this string-key map to a render context using the provided slot key mapping.
+     * Entries with no matching key are ignored.
+     */
+    public RenderContext toRenderContext(Map<String, SlotKey<?>> slotMapping) {
+        RenderContext context = RenderContext.empty();
+        values.forEach((name, typedValue) -> {
+            SlotKey<?> key = slotMapping.get(name);
+            if (key != null) {
+                putContextValue(context, key, typedValue.value());
+            }
+        });
+        return context;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static void putContextValue(RenderContext context, SlotKey<?> key, Object value) {
+        context.put((SlotKey) key, value);
+    }
+
     public Map<String, Object> toPlainMap() {
         Map<String, Object> plain = new HashMap<>();
-        values.forEach((key, tv) -> plain.put(key, tv.getValue()));
+        values.forEach((key, tv) -> plain.put(key, tv.value()));
         return plain;
     }
 
     public Map<String, TypedValue> getValues() {
-        return Collections.unmodifiableMap(values);
+        return Map.copyOf(values);
     }
 
     public boolean isEmpty() {

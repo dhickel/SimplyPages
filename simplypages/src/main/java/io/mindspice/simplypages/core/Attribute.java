@@ -56,21 +56,7 @@ import org.owasp.encoder.Encode;
  *
  * @see HtmlTag#withAttribute(String, String)
  */
-public class Attribute {
-    private final String name;
-    private final String value;
-
-    /**
-     * Creates a new HTML attribute with the given name and value.
-     *
-     * @param name the attribute name (e.g., "class", "id", "href")
-     * @param value the attribute value (e.g., "container", "btn-primary")
-     *              Use empty string or null for boolean attributes
-     */
-    public Attribute(String name, String value) {
-        this.name = name;
-        this.value = value;
-    }
+public record Attribute(String name, String value) {
 
     /**
      * Renders this attribute as an HTML string.
@@ -96,23 +82,5 @@ public class Attribute {
             return " " + name;
         }
         return String.format(" %s=\"%s\"", name, Encode.forHtmlAttribute(value));
-    }
-
-    /**
-     * Gets the attribute name.
-     *
-     * @return the attribute name
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Gets the attribute value.
-     *
-     * @return the attribute value
-     */
-    public String getValue() {
-        return value;
     }
 }

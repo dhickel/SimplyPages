@@ -1,65 +1,127 @@
-# Agent Notes - SimplyPages Editing System
+# SimplyPages - Engineering Agent Guide
 
-## Scope
-Summarizes core editing-system constraints plus Phase 1-8 commit-message history for later code review.
 
-## Key Editing System Constraints
-- Single modal container: `#edit-modal-container`; always render overlays via `Modal.create()` or `EditModalBuilder`.
-- HTMX save/delete: use `Button.create()` (type=button), `hx-swap="none"`, and OOB swaps to clear modal + refresh `#page-content`.
-- Module sizing is a layout concern: use grid columns (`Column.withWidth`); do not add width to module edit contracts.
-- Escape user input with `HtmlUtils.htmlEscape()` before rendering.
-- Each phase should have a dedicated `Phase{N}TestController` (or `Phase{N}And{N+1}`) for manual verification.
+## `.internal-dev` Development Document Store
 
-## Phase 1-8 Commit Message Digest (Chronological)
-- `39771b5` Phase 2 docs update: added advanced/examples/quick-reference/troubleshooting docs; new examples (live dashboard, wiki-style editing); template system cheat sheet and troubleshooting guide.
-- `3eab63c` Editing demo enhancement plan (phases 1-6): added width/position fields, PageData, save/load, add/edit modals with width presets, row insertion fix, compact edit buttons, and modal containers (`#add-module-modal`, `#edit-module-modal`) in demo; pre-dates single-container modal guidance.
-- `a951062` Phase 1-2: Modal component + CSS; edit button size increase; EditAdapter + ValidationResult + EditModalBuilder; ContentModule implements EditAdapter.
-- `9e4bd26` Phase 1-2 test page: `/test/phase1-2` verifying modal rendering, EditAdapter, EditModalBuilder, validation, HTMX.
-- `161f90f` Plan doc update: created `EDITING_SYSTEM_PLAN.md`; documented Phase 2.5 bug fixes (button type, hx-include selector, OOB swaps); updated `CLAUDE.md`.
-- `3efd5dd` Phase 3-4: auto-save architecture (remove save/load); add/insert row opens module modal; delete module auto-deletes empty rows.
-- `192d1d1` Phase 3-4 test + modal overlay doc: `MODAL_OVERLAY_USAGE.md`; `/test/phase3-4`; formalized single modal container + OOB swap pattern.
-- `fbceace` Phase 3-4 UX: width dropdown in edit modal (test controller); improved markdown label; edit/delete button styling tweaks; Phase 6.5 locking design added to plan.
-- `52fbb0e` and `25fcf01` Phase 5: EditableModule wrapper + framework CSS buttons; fixes for ContentModule rebuild and EditableModule render/build idempotency; updates to controllers; Phase5TestController; consistent z-index + styling.
-- `a19ec5f` Phase 6: editing system styling improvements (row/module spacing, add-module button, hover); Phase6TestController.
-- `2edd48f` Row insert pattern only: removed "Add Row at Bottom" button, aligning with upcoming Phase 6.5 row locking.
-- `4b11a4d` Phase 6.5: permission flags (canEdit, canDelete, canAddModule); Phase6_5TestController; docs updated.
-- `093d204` Phase 6.5 follow-up: Phase6_5TestController rewritten with full CRUD endpoints and OOB swap patterns.
-- `edf1722` + `415cb54` Phase 6.5 docs: updated plan, notes, API/overview with completion status and permission APIs.
-- `bff114c` Phase 7a: new `Editable<T>` interface replacing EditAdapter; EditableChild wrapper; EditModalBuilder supports inline child edits; ContentModule + tests migrated; `STATE_MANAGEMENT_ANALYSIS.md`; Phase7aTestController.
-- `67919cf` Phase 7b: Editable on core components (Image, Link, Paragraph, Header, ListItem); new RichContentModule/SimpleListModule; Phase7TestController.
-- `9ebfd88` Phase 7 fix: Module base class gets `getModuleId()` and `getTitle()` to avoid reflection and fix Phase 7 bug.
-- `8e5e0dc` Phase 8: AuthWrapper pattern (`require*` helpers); Phase8TestController with role-based access; docs updated.
-- `37b6225` Post-Phase 8: added `EDITING_SYSTEM_GUIDE.md` as comprehensive implementation guide.
+`.internal-dev/` is the persistent engineering document store for plans, bugs, changelogs, reviews, notes, and reusable knowledge.
 
-## Agent Review Context (Alpha Sprint)
-Notes gathered from a framework-only review (exclude demo-only behavior unless explicitly referenced).
+### When you are finish task you must use internal-dev for (after asking the user it if time to first):
+- Making a changelog to: `.internal-dev/changelogs/`:
+- Add any general knowledge to : `.internal-dev/knowledge/`
+- Add any notes to : `.internal-dev/notes/`, using or creating the futuer_consideration.md for future improvement/concerns that should be addressed
+- Add any out of scope bugs to:`.internal-dev/bugs/`
 
-### Gotchas and Inconsistencies
-- `EditModalBuilder` nested editing is incomplete: `editChildUrl` is unused and the single save POST cannot map edits back to specific children. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditModalBuilder.java`
-- Add-child UI only posts `text`, but `RichContentModule.addChild` expects fields like `src`, `alt`, or `href`. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditModalBuilder.java`, `simplypages/src/main/java/io/mindspice/simplypages/modules/RichContentModule.java`
-- `EditableRow` column widths are only calculated for the newest module; existing columns are not resized, so total width can exceed 12 columns. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditableRow.java`
-- `EditableRow` uses `#add-module-modal`, which conflicts with the single modal container rule (`#edit-modal-container`). `simplypages/src/main/java/io/mindspice/simplypages/editing/EditableRow.java`
-- `EditablePage` insert-row POST lacks row context and empty pages render no insert controls, so insertion is ambiguous or impossible. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditablePage.java`
-- `EditableModule` delete lacks a default target (wrapper has no id), so HTMX swaps the button itself unless callers set a target. `simplypages/src/main/java/io/mindspice/simplypages/modules/EditableModule.java`
-- `EditModalBuilder` delete uses main swap (`outerHTML`) instead of OOB-only, diverging from the Phase 6.5 OOB guidance. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditModalBuilder.java`
-- Header alignment edits do not update CSS classes; paragraph alignment appends classes every render (duplicates). `simplypages/src/main/java/io/mindspice/simplypages/components/Header.java`, `simplypages/src/main/java/io/mindspice/simplypages/components/Paragraph.java`
-- `Modal` injects `modalId` directly into inline JS/HTML; only pass trusted ids. `simplypages/src/main/java/io/mindspice/simplypages/components/display/Modal.java`
-- Link validation only blocks `javascript:`; other schemes are still possible. `simplypages/src/main/java/io/mindspice/simplypages/components/navigation/Link.java`
-- `EditAdapter` is deprecated but still appears in docs; the framework has moved to `Editable`. `simplypages/src/main/java/io/mindspice/simplypages/editing/EditAdapter.java`
 
-### Documentation Drift
-- `docs/EDITING_SYSTEM.md` is legacy and contradicts single-modal/OOB patterns; prefer `EDITING_SYSTEM_GUIDE.md` and `MODAL_OVERLAY_USAGE.md`.
-- `EDITING_SYSTEM_API.md` still documents `EditAdapter` as primary and mentions `withErrors` (not implemented).
+When generating plans or reviews you are to always use  `.internal-dev/plans/` or `.internal-dev/reviews/`, large multistep plans should have their own directory.
 
-### Framework Behavior Reminders
-- Modules are build-once and not thread-safe; editing must clear children and rebuild (`children.clear(); buildContent();`) after apply edits or child changes.
-- `HtmlTag.withInnerText` escapes using OWASP; `withUnsafeHtml` bypasses escaping and should never be used on user content.
+- Operating guide and templates: `.internal-dev/AGENTS.md`
+- `.internal-dev/` is intentionally untracked in this repo so the workflow can stay stable across repos.
+- Structure:
+- `.internal-dev/bugs/`: out-of-scope bugs found during other work (log immediately).
+- `.internal-dev/plans/`: active plans in nested plan directories with phase files.
+- `.internal-dev/reviews/`: review outputs.
+- `.internal-dev/notes/`: deferred ideas/future considerations.
+- `.internal-dev/knowledge/`: reusable research and learner-facing summaries.
+- `.internal-dev/changelogs/`: finalized change records.
+- Do not read `.internal-dev` broadly by default.
+- Use controlled access: read only files needed for the active task.
+- Ask before logging future considerations in `notes/` when they are out of scope.
+- Move finalized bug/plan artifacts to sibling `.archive/` directories.
+- Create changelog entries for finalized work.
+- Keep AGENTS and `.internal-dev` documentation aligned with major architecture/process changes.
 
-### Additional Context for Agents
-- `EditablePage` and `EditableRow` override `render()` to build new wrapper `Div`s; attributes set on the instance are not rendered.
-- `EditModalBuilder` only shows child editing if `withEditable(...)` is used (setting `withEditView(...)` alone does not populate `editable`).
-- `EditModalBuilder` defaults to `pageContainerId="page-container"` while most docs/demos use `page-content`; mismatch breaks OOB swaps unless overridden.
-- `ValidationResult` docs mention `addError`, but the method is not implemented; use `invalid(...)` or `invalid(List)` instead.
-- `HtmlTag.withAttribute` replaces existing attributes of the same name; some components override `withClass` to replace instead of append (class handling is inconsistent).
-- `Modal.closeOnBackdrop(false)` still allows ESC key to close; there is no built-in way to disable ESC close.
-- `EditableModule` is idempotent after first render; set edit/delete config before rendering.
+
+## Project Positioning
+SimplyPages is an active internal Java-first SSR framework for building data-heavy web applications with minimal JavaScript and pragmatic HTMX usage.
+
+### Primary Audience
+- Java backend engineers (Spring-friendly) who want server-rendered UI composition in Java
+- Teams prioritizing maintainability and type-safety over frontend framework complexity
+
+### Scope
+- In scope: framework architecture, component/module design rules, rendering model, integration expectations
+- Out of scope: speculative roadmap and phase tracking (track those in `.internal-dev/notes/future_consideration.md`)
+
+## Architecture (High-Level)
+
+### Core Rendering Model
+- `Component` is the root interface and supports `render()` and `render(RenderContext)`
+- `HtmlTag` is the common base for most concrete components
+- `Module` provides high-level composition with a build lifecycle (`build()` + `buildContent()`)
+- Escaping and attribute safety are handled at framework level via OWASP encoder in core rendering paths
+
+### Template and Slot System (First-Class)
+- Dynamic data injection is modeled via `SlotKey<T>`, `Slot`, and `RenderContext`
+- `Template` compiles static component structure for repeated rendering with context values
+- Prefer slot-driven rendering for request-time dynamic content over mutating built module structure
+
+### Module Lifecycle Contract
+- Modules are built lazily and idempotently through `build()`
+- `buildContent()` is structure composition, not per-request mutation logic
+- Module width methods (`withWidth`, `withMaxWidth`, `withMinWidth`) are intentionally blocked on `Module`
+- Layout controls module sizing via `Row`/`Column` containers
+
+## Package Map
+- `core`: rendering primitives, slots/templates, attributes/styles, module base
+- `components`: low-level UI components by domain (`forms`, `display`, `media`, `forum`, `navigation`)
+- `layout`: page/grid primitives (`Page`, `Row`, `Column`, etc.)
+- `modules`: high-level composed feature modules
+- `editing`: editing contracts, helpers, auth wrappers, validation and edit flow utilities
+- `builders`: shell and navigation builders for app scaffolding
+- `demo`: framework usage examples and integration demonstrations
+
+Package-specific operational rules live in package-level `AGENTS.md` files.
+
+## Maintenance Requirements
+- Keep this root `AGENTS.md` updated as architecture/process changes during development.
+- When making large or cross-package changes, always review and update affected package-level `AGENTS.md` files in the same workstream.
+- If a package contract changes and no package `AGENTS.md` update is needed, explicitly validate that no guidance drift was introduced.
+
+## Global Engineering Rules
+
+### Design Rules
+- Prefer composition over inheritance for feature assembly
+- Keep fluent APIs consistent (`create()` factories, chaining methods, typed returns)
+- Keep module/component responsibilities clear: components are primitives, modules are compositions
+- Keep docs and tests aligned with behavior-changing code
+
+### Security Responsibility Split
+- Framework responsibilities:
+- Escape untrusted text and attributes in render paths
+- Validate sensitive style inputs where implemented
+- Consumer application responsibilities:
+- CSRF, authorization, endpoint security, and HTMX request policy at HTTP/controller layer
+- Input validation and domain authorization on business operations
+
+### Testing Expectations
+- Any behavior/API change requires targeted tests in the matching package test suite
+- Prioritize regression coverage for rendering, escaping, lifecycle, editing flow, and layout behavior
+- Demo changes should not replace framework tests
+
+## Build and Test Commands
+
+### From Repository Root
+```bash
+./mvnw clean install
+./mvnw test
+./mvnw -pl simplypages test
+./mvnw -pl demo spring-boot:run
+```
+
+### Module-Scoped
+```bash
+cd simplypages && ../mvnw test
+cd demo && ../mvnw spring-boot:run
+```
+
+## Documentation Pointers
+- `README.md`
+- `docs/getting-started/README.md`
+- `docs/getting-started/13-templates-and-dynamic-updates.md`
+- `docs/quick-reference/template-system.md`
+- `docs/quick-reference/editing-api.md`
+- `docs/SLOTKEY_MIGRATION_GUIDE.md`
+- `docs/advanced/05-security-best-practices.md`
+
+## Naming Conventions
+Use `SimplyPages` terminology in new docs and updates. `JHF` appears in older materials and should be treated as legacy naming.

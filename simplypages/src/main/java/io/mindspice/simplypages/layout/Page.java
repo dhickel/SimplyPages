@@ -116,26 +116,12 @@ public class Page extends HtmlTag {
         public Page build() {
             // Apply independent scrolling class if enabled
             if (independentScrolling) {
-                String currentClass = page.attributes.stream()
-                        .filter(attr -> "class".equals(attr.getName()))
-                        .map(attr -> attr.getValue())
-                        .findFirst()
-                        .orElse("page-content");
-                // Remove existing class attribute to avoid duplicates
-                page.attributes.removeIf(attr -> "class".equals(attr.getName()));
-                page.withAttribute("class", currentClass + " scrollable-page");
+                page.addClass("scrollable-page");
             }
 
             // Build sticky sidebar layout if configured
             if (stickyComponent != null) {
-                String currentClass = page.attributes.stream()
-                        .filter(attr -> "class".equals(attr.getName()))
-                        .map(attr -> attr.getValue())
-                        .findFirst()
-                        .orElse("page-content");
-                // Remove existing class attribute to avoid duplicates
-                page.attributes.removeIf(attr -> "class".equals(attr.getName()));
-                page.withAttribute("class", currentClass + " with-sticky-sidebar");
+                page.addClass("with-sticky-sidebar");
 
                 // Add main content to page
                 page.withChild(mainContent);

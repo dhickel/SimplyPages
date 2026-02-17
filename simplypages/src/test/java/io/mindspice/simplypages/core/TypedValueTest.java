@@ -12,7 +12,7 @@ class TypedValueTest {
     @DisplayName("TypedValue should preserve type and value")
     void testTypeChecking() {
         TypedValue value = TypedValue.string("Hello");
-        assertEquals(String.class, value.getType());
+        assertEquals(String.class, value.type());
         assertEquals("Hello", value.getValue());
     }
 
@@ -32,9 +32,9 @@ class TypedValueTest {
         TypedValue boolValue = TypedValue.bool(true);
         TypedValue intValue = TypedValue.integer(42);
 
-        assertEquals(Boolean.class, boolValue.getType());
+        assertEquals(Boolean.class, boolValue.type());
         assertEquals(Boolean.TRUE, boolValue.getValue());
-        assertEquals(Integer.class, intValue.getType());
+        assertEquals(Integer.class, intValue.type());
         assertEquals(Integer.valueOf(42), intValue.getValue());
     }
 }

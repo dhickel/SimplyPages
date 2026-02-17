@@ -106,7 +106,7 @@ import io.mindspice.simplypages.core.Module;
  *   <li><strong>Fluent API:</strong> All configuration methods return {@code this}</li>
  * </ul>
  *
- * @see io.mindspice.simplypages.editing.EditAdapter
+ * @see io.mindspice.simplypages.editing.Editable
  * @see io.mindspice.simplypages.editing.EditModalBuilder
  * @see io.mindspice.simplypages.components.display.Modal
  */

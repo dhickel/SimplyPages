@@ -81,7 +81,7 @@ import java.util.Optional;
  *
  *         // Build profile card
  *         Card card = Card.create()
- *             .withHeader(user.getName())
+ *             .withHeader(user.name())
  *             .withBody(new Paragraph().withInnerText(user.getEmail()));
  *
  *         super.withChild(card);
@@ -441,8 +441,8 @@ public abstract class Module extends HtmlTag {
      */
     private Optional<String> getAttributeValue(String name) {
         return attributes.stream()
-                .filter(attr -> name.equals(attr.getName()))
-                .map(Attribute::getValue)
+                .filter(attr -> name.equals(attr.name()))
+                .map(Attribute::value)
                 .findFirst();
     }
 }

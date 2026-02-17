@@ -1,6 +1,5 @@
 package io.mindspice.simplypages.core;
 
-import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -8,14 +7,7 @@ import java.util.function.Function;
  *
  * @param <T> the type of value associated with this key
  */
-public class SlotKey<T> {
-    private final String name;
-    private final Function<RenderContext, T> defaultProvider;
-
-    private SlotKey(String name, Function<RenderContext, T> defaultProvider) {
-        this.name = name;
-        this.defaultProvider = defaultProvider;
-    }
+public record SlotKey<T>(String name, Function<RenderContext, T> defaultProvider) {
 
     /**
      * Creates a key with the given name and no default value.
@@ -38,10 +30,6 @@ public class SlotKey<T> {
         return new SlotKey<>(name, defaultProvider);
     }
 
-    public String getName() {
-        return name;
-    }
-
     /**
      * Returns the default value for this key, if any.
      */
@@ -51,15 +39,12 @@ public class SlotKey<T> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        SlotKey<?> slotKey = (SlotKey<?>) o;
-        return Objects.equals(name, slotKey.name);
+        return o instanceof SlotKey<?> other && name.equals(other.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return name.hashCode();
     }
 
     @Override

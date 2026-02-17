@@ -9,7 +9,7 @@ import io.mindspice.simplypages.components.forms.Button;
 import io.mindspice.simplypages.components.forms.Select;
 import io.mindspice.simplypages.components.forms.TextArea;
 import io.mindspice.simplypages.components.forms.TextInput;
-import io.mindspice.simplypages.editing.EditAdapter;
+import io.mindspice.simplypages.editing.Editable;
 import io.mindspice.simplypages.editing.EditModalBuilder;
 import io.mindspice.simplypages.layout.Column;
 import io.mindspice.simplypages.layout.Container;
@@ -47,7 +47,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li><strong>Phase 5:</strong> EditableModule wrapper with framework CSS</li>
  *   <li><strong>Phase 5:</strong> Markdown toggle bug fix (persisted state)</li>
  *   <li><strong>Phase 5:</strong> Framework-level z-index and button styling</li>
- *   <li><strong>Phases 1-4:</strong> Modal, EditAdapter, Auto-save, Constraints</li>
+ *   <li><strong>Phases 1-4:</strong> Modal, Editable, Auto-save, Constraints</li>
  * </ul>
  *
  * <p>Access at: <a href="http://localhost:8080/test/phase5">http://localhost:8080/test/phase5</a></p>
@@ -292,7 +292,7 @@ public class Phase5TestController {
                 .withTitle(module.title)
                 .withContent(module.content);
 
-        EditAdapter<ContentModule> adapter = contentMod;
+        Editable<ContentModule> adapter = contentMod;
 
         // Build combined form (module fields + width field)
         Div combinedForm = new Div();

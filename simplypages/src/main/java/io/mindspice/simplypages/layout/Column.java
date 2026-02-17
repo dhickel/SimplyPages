@@ -84,7 +84,7 @@ public class Column extends HtmlTag {
     private void ensureColClass() {
         // Check if any class attribute exists
         boolean hasClassAttr = attributes.stream()
-                .anyMatch(attr -> "class".equals(attr.getName()));
+                .anyMatch(attr -> "class".equals(attr.name()));
 
         if (!hasClassAttr) {
             // No class attribute - add "col"
@@ -92,15 +92,15 @@ public class Column extends HtmlTag {
         } else {
             // Check if "col" class is already in the class list
             boolean hasColClass = attributes.stream()
-                    .filter(attr -> "class".equals(attr.getName()))
-                    .anyMatch(attr -> attr.getValue().contains("col"));
+                    .filter(attr -> "class".equals(attr.name()))
+                    .anyMatch(attr -> attr.value().contains("col"));
 
             if (!hasColClass) {
                 // Find and update the class attribute
                 for (Attribute attr : attributes) {
-                    if ("class".equals(attr.getName())) {
+                    if ("class".equals(attr.name())) {
                         // Prepend "col" to existing classes
-                        String newValue = "col " + attr.getValue();
+                        String newValue = "col " + attr.value();
                         attributes.remove(attr);
                         this.withAttribute("class", newValue);
                         break;

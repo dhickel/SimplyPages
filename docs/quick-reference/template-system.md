@@ -165,13 +165,36 @@ String html = LIST_TEMPLATE.render(
 
 ## RenderContext Patterns
 
-### Basic Context
+### Basic Context (Mutable)
 
 ```java
 RenderContext ctx = RenderContext.builder()
     .with(TITLE, "My Title")
     .with(BODY, "My Body")
     .build();
+```
+
+### Compile Policy
+
+```java
+RenderContext ctx = RenderContext.builder()
+    .withPolicy(RenderContext.RenderPolicy.COMPILE_ON_FIRST_HIT)
+    .with(TITLE, "My Title")
+    .with(BODY, "My Body")
+    .build();
+```
+
+Policy options:
+- `RenderContext.RenderPolicy.NEVER_COMPILE` (default)
+- `RenderContext.RenderPolicy.COMPILE_ON_FIRST_HIT`
+
+### Manual Entry Updates
+
+```java
+ctx.put(TITLE, "Updated title");                       // live value
+ctx.putCompiled(BODY, "<strong>Trusted HTML</strong>"); // compiled value
+ctx.remove(BODY);                                      // remove explicit entry
+ctx.clear();                                           // clear all explicit entries
 ```
 
 ### All Supported Types
@@ -201,7 +224,7 @@ RenderContext ctx = RenderContext.builder()
 
 ```java
 // Build context conditionally
-RenderContext.Builder builder = RenderContext.builder()
+RenderContext.RenderContextBuilder builder = RenderContext.builder()
     .with(TITLE, article.getTitle())
     .with(CONTENT, article.getContent());
 
