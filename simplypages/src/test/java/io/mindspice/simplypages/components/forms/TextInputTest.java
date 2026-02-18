@@ -1,10 +1,9 @@
 package io.mindspice.simplypages.components.forms;
 
 import io.mindspice.simplypages.components.forms.TextInput.InputType;
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TextInputTest {
 
@@ -14,8 +13,10 @@ class TextInputTest {
         TextInput input = TextInput.create("username");
         String html = input.render();
 
-        assertTrue(html.contains("type=\"text\""));
-        assertTrue(html.contains("name=\"username\""));
+        HtmlAssert.assertThat(html)
+            .hasElement("input.form-input")
+            .attributeEquals("input.form-input", "type", "text")
+            .attributeEquals("input.form-input", "name", "username");
     }
 
     @Test
@@ -27,28 +28,29 @@ class TextInputTest {
 
         String html = input.render();
 
-        assertTrue(html.contains("type=\"email\""));
-        assertTrue(html.contains("value=\"user@example.com\""));
+        HtmlAssert.assertThat(html)
+            .hasElement("input.form-input")
+            .attributeEquals("input.form-input", "type", "email")
+            .attributeEquals("input.form-input", "value", "user@example.com");
     }
 
     @Test
     @DisplayName("TextInput convenience constructors should set types")
     void testConvenienceConstructors() {
-        String emailHtml = TextInput.email("email").render();
-        String passwordHtml = TextInput.password("password").render();
-        String numberHtml = TextInput.number("age").render();
-        String dateHtml = TextInput.date("birthday").render();
-        String searchHtml = TextInput.search("query").render();
-
-        assertTrue(emailHtml.contains("type=\"email\""));
-        assertTrue(passwordHtml.contains("type=\"password\""));
-        assertTrue(numberHtml.contains("type=\"number\""));
-        assertTrue(dateHtml.contains("type=\"date\""));
-        assertTrue(searchHtml.contains("type=\"search\""));
+        HtmlAssert.assertThat(TextInput.email("email").render())
+            .attributeEquals("input", "type", "email");
+        HtmlAssert.assertThat(TextInput.password("password").render())
+            .attributeEquals("input", "type", "password");
+        HtmlAssert.assertThat(TextInput.number("age").render())
+            .attributeEquals("input", "type", "number");
+        HtmlAssert.assertThat(TextInput.date("birthday").render())
+            .attributeEquals("input", "type", "date");
+        HtmlAssert.assertThat(TextInput.search("query").render())
+            .attributeEquals("input", "type", "search");
     }
 
     @Test
-    @DisplayName("TextInput should apply additional attributes and styles")
+    @DisplayName("TextInput should apply additional attributes and styles on input element")
     void testAdditionalAttributes() {
         TextInput input = TextInput.create("schedule")
             .withType(InputType.DATETIME_LOCAL)
@@ -73,24 +75,25 @@ class TextInputTest {
 
         String html = input.render();
 
-        assertTrue(html.contains("type=\"datetime-local\""));
-        assertTrue(html.contains("id=\"schedule-id\""));
-        assertTrue(html.contains("value=\"2024-01-01T10:00\""));
-        assertTrue(html.contains("placeholder=\"Select time\""));
-        assertTrue(html.contains("required"));
-        assertTrue(html.contains("readonly"));
-        assertTrue(html.contains("disabled"));
-        assertTrue(html.contains("pattern=\"\\d+\""));
-        assertTrue(html.contains("minlength=\"1\""));
-        assertTrue(html.contains("maxlength=\"10\""));
-        assertTrue(html.contains("min=\"1\""));
-        assertTrue(html.contains("max=\"10\""));
-        assertTrue(html.contains("step=\"2\""));
-        assertTrue(html.contains("class=\"form-input extra\""));
-        assertTrue(html.contains("autofocus"));
-        assertTrue(html.contains("autocomplete=\"off\""));
-        assertTrue(html.contains("width: 120px;"));
-        assertTrue(html.contains("max-width: 240px;"));
-        assertTrue(html.contains("min-width: 80px;"));
+        HtmlAssert.assertThat(html)
+            .hasElement("input#schedule-id.form-input.extra")
+            .attributeEquals("input#schedule-id", "name", "schedule")
+            .attributeEquals("input#schedule-id", "type", "datetime-local")
+            .attributeEquals("input#schedule-id", "value", "2024-01-01T10:00")
+            .attributeEquals("input#schedule-id", "placeholder", "Select time")
+            .attributeEquals("input#schedule-id", "pattern", "\\d+")
+            .attributeEquals("input#schedule-id", "minlength", "1")
+            .attributeEquals("input#schedule-id", "maxlength", "10")
+            .attributeEquals("input#schedule-id", "min", "1")
+            .attributeEquals("input#schedule-id", "max", "10")
+            .attributeEquals("input#schedule-id", "step", "2")
+            .attributeEquals("input#schedule-id", "autocomplete", "off")
+            .attributeEquals("input#schedule-id", "required", "")
+            .attributeEquals("input#schedule-id", "readonly", "")
+            .attributeEquals("input#schedule-id", "disabled", "")
+            .attributeEquals("input#schedule-id", "autofocus", "")
+            .hasElement("input#schedule-id[style*=width]")
+            .hasElement("input#schedule-id[style*=max-width]")
+            .hasElement("input#schedule-id[style*=min-width]");
     }
 }

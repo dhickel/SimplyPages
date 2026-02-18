@@ -1,9 +1,8 @@
 package io.mindspice.simplypages.components.forms;
 
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TextAreaTest {
 
@@ -16,9 +15,11 @@ class TextAreaTest {
 
         String html = area.render();
 
-        assertTrue(html.contains("name=\"bio\""));
-        assertTrue(html.contains("rows=\"5\""));
-        assertTrue(html.contains(">Hello</textarea>"));
+        HtmlAssert.assertThat(html)
+            .hasElement("textarea.form-textarea")
+            .attributeEquals("textarea.form-textarea", "name", "bio")
+            .attributeEquals("textarea.form-textarea", "rows", "5")
+            .elementTextEquals("textarea.form-textarea", "Hello");
     }
 
     @Test
@@ -43,20 +44,21 @@ class TextAreaTest {
 
         String html = area.render();
 
-        assertTrue(html.contains("id=\"notes-id\""));
-        assertTrue(html.contains("placeholder=\"Enter notes\""));
-        assertTrue(html.contains("rows=\"4\""));
-        assertTrue(html.contains("cols=\"30\""));
-        assertTrue(html.contains("required"));
-        assertTrue(html.contains("readonly"));
-        assertTrue(html.contains("disabled"));
-        assertTrue(html.contains("maxlength=\"200\""));
-        assertTrue(html.contains("minlength=\"10\""));
-        assertTrue(html.contains("class=\"form-textarea extra\""));
-        assertTrue(html.contains("autofocus"));
-        assertTrue(html.contains("wrap=\"soft\""));
-        assertTrue(html.contains("width: 300px;"));
-        assertTrue(html.contains("max-width: 600px;"));
-        assertTrue(html.contains("min-width: 150px;"));
+        HtmlAssert.assertThat(html)
+            .hasElement("textarea#notes-id.form-textarea.extra")
+            .attributeEquals("textarea#notes-id", "name", "notes")
+            .attributeEquals("textarea#notes-id", "placeholder", "Enter notes")
+            .attributeEquals("textarea#notes-id", "rows", "4")
+            .attributeEquals("textarea#notes-id", "cols", "30")
+            .attributeEquals("textarea#notes-id", "maxlength", "200")
+            .attributeEquals("textarea#notes-id", "minlength", "10")
+            .attributeEquals("textarea#notes-id", "wrap", "soft")
+            .attributeEquals("textarea#notes-id", "required", "")
+            .attributeEquals("textarea#notes-id", "readonly", "")
+            .attributeEquals("textarea#notes-id", "disabled", "")
+            .attributeEquals("textarea#notes-id", "autofocus", "")
+            .hasElement("textarea#notes-id[style*=width]")
+            .hasElement("textarea#notes-id[style*=max-width]")
+            .hasElement("textarea#notes-id[style*=min-width]");
     }
 }

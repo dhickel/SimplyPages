@@ -2,10 +2,9 @@ package io.mindspice.simplypages.components.forms;
 
 import io.mindspice.simplypages.components.forms.Button.ButtonStyle;
 import io.mindspice.simplypages.components.forms.Button.ButtonType;
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ButtonTest {
 
@@ -15,8 +14,10 @@ class ButtonTest {
         Button button = Button.create("Click");
         String html = button.render();
 
-        assertTrue(html.contains("type=\"button\""));
-        assertTrue(html.contains("class=\"btn btn-primary\""));
+        HtmlAssert.assertThat(html)
+            .hasElement("button.btn.btn-primary")
+            .attributeEquals("button.btn.btn-primary", "type", "button")
+            .elementTextEquals("button.btn.btn-primary", "Click");
     }
 
     @Test
@@ -28,18 +29,18 @@ class ButtonTest {
 
         String html = button.render();
 
-        assertTrue(html.contains("type=\"submit\""));
-        assertTrue(html.contains("class=\"btn btn-danger\""));
+        HtmlAssert.assertThat(html)
+            .hasElement("button.btn.btn-danger")
+            .attributeEquals("button.btn.btn-danger", "type", "submit");
     }
 
     @Test
     @DisplayName("Button convenience methods should set types")
     void testButtonConvenienceMethods() {
-        String submitHtml = Button.submit("Send").render();
-        String resetHtml = Button.reset("Reset").render();
-
-        assertTrue(submitHtml.contains("type=\"submit\""));
-        assertTrue(resetHtml.contains("type=\"reset\""));
+        HtmlAssert.assertThat(Button.submit("Send").render())
+            .attributeEquals("button", "type", "submit");
+        HtmlAssert.assertThat(Button.reset("Reset").render())
+            .attributeEquals("button", "type", "reset");
     }
 
     @Test
@@ -60,16 +61,13 @@ class ButtonTest {
 
         String html = button.render();
 
-        assertTrue(html.contains("class=\"btn btn-success"));
-        assertTrue(html.contains("id=\"save-btn\""));
-        assertTrue(html.contains("disabled"));
-        assertTrue(html.contains("extra"));
-        assertTrue(html.contains("onclick=\"doSave()\""));
-        assertTrue(html.contains("btn-full-width"));
-        assertTrue(html.contains("btn-lg"));
-        assertTrue(html.contains("btn-sm"));
-        assertTrue(html.contains("width: 120px;"));
-        assertTrue(html.contains("max-width: 200px;"));
-        assertTrue(html.contains("min-width: 80px;"));
+        HtmlAssert.assertThat(html)
+            .hasElement("button#save-btn.btn.btn-success")
+            .attributeEquals("button#save-btn", "disabled", "")
+            .attributeEquals("button#save-btn", "onclick", "doSave()")
+            .hasElement("button#save-btn[style*=width]")
+            .hasElement("button#save-btn[style*=max-width]")
+            .hasElement("button#save-btn[style*=min-width]")
+            .attributeEquals("button#save-btn", "class", "btn btn-success extra btn-full-width btn-lg btn-sm");
     }
 }

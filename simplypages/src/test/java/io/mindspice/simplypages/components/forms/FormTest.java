@@ -1,12 +1,9 @@
 package io.mindspice.simplypages.components.forms;
 
 import io.mindspice.simplypages.components.forms.Form.Method;
-import io.mindspice.simplypages.components.forms.TextInput;
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FormTest {
 
@@ -19,8 +16,10 @@ class FormTest {
 
         String html = form.render();
 
-        assertTrue(html.contains("action=\"/submit\""));
-        assertTrue(html.contains("method=\"POST\""));
+        HtmlAssert.assertThat(html)
+            .hasElement("form.form")
+            .attributeEquals("form.form", "action", "/submit")
+            .attributeEquals("form.form", "method", "POST");
     }
 
     @Test
@@ -31,9 +30,9 @@ class FormTest {
 
         String html = form.render();
 
-        assertTrue(html.contains("method=\"POST\""));
-        assertTrue(html.contains("name=\"_method\""));
-        assertTrue(html.contains("value=\"PUT\""));
+        HtmlAssert.assertThat(html)
+            .attributeEquals("form.form", "method", "POST")
+            .hasElement("form.form > input[type=hidden][name=_method][value=PUT]");
     }
 
     @Test
@@ -44,8 +43,9 @@ class FormTest {
 
         String html = form.render();
 
-        assertTrue(html.contains("method=\"GET\""));
-        assertFalse(html.contains("name=\"_method\""));
+        HtmlAssert.assertThat(html)
+            .attributeEquals("form.form", "method", "GET")
+            .doesNotHaveElement("input[name=_method]");
     }
 
     @Test
@@ -56,8 +56,8 @@ class FormTest {
 
         String html = form.render();
 
-        assertTrue(html.contains("name=\"_csrf\""));
-        assertTrue(html.contains("value=\"token123\""));
+        HtmlAssert.assertThat(html)
+            .hasElement("form.form > input[type=hidden][name=_csrf][value=token123]");
     }
 
     @Test
@@ -68,9 +68,9 @@ class FormTest {
 
         String html = form.render();
 
-        assertTrue(html.contains("hx-post=\"/save\""));
-        assertTrue(html.contains("hx-headers="));
-        assertTrue(html.contains("X-CSRF-TOKEN"));
+        HtmlAssert.assertThat(html)
+            .attributeEquals("form.form", "hx-post", "/save")
+            .attributeEquals("form.form", "hx-headers", "{\"X-CSRF-TOKEN\": \"token123\"}");
     }
 
     @Test
@@ -91,33 +91,38 @@ class FormTest {
 
         String html = form.render();
 
-        assertTrue(html.contains("id=\"contact-form\""));
-        assertTrue(html.contains("class=\"form compact\""));
-        assertTrue(html.contains("hx-get=\"/load\""));
-        assertTrue(html.contains("hx-put=\"/update\""));
-        assertTrue(html.contains("hx-delete=\"/remove\""));
-        assertTrue(html.contains("hx-target=\"#target\""));
-        assertTrue(html.contains("hx-swap=\"outerHTML\""));
-        assertTrue(html.contains("hx-trigger=\"submit\""));
-        assertTrue(html.contains("enctype=\"multipart/form-data\""));
-        assertTrue(html.contains("novalidate"));
+        HtmlAssert.assertThat(html)
+            .hasElement("form#contact-form.form.compact")
+            .attributeEquals("form#contact-form", "hx-get", "/load")
+            .attributeEquals("form#contact-form", "hx-put", "/update")
+            .attributeEquals("form#contact-form", "hx-delete", "/remove")
+            .attributeEquals("form#contact-form", "hx-target", "#target")
+            .attributeEquals("form#contact-form", "hx-swap", "outerHTML")
+            .attributeEquals("form#contact-form", "hx-trigger", "submit")
+            .attributeEquals("form#contact-form", "enctype", "multipart/form-data")
+            .attributeEquals("form#contact-form", "novalidate", "");
     }
 
     @Test
     @DisplayName("Form should handle labeled and unlabeled fields")
     void testFormFieldLabels() {
         Form labeled = Form.create()
-            .addField("Name", TextInput.create("name"));
+            .addField("Name", TextInput.create("name").withId("name-input"));
         Form unlabeled = Form.create()
-            .addField("", TextInput.create("nickname"));
+            .addField("", TextInput.create("nickname").withId("nickname-input"));
 
         String labeledHtml = labeled.render();
         String unlabeledHtml = unlabeled.render();
 
-        assertTrue(labeledHtml.contains("form-label"));
-        assertTrue(labeledHtml.contains(">Name<"));
-        assertTrue(labeledHtml.contains("name=\"name\""));
-        assertFalse(unlabeledHtml.contains("form-label"));
-        assertTrue(unlabeledHtml.contains("name=\"nickname\""));
+        HtmlAssert.assertThat(labeledHtml)
+            .hasElement("form.form > div.form-field > label.form-label")
+            .elementTextEquals("label.form-label", "Name")
+            .hasElement("form.form > div.form-field > input#name-input.form-input")
+            .attributeEquals("input#name-input", "name", "name");
+
+        HtmlAssert.assertThat(unlabeledHtml)
+            .doesNotHaveElement("label.form-label")
+            .hasElement("form.form > div.form-field > input#nickname-input.form-input")
+            .attributeEquals("input#nickname-input", "name", "nickname");
     }
 }

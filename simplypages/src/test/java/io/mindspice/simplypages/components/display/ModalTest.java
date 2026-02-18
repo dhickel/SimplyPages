@@ -2,16 +2,15 @@ package io.mindspice.simplypages.components.display;
 
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.components.forms.Button;
+import io.mindspice.simplypages.testutil.HtmlAssert;
+import io.mindspice.simplypages.testutil.SnapshotAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ModalTest {
 
     @Test
-    @DisplayName("Modal should render title, body, and footer")
+    @DisplayName("Modal should render title, body, and footer in expected containers")
     void testModalRendering() {
         Modal modal = Modal.create()
             .withModalId("test-modal")
@@ -21,12 +20,20 @@ class ModalTest {
 
         String html = modal.render();
 
-        assertTrue(html.contains("id=\"test-modal\""));
-        assertTrue(html.contains("modal-title"));
-        assertTrue(html.contains("Edit Item"));
-        assertTrue(html.contains("modal-body"));
-        assertTrue(html.contains("Body content"));
-        assertTrue(html.contains("modal-footer"));
+        HtmlAssert.assertThat(html)
+            .hasElement("div.modal-backdrop#test-modal")
+            .hasElement("div.modal-backdrop#test-modal > div.modal-container")
+            .hasElement("div.modal-container > div.modal-header")
+            .hasElement("div.modal-header > h3.modal-title")
+            .hasElement("div.modal-container > div.modal-body")
+            .hasElement("div.modal-container > div.modal-footer")
+            .elementTextEquals("div.modal-header > h3.modal-title", "Edit Item")
+            .elementTextEquals("div.modal-body", "Body content")
+            .elementTextEquals("div.modal-footer > button", "Save")
+            .attributeEquals("div.modal-footer > button", "type", "button")
+            .childOrder("div.modal-container", "div.modal-header", "div.modal-body", "div.modal-footer");
+
+        SnapshotAssert.assertMatches("display/modal/default", html);
     }
 
     @Test
@@ -37,6 +44,32 @@ class ModalTest {
             .closeOnEscape(false)
             .render();
 
-        assertFalse(html.contains("onkeydown=\"if(event.key === 'Escape')"));
+        HtmlAssert.assertThat(html)
+            .hasElement("div.modal-backdrop#test-modal")
+            .attributeEquals("div.modal-backdrop#test-modal", "tabindex", "0");
+
+        HtmlAssert.assertThat(html)
+            .doesNotHaveElement("div.modal-backdrop[onkeydown]");
+
+        SnapshotAssert.assertMatches("display/modal/escape-disabled", html);
+    }
+
+    @Test
+    @DisplayName("Modal should render body/footer without header when close button and title are omitted")
+    void testModalWithoutHeader() {
+        String html = Modal.create()
+            .withModalId("content-only-modal")
+            .showCloseButton(false)
+            .withBody(new Div().withInnerText("Body only"))
+            .withFooter(Button.create("Close"))
+            .render();
+
+        HtmlAssert.assertThat(html)
+            .doesNotHaveElement("div.modal-header")
+            .hasElement("div.modal-body")
+            .hasElement("div.modal-footer")
+            .childOrder("div.modal-container", "div.modal-body", "div.modal-footer");
+
+        SnapshotAssert.assertMatches("display/modal/content-only", html);
     }
 }

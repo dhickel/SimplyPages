@@ -1,10 +1,8 @@
 package io.mindspice.simplypages.components.forms;
 
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CheckboxTest {
 
@@ -17,13 +15,18 @@ class CheckboxTest {
 
         String html = checkbox.render();
 
-        assertTrue(html.contains("type=\"checkbox\""));
-        assertTrue(html.contains("name=\"agree\""));
-        assertTrue(html.contains("value=\"yes\""));
-        assertTrue(html.contains("checked"));
-        assertTrue(html.contains("checkbox-label"));
-        assertTrue(html.contains(">Agree to terms</label>"));
-        assertTrue(html.contains("for=\"checkbox-"));
+        HtmlAssert.assertThat(html)
+            .hasElement("div.form-checkbox > input.checkbox-input")
+            .hasElement("div.form-checkbox > label.checkbox-label")
+            .attributeEquals("input.checkbox-input", "type", "checkbox")
+            .attributeEquals("input.checkbox-input", "name", "agree")
+            .attributeEquals("input.checkbox-input", "value", "yes")
+            .attributeEquals("input.checkbox-input", "checked", "")
+            .elementTextEquals("label.checkbox-label", "Agree to terms");
+
+        String inputId = org.jsoup.Jsoup.parseBodyFragment(html).selectFirst("input.checkbox-input").attr("id");
+        HtmlAssert.assertThat(html)
+            .attributeEquals("label.checkbox-label", "for", inputId);
     }
 
     @Test
@@ -36,9 +39,10 @@ class CheckboxTest {
 
         String html = checkbox.render();
 
-        assertTrue(html.contains("id=\"agree-id\""));
-        assertTrue(html.contains("required"));
-        assertTrue(html.contains("disabled"));
-        assertFalse(html.contains("checkbox-label"));
+        HtmlAssert.assertThat(html)
+            .hasElement("div.form-checkbox > input#agree-id.checkbox-input")
+            .attributeEquals("input#agree-id", "required", "")
+            .attributeEquals("input#agree-id", "disabled", "")
+            .doesNotHaveElement("label.checkbox-label");
     }
 }

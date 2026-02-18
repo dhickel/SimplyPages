@@ -1,12 +1,10 @@
 package io.mindspice.simplypages.components.forms;
 
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SelectTest {
 
@@ -19,11 +17,15 @@ class SelectTest {
 
         String html = select.render();
 
-        assertTrue(html.contains("name=\"choice\""));
-        assertTrue(html.contains("value=\"a\""));
-        assertTrue(html.contains(">Alpha</option>"));
-        assertTrue(html.contains("value=\"b\""));
-        assertTrue(html.contains("selected"));
+        HtmlAssert.assertThat(html)
+            .hasElement("select.form-select")
+            .attributeEquals("select.form-select", "name", "choice")
+            .hasElementCount("select.form-select > option", 2)
+            .attributeEquals("select.form-select > option:nth-child(1)", "value", "a")
+            .elementTextEquals("select.form-select > option:nth-child(1)", "Alpha")
+            .attributeEquals("select.form-select > option:nth-child(2)", "value", "b")
+            .attributeEquals("select.form-select > option:nth-child(2)", "selected", "")
+            .elementTextEquals("select.form-select > option:nth-child(2)", "Beta");
     }
 
     @Test
@@ -36,9 +38,11 @@ class SelectTest {
 
         String html = select.render();
 
-        assertTrue(html.contains("multiple"));
-        assertTrue(html.contains("required"));
-        assertTrue(html.contains("size=\"3\""));
+        HtmlAssert.assertThat(html)
+            .hasElement("select.form-select")
+            .attributeEquals("select.form-select", "multiple", "")
+            .attributeEquals("select.form-select", "required", "")
+            .attributeEquals("select.form-select", "size", "3");
     }
 
     @Test
@@ -55,16 +59,17 @@ class SelectTest {
 
         String html = select.render();
 
-        assertTrue(html.contains("id=\"items-id\""));
-        assertTrue(html.contains("disabled"));
-        assertTrue(html.contains("class=\"form-select wide\""));
-        assertTrue(html.contains("value=\"One\""));
-        assertTrue(html.contains(">One</option>"));
-        assertTrue(html.contains("value=\"Two\""));
-        assertTrue(html.contains(">Two</option>"));
-        assertTrue(html.contains("width: 300px;"));
-        assertTrue(html.contains("max-width: 500px;"));
-        assertTrue(html.contains("min-width: 200px;"));
+        HtmlAssert.assertThat(html)
+            .hasElement("select#items-id.form-select.wide")
+            .attributeEquals("select#items-id", "name", "items")
+            .attributeEquals("select#items-id", "disabled", "")
+            .hasElement("select#items-id[style*=width]")
+            .hasElement("select#items-id[style*=max-width]")
+            .hasElement("select#items-id[style*=min-width]")
+            .attributeEquals("select#items-id > option:nth-child(1)", "value", "One")
+            .elementTextEquals("select#items-id > option:nth-child(1)", "One")
+            .attributeEquals("select#items-id > option:nth-child(2)", "value", "Two")
+            .elementTextEquals("select#items-id > option:nth-child(2)", "Two");
     }
 
     @Test
@@ -75,10 +80,11 @@ class SelectTest {
 
         String html = option.render();
 
-        assertTrue(html.contains("selected"));
-        assertTrue(html.contains("disabled"));
-        assertTrue(html.contains("&lt;b&gt;Label&lt;/b&gt;"));
-        assertFalse(html.contains("<script>"));
-        assertFalse(html.contains("<b>"));
+        HtmlAssert.assertThat(html)
+            .hasElement("option")
+            .attributeEquals("option", "selected", "")
+            .attributeEquals("option", "disabled", "")
+            .attributeEquals("option", "value", "<script>")
+            .elementTextEquals("option", "<b>Label</b>");
     }
 }
