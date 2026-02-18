@@ -1,11 +1,9 @@
 package io.mindspice.simplypages.components.display;
 
 import io.mindspice.simplypages.components.Paragraph;
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OrderedListTest {
 
@@ -18,9 +16,11 @@ class OrderedListTest {
 
         String html = list.render();
 
-        assertTrue(html.contains("<ol"));
-        assertTrue(html.contains("<li>First</li>"));
-        assertTrue(html.contains("<li>Second</li>"));
+        HtmlAssert.assertThat(html)
+            .hasElement("ol.list")
+            .hasElementCount("ol.list > li", 2)
+            .elementTextEquals("ol.list > li:nth-of-type(1)", "First")
+            .elementTextEquals("ol.list > li:nth-of-type(2)", "Second");
     }
 
     @Test
@@ -31,8 +31,10 @@ class OrderedListTest {
 
         String html = list.render();
 
-        assertTrue(html.contains("&lt;script&gt;alert(1)&lt;/script&gt;"));
-        assertFalse(html.contains("<script>"));
+        HtmlAssert.assertThat(html)
+            .hasElement("ol.list > li")
+            .elementTextEquals("ol.list > li", "<script>alert(1)</script>")
+            .doesNotHaveElement("script");
     }
 
     @Test
@@ -45,8 +47,9 @@ class OrderedListTest {
 
         String html = list.render();
 
-        assertTrue(html.contains("start=\"3\""));
-        assertTrue(html.contains("reversed"));
-        assertTrue(html.contains("Nested"));
+        HtmlAssert.assertThat(html)
+            .hasElement("ol.list[start=\"3\"][reversed]")
+            .hasElement("ol.list > li > p")
+            .elementTextEquals("ol.list > li > p", "Nested");
     }
 }

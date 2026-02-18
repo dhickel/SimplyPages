@@ -1,9 +1,8 @@
 package io.mindspice.simplypages.components.display;
 
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TagTest {
 
@@ -19,8 +18,12 @@ class TagTest {
         String coloredHtml = colored.render();
         String removableHtml = removable.render();
 
-        assertTrue(coloredHtml.contains("tag-blue"));
-        assertTrue(removableHtml.contains("tag-removable"));
-        assertTrue(removableHtml.contains(">Topic</span>"));
+        HtmlAssert.assertThat(coloredHtml)
+            .hasElement("span.tag.tag-blue")
+            .elementTextEquals("span.tag.tag-blue", "Topic");
+
+        HtmlAssert.assertThat(removableHtml)
+            .hasElement("span.tag.tag-removable")
+            .elementTextEquals("span.tag.tag-removable", "Topic");
     }
 }

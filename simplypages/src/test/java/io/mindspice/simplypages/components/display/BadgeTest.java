@@ -1,9 +1,8 @@
 package io.mindspice.simplypages.components.display;
 
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BadgeTest {
 
@@ -12,8 +11,9 @@ class BadgeTest {
     void testDefaultBadge() {
         String html = Badge.create("New").render();
 
-        assertTrue(html.contains("class=\"badge badge-primary\""));
-        assertTrue(html.contains(">New</span>"));
+        HtmlAssert.assertThat(html)
+            .hasElement("span.badge.badge-primary")
+            .elementTextEquals("span.badge.badge-primary", "New");
     }
 
     @Test
@@ -21,6 +21,8 @@ class BadgeTest {
     void testCustomBadge() {
         String html = Badge.danger("Alert").render();
 
-        assertTrue(html.contains("class=\"badge badge-danger\""));
+        HtmlAssert.assertThat(html)
+            .hasElement("span.badge.badge-danger")
+            .elementTextEquals("span.badge.badge-danger", "Alert");
     }
 }

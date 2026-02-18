@@ -1,9 +1,8 @@
 package io.mindspice.simplypages.components.display;
 
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SpinnerTest {
 
@@ -17,9 +16,9 @@ class SpinnerTest {
 
         String html = spinner.render();
 
-        assertTrue(html.contains("spinner-lg"));
-        assertTrue(html.contains("spinner-primary"));
-        assertTrue(html.contains("spinner-message"));
-        assertTrue(html.contains("Loading"));
+        HtmlAssert.assertThat(html)
+            .hasElement("div.spinner-wrapper")
+            .hasElement("div.spinner.spinner-lg.spinner-primary[role=\"status\"][aria-label=\"Loading\"]")
+            .elementTextEquals("div.spinner-message", "Loading");
     }
 }

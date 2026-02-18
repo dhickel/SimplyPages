@@ -1,4 +1,4 @@
-[Previous](01-performance-threading-and-cache-lifecycles.md) | [Index](../INDEX.md)
+[Previous](01-performance-threading-and-cache-lifecycles.md) | [Next](03-writing-tests-for-components-and-modules.md) | [Index](../INDEX.md)
 
 # Testing and Troubleshooting Playbook
 
@@ -55,8 +55,9 @@ When in doubt, match your app behavior tests to these contracts.
 @Test
 void saveReturnsOobModalCloseAndModuleUpdate() {
     String html = controller.saveModule("m1", Map.of("title", "Updated", "content", "Body"));
-    assertTrue(html.contains("id=\"edit-modal-container\""));
-    assertTrue(html.contains("hx-swap-oob=\"true\""));
-    assertTrue(html.contains("id=\"m1\""));
+
+    HtmlAssert.assertThat(html)
+        .hasElement("#edit-modal-container[hx-swap-oob=\"true\"]")
+        .hasElement("#m1");
 }
 ```

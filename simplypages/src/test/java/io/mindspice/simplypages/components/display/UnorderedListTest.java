@@ -1,11 +1,9 @@
 package io.mindspice.simplypages.components.display;
 
 import io.mindspice.simplypages.components.Paragraph;
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UnorderedListTest {
 
@@ -18,9 +16,12 @@ class UnorderedListTest {
 
         String html = list.render();
 
-        assertTrue(html.contains("<ul"));
-        assertTrue(html.contains("<li>One</li>"));
-        assertTrue(html.contains("Two"));
+        HtmlAssert.assertThat(html)
+            .hasElement("ul.list")
+            .hasElementCount("ul.list > li", 2)
+            .elementTextEquals("ul.list > li:nth-of-type(1)", "One")
+            .hasElement("ul.list > li:nth-of-type(2) > p")
+            .elementTextEquals("ul.list > li:nth-of-type(2) > p", "Two");
     }
 
     @Test
@@ -31,8 +32,10 @@ class UnorderedListTest {
 
         String html = list.render();
 
-        assertTrue(html.contains("&lt;img src=x onerror=alert(1)&gt;"));
-        assertFalse(html.contains("<img"));
+        HtmlAssert.assertThat(html)
+            .hasElement("ul.list > li")
+            .elementTextEquals("ul.list > li", "<img src=x onerror=alert(1)>")
+            .doesNotHaveElement("img");
     }
 
     @Test
@@ -45,7 +48,8 @@ class UnorderedListTest {
 
         String html = list.render();
 
-        assertTrue(html.contains("list-unstyled"));
-        assertTrue(html.contains("list-inline"));
+        HtmlAssert.assertThat(html)
+            .hasElement("ul.list.list-unstyled.list-inline")
+            .elementTextEquals("ul.list > li", "Item");
     }
 }

@@ -1,9 +1,8 @@
 package io.mindspice.simplypages.components.display;
 
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CardGridTest {
 
@@ -16,8 +15,9 @@ class CardGridTest {
 
         String html = grid.render();
 
-        assertTrue(html.contains("card-grid"));
-        assertTrue(html.contains("grid-cols-2"));
-        assertTrue(html.contains("card-body"));
+        HtmlAssert.assertThat(html)
+            .hasElement("div.card-grid.grid-cols-2")
+            .hasElement("div.card-grid > div.card > div.card-body")
+            .elementTextEquals("div.card-grid > div.card > div.card-body", "Body");
     }
 }

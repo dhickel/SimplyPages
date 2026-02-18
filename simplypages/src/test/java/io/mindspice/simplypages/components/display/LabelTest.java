@@ -1,9 +1,8 @@
 package io.mindspice.simplypages.components.display;
 
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LabelTest {
 
@@ -16,8 +15,9 @@ class LabelTest {
 
         String html = label.render();
 
-        assertTrue(html.contains("for=\"email\""));
-        assertTrue(html.contains("label-required"));
-        assertTrue(html.contains(">Email</label>"));
+        HtmlAssert.assertThat(html)
+            .hasElement("label.label.label-required")
+            .attributeEquals("label.label.label-required", "for", "email")
+            .elementTextEquals("label.label.label-required", "Email");
     }
 }

@@ -1,9 +1,8 @@
 package io.mindspice.simplypages.components.display;
 
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InfoBoxTest {
 
@@ -17,9 +16,10 @@ class InfoBoxTest {
 
         String html = box.render();
 
-        assertTrue(html.contains("info-box"));
-        assertTrue(html.contains("Users"));
-        assertTrue(html.contains("42"));
-        assertTrue(html.contains("info-box-icon"));
+        HtmlAssert.assertThat(html)
+            .hasElement("div.info-box")
+            .elementTextEquals(".info-box-title", "Users")
+            .elementTextEquals(".info-box-value", "42")
+            .elementTextEquals(".info-box-icon", "👤");
     }
 }

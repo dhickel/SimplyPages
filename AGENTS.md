@@ -10,6 +10,7 @@
 - Add any general knowledge to : `.internal-dev/knowledge/`
 - Add any notes to : `.internal-dev/notes/`, using or creating the future_consideration.md for future improvement/concerns that should be addressed
 - Add any out-of-scope bugs to:`.internal-dev/bugs/`
+- Use `.internal-dev/knowledge/agent-test-implementation-loop.md` as the default testing implementation reference for agent work loops.
 
 
 When generating plans or reviews you are to always use  `.internal-dev/plans/` or `.internal-dev/reviews/`, large multistep plans should have their own directory.
@@ -95,6 +96,7 @@ Package-specific operational rules live in package-level `AGENTS.md` files.
 
 ### Testing Expectations
 - Any behavior/API change requires targeted tests in the matching package test suite
+- Always implement tests for new features in the same workstream; do not defer test coverage.
 - Prioritize regression coverage for rendering, escaping, lifecycle, editing flow, and layout behavior
 - Demo changes should not replace framework tests
 
@@ -121,7 +123,7 @@ cd demo && ../mvnw spring-boot:run
 - Core: `docs/core/01-components-htmltag-and-module-lifecycle.md`, `docs/core/02-layout-page-row-column-grid.md`, `docs/core/03-template-rendercontext-slotkey-reference.md`, `docs/core/04-rendering-pipeline-high-and-low-level.md`, `docs/core/05-css-defaults-overrides-and-structure.md`, `docs/core/06-shell-project-structure-and-asset-load-chain.md`
 - Patterns: `docs/patterns/01-static-page-serving-patterns.md`, `docs/patterns/02-dynamic-fragment-caching-patterns.md`, `docs/patterns/03-htmx-endpoint-and-swap-patterns.md`, `docs/patterns/04-editing-workflows-owner-user-approval.md`
 - Security: `docs/security/01-security-boundaries-and-safe-rendering.md`, `docs/security/02-authwrapper-authorizationchecker-integration.md`
-- Operations: `docs/operations/01-performance-threading-and-cache-lifecycles.md`, `docs/operations/02-testing-and-troubleshooting-playbook.md`
+- Operations: `docs/operations/01-performance-threading-and-cache-lifecycles.md`, `docs/operations/02-testing-and-troubleshooting-playbook.md`, `docs/operations/03-writing-tests-for-components-and-modules.md`
 - Reference: `docs/reference/components-and-modules-catalog.md`, `docs/reference/builders-shell-nav-banner-accountbar.md`, `docs/reference/editing-api-reference.md`
 
 ## Documentation Sync Requirement

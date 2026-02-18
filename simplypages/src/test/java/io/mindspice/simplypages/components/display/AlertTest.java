@@ -1,9 +1,8 @@
 package io.mindspice.simplypages.components.display;
 
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AlertTest {
 
@@ -12,8 +11,9 @@ class AlertTest {
     void testAlertTypes() {
         String html = Alert.success("Saved").render();
 
-        assertTrue(html.contains("class=\"alert alert-success\""));
-        assertTrue(html.contains("Saved"));
+        HtmlAssert.assertThat(html)
+            .hasElement("div.alert.alert-success")
+            .elementTextEquals("div.alert.alert-success", "Saved");
     }
 
     @Test
@@ -23,6 +23,8 @@ class AlertTest {
             .dismissible()
             .render();
 
-        assertTrue(html.contains("alert-dismissible"));
+        HtmlAssert.assertThat(html)
+            .hasElement("div.alert.alert-warning.alert-dismissible")
+            .elementTextEquals("div.alert.alert-warning.alert-dismissible", "Heads up");
     }
 }

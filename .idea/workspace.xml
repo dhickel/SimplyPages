@@ -7,21 +7,21 @@
     <list default="true" id="7458035e-2a44-4ace-b3c3-43ca67179f0a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/DemoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/DemoController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/deploy.sh" beforeDir="false" afterPath="$PROJECT_DIR$/deploy.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TEST_REMEDIATION_PLAN.md" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/INDEX.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/INDEX.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/core/05-css-defaults-overrides-and-structure.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/core/05-css-defaults-overrides-and-structure.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/fundamentals/03-css-fundamentals.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/fundamentals/03-css-fundamentals.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/patterns/01-static-page-serving-patterns.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/patterns/01-static-page-serving-patterns.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/patterns/03-htmx-endpoint-and-swap-patterns.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/patterns/03-htmx-endpoint-and-swap-patterns.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/reference/builders-shell-nav-banner-accountbar.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/reference/builders-shell-nav-banner-accountbar.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/ShellBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/ShellBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/resources/static/css/framework.css" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/resources/static/css/framework.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/resources/static/js/framework.js" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/resources/static/js/framework.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/builders/ShellBuilderTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/builders/ShellBuilderTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/operations/02-testing-and-troubleshooting-playbook.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/operations/02-testing-and-troubleshooting-playbook.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/AlertTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/AlertTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/BadgeTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/BadgeTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/CardGridTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/CardGridTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/InfoBoxTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/InfoBoxTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/LabelTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/LabelTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/OrderedListTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/OrderedListTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/ProgressBarTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/ProgressBarTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/SpinnerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/SpinnerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/TableTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/TableTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/TagTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/TagTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/UnorderedListTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/UnorderedListTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/testutil/StructuralAssertionPolicyTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/testutil/StructuralAssertionPolicyTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -80,6 +80,7 @@
       <recent name="$PROJECT_DIR$/demo/src/main/resources" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/.internal-dev/plans/test-remediation" />
       <recent name="$PROJECT_DIR$/.internal-dev/knowledge/.archive" />
       <recent name="$PROJECT_DIR$/.internal-dev/notes/.archive" />
       <recent name="$PROJECT_DIR$/.internal-dev/plans/slotkey-refactor" />
@@ -129,7 +130,7 @@
       <workItem from="1769593328611" duration="176000" />
       <workItem from="1770186191577" duration="1617000" />
       <workItem from="1770772139855" duration="599000" />
-      <workItem from="1771279453224" duration="21644000" />
+      <workItem from="1771279453224" duration="25382000" />
     </task>
     <servers />
   </component>
