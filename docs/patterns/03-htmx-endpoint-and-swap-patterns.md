@@ -40,6 +40,23 @@ Response body contains:
 - <div id="module-42" hx-swap-oob="true">...</div>
 ```
 
+## Pattern 4: Sticky Sidebar Nav + URL History
+
+Use this when a sticky table-of-contents or side menu navigates between documents using HTMX.
+
+```java
+Link.create("/docs/core/01-components-htmltag-and-module-lifecycle", "Components")
+    .withHxGet("/docs/core/01-components-htmltag-and-module-lifecycle")
+    .withHxTarget("#docs-content")
+    .withHxSwap("innerHTML show:window:top")
+    .withHxPushUrl(true);
+```
+
+Notes:
+1. `show:window:top` ensures the viewport returns to the top on each navigation.
+2. Keep in-document anchors (`#section-id`) as normal links for same-page jumps.
+3. SimplyPages also resets scroll for HTMX requests that push browser history (`hx-push-url`), so this pattern works even when navigation is initiated from reusable side-nav components.
+
 ## Endpoint Contracts
 
 1. Each endpoint owns one primary target contract.

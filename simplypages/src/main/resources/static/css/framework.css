@@ -1,3 +1,98 @@
+/*
+ * SimplyPages Framework CSS (Core Defaults)
+ *
+ * This file defines the baseline visual system for framework-generated HTML.
+ * Most users should NOT fork this file. Instead, keep this as the stable base
+ * and layer project-specific styles with `ShellBuilder.withCustomCss(...)`.
+ *
+ * Override strategy (recommended):
+ * 1) Override `:root` tokens first (colors, spacing, type scale).
+ * 2) Add app selectors in your own stylesheet for page/module-specific behavior.
+ * 3) Use inline styles in Java only for one-off runtime values.
+ *
+ * Load order in ShellBuilder:
+ * - /css/framework.css
+ * - your custom CSS from withCustomCss(...)
+ *
+ * Matching Java concepts:
+ * - ShellBuilder layout: `.main-container`, `.main-sidebar`, `.content-wrapper`
+ * - Layout package: `.container`, `.row`, `.col-*`, `.grid-*`
+ * - BannerBuilder: `.banner*` family
+ * - ContentModule / Rich content wrappers: `.content-module`, `.module-content`
+ * - Editing package: styles in "Editing System Styles" section
+ */
+
+/* ===== Theme Tokens =====
+ * Beginner note:
+ * CSS variables are read with var(--token-name). Change values here to retheme
+ * large parts of the framework without rewriting component selectors.
+ */
+:root {
+    /* Brand and semantic colors */
+    --sp-color-bg: #f5f7fa;
+    --sp-color-surface: #fff;
+    --sp-color-text-primary: #333;
+    --sp-color-text-secondary: #4a5568;
+    --sp-color-heading: #2c3e50;
+    --sp-color-border: #e2e8f0;
+    --sp-color-border-soft: #e1e8ed;
+    --sp-color-primary: #4299e1;
+    --sp-color-primary-hover: #3182ce;
+    --sp-color-secondary: #718096;
+    --sp-color-secondary-hover: #4a5568;
+    --sp-color-success: #48bb78;
+    --sp-color-success-hover: #38a169;
+    --sp-color-danger: #f56565;
+    --sp-color-danger-hover: #e53e3e;
+    --sp-color-warning: #ed8936;
+    --sp-color-warning-hover: #dd6b20;
+    --sp-color-info: #4299e1;
+    --sp-color-info-hover: #3182ce;
+
+    /* Typography */
+    --sp-font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --sp-font-size-base: 1rem;
+    --sp-line-height-base: 1.6;
+    --sp-line-height-heading: 1.2;
+    --sp-heading-weight: 600;
+    --sp-h1-size: 2.5rem;
+    --sp-h2-size: 2rem;
+    --sp-h3-size: 1.75rem;
+    --sp-h4-size: 1.5rem;
+    --sp-h5-size: 1.25rem;
+    --sp-h6-size: 1rem;
+
+    /* Spacing scale */
+    --sp-space-1: 0.25rem;
+    --sp-space-2: 0.5rem;
+    --sp-space-3: 0.75rem;
+    --sp-space-4: 1rem;
+    --sp-space-5: 1.25rem;
+    --sp-space-6: 1.5rem;
+    --sp-space-7: 1.875rem;
+    --sp-space-8: 2rem;
+    --sp-space-xs: 10px;
+    --sp-space-sm: 15px;
+    --sp-space-md: 20px;
+    --sp-space-lg: 30px;
+
+    /* Radius and shadow */
+    --sp-radius-sm: 3px;
+    --sp-radius-md: 4px;
+    --sp-radius-lg: 8px;
+    --sp-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --sp-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --sp-shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.15);
+
+    /* Layout and motion */
+    --sp-sidebar-width: 250px;
+    --sp-sidebar-collapsed-width: 60px;
+    --sp-content-max-width: 1400px;
+    --sp-transition-fast: 0.2s;
+    --sp-transition-base: 0.3s;
+    --sp-ease-standard: ease;
+}
+
 /* ===== Reset & Base Styles ===== */
 * {
     box-sizing: border-box;
@@ -6,26 +101,27 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: var(--sp-font-family-base);
+    font-size: var(--sp-font-size-base);
     margin: 0;
-    background-color: #f5f7fa;
-    color: #333;
-    line-height: 1.6;
+    background-color: var(--sp-color-bg);
+    color: var(--sp-color-text-primary);
+    line-height: var(--sp-line-height-base);
 }
 
 /* ===== Layout System ===== */
 .main-container {
     display: grid;
     grid-template-areas: "sidebar content";
-    grid-template-columns: 250px 1fr;
+    grid-template-columns: var(--sp-sidebar-width) 1fr;
     min-height: calc(100vh - 60px);
 }
 
 .main-header {
-    background-color: #fff;
-    padding: 15px 30px;
-    border-bottom: 2px solid #e1e8ed;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background-color: var(--sp-color-surface);
+    padding: var(--sp-space-sm) var(--sp-space-lg);
+    border-bottom: 2px solid var(--sp-color-border-soft);
+    box-shadow: var(--sp-shadow-sm);
 }
 
 /* Remove padding from main-header when using styled banner */
@@ -37,22 +133,22 @@ body {
 
 .main-sidebar {
     grid-area: sidebar;
-    background-color: #2c3e50;
-    padding: 20px 0;
+    background-color: var(--sp-color-heading);
+    padding: var(--sp-space-md) 0;
     overflow-y: auto;
 }
 
 .content-wrapper {
     grid-area: content;
-    padding: 30px;
+    padding: var(--sp-space-lg);
     overflow-y: auto;
 }
 
 #content-area {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    background-color: var(--sp-color-surface);
+    padding: var(--sp-space-lg);
+    border-radius: var(--sp-radius-lg);
+    box-shadow: var(--sp-shadow-md);
     min-height: 400px;
 }
 
@@ -60,7 +156,7 @@ body {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 15px;
+    padding: 0 var(--sp-space-sm);
 }
 
 .container-sm { max-width: 720px; }
@@ -73,13 +169,13 @@ body {
 .row {
     display: flex;
     flex-wrap: wrap;
-    margin: 0 -15px;
-    margin-bottom: 20px;
+    margin: 0 calc(-1 * var(--sp-space-sm));
+    margin-bottom: var(--sp-space-md);
 }
 
 .col {
     flex: 1;
-    padding: 0 15px;
+    padding: 0 var(--sp-space-sm);
 }
 
 .col-1 { flex: 0 0 8.333333%; max-width: 8.333333%; }
@@ -100,7 +196,7 @@ body {
 /* Grid Layout */
 .grid {
     display: grid;
-    gap: 20px;
+    gap: var(--sp-space-md);
 }
 
 .grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
@@ -111,24 +207,24 @@ body {
 .grid-cols-6 { grid-template-columns: repeat(6, 1fr); }
 
 /* Gap utilities */
-.gap-sm { gap: 10px; }
-.gap-medium { gap: 20px; }
-.gap-lg { gap: 30px; }
+.gap-sm { gap: var(--sp-space-xs); }
+.gap-medium { gap: var(--sp-space-md); }
+.gap-lg { gap: var(--sp-space-lg); }
 
 /* ===== Typography ===== */
 h1, h2, h3, h4, h5, h6 {
-    color: #2c3e50;
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-    line-height: 1.2;
+    color: var(--sp-color-heading);
+    font-weight: var(--sp-heading-weight);
+    margin-bottom: var(--sp-space-3);
+    line-height: var(--sp-line-height-heading);
 }
 
-h1 { font-size: 2.5rem; }
-h2 { font-size: 2rem; }
-h3 { font-size: 1.75rem; }
-h4 { font-size: 1.5rem; }
-h5 { font-size: 1.25rem; }
-h6 { font-size: 1rem; }
+h1 { font-size: var(--sp-h1-size); }
+h2 { font-size: var(--sp-h2-size); }
+h3 { font-size: var(--sp-h3-size); }
+h4 { font-size: var(--sp-h4-size); }
+h5 { font-size: var(--sp-h5-size); }
+h6 { font-size: var(--sp-h6-size); }
 
 p { margin-bottom: 1rem; }
 
@@ -138,32 +234,32 @@ p { margin-bottom: 1rem; }
 }
 
 .form-field {
-    margin-bottom: 20px;
+    margin-bottom: var(--sp-space-md);
 }
 
 .form-label {
     display: block;
     margin-bottom: 5px;
     font-weight: 500;
-    color: #4a5568;
+    color: var(--sp-color-text-secondary);
 }
 
 .form-input,
 .form-textarea,
 .form-select {
     width: 100%;
-    padding: 10px 15px;
+    padding: var(--sp-space-xs) var(--sp-space-sm);
     border: 1px solid #cbd5e0;
-    border-radius: 4px;
+    border-radius: var(--sp-radius-md);
     font-size: 1rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color var(--sp-transition-fast), box-shadow var(--sp-transition-fast);
 }
 
 .form-input:focus,
 .form-textarea:focus,
 .form-select:focus {
     outline: none;
-    border-color: #4299e1;
+    border-color: var(--sp-color-primary);
     box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
 }
 
@@ -203,72 +299,86 @@ p { margin-bottom: 1rem; }
 /* Buttons */
 .btn {
     display: inline-block;
-    padding: 10px 20px;
+    padding: var(--sp-space-xs) var(--sp-space-md);
     border: none;
-    border-radius: 4px;
+    border-radius: var(--sp-radius-md);
     font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--sp-transition-fast);
     text-decoration: none;
     text-align: center;
 }
 
 .btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: var(--sp-shadow-lg);
 }
 
 .btn:active {
     transform: translateY(0);
 }
 
-.btn-primary { background-color: #4299e1; color: white; }
-.btn-primary:hover { background-color: #3182ce; }
+.btn-primary { background-color: var(--sp-color-primary); color: white; }
+.btn-primary:hover { background-color: var(--sp-color-primary-hover); }
 
-.btn-secondary { background-color: #718096; color: white; }
-.btn-secondary:hover { background-color: #4a5568; }
+.btn-secondary { background-color: var(--sp-color-secondary); color: white; }
+.btn-secondary:hover { background-color: var(--sp-color-secondary-hover); }
 
-.btn-success { background-color: #48bb78; color: white; }
-.btn-success:hover { background-color: #38a169; }
+.btn-success { background-color: var(--sp-color-success); color: white; }
+.btn-success:hover { background-color: var(--sp-color-success-hover); }
 
-.btn-danger { background-color: #f56565; color: white; }
-.btn-danger:hover { background-color: #e53e3e; }
+.btn-danger { background-color: var(--sp-color-danger); color: white; }
+.btn-danger:hover { background-color: var(--sp-color-danger-hover); }
 
-.btn-warning { background-color: #ed8936; color: white; }
-.btn-warning:hover { background-color: #dd6b20; }
+.btn-warning { background-color: var(--sp-color-warning); color: white; }
+.btn-warning:hover { background-color: var(--sp-color-warning-hover); }
 
-.btn-info { background-color: #4299e1; color: white; }
-.btn-info:hover { background-color: #3182ce; }
+.btn-info { background-color: var(--sp-color-info); color: white; }
+.btn-info:hover { background-color: var(--sp-color-info-hover); }
 
-.btn-link { background: none; color: #4299e1; text-decoration: underline; }
+.btn-link { background: none; color: var(--sp-color-primary); text-decoration: underline; }
 
 .btn-sm { padding: 6px 12px; font-size: 0.875rem; }
 .btn-lg { padding: 14px 28px; font-size: 1.125rem; }
 .btn-full-width { width: 100%; }
 
 /* ===== Tables ===== */
-.table {
+/* Tables are used by:
+ * - `.table` utility class in hand-authored markup
+ * - markdown-rendered `<table>` inside ContentModule/Rich content wrappers
+ * We style both through a shared selector set so markdown tables inherit the
+ * same baseline visuals as explicit `.table` usage.
+ */
+:is(.table, .content-module table, .module-content table) {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
+    margin-bottom: var(--sp-space-md);
 }
 
-.table th,
-.table td {
-    padding: 12px 15px;
+:is(.table, .content-module table, .module-content table) th,
+:is(.table, .content-module table, .module-content table) td {
+    padding: 12px var(--sp-space-sm);
     text-align: left;
 }
 
-.table thead th {
+/* Markdown tables were historically always bordered.
+ * Keep that behavior for render compatibility while `.table` stays lighter.
+ */
+:is(.content-module table, .module-content table) th,
+:is(.content-module table, .module-content table) td {
+    border: 1px solid var(--sp-color-border);
+}
+
+:is(.table, .content-module table, .module-content table) thead th {
     background-color: #f7fafc;
     font-weight: 600;
     color: #2d3748;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid var(--sp-color-border);
 }
 
-.table tbody tr {
-    border-bottom: 1px solid #e2e8f0;
+:is(.table, .content-module table, .module-content table) tbody tr {
+    border-bottom: 1px solid var(--sp-color-border);
 }
 
 .table-striped tbody tr:nth-child(odd) {
@@ -276,111 +386,80 @@ p { margin-bottom: 1rem; }
 }
 
 .table-bordered {
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--sp-color-border);
 }
 
 .table-bordered th,
 .table-bordered td {
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--sp-color-border);
 }
 
 .table-hover tbody tr:hover {
     background-color: #edf2f7;
 }
 
-/* Markdown-generated tables need .table class styling applied */
-.content-module table,
-.module-content table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-}
-
-.content-module table th,
-.content-module table td,
-.module-content table th,
-.module-content table td {
-    padding: 12px 15px;
-    text-align: left;
-    border: 1px solid #e2e8f0;
-}
-
-.content-module table thead th,
-.module-content table thead th {
-    background-color: #f7fafc;
-    font-weight: 600;
-    color: #2d3748;
-    border-bottom: 2px solid #e2e8f0;
-}
-
-.content-module table tbody tr,
-.module-content table tbody tr {
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.content-module table tbody tr:nth-child(even),
-.module-content table tbody tr:nth-child(even) {
+/* Keep historical markdown striping parity (even rows). */
+:is(.content-module table, .module-content table) tbody tr:nth-child(even) {
     background-color: #f7fafc;
 }
 
 /* ===== Markdown Content Styling ===== */
+/* This section applies only inside framework rich text wrappers.
+ * Most rules are scoped so generic page typography is not unexpectedly changed.
+ */
+:is(.content-module, .module-content) {
+    --sp-markdown-link: #3182ce;
+    --sp-markdown-link-hover: #2c5282;
+}
 
 /* Blockquotes */
-.content-module blockquote,
-.module-content blockquote {
+:is(.content-module, .module-content) blockquote {
     margin: 1.5em 0;
     padding: 0.75em 1.25em;
-    border-left: 4px solid #4299e1;
+    border-left: 4px solid var(--sp-color-primary);
     background-color: #ebf8ff;
     color: #2c5282;
     font-style: italic;
 }
 
-.content-module blockquote p,
-.module-content blockquote p {
+:is(.content-module, .module-content) blockquote p {
     margin: 0.5em 0;
 }
 
-.content-module blockquote p:first-child,
-.module-content blockquote p:first-child {
+:is(.content-module, .module-content) blockquote p:first-child {
     margin-top: 0;
 }
 
-.content-module blockquote p:last-child,
-.module-content blockquote p:last-child {
+:is(.content-module, .module-content) blockquote p:last-child {
     margin-bottom: 0;
 }
 
 /* Headings in markdown content */
-.content-module h1,
-.module-content h1 {
+:is(.content-module, .module-content) h1 {
     font-size: 2em;
     font-weight: 700;
     margin-top: 1.5em;
     margin-bottom: 0.75em;
     color: #1a202c;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid var(--sp-color-border);
     padding-bottom: 0.3em;
 }
 
-.content-module h1:first-child,
-.module-content h1:first-child {
+:is(.content-module, .module-content) h1:first-child {
     margin-top: 0;
 }
 
-.content-module h2,
-.module-content h2 {
+:is(.content-module, .module-content) h2 {
     font-size: 1.5em;
     font-weight: 600;
     margin-top: 1.5em;
     margin-bottom: 0.75em;
     color: #2d3748;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--sp-color-border);
     padding-bottom: 0.3em;
 }
 
-.content-module h3,
-.module-content h3 {
+:is(.content-module, .module-content) h3 {
     font-size: 1.25em;
     font-weight: 600;
     margin-top: 1.25em;
@@ -388,8 +467,7 @@ p { margin-bottom: 1rem; }
     color: #2d3748;
 }
 
-.content-module h4,
-.module-content h4 {
+:is(.content-module, .module-content) h4 {
     font-size: 1.1em;
     font-weight: 600;
     margin-top: 1em;
@@ -397,8 +475,7 @@ p { margin-bottom: 1rem; }
     color: #4a5568;
 }
 
-.content-module h5,
-.module-content h5 {
+:is(.content-module, .module-content) h5 {
     font-size: 1em;
     font-weight: 600;
     margin-top: 1em;
@@ -406,8 +483,7 @@ p { margin-bottom: 1rem; }
     color: #4a5568;
 }
 
-.content-module h6,
-.module-content h6 {
+:is(.content-module, .module-content) h6 {
     font-size: 0.9em;
     font-weight: 600;
     margin-top: 1em;
@@ -416,81 +492,64 @@ p { margin-bottom: 1rem; }
 }
 
 /* Paragraphs */
-.content-module p,
-.module-content p {
+:is(.content-module, .module-content) p {
     margin: 1em 0;
     line-height: 1.7;
 }
 
 /* Lists */
-.content-module ul,
-.module-content ul {
+:is(.content-module, .module-content) ul {
     margin: 1em 0;
     padding-left: 2em;
     list-style-type: disc;
 }
 
-.content-module ol,
-.module-content ol {
+:is(.content-module, .module-content) ol {
     margin: 1em 0;
     padding-left: 2em;
     list-style-type: decimal;
 }
 
-.content-module li,
-.module-content li {
+:is(.content-module, .module-content) li {
     margin: 0.5em 0;
     line-height: 1.6;
 }
 
 /* Nested lists */
-.content-module ul ul,
-.module-content ul ul,
-.content-module ol ol,
-.module-content ol ol,
-.content-module ul ol,
-.module-content ul ol,
-.content-module ol ul,
-.module-content ol ul {
+:is(.content-module, .module-content) :is(ul ul, ol ol, ul ol, ol ul) {
     margin: 0.25em 0;
 }
 
-.content-module ul ul,
-.module-content ul ul {
+:is(.content-module, .module-content) ul ul {
     list-style-type: circle;
 }
 
-.content-module ul ul ul,
-.module-content ul ul ul {
+:is(.content-module, .module-content) ul ul ul {
     list-style-type: square;
 }
 
 /* Horizontal rules */
-.content-module hr,
-.module-content hr {
+:is(.content-module, .module-content) hr {
     margin: 2em 0;
     border: none;
-    border-top: 2px solid #e2e8f0;
+    border-top: 2px solid var(--sp-color-border);
 }
 
 /* Links */
-.content-module a,
-.module-content a {
-    color: #3182ce;
+:is(.content-module, .module-content) a {
+    color: var(--sp-markdown-link);
     text-decoration: none;
     border-bottom: 1px solid transparent;
     transition: border-color 0.2s;
 }
 
-.content-module a:hover,
-.module-content a:hover {
-    color: #2c5282;
-    border-bottom-color: #2c5282;
+:is(.content-module, .module-content) a:hover {
+    color: var(--sp-markdown-link-hover);
+    border-bottom-color: var(--sp-markdown-link-hover);
 }
 
 /* Images */
-.content-module img,
-.module-content img {
+:is(.content-module, .module-content) img {
     max-width: 100%;
     height: auto;
     margin: 1em 0;
@@ -498,20 +557,17 @@ p { margin-bottom: 1rem; }
 }
 
 /* Strong and emphasis */
-.content-module strong,
-.module-content strong {
+:is(.content-module, .module-content) strong {
     font-weight: 600;
     color: #2d3748;
 }
 
-.content-module em,
-.module-content em {
+:is(.content-module, .module-content) em {
     font-style: italic;
 }
 
 /* Inline code */
-.content-module code,
-.module-content code {
+:is(.content-module, .module-content) code {
     background-color: #f7fafc;
     color: #e53e3e;
     padding: 0.2em 0.4em;
@@ -521,8 +577,7 @@ p { margin-bottom: 1rem; }
 }
 
 /* Code blocks override inline code styling */
-.content-module pre code,
-.module-content pre code {
+:is(.content-module, .module-content) pre code {
     background-color: transparent;
     color: inherit;
     padding: 0;
@@ -530,8 +585,7 @@ p { margin-bottom: 1rem; }
 }
 
 /* Pre-formatted text / code blocks */
-.content-module pre,
-.module-content pre {
+:is(.content-module, .module-content) pre {
     background-color: #2d3748;
     color: #e2e8f0;
     padding: 1em;
@@ -542,19 +596,16 @@ p { margin-bottom: 1rem; }
 }
 
 /* Definition lists */
-.content-module dl,
-.module-content dl {
+:is(.content-module, .module-content) dl {
     margin: 1em 0;
 }
 
-.content-module dt,
-.module-content dt {
+:is(.content-module, .module-content) dt {
     font-weight: 600;
     margin-top: 1em;
 }
 
-.content-module dd,
-.module-content dd {
+:is(.content-module, .module-content) dd {
     margin-left: 2em;
     margin-bottom: 0.5em;
 }
@@ -992,6 +1043,10 @@ pre::-webkit-scrollbar-thumb:hover {
 .font-semibold { font-weight: 600; }
 .font-bold { font-weight: 700; }
 
+/* Legacy size aliases retained for backwards compatibility.
+ * Prefer scale utilities in "Spacing Utilities" (`.p-1`..`.p-6`, `.m-1`..`.m-6`)
+ * for new code.
+ */
 .p-sm { padding: 10px; }
 .p-medium { padding: 20px; }
 .p-lg { padding: 30px; }
@@ -1034,11 +1089,15 @@ img {
 }
 
 /* ===== Banner (New Flexible System) ===== */
-.banner {
-    background-color: #fff;
-    padding: 20px 30px;
-    border-bottom: 2px solid #e1e8ed;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+/* BannerBuilder maps directly to `.banner*` selectors in this section.
+ * Legacy `.top-banner*` selectors are retained as compatibility aliases.
+ */
+.banner,
+.top-banner {
+    background-color: var(--sp-color-surface);
+    padding: var(--sp-space-md) var(--sp-space-lg);
+    border-bottom: 2px solid var(--sp-color-border-soft);
+    box-shadow: var(--sp-shadow-sm);
     position: relative;
 }
 
@@ -1049,35 +1108,41 @@ img {
     text-align: center;
 }
 
+.banner-full-width .banner-title,
 .banner-full-width .top-banner-title {
     font-size: 2rem;
     margin-bottom: 8px;
 }
 
+.banner-full-width .banner-subtitle,
 .banner-full-width .top-banner-subtitle {
     font-size: 1rem;
     opacity: 0.9;
 }
 
-.banner-content {
-    max-width: 1400px;
+.banner-content,
+.top-banner-content {
+    max-width: var(--sp-content-max-width);
     margin: 0 auto;
 }
 
 /* Horizontal layout (image + text side by side) */
-.banner-horizontal .banner-content {
+.banner-horizontal .banner-content,
+.banner-horizontal .top-banner-content {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: var(--sp-space-md);
 }
 
-.banner-horizontal .banner-image {
+.banner-horizontal .banner-image,
+.banner-horizontal .top-banner-image {
     max-height: 60px;
     width: auto;
     object-fit: contain;
 }
 
-.banner-horizontal .banner-text {
+.banner-horizontal .banner-text,
+.banner-horizontal .top-banner-text {
     flex: 1;
 }
 
@@ -1129,68 +1194,25 @@ img {
 
 .banner-image-overlay .banner-text {
     background-color: rgba(255, 255, 255, 0.9);
-    padding: 20px 30px;
-    border-radius: 8px;
+    padding: var(--sp-space-md) var(--sp-space-lg);
+    border-radius: var(--sp-radius-lg);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Banner typography */
-.banner-title {
-    margin: 0;
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #2c3e50;
-}
-
-.banner-subtitle {
-    margin: 5px 0 0 0;
-    font-size: 0.875rem;
-    color: #718096;
-}
-
-/* Legacy support for old TopBannerBuilder */
-.top-banner {
-    background-color: #fff;
-    padding: 20px 30px;
-    border-bottom: 2px solid #e1e8ed;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-/* Full-width banner overrides */
-.top-banner.banner-full-width {
-    padding: 30px;
-    border-bottom: none;
-}
-
-.top-banner-content {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-.top-banner-image {
-    max-height: 60px;
-    width: auto;
-    object-fit: contain;
-}
-
-.top-banner-text {
-    flex: 1;
-}
-
+.banner-title,
 .top-banner-title {
     margin: 0;
     font-size: 1.75rem;
     font-weight: 700;
-    color: #2c3e50;
+    color: var(--sp-color-heading);
 }
 
+.banner-subtitle,
 .top-banner-subtitle {
     margin: 5px 0 0 0;
     font-size: 0.875rem;
-    color: #718096;
+    color: var(--sp-color-secondary);
 }
 
 /* ===== Account Bar ===== */
@@ -1523,7 +1545,7 @@ img {
 }
 
 .main-sidebar.collapsible.collapsed {
-    width: 60px;
+    width: var(--sp-sidebar-collapsed-width);
 }
 
 .main-sidebar.collapsible.collapsed .sidenav-item {
@@ -1540,7 +1562,7 @@ img {
 }
 
 .main-container.sidebar-collapsed {
-    grid-template-columns: 60px 1fr;
+    grid-template-columns: var(--sp-sidebar-collapsed-width) 1fr;
 }
 
 /* ===== Responsive Design ===== */
@@ -1555,10 +1577,10 @@ img {
 
     .main-sidebar {
         position: fixed;
-        left: -250px;
+        left: calc(-1 * var(--sp-sidebar-width));
         top: 0;
         bottom: 0;
-        width: 250px;
+        width: var(--sp-sidebar-width);
         z-index: 1000;
         transition: left 0.3s ease;
     }
@@ -1569,9 +1591,10 @@ img {
     }
 
     .main-container.sidebar-collapsed .main-sidebar {
-        left: -250px;
+        left: calc(-1 * var(--sp-sidebar-width));
     }
 
+    .banner-content,
     .top-banner-content {
         flex-direction: column;
         text-align: center;
@@ -1624,11 +1647,13 @@ img {
 
 /* Mobile phones */
 @media (max-width: 480px) {
-    .top-banner, .banner {
+    .banner,
+    .top-banner {
         padding: 15px 20px;
     }
 
-    .top-banner-title, .banner-title {
+    .banner-title,
+    .top-banner-title {
         font-size: 1.5rem;
     }
 

@@ -106,8 +106,31 @@ function handleCallout(button) {
     }
 }
 
-// HTMX specific handling (only for history/scroll, components work automatically now)
-document.body.addEventListener('htmx:afterSwap', function(event) {
-    // Scroll to top on navigation
-    window.scrollTo({top: 0, behavior: 'instant'});
+// HTMX history navigation should reset the window scroll position.
+// This keeps sidebar-driven page-to-page navigation predictable while avoiding
+// scroll jumps for non-navigation fragment updates.
+document.body.addEventListener('htmx:afterSettle', function(event) {
+    const requestConfig = event.detail && event.detail.requestConfig;
+    if (!requestConfig) {
+        return;
+    }
+
+    const sourceElement = requestConfig.elt instanceof Element ? requestConfig.elt : null;
+    const pushUrlAttr = sourceElement ? sourceElement.getAttribute('hx-push-url') : null;
+    const normalizedPushUrlAttr = pushUrlAttr == null ? null : pushUrlAttr.trim().toLowerCase();
+    const pushesUrlViaAttr = normalizedPushUrlAttr === ''
+        || normalizedPushUrlAttr === 'true'
+        || (normalizedPushUrlAttr != null && normalizedPushUrlAttr !== 'false');
+
+    const pushUrlRequest = requestConfig.pushURL;
+    const pushesUrlViaRequest = pushUrlRequest === true
+        || (typeof pushUrlRequest === 'string'
+            && pushUrlRequest.trim() !== ''
+            && pushUrlRequest.trim().toLowerCase() !== 'false');
+
+    if (!pushesUrlViaAttr && !pushesUrlViaRequest) {
+        return;
+    }
+
+    window.scrollTo({top: 0, left: 0, behavior: 'auto'});
 });

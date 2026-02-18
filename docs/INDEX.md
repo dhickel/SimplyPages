@@ -24,6 +24,7 @@ This page is the table of contents for all framework documentation.
 - [Template, RenderContext, and SlotKey Reference](core/03-template-rendercontext-slotkey-reference.md)
 - [Rendering Pipeline: High and Low Level](core/04-rendering-pipeline-high-and-low-level.md)
 - [CSS: Defaults, Overrides, and Structure](core/05-css-defaults-overrides-and-structure.md)
+- [Shell Project Structure and Asset Load Chain](core/06-shell-project-structure-and-asset-load-chain.md)
 
 ## Patterns
 

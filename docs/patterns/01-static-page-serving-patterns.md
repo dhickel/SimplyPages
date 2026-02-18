@@ -1,4 +1,4 @@
-[Previous](../core/05-css-defaults-overrides-and-structure.md) | [Index](../INDEX.md)
+[Previous](../core/06-shell-project-structure-and-asset-load-chain.md) | [Index](../INDEX.md)
 
 # Static Page Serving Patterns
 

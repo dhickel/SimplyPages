@@ -2,7 +2,7 @@
 
 # CSS: Defaults, Overrides, and Structure
 
-This guide answers how CSS is handled in SimplyPages and where your application CSS should live.
+This guide explains how to customize SimplyPages styling safely without forking framework CSS.
 
 ## Where Default CSS Comes From
 
@@ -14,33 +14,58 @@ It is included by `ShellBuilder` in generated HTML as:
 
 - `<link rel="stylesheet" href="/css/framework.css">`
 
-## How CSS Is Loaded in ShellBuilder
+## ShellBuilder CSS Controls
+
+Use `ShellBuilder` to control the stylesheet chain:
+
+- `withFrameworkCss(boolean)` toggles framework CSS on/off.
+- `withFrameworkCssPath(String)` replaces the framework CSS href.
+- `withCustomCss(String)` sets one custom stylesheet.
+- `withCustomCss(List<String>)` sets an ordered list of custom stylesheets.
+- `addCustomCss(String)` appends one custom stylesheet.
+
+## CSS Load Order
 
 `ShellBuilder.build()` loads styles in this order:
 
-1. `/css/framework.css` (framework defaults)
-2. your custom stylesheet from `withCustomCss(...)` (if set)
+1. framework CSS (default `/css/framework.css`, or `withFrameworkCssPath(...)`)
+2. custom stylesheets in configured order
 
-That order means your custom stylesheet can override framework rules when selectors have equal or higher specificity.
+If `withFrameworkCss(false)` is set, only custom stylesheets are included.
+
+## Shared Framework Tokens
+
+`framework.css` exposes shared `:root` variables with `--sp-*` names. Start customization by overriding these in your app CSS:
+
+```css
+:root {
+  --sp-color-primary: #0f766e;
+  --sp-color-primary-hover: #115e59;
+  --sp-space-md: 24px;
+  --sp-radius-lg: 12px;
+}
+```
+
+This keeps framework component selectors intact while changing theme globally.
 
 ## Where You Put Your App CSS
 
-For Spring Boot users, place app CSS in your app resources, typically:
+For Spring Boot applications, place app CSS in:
 
 - `src/main/resources/static/css/app.css` (global app CSS)
 - `src/main/resources/static/css/pages/<page-name>.css` (page-specific CSS)
 - `src/main/resources/static/css/modules/<module-name>.css` (module-specific CSS)
 
-Then reference it through shell configuration:
+Reference one or many files through `ShellBuilder`:
 
 ```java
 String html = ShellBuilder.create()
     .withPageTitle("Portal")
     .withCustomCss("/css/app.css")
+    .addCustomCss("/css/pages/analytics.css")
+    .addCustomCss("/css/modules/sales-summary.css")
     .build();
 ```
-
-If you need multiple CSS files, use one aggregated app stylesheet that `@import`s others, or generate shell manually and add additional `<link>` tags.
 
 ## Cross-App CSS vs Page CSS vs Module CSS
 
@@ -59,7 +84,7 @@ Load order strategy:
 
 Later files win on equal specificity.
 
-## How to Target Pages and Modules
+## How to Target Pages and Modules Safely
 
 Use stable IDs/classes from your components and modules.
 
@@ -90,7 +115,7 @@ Then in CSS:
 }
 ```
 
-## How Overrides Work (Important)
+## Override and Precedence Rules
 
 CSS precedence in practical terms:
 
@@ -103,27 +128,39 @@ In SimplyPages code:
 - `.withClass(...)` / `.addClass(...)` adds classes for stylesheet-driven control.
 - `.addStyle(...)` and size helpers (`withWidth`, `withMaxWidth`, `withMinWidth`) write inline style.
 
-Use inline style sparingly. Prefer class-based styles in your CSS files for maintainability.
+Use inline style sparingly for runtime-calculated values.
 
-## Do Users Override in Code or CSS Files?
+## Should You Edit `framework.css` Directly?
 
-Use both, but default to CSS files.
+Default answer: no.
 
-- Use code-level style for one-off runtime values.
-- Use CSS files for system-wide, page-wide, and module-wide styling.
+- Preferred: override `--sp-*` tokens and layer app selectors in your own CSS files.
+- Edit framework `framework.css` directly only when contributing upstream framework defaults.
+- If you fork framework CSS in an app, expect manual merge work on framework upgrades.
 
 ## Minimal Practical Setup
 
 1. Keep framework defaults enabled.
-2. Add `/css/app.css` using `withCustomCss(...)`.
+2. Add `/css/app.css` using `withCustomCss(...)` or `withCustomCss(List<String>)`.
 3. Namespace page styles under a page root ID.
 4. Namespace module styles under module IDs/classes.
 5. Keep overrides in CSS, not scattered inline styles.
 
-## Request Mechanics
+## Advanced Mode: No Framework CSS
 
-No additional HTTP behavior is needed beyond static resource serving.
+You can disable framework CSS:
 
-- Browser requests HTML.
-- Browser requests linked CSS files.
-- CSS cascade resolves final visual output.
+```java
+String html = ShellBuilder.create()
+    .withFrameworkCss(false)
+    .withCustomCss("/css/app.css")
+    .build();
+```
+
+This is supported for advanced integrations. Without replacement styles, many built-in components may appear visually broken because they rely on framework class styling.
+
+## Next Reading
+
+For internals and behind-the-scenes load behavior, read:
+
+- `docs/core/06-shell-project-structure-and-asset-load-chain.md`

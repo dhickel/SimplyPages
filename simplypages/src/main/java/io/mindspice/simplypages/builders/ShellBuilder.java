@@ -4,6 +4,10 @@ import io.mindspice.simplypages.components.navigation.SideNav;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
  * Comprehensive builder for creating the entire application shell/layout.
  * Supports top banner, account bar, side navigation, and main content area.
@@ -44,7 +48,9 @@ public class ShellBuilder {
     private String contentTarget = "content-area";
     private String pageTitle = "Application";
     private boolean includeHtmx = true;
-    private String customCss;
+    private boolean includeFrameworkCss = true;
+    private String frameworkCssPath = "/css/framework.css";
+    private final Set<String> customCssPaths = new LinkedHashSet<>();
 
     private ShellBuilder() {}
 
@@ -121,7 +127,46 @@ public class ShellBuilder {
      * Add custom CSS file path.
      */
     public ShellBuilder withCustomCss(String cssPath) {
-        this.customCss = cssPath;
+        this.customCssPaths.clear();
+        this.customCssPaths.add(requireCssPath(cssPath, "cssPath"));
+        return this;
+    }
+
+    /**
+     * Replace all custom CSS paths with the provided ordered list.
+     */
+    public ShellBuilder withCustomCss(List<String> cssPaths) {
+        if (cssPaths == null) {
+            throw new IllegalArgumentException("cssPaths cannot be null");
+        }
+        this.customCssPaths.clear();
+        for (String cssPath : cssPaths) {
+            this.customCssPaths.add(requireCssPath(cssPath, "cssPaths entry"));
+        }
+        return this;
+    }
+
+    /**
+     * Append an additional custom CSS file path.
+     */
+    public ShellBuilder addCustomCss(String cssPath) {
+        this.customCssPaths.add(requireCssPath(cssPath, "cssPath"));
+        return this;
+    }
+
+    /**
+     * Enable/disable framework CSS inclusion.
+     */
+    public ShellBuilder withFrameworkCss(boolean include) {
+        this.includeFrameworkCss = include;
+        return this;
+    }
+
+    /**
+     * Set framework CSS path used when framework CSS is enabled.
+     */
+    public ShellBuilder withFrameworkCssPath(String cssPath) {
+        this.frameworkCssPath = requireCssPath(cssPath, "cssPath");
         return this;
     }
 
@@ -136,14 +181,18 @@ public class ShellBuilder {
             .withChild(new HtmlTag("meta", true).withAttribute("charset", "UTF-8"))
             .withChild(new HtmlTag("meta", true).withAttribute("name", "viewport")
                 .withAttribute("content", "width=device-width, initial-scale=1.0"))
-            .withChild(new HtmlTag("title").withInnerText(pageTitle))
-            .withChild(new HtmlTag("link", true).withAttribute("rel", "stylesheet")
-                .withAttribute("href", "/css/framework.css"));
+            .withChild(new HtmlTag("title").withInnerText(pageTitle));
 
-        if (customCss != null) {
+        if (includeFrameworkCss) {
             head.withChild(new HtmlTag("link", true).withAttribute("rel", "stylesheet")
-                .withAttribute("href", customCss));
+                .withAttribute("href", frameworkCssPath));
         }
+
+        for (String customCssPath : customCssPaths) {
+            head.withChild(new HtmlTag("link", true).withAttribute("rel", "stylesheet")
+                .withAttribute("href", customCssPath));
+        }
+
         if (includeHtmx) {
             head.withChild(new HtmlTag("script")
                 .withAttribute("src", "/webjars/htmx.org/dist/htmx.min.js")
@@ -282,5 +331,12 @@ public class ShellBuilder {
             asideClass += " collapsible";
         }
         return asideClass;
+    }
+
+    private String requireCssPath(String cssPath, String fieldName) {
+        if (cssPath == null || cssPath.isBlank()) {
+            throw new IllegalArgumentException(fieldName + " cannot be null or blank");
+        }
+        return cssPath;
     }
 }

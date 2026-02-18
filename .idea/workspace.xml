@@ -8,50 +8,20 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/AGENTS.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/pages/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/pages/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/ADVANCED_RENDERING.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/RENDERING_REFACTOR.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/SLOTKEY_MIGRATION_GUIDE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/advanced/01-state-management.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/advanced/05-security-best-practices.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/advanced/06-gotchas.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/advanced/rendering-patterns.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/examples/live-dashboard.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/examples/wiki-style-editing.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/01-introduction.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/02-core-concepts.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/03-custom-components.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/04-custom-modules.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/05-pages-and-layouts.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/06-shell-configuration.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/07-css-and-styling.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/08-forms.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/09-htmx-dynamic-features.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/10-forum-tutorial.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/11-spring-integration.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/12-security.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/13-templates-and-dynamic-updates.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/14-shells-and-navigation.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/15-building-pages.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/getting-started/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/getting-started/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/guides/01-editable-pages.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/guides/02-user-craftable-pages.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/guides/03-communal-pages.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/quick-reference/editing-api.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/quick-reference/template-system.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/troubleshooting/common-issues.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/DemoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/DemoController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy.sh" beforeDir="false" afterPath="$PROJECT_DIR$/deploy.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/INDEX.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/INDEX.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/core/05-css-defaults-overrides-and-structure.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/core/05-css-defaults-overrides-and-structure.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/fundamentals/03-css-fundamentals.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/fundamentals/03-css-fundamentals.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/patterns/01-static-page-serving-patterns.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/patterns/01-static-page-serving-patterns.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/patterns/03-htmx-endpoint-and-swap-patterns.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/patterns/03-htmx-endpoint-and-swap-patterns.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/reference/builders-shell-nav-banner-accountbar.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/reference/builders-shell-nav-banner-accountbar.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/display/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/display/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/forms/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/forms/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/forum/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/forum/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/media/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/media/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/navigation/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/navigation/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/core/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/core/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/editing/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/editing/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/layout/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/layout/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/modules/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/modules/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/ShellBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/ShellBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/resources/static/css/framework.css" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/resources/static/css/framework.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/resources/static/js/framework.js" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/resources/static/js/framework.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/builders/ShellBuilderTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/builders/ShellBuilderTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -159,7 +129,7 @@
       <workItem from="1769593328611" duration="176000" />
       <workItem from="1770186191577" duration="1617000" />
       <workItem from="1770772139855" duration="599000" />
-      <workItem from="1771279453224" duration="15881000" />
+      <workItem from="1771279453224" duration="21644000" />
     </task>
     <servers />
   </component>

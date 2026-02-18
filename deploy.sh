@@ -78,8 +78,7 @@ echo ""
 
 echo "Step 6: Restarting remote service..."
 sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no "$SSH_HOST" \
-    "cd $REMOTE_PATH && { ./sp_demo.sh stop || true; ./sp_demo.sh start; }"
-echo "✓ Remote service restarted"
+    "cd $REMOTE_PATH && { ./sp_demo.sh stop || true; ./sp_demo.sh start; ./sp_demo.sh status; exit \$?; }"
 
 echo ""
 echo "=== Deployment Script Finished ==="

@@ -14,9 +14,18 @@ Core options:
 - `withContentTarget(...)`
 - `withPageTitle(...)`
 - `withHtmx(boolean)`
-- `withCustomCss(...)`
+- `withFrameworkCss(boolean)`
+- `withFrameworkCssPath(String)`
+- `withCustomCss(String)`
+- `withCustomCss(List<String>)`
+- `addCustomCss(String)`
 
 Returns full HTML document string from `build()`.
+
+Stylesheet load order in `build()`:
+
+1. framework CSS (if enabled)
+2. custom CSS files in configured order
 
 ## SideNavBuilder and TopNavBuilder
 
@@ -47,5 +56,7 @@ String shell = ShellBuilder.create()
         .addSection("Main")
         .addLink("Dashboard", "/dashboard", "")
         .build(), true)
+    .withCustomCss("/css/app.css")
+    .addCustomCss("/css/pages/dashboard.css")
     .build();
 ```

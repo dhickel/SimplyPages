@@ -218,6 +218,7 @@ Recommended sequence:
   - `docs/core/03-template-rendercontext-slotkey-reference.md`
   - `docs/core/04-rendering-pipeline-high-and-low-level.md`
   - `docs/core/05-css-defaults-overrides-and-structure.md`
+  - `docs/core/06-shell-project-structure-and-asset-load-chain.md`
 - Patterns:
   - `docs/patterns/01-static-page-serving-patterns.md`
   - `docs/patterns/02-dynamic-fragment-caching-patterns.md`
