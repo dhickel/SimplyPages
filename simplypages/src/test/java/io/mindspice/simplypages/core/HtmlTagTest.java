@@ -1,11 +1,19 @@
 package io.mindspice.simplypages.core;
 
+import io.mindspice.simplypages.testutil.HtmlAssert;
+import io.mindspice.simplypages.testutil.SnapshotAssert;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HtmlTagTest {
 
@@ -17,8 +25,11 @@ class HtmlTagTest {
 
         String html = div.render();
 
-        assertTrue(html.contains("&lt;b&gt;bold&lt;/b&gt;"));
-        assertFalse(html.contains("<b>bold</b>"));
+        HtmlAssert.assertThat(html)
+            .hasElement("div")
+            .doesNotHaveElement("div > b")
+            .elementTextEquals("div", "<b>bold</b>");
+        SnapshotAssert.assertMatches("core/htmltag/inner-text-escaping", html);
     }
 
     @Test
@@ -29,7 +40,10 @@ class HtmlTagTest {
 
         String html = div.render();
 
-        assertTrue(html.contains("<b>bold</b>"));
+        HtmlAssert.assertThat(html)
+            .hasElement("div > b")
+            .elementTextEquals("div > b", "bold");
+        SnapshotAssert.assertMatches("core/htmltag/unsafe-html", html);
     }
 
     @Test
@@ -41,8 +55,9 @@ class HtmlTagTest {
 
         String html = div.render();
 
-        assertTrue(html.contains("class=\"alpha\""));
-        assertFalse(html.contains("alpha alpha"));
+        HtmlAssert.assertThat(html)
+            .hasElement("div.alpha")
+            .attributeEquals("div", "class", "alpha");
     }
 
     @Test
@@ -54,7 +69,9 @@ class HtmlTagTest {
 
         String html = span.render(ctx);
 
-        assertTrue(html.contains(">Value</span>"));
+        HtmlAssert.assertThat(html)
+            .hasElement("span")
+            .elementTextEquals("span", "Value");
     }
 
     @Test
@@ -64,7 +81,9 @@ class HtmlTagTest {
 
         String html = div.render();
 
-        assertTrue(html.contains("style=\"width: 50%"));
+        HtmlAssert.assertThat(html)
+            .hasElement("div")
+            .attributeEquals("div", "style", "width: 50%;");
     }
 
     @Test
@@ -75,18 +94,19 @@ class HtmlTagTest {
             .withMaxWidth("100%");
 
         String html = div.render();
-
-        assertTrue(html.contains("width: 50%"));
-        assertTrue(html.contains("max-width: 100%"));
+        HtmlAssert.assertThat(html).hasElement("div");
+        assertEquals("50%", parseStyles(html).get("width"));
+        assertEquals("100%", parseStyles(html).get("max-width"));
 
         HtmlTag updated = new HtmlTag("div")
             .withWidth("50%")
             .withWidth("25%");
 
         String updatedHtml = updated.render();
-
-        assertTrue(updatedHtml.contains("width: 25%"));
-        assertFalse(updatedHtml.contains("width: 50%"));
+        HtmlAssert.assertThat(updatedHtml).hasElement("div");
+        Map<String, String> updatedStyles = parseStyles(updatedHtml);
+        assertEquals("25%", updatedStyles.get("width"));
+        assertNull(updatedStyles.get("max-width"));
     }
 
     @Test
@@ -95,5 +115,33 @@ class HtmlTagTest {
         assertThrows(IllegalArgumentException.class, () -> new HtmlTag("div").withWidth("wide"));
         assertThrows(IllegalArgumentException.class, () -> new HtmlTag("div").withMaxWidth("100pt"));
         assertThrows(IllegalArgumentException.class, () -> new HtmlTag("div").withMinWidth("-10px"));
+    }
+
+    private static Map<String, String> parseStyles(String html) {
+        Document document = Jsoup.parseBodyFragment(html);
+        Element div = document.selectFirst("div");
+        Map<String, String> styleMap = new HashMap<>();
+        if (div == null) {
+            return styleMap;
+        }
+
+        String style = div.attr("style");
+        if (style == null || style.isBlank()) {
+            return styleMap;
+        }
+
+        String[] declarations = style.split(";");
+        for (String declaration : declarations) {
+            String trimmed = declaration.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            String[] keyValue = trimmed.split(":", 2);
+            if (keyValue.length != 2) {
+                continue;
+            }
+            styleMap.put(keyValue[0].trim(), keyValue[1].trim());
+        }
+        return styleMap;
     }
 }
