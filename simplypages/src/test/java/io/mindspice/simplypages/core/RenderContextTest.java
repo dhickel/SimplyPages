@@ -8,6 +8,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RenderContextTest {
@@ -97,5 +98,70 @@ class RenderContextTest {
 
         assertFalse(context.isCompiled(key));
         assertEquals("live", context.get(key).orElse(""));
+    }
+
+    @Test
+    @DisplayName("RenderContext should support override and restore behavior for nested rendering scopes")
+    void testOverrideAndRestoreBehavior() {
+        SlotKey<String> key = SlotKey.of("name", "fallback");
+        RenderContext context = RenderContext.empty()
+            .put(key, "outer");
+
+        assertEquals("outer", context.get(key).orElse(""));
+
+        context.put(key, "inner");
+        assertEquals("inner", context.get(key).orElse(""));
+
+        context.put(key, "outer");
+        assertEquals("outer", context.get(key).orElse(""));
+
+        context.remove(key);
+        assertEquals("fallback", context.get(key).orElse(""));
+    }
+
+    @Test
+    @DisplayName("RenderContext should evaluate dynamic defaults against latest overridden values")
+    void testDynamicDefaultTracksOverrides() {
+        SlotKey<String> base = SlotKey.of("base", "root");
+        SlotKey<String> derived = SlotKey.of("derived", ctx -> "prefix-" + ctx.get(base).orElse("none"));
+        RenderContext context = RenderContext.empty();
+
+        assertEquals("prefix-root", context.get(derived).orElse(""));
+
+        context.put(base, "branch");
+        assertEquals("prefix-branch", context.get(derived).orElse(""));
+
+        context.remove(base);
+        assertEquals("prefix-root", context.get(derived).orElse(""));
+    }
+
+    @Test
+    @DisplayName("RenderContext should invalidate compiled entries when live values replace them repeatedly")
+    void testCompiledEntryInvalidationAcrossReplacements() {
+        SlotKey<String> key = SlotKey.of("title");
+        RenderContext context = RenderContext.empty();
+
+        context.putCompiled(key, "<b>cached</b>");
+        assertTrue(context.isCompiled(key));
+        assertEquals("<b>cached</b>", context.getCompiled(key).orElse(""));
+
+        context.put(key, "live-a");
+        assertFalse(context.isCompiled(key));
+        assertEquals("live-a", context.get(key).orElse(""));
+
+        context.putCompiled(key, "<i>cached-b</i>");
+        assertTrue(context.isCompiled(key));
+        assertEquals("<i>cached-b</i>", context.getCompiled(key).orElse(""));
+
+        context.put(key, "live-b");
+        assertFalse(context.isCompiled(key));
+        assertEquals("live-b", context.get(key).orElse(""));
+    }
+
+    @Test
+    @DisplayName("RenderContext should reject null policy assignment")
+    void testNullPolicyRejected() {
+        RenderContext context = RenderContext.empty();
+        assertThrows(NullPointerException.class, () -> context.withPolicy(null));
     }
 }

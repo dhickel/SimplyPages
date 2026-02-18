@@ -1,10 +1,9 @@
 package io.mindspice.simplypages.core;
 
 import io.mindspice.simplypages.components.Div;
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TemplateComponentTest {
 
@@ -21,6 +20,8 @@ class TemplateComponentTest {
         TemplateComponent component = TemplateComponent.of(template, boundContext);
         String html = component.render(parentContext);
 
-        assertTrue(html.contains(">Bound</span>"));
+        HtmlAssert.assertThat(html)
+            .hasElement("div > span")
+            .elementTextEquals("div > span", "Bound");
     }
 }

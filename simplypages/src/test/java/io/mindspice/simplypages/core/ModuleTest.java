@@ -1,12 +1,12 @@
 package io.mindspice.simplypages.core;
 
+import io.mindspice.simplypages.testutil.HtmlAssert;
+import io.mindspice.simplypages.testutil.SnapshotAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ModuleTest {
 
@@ -31,16 +31,16 @@ class ModuleTest {
         protected void buildContent() {
             buildCount++;
             if (title != null) {
-                super.withChild(new HtmlTag("h2").withInnerText(title));
+                super.withChild(new HtmlTag("h2").withClass("module-title").withInnerText(title));
             }
             if (content != null) {
-                super.withChild(new HtmlTag("span").withInnerText(content));
+                super.withChild(new HtmlTag("span").withClass("module-content").withInnerText(content));
             }
         }
     }
 
     @Test
-    @DisplayName("Module should build once and render with module class")
+    @DisplayName("Module should build once and render id class title and content structure")
     void testModuleBuildAndRender() {
         TestModule module = new TestModule();
         module.withTitle("Title");
@@ -53,10 +53,12 @@ class ModuleTest {
         assertEquals("module-1", module.getModuleId());
         assertEquals("Title", module.getTitle());
         assertEquals(1, module.buildCount);
-        assertTrue(html.contains("class=\"featured module\""));
-        assertTrue(html.contains("id=\"module-1\""));
-        assertTrue(html.contains(">Title</h2>"));
-        assertTrue(html.contains(">Body</span>"));
+        HtmlAssert.assertThat(html)
+            .hasElement("div#module-1.featured.module")
+            .childOrder("div#module-1", "h2.module-title", "span.module-content")
+            .elementTextEquals("div#module-1 > h2.module-title", "Title")
+            .elementTextEquals("div#module-1 > span.module-content", "Body");
+        SnapshotAssert.assertMatches("core/module/title-content-classes", html);
 
         module.render(RenderContext.empty());
         assertEquals(1, module.buildCount);
@@ -69,8 +71,10 @@ class ModuleTest {
         module.withTitle("Title");
         module.withContent("alpha");
 
-        String html = module.render();
-        assertTrue(html.contains(">alpha</span>"));
+        String initial = module.render();
+        HtmlAssert.assertThat(initial)
+            .hasElement("div.module > span.module-content")
+            .elementTextEquals("div.module > span.module-content", "alpha");
         assertEquals(1, module.buildCount);
 
         module.withContent("beta");
@@ -78,8 +82,9 @@ class ModuleTest {
         String updated = module.render();
 
         assertEquals(2, module.buildCount);
-        assertTrue(updated.contains(">beta</span>"));
-        assertFalse(updated.contains(">alpha</span>"));
+        HtmlAssert.assertThat(updated)
+            .hasElement("div.module > span.module-content")
+            .elementTextEquals("div.module > span.module-content", "beta");
     }
 
     @Test
