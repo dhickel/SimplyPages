@@ -1,0 +1,38 @@
+<meta charset="UTF-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><title>Collapsible Sidebar</title><link href="/css/framework.css" rel="stylesheet"><script defer src="/webjars/htmx.org/dist/htmx.min.js"></script><script defer src="/js/framework.js"></script><header class="main-header"><div class="banner banner-horizontal"><div class="banner-content"><div class="banner-text"><h1 class="banner-title">SimplyPages</h1></div></div></div></header><div class="main-container has-sidebar collapsible-sidebar"><aside class="main-sidebar collapsible" id="main-sidebar"><button aria-label="Toggle sidebar" class="sidebar-toggle" onclick="toggleSidebar()">☰</button><nav class="sidenav"><div class="sidenav-section">
+      Main
+     </div><a class="sidenav-item active" href="/home" hx-get="/home" hx-push-url="true" hx-target="#page-content">Home</a><a class="sidenav-item" href="/reports" hx-get="/reports" hx-push-url="true" hx-target="#page-content">Reports</a><a class="sidenav-item" href="/settings" hx-get="/settings" hx-push-url="true" hx-target="#page-content">Settings</a></nav></aside><main class="content-wrapper"><div hx-get="/home" hx-trigger="load" id="page-content"><div class="page-content"><div class="row" id="welcome-row"><div class="col col-12"><div class="welcome-card">
+         Welcome to SimplyPages
+        </div></div></div></div></div></main></div><script>function toggleSidebar() {
+    const sidebar = document.getElementById('main-sidebar');
+    const container = document.querySelector('.main-container');
+    sidebar.classList.toggle('collapsed');
+    container.classList.toggle('sidebar-collapsed');
+
+    // Save state to localStorage
+    const isCollapsed = sidebar.classList.contains('collapsed');
+    localStorage.setItem('sidebarCollapsed', isCollapsed);
+}
+
+// Restore sidebar state on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (isCollapsed) {
+        document.getElementById('main-sidebar').classList.add('collapsed');
+        document.querySelector('.main-container').classList.add('sidebar-collapsed');
+    }
+});
+</script><script>// Update active navigation link when content changes
+document.body.addEventListener('htmx:afterSettle', function(event) {
+    // Remove active class from all nav items
+    document.querySelectorAll('.sidenav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+
+    // Add active class to current page's nav item
+    const currentPath = window.location.pathname;
+    const activeLink = document.querySelector('.sidenav-item[href="' + currentPath + '"]');
+    if (activeLink) {
+        activeLink.classList.add('active');
+    }
+});
+</script>

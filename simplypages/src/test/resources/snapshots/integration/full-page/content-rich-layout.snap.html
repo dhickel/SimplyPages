@@ -1,0 +1,23 @@
+<meta charset="UTF-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><title>Content Rich</title><link href="/css/framework.css" rel="stylesheet"><script defer src="/webjars/htmx.org/dist/htmx.min.js"></script><script defer src="/js/framework.js"></script><header class="main-header"><div class="banner banner-horizontal"><div class="banner-content"><div class="banner-text"><h1 class="banner-title">SimplyPages</h1></div></div></div></header><div class="account-bar"><div class="account-bar-left"><a href="/">Dashboard</a></div><div class="account-bar-right"><a href="/profile">Profile</a></div></div><div class="main-container has-sidebar"><aside class="main-sidebar" id="main-sidebar"><nav class="sidenav"><div class="sidenav-section">
+      Main
+     </div><a class="sidenav-item active" href="/home" hx-get="/home" hx-push-url="true" hx-target="#page-content">Home</a><a class="sidenav-item" href="/reports" hx-get="/reports" hx-push-url="true" hx-target="#page-content">Reports</a><a class="sidenav-item" href="/settings" hx-get="/settings" hx-push-url="true" hx-target="#page-content">Settings</a></nav></aside><main class="content-wrapper"><div hx-get="/home" hx-trigger="load" id="page-content"><div class="page-content"><div class="row" id="hero-row"><div class="col col-8"><div class="editable-module-wrapper" id="hero-editable"><button class="btn btn-link module-edit-btn" hx-get="/modules/hero/edit" hx-swap="innerHTML" hx-target="#edit-modal-container" title="Edit" type="button">✏</button><button class="btn btn-link module-delete-btn" hx-delete="/modules/hero/delete" hx-swap="outerHTML" hx-target="#hero-editable" title="Delete" type="button">🗑</button><div class="content-module module" id="hero-content"><h2 class="module-title">Team Dashboard</h2><div class="module-content"><p>Weekly status and ownership details.</p></div></div></div></div><div class="col col-4"><div class="quick-actions"><div class="quick-action-title">
+          Quick Actions
+         </div><div>
+          Open incidents: 4
+         </div><div>
+          Pending approvals: 2
+         </div></div></div></div><div class="row" id="data-row"><div class="col col-12"><div class="data-module module" id="team-data"><h2 class="module-title">Team Roster</h2><div class="data-table-wrapper"><table class="table data-table table-striped table-hover"><thead><tr><th>Name</th><th>Role</th><th>Location</th></tr></thead><tbody><tr><td>Sam</td><td>Lead</td><td>Remote</td></tr><tr><td>Ari</td><td>Engineer</td><td>New York</td></tr><tr><td>Maya</td><td>QA</td><td>Austin</td></tr></tbody></table></div></div></div></div></div></div></main></div><script>// Update active navigation link when content changes
+document.body.addEventListener('htmx:afterSettle', function(event) {
+    // Remove active class from all nav items
+    document.querySelectorAll('.sidenav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+
+    // Add active class to current page's nav item
+    const currentPath = window.location.pathname;
+    const activeLink = document.querySelector('.sidenav-item[href="' + currentPath + '"]');
+    if (activeLink) {
+        activeLink.classList.add('active');
+    }
+});
+</script>

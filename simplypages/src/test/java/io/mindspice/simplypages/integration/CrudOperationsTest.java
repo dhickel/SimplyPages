@@ -2,10 +2,9 @@ package io.mindspice.simplypages.integration;
 
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.editing.EditModalBuilder;
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CrudOperationsTest {
 
@@ -20,9 +19,17 @@ class CrudOperationsTest {
             .build()
             .render();
 
-        assertTrue(html.contains("hx-post=\"/save\""));
-        assertTrue(html.contains("hx-delete=\"/delete\""));
-        assertTrue(html.contains("hx-swap=\"none\""));
-        assertTrue(html.contains("hx-include=\".edit-properties-section input, .edit-properties-section textarea, .edit-properties-section select\""));
+        HtmlAssert.assertThat(html)
+            .hasElement("div.modal-backdrop")
+            .hasElement("div.modal-backdrop div.modal-body div.edit-properties-section")
+            .hasElement("div.modal-backdrop div.modal-footer button[hx-post='/save']")
+            .hasElement("div.modal-backdrop div.modal-footer button[hx-delete='/delete']")
+            .attributeEquals("div.modal-backdrop div.modal-footer button[hx-post='/save']", "hx-swap", "none")
+            .attributeEquals("div.modal-backdrop div.modal-footer button[hx-delete='/delete']", "hx-target", "#page-content")
+            .attributeEquals(
+                "div.modal-backdrop div.modal-footer button[hx-post='/save']",
+                "hx-include",
+                ".edit-properties-section input, .edit-properties-section textarea, .edit-properties-section select"
+            );
     }
 }
