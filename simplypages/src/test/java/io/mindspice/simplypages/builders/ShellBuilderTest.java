@@ -305,6 +305,9 @@ class ShellBuilderTest {
     @DisplayName("ShellBuilder should not render mobile sidebar toggle without side nav")
     void testNoMobileToggleWhenNoSidebar() {
         String html = ShellBuilder.create().build();
+        HtmlAssert.assertThat(html)
+            .hasElement("body > div.main-container")
+            .doesNotHaveElement("body > div.main-container.has-sidebar");
         assertFalse(html.contains("mobile-sidebar-toggle"));
         assertFalse(html.contains("toggleMobileSidebar()"));
     }

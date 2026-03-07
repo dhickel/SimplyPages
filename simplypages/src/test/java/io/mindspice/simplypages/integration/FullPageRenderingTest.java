@@ -85,6 +85,7 @@ class FullPageRenderingTest {
         HtmlAssert.assertThat(html)
             .hasDoctype("html")
             .hasElement("body > div.main-container")
+            .doesNotHaveElement("body > div.main-container.has-sidebar")
             .doesNotHaveElement("body > button.mobile-sidebar-toggle")
             .doesNotHaveElement("body > div.main-container > aside#main-sidebar")
             .hasElement("body > div.main-container > main.content-wrapper > #page-content")

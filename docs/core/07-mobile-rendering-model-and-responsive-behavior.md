@@ -9,6 +9,7 @@ This guide explains how mobile behavior works in SimplyPages and what is automat
 SimplyPages mobile behavior is primarily CSS-driven, with small framework-generated HTML/JS hooks:
 
 - `ShellBuilder` emits shell structure and mobile nav toggle markup when a sidebar exists.
+- Shell layout defaults to full-width content when no sidebar is configured.
 - `framework.css` applies responsive breakpoints and stacking/wrapping behavior.
 - `framework.js` handles interactive shell behavior like mobile sidebar open/close.
 - Layout primitives (`Page`, `Row`, `Column`) provide stable class/markup contracts that CSS targets.

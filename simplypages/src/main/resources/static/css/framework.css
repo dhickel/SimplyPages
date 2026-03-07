@@ -112,9 +112,14 @@ body {
 /* ===== Layout System ===== */
 .main-container {
     display: grid;
+    grid-template-areas: "content";
+    grid-template-columns: 1fr;
+    min-height: calc(100vh - 60px);
+}
+
+.main-container.has-sidebar {
     grid-template-areas: "sidebar content";
     grid-template-columns: var(--sp-sidebar-width) 1fr;
-    min-height: calc(100vh - 60px);
 }
 
 .main-header {
