@@ -7,6 +7,7 @@ import io.mindspice.simplypages.builders.SideNavBuilder;
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.components.Header;
 import io.mindspice.simplypages.components.Paragraph;
+import io.mindspice.simplypages.components.RawHtml;
 import io.mindspice.simplypages.components.display.Alert;
 import io.mindspice.simplypages.components.display.Modal;
 import io.mindspice.simplypages.components.forms.Button;
@@ -797,7 +798,7 @@ public class EditingDemoController {
     }
 
     private String renderWithShell(String content) {
-        String shell = ShellBuilder.create()
+        return ShellBuilder.create()
                 .withPageTitle("SimplyPages Editing Demo")
                 .withTopBanner(
                         BannerBuilder.create()
@@ -822,10 +823,7 @@ public class EditingDemoController {
                                 .addLink("Back to Home", "/home", "🏠")
                                 .build()
                 )
+                .withContent(new RawHtml(content))
                 .build();
-
-        return shell.replaceAll("<div id=\"content-area\"[^>]*>", "<div id=\"content-area\">")
-                .replace("<div id=\"content-area\"></div>",
-                        "<div id=\"content-area\">" + content + "</div>");
     }
 }

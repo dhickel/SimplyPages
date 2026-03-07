@@ -2,6 +2,14 @@
 
 # Components, HtmlTag, and Module Lifecycle
 
+## Thread Safety First
+
+`HtmlTag`, `Module`, and `RenderContext` are mutable and not thread-safe while being configured.
+
+- Build/mutate component trees and contexts in a single request flow.
+- Do not share mutable instances across concurrent requests.
+- Reuse only stable structures (typically via `Template`) and pass per-request values through `RenderContext`.
+
 ## Component
 
 `Component` is the rendering contract.
@@ -19,6 +27,16 @@ Capabilities:
 - Children via `withChild`.
 - Escaped text via `withInnerText`.
 - Explicit unescaped HTML via `withUnsafeHtml`.
+- HTMX aliases via `hxGet`, `hxPost`, `hxPut`, `hxPatch`, `hxDelete`, `hxTarget`, `hxSwap`, `hxTrigger`, `hxInclude`, `hxPushUrl`.
+
+Example:
+
+```java
+HtmlTag panel = new HtmlTag("div")
+    .hxGet("/orders/42/details")
+    .hxTarget("#content-area")
+    .hxSwap("innerHTML");
+```
 
 ## Module
 

@@ -75,6 +75,39 @@ class HtmlTagTest {
     }
 
     @Test
+    @DisplayName("HtmlTag should chain HTMX helper methods and overwrite duplicate attributes")
+    void testHtmxHelperMethods() {
+        HtmlTag button = new HtmlTag("button")
+            .hxGet("/api/first")
+            .hxGet("/api/latest")
+            .hxTarget("#content")
+            .hxSwap("innerHTML")
+            .hxSwap("outerHTML")
+            .hxTrigger("click")
+            .hxInclude("#form")
+            .hxPushUrl(false)
+            .hxPost("/api/post")
+            .hxPut("/api/put")
+            .hxPatch("/api/patch")
+            .hxDelete("/api/delete");
+
+        String html = button.render();
+
+        HtmlAssert.assertThat(html)
+            .hasElement("button")
+            .attributeEquals("button", "hx-get", "/api/latest")
+            .attributeEquals("button", "hx-target", "#content")
+            .attributeEquals("button", "hx-swap", "outerHTML")
+            .attributeEquals("button", "hx-trigger", "click")
+            .attributeEquals("button", "hx-include", "#form")
+            .attributeEquals("button", "hx-push-url", "false")
+            .attributeEquals("button", "hx-post", "/api/post")
+            .attributeEquals("button", "hx-put", "/api/put")
+            .attributeEquals("button", "hx-patch", "/api/patch")
+            .attributeEquals("button", "hx-delete", "/api/delete");
+    }
+
+    @Test
     @DisplayName("HtmlTag should apply width styles")
     void testWithWidth() {
         HtmlTag div = new HtmlTag("div").withWidth("50%");
@@ -94,18 +127,24 @@ class HtmlTagTest {
             .withMaxWidth("100%");
 
         String html = div.render();
-        HtmlAssert.assertThat(html).hasElement("div");
+        HtmlAssert.assertThat(html)
+            .hasElement("div")
+            .attributeEquals("div", "style", "width: 50%; max-width: 100%;");
         assertEquals("50%", parseStyles(html).get("width"));
         assertEquals("100%", parseStyles(html).get("max-width"));
 
         HtmlTag updated = new HtmlTag("div")
             .withWidth("50%")
-            .withWidth("25%");
+            .withWidth("25%")
+            .withMinWidth("10%");
 
         String updatedHtml = updated.render();
-        HtmlAssert.assertThat(updatedHtml).hasElement("div");
+        HtmlAssert.assertThat(updatedHtml)
+            .hasElement("div")
+            .attributeEquals("div", "style", "width: 25%; min-width: 10%;");
         Map<String, String> updatedStyles = parseStyles(updatedHtml);
         assertEquals("25%", updatedStyles.get("width"));
+        assertEquals("10%", updatedStyles.get("min-width"));
         assertNull(updatedStyles.get("max-width"));
     }
 

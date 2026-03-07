@@ -173,7 +173,6 @@ public class Page extends HtmlTag {
                 // Create and add sidebar
                 HtmlTag sidebarDetails = new HtmlTag("details")
                         .withAttribute("class", "sticky-sidebar-mobile-collapse")
-                        .withAttribute("open", "open")
                         .withChild(new HtmlTag("summary")
                                 .withAttribute("class", "sticky-sidebar-mobile-summary")
                                 .withInnerText("Page navigation"))

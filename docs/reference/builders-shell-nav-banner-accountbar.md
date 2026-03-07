@@ -11,7 +11,12 @@ Core options:
 - `withTopBanner(...)`
 - `withAccountBar(...)`
 - `withSideNav(...)`
+- `withSideNav(..., boolean collapsible)`
+- `withCollapsibleSideNav(boolean)`
 - `withContentTarget(...)`
+- `withContentTargetId(...)`
+- `withContentTargetClass(...)`
+- `withContentWrapper(Function<Component, Component>)`
 - `withContent(...)`
 - `withPageTitle(...)`
 - `withHtmx(boolean)`
@@ -20,6 +25,10 @@ Core options:
 - `withCustomCss(String)`
 - `withCustomCss(List<String>)`
 - `addCustomCss(String)`
+- `withCustomJs(String)`
+- `withCustomJs(List<String>)`
+- `addCustomJs(String)`
+- `buildBody()`
 
 Returns full HTML document string from `build()`.
 
@@ -29,6 +38,25 @@ Stylesheet load order in `build()`:
 
 1. framework CSS (if enabled)
 2. custom CSS files in configured order
+
+Script load order in `build()`:
+
+1. HTMX script (if enabled)
+2. framework JS (`/js/framework.js`)
+3. custom JS files in configured order
+
+Custom JS setup example:
+
+```java
+String shell = ShellBuilder.create()
+    .withPageTitle("Admin Portal")
+    .withCustomJs("/js/app.js")
+    .addCustomJs("/js/pages/admin-dashboard.js")
+    .withContentWrapper(content -> new HtmlTag("section")
+        .withClass("content-shell")
+        .withChild(content))
+    .build();
+```
 
 ## SideNavBuilder and TopNavBuilder
 

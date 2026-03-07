@@ -96,6 +96,76 @@ public class HtmlTag implements Component {
     }
 
     /**
+     * Sets {@code hx-get}.
+     */
+    public HtmlTag hxGet(String url) {
+        return withAttribute("hx-get", url);
+    }
+
+    /**
+     * Sets {@code hx-post}.
+     */
+    public HtmlTag hxPost(String url) {
+        return withAttribute("hx-post", url);
+    }
+
+    /**
+     * Sets {@code hx-put}.
+     */
+    public HtmlTag hxPut(String url) {
+        return withAttribute("hx-put", url);
+    }
+
+    /**
+     * Sets {@code hx-patch}.
+     */
+    public HtmlTag hxPatch(String url) {
+        return withAttribute("hx-patch", url);
+    }
+
+    /**
+     * Sets {@code hx-delete}.
+     */
+    public HtmlTag hxDelete(String url) {
+        return withAttribute("hx-delete", url);
+    }
+
+    /**
+     * Sets {@code hx-target}.
+     */
+    public HtmlTag hxTarget(String selector) {
+        return withAttribute("hx-target", selector);
+    }
+
+    /**
+     * Sets {@code hx-swap}.
+     */
+    public HtmlTag hxSwap(String mode) {
+        return withAttribute("hx-swap", mode);
+    }
+
+    /**
+     * Sets {@code hx-trigger}.
+     */
+    public HtmlTag hxTrigger(String trigger) {
+        return withAttribute("hx-trigger", trigger);
+    }
+
+    /**
+     * Sets {@code hx-include}.
+     */
+    public HtmlTag hxInclude(String selector) {
+        return withAttribute("hx-include", selector);
+    }
+
+    /**
+     * Sets {@code hx-push-url}.
+     */
+    public HtmlTag hxPushUrl(boolean enabled) {
+        return withAttribute("hx-push-url", String.valueOf(enabled));
+    }
+
+    /**
      * Appends a child component in render order.
      */
     public HtmlTag withChild(Component component) {
@@ -195,9 +265,10 @@ public class HtmlTag implements Component {
 
         String newStyle;
         if (existingStyle.isPresent()) {
-            String styles = existingStyle.get();
+            String styles = existingStyle.get().trim().replaceAll(";+$", "");
             String propertyPattern = property + "\\s*:[^;]*;?";
             styles = styles.replaceAll(propertyPattern, "").trim();
+            styles = styles.replaceAll(";+$", "");
             newStyle = styles.isEmpty() ?
                     property + ": " + value + ";" :
                     styles + "; " + property + ": " + value + ";";

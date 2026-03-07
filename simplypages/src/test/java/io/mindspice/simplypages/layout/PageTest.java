@@ -54,7 +54,7 @@ class PageTest {
 
         HtmlAssert.assertThat(html)
             .hasElement(".sticky-sidebar-mobile-collapse")
-            .attributeEquals(".sticky-sidebar-mobile-collapse", "open", "open")
+            .doesNotHaveElement(".sticky-sidebar-mobile-collapse[open]")
             .hasElement(".sticky-sidebar-mobile-summary")
             .hasElement(".sticky-sidebar-content");
     }

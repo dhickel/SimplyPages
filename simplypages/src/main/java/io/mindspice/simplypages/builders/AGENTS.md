@@ -12,6 +12,8 @@ Owns higher-level shell and navigation builder utilities.
 - `build()` output shape stays stable for consumers.
 - Default values keep generated output functional.
 - Shell sidebar markup keeps stable class hooks for responsive/mobile behavior.
+- Shell head script order remains deterministic: HTMX (optional), framework JS, then custom JS.
+- Shell content target/wrapper hooks (`withContentTargetId`, `withContentTargetClass`, `withContentWrapper`) stay consistent across `build()` and `buildBody()`.
 
 ## Do
 - Keep generated markup predictable and integration-friendly.
@@ -26,6 +28,7 @@ Owns higher-level shell and navigation builder utilities.
 - Breaking CSS class hooks used by framework styles.
 - Changing default IDs/targets unexpectedly.
 - Regressing HTMX bootstrap behavior in shell output.
+- Emitting custom JS before framework JS.
 
 ## Required Tests
 - `ShellBuilderTest`, `BannerBuilderTest`

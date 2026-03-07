@@ -30,7 +30,7 @@ It is built for practical web apps: admin portals, internal tools, content-heavy
 <dependency>
   <groupId>io.mindspice</groupId>
   <artifactId>simplypages</artifactId>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
 </dependency>
 ```
 

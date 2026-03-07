@@ -66,6 +66,15 @@ public class RenderContext {
     }
 
     /**
+     * Creates a context with a single raw slot value and default policy.
+     *
+     * <p>{@code null} values produce an empty context for the given key.</p>
+     */
+    public static <T> RenderContext of(SlotKey<T> key, T value) {
+        return empty().put(key, value);
+    }
+
+    /**
      * Resolves the value for {@code key}.
      *
      * <p>Resolution order:</p>

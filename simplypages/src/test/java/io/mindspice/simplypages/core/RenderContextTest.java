@@ -68,6 +68,27 @@ class RenderContextTest {
     }
 
     @Test
+    @DisplayName("RenderContext single-slot factory should store non-null values")
+    void testSingleSlotFactoryNonNull() {
+        SlotKey<String> key = SlotKey.of("user");
+        RenderContext context = RenderContext.of(key, "alice");
+
+        assertEquals(RenderContext.RenderPolicy.NEVER_COMPILE, context.getPolicy());
+        assertEquals("alice", context.get(key).orElse(""));
+    }
+
+    @Test
+    @DisplayName("RenderContext single-slot factory should treat null as missing")
+    void testSingleSlotFactoryNull() {
+        SlotKey<String> key = SlotKey.of("user");
+        RenderContext context = RenderContext.of(key, null);
+
+        assertEquals(RenderContext.RenderPolicy.NEVER_COMPILE, context.getPolicy());
+        assertTrue(context.get(key).isEmpty());
+        assertTrue(context.getEntries().isEmpty());
+    }
+
+    @Test
     @DisplayName("RenderContext should support compile policy")
     void testPolicySupport() {
         RenderContext context = RenderContext.empty()

@@ -7,6 +7,7 @@ import io.mindspice.simplypages.core.HtmlTag;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Builds a full SimplyPages shell document (head + body) or body-only fragment.
@@ -29,6 +30,9 @@ public class ShellBuilder {
     private boolean includeFrameworkCss = true;
     private String frameworkCssPath = "/css/framework.css";
     private final Set<String> customCssPaths = new LinkedHashSet<>();
+    private final Set<String> customJsPaths = new LinkedHashSet<>();
+    private String contentTargetClass;
+    private Function<Component, Component> contentWrapper = Function.identity();
     private Component content;
 
     private ShellBuilder() {}
@@ -86,6 +90,32 @@ public class ShellBuilder {
      */
     public ShellBuilder withContentTarget(String targetId) {
         this.contentTarget = targetId;
+        return this;
+    }
+
+    /**
+     * Alias for {@link #withContentTarget(String)}.
+     */
+    public ShellBuilder withContentTargetId(String targetId) {
+        return withContentTarget(targetId);
+    }
+
+    /**
+     * Set optional class on the content target div.
+     */
+    public ShellBuilder withContentTargetClass(String className) {
+        this.contentTargetClass = requireNonBlank(className, "className");
+        return this;
+    }
+
+    /**
+     * Apply a wrapper around the content target component.
+     */
+    public ShellBuilder withContentWrapper(Function<Component, Component> wrapper) {
+        if (wrapper == null) {
+            throw new IllegalArgumentException("wrapper cannot be null");
+        }
+        this.contentWrapper = wrapper;
         return this;
     }
 
@@ -148,6 +178,37 @@ public class ShellBuilder {
     }
 
     /**
+     * Replace all custom JS paths with a single JS path.
+     */
+    public ShellBuilder withCustomJs(String jsPath) {
+        this.customJsPaths.clear();
+        this.customJsPaths.add(requireJsPath(jsPath, "jsPath"));
+        return this;
+    }
+
+    /**
+     * Replace all custom JS paths with the provided ordered list.
+     */
+    public ShellBuilder withCustomJs(List<String> jsPaths) {
+        if (jsPaths == null) {
+            throw new IllegalArgumentException("jsPaths cannot be null");
+        }
+        this.customJsPaths.clear();
+        for (String jsPath : jsPaths) {
+            this.customJsPaths.add(requireJsPath(jsPath, "jsPaths entry"));
+        }
+        return this;
+    }
+
+    /**
+     * Append an additional custom JS file path.
+     */
+    public ShellBuilder addCustomJs(String jsPath) {
+        this.customJsPaths.add(requireJsPath(jsPath, "jsPath"));
+        return this;
+    }
+
+    /**
      * Enable/disable framework CSS inclusion.
      */
     public ShellBuilder withFrameworkCss(boolean include) {
@@ -193,6 +254,11 @@ public class ShellBuilder {
         head.withChild(new HtmlTag("script")
             .withAttribute("src", "/js/framework.js")
             .withAttribute("defer", ""));
+        for (String customJsPath : customJsPaths) {
+            head.withChild(new HtmlTag("script")
+                .withAttribute("src", customJsPath)
+                .withAttribute("defer", ""));
+        }
 
         HtmlTag body = buildShellContent();
         appendInlineScripts(body);
@@ -260,6 +326,9 @@ public class ShellBuilder {
         }
 
         HtmlTag contentArea = new HtmlTag("div").withAttribute("id", contentTarget);
+        if (contentTargetClass != null) {
+            contentArea.withAttribute("class", contentTargetClass);
+        }
         if (content != null) {
             contentArea.withChild(content);
         } else if (includeHtmx) {
@@ -267,9 +336,13 @@ public class ShellBuilder {
                 .withAttribute("hx-trigger", "load");
         }
 
+        Component wrappedContentArea = contentWrapper.apply(contentArea);
+        if (wrappedContentArea == null) {
+            throw new IllegalArgumentException("wrapper cannot return null");
+        }
         mainContainer.withChild(new HtmlTag("main")
             .withAttribute("class", "content-wrapper")
-            .withChild(contentArea));
+            .withChild(wrappedContentArea));
         return mainContainer;
     }
 
@@ -354,9 +427,17 @@ public class ShellBuilder {
     }
 
     private String requireCssPath(String cssPath, String fieldName) {
-        if (cssPath == null || cssPath.isBlank()) {
+        return requireNonBlank(cssPath, fieldName);
+    }
+
+    private String requireJsPath(String jsPath, String fieldName) {
+        return requireNonBlank(jsPath, fieldName);
+    }
+
+    private String requireNonBlank(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(fieldName + " cannot be null or blank");
         }
-        return cssPath;
+        return value;
     }
 }

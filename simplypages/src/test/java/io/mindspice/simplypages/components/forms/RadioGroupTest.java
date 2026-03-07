@@ -19,6 +19,7 @@ class RadioGroupTest {
         String html = group.render();
 
         HtmlAssert.assertThat(html)
+            .hasElement("div.form-radio-group.radio-inline")
             .hasElement("div.radio-inline")
             .hasElementCount("div.radio-inline > div.radio-option", 2)
             .attributeEquals("div.radio-option:nth-child(1) > input.radio-input", "name", "choice")

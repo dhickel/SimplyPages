@@ -3,11 +3,16 @@ package io.mindspice.simplypages.builders;
 import io.mindspice.simplypages.components.navigation.SideNav;
 import io.mindspice.simplypages.components.Paragraph;
 import io.mindspice.simplypages.core.Component;
+import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.jsoup.Jsoup;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -146,6 +151,137 @@ class ShellBuilderTest {
         assertThrows(
             IllegalArgumentException.class,
             () -> ShellBuilder.create().withCustomCss(List.of("/css/ok.css", " "))
+        );
+    }
+
+    @Test
+    @DisplayName("ShellBuilder should include custom JS after framework JS in deterministic order")
+    void testCustomJsOrder() {
+        String html = ShellBuilder.create()
+            .addCustomJs("/js/app.js")
+            .addCustomJs("/js/feature.js")
+            .build();
+
+        List<String> scriptSources = Jsoup.parse(html)
+            .select("head script[src]")
+            .stream()
+            .map(script -> script.attr("src"))
+            .collect(Collectors.toList());
+
+        assertEquals(
+            List.of("/webjars/htmx.org/dist/htmx.min.js", "/js/framework.js", "/js/app.js", "/js/feature.js"),
+            scriptSources
+        );
+        HtmlAssert.assertThat(html)
+            .hasElement("head script[src='/webjars/htmx.org/dist/htmx.min.js'][defer]")
+            .hasElement("head script[src='/js/framework.js'][defer]")
+            .hasElement("head script[src='/js/app.js'][defer]")
+            .hasElement("head script[src='/js/feature.js'][defer]");
+    }
+
+    @Test
+    @DisplayName("ShellBuilder addCustomJs should dedupe while preserving insertion order")
+    void testCustomJsDedupe() {
+        String html = ShellBuilder.create()
+            .addCustomJs("/js/app.js")
+            .addCustomJs("/js/feature.js")
+            .addCustomJs("/js/app.js")
+            .build();
+
+        HtmlAssert.assertThat(html)
+            .hasElementCount("head script[src='/js/app.js']", 1)
+            .hasElementCount("head script[src='/js/feature.js']", 1)
+            .appearsBefore("head script[src='/js/app.js']", "head script[src='/js/feature.js']");
+    }
+
+    @Test
+    @DisplayName("ShellBuilder withCustomJs(String) should reset to a single script")
+    void testWithCustomJsStringResetsList() {
+        String html = ShellBuilder.create()
+            .addCustomJs("/js/a.js")
+            .addCustomJs("/js/b.js")
+            .withCustomJs("/js/only.js")
+            .build();
+
+        HtmlAssert.assertThat(html)
+            .hasElement("head script[src='/js/only.js']")
+            .doesNotHaveElement("head script[src='/js/a.js']")
+            .doesNotHaveElement("head script[src='/js/b.js']");
+    }
+
+    @Test
+    @DisplayName("ShellBuilder withCustomJs(List) should replace prior scripts with ordered list")
+    void testWithCustomJsListReplacement() {
+        String html = ShellBuilder.create()
+            .addCustomJs("/js/legacy.js")
+            .withCustomJs(List.of("/js/alpha.js", "/js/beta.js", "/js/alpha.js"))
+            .build();
+
+        HtmlAssert.assertThat(html)
+            .doesNotHaveElement("head script[src='/js/legacy.js']")
+            .hasElementCount("head script[src='/js/alpha.js']", 1)
+            .hasElementCount("head script[src='/js/beta.js']", 1)
+            .appearsBefore("head script[src='/js/alpha.js']", "head script[src='/js/beta.js']");
+    }
+
+    @Test
+    @DisplayName("ShellBuilder should validate JS path inputs")
+    void testJsPathValidation() {
+        assertThrows(IllegalArgumentException.class, () -> ShellBuilder.create().withCustomJs(" "));
+        assertThrows(IllegalArgumentException.class, () -> ShellBuilder.create().addCustomJs(null));
+        assertThrows(IllegalArgumentException.class, () -> ShellBuilder.create().withCustomJs((List<String>) null));
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> ShellBuilder.create().withCustomJs(List.of("/js/ok.js", " "))
+        );
+    }
+
+    @Test
+    @DisplayName("ShellBuilder withContentTargetId should delegate to withContentTarget")
+    void testContentTargetIdAlias() {
+        String html = ShellBuilder.create()
+            .withContentTargetId("page-content")
+            .build();
+
+        HtmlAssert.assertThat(html).hasElement("div#page-content[hx-get='/home'][hx-trigger='load']");
+    }
+
+    @Test
+    @DisplayName("ShellBuilder should apply content target class")
+    void testContentTargetClass() {
+        String html = ShellBuilder.create()
+            .withContentTargetClass("page-fragment")
+            .build();
+
+        HtmlAssert.assertThat(html).hasElement("div#content-area.page-fragment");
+    }
+
+    @Test
+    @DisplayName("ShellBuilder should apply content wrapper in full build and body build")
+    void testContentWrapperAppliedToBuildAndBody() {
+        ShellBuilder builder = ShellBuilder.create()
+            .withContentWrapper(contentTarget ->
+                new HtmlTag("section")
+                    .withAttribute("class", "content-shell")
+                    .withChild(contentTarget)
+            );
+
+        String fullHtml = builder.build();
+        String bodyHtml = builder.buildBody().render();
+
+        HtmlAssert.assertThat(fullHtml)
+            .hasElement("main.content-wrapper > section.content-shell > div#content-area[hx-get='/home'][hx-trigger='load']");
+        HtmlAssert.assertThat(bodyHtml)
+            .hasElement("main.content-wrapper > section.content-shell > div#content-area[hx-get='/home'][hx-trigger='load']");
+    }
+
+    @Test
+    @DisplayName("ShellBuilder should guard content wrapper null usage")
+    void testContentWrapperNullGuards() {
+        assertThrows(IllegalArgumentException.class, () -> ShellBuilder.create().withContentWrapper(null));
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> ShellBuilder.create().withContentWrapper(contentTarget -> null).build()
         );
     }
 

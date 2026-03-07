@@ -18,13 +18,13 @@ public class Div extends HtmlTag {
     }
 
     /**
-     * Sets class attribute.
+     * Adds class token(s) without replacing previously assigned classes.
      *
      * @param className class token(s)
      * @return this div
      */
     public Div withClass(String className) {
-        this.withAttribute("class", className);
+        super.withClass(className);
         return this;
     }
 

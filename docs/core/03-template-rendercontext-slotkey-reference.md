@@ -35,6 +35,12 @@ RenderContext ctx = RenderContext.builder()
     .build();
 ```
 
+Single-slot convenience for common cases:
+
+```java
+RenderContext ctx = RenderContext.of(TITLE, "Quarterly Report");
+```
+
 Methods you will use most:
 
 - `put(key, value)`

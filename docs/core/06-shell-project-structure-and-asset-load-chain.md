@@ -28,6 +28,7 @@ Head assets are added in this order:
 2. custom CSS files in configured order
 3. HTMX script (if enabled)
 4. framework JS (`/js/framework.js`)
+5. custom JS files in configured order
 
 Body behavior:
 
@@ -63,6 +64,23 @@ ShellBuilder.create()
     .build();
 ```
 
+Framework JS + custom page scripts:
+
+```java
+ShellBuilder.create()
+    .withCustomJs("/js/app.js")
+    .addCustomJs("/js/pages/dashboard.js")
+    .build();
+```
+
+Replace all custom JS paths with an explicit ordered list:
+
+```java
+ShellBuilder.create()
+    .withCustomJs(List.of("/js/vendor/charts.js", "/js/pages/dashboard.js"))
+    .build();
+```
+
 No framework CSS (advanced):
 
 ```java
@@ -90,6 +108,7 @@ ShellBuilder automatically handles:
 - inclusion of framework JS
 - optional HTMX bootstrap script inclusion
 - default content target ID (`content-area`) and optional HTMX load trigger (`hx-get="/home"` when HTMX is enabled)
+- optional content target hooks (`withContentTargetId`, `withContentTargetClass`, `withContentWrapper`)
 
 Nothing else is auto-loaded for you. Any additional app CSS/JS must be linked explicitly by your app shell strategy.
 
@@ -104,6 +123,8 @@ Nothing else is auto-loaded for you. Any additional app CSS/JS must be linked ex
 - Markup hooks come from shell/layout builders.
 - Responsive behavior is in `framework.css`.
 - Interactive sidebar open/close behavior is in `framework.js`.
+
+Custom script order remains deterministic: HTMX (optional) -> framework JS -> custom JS in the order configured through `withCustomJs(...)` / `addCustomJs(...)`.
 
 For a full mobile behavior map, read:
 

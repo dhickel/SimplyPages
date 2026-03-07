@@ -5,8 +5,8 @@
 
 `.internal-dev/` is the persistent engineering document store for plans, bugs, changelogs, reviews, notes, and reusable knowledge.
 
-### When you are finish task you must use internal-dev for (after asking the user it if time to first):
-- Making a changelog to: `.internal-dev/changelogs/`:
+### When you finish a task, you must use `.internal-dev` for:
+- Always create a changelog in `.internal-dev/changelogs/` for finalized work (no exceptions).
 - Add any general knowledge to : `.internal-dev/knowledge/`
 - Add any notes to : `.internal-dev/notes/`, using or creating the future_consideration.md for future improvement/concerns that should be addressed
 - Add any out-of-scope bugs to:`.internal-dev/bugs/`
