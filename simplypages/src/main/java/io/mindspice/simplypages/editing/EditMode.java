@@ -2,25 +2,16 @@ package io.mindspice.simplypages.editing;
 
 
 /**
- * Defines editing behavior modes for editable modules.
- * <p>
- * USER_EDIT mode requires changes to go through an approval workflow before
- * becoming visible to other users. OWNER_EDIT mode allows immediate updates
- * that go live without approval.
- * </p>
+ * Defines persistence/approval behavior expected by edit handlers.
  */
 public enum EditMode {
     /**
-     * User edits require approval before going live.
-     * Typically used for community contributions, wiki-style editing,
-     * or when users are editing content they don't own.
+     * User edits should enter an approval workflow before publication.
      */
     USER_EDIT,
 
     /**
-     * Owner/admin edits go live immediately.
-     * Typically used when the user owns the content or has
-     * administrative/moderator privileges.
+     * Owner/admin edits may be applied immediately.
      */
     OWNER_EDIT
 }

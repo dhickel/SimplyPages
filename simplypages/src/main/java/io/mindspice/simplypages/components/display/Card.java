@@ -7,8 +7,9 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
- * Card component for displaying content in a contained, styled box.
- * Common for displaying items in a grid or list.
+ * Card container with optional header/body/footer/image slots.
+ *
+ * <p>Mutable and not thread-safe. Slot flags and nested slot containers are updated in place. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Card extends HtmlTag {
 

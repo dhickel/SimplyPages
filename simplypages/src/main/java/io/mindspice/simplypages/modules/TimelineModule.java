@@ -12,25 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Timeline module for displaying chronological events.
+ * Module for rendering chronological events in vertical or horizontal orientation.
  *
- * <p>Perfect for grow journals, project history, research progress, or any
- * time-based sequence of events.</p>
- *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // Grow journal timeline
- * TimelineModule.create()
- *     .withTitle("My Grow Journal")
- *     .addEvent("Day 1", "Germination", "Seeds placed in wet paper towel")
- *     .addEvent("Day 7", "Seedling", "First true leaves appeared")
- *     .addEvent("Day 21", "Vegetative", "Switched to 18/6 light cycle");
- *
- * // Research timeline with custom content
- * TimelineModule.create()
- *     .vertical()
- *     .addEvent("2020", "Phase 1", customComponent);
- * }</pre>
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Mutate within a request-scoped flow. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
  */
 public class TimelineModule extends Module {
 

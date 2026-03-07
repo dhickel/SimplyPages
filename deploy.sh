@@ -30,25 +30,22 @@ if ! command -v sshpass &> /dev/null; then
     exit 1
 fi
 
-# Generate Javadocs and Build
-echo "Step 1: Generating Javadocs..."
-./mvnw clean javadoc:javadoc -pl simplypages
-echo "✓ Javadocs generated"
-echo ""
-
-echo "Step 2: Copying Javadocs to demo..."
-mkdir -p demo/src/main/resources/static/javadocs
-cp -r simplypages/target/reports/apidocs/* demo/src/main/resources/static/javadocs/
-echo "✓ Javadocs copied"
-echo ""
-
-echo "Step 3: Testing and building project locally..."
-./mvnw package
+# Build with reactor so simplypages Javadocs are generated and copied into demo
+echo "Step 1: Building project (includes Javadocs generation/copy)..."
+./mvnw -pl demo -am clean package
 echo "✓ Build complete"
 echo ""
 
+echo "Step 2: Verifying packaged Javadocs are present..."
+if [ ! -f demo/target/classes/static/javadocs/index.html ]; then
+    echo "ERROR: Missing demo/target/classes/static/javadocs/index.html after build"
+    exit 1
+fi
+echo "✓ Javadocs verified"
+echo ""
+
 # Select built demo jar
-echo "Step 4: Locating built demo jar..."
+echo "Step 3: Locating built demo jar..."
 shopt -s nullglob
 all_jars=(demo/target/*.jar)
 shopt -u nullglob
@@ -69,16 +66,40 @@ JAR_PATH="${demo_jars[0]}"
 echo "✓ Using jar: $JAR_PATH"
 echo ""
 
-echo "Step 5: Transferring jar to remote..."
+echo "Step 4: Transferring jar to remote..."
 sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no \
     "$JAR_PATH" \
     "$SSH_HOST:$REMOTE_PATH/"
 echo "✓ Jar transferred"
 echo ""
 
-echo "Step 6: Restarting remote service..."
+echo "Step 5: Restarting remote service..."
 sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no "$SSH_HOST" \
     "cd $REMOTE_PATH && { ./sp_demo.sh stop || true; ./sp_demo.sh start; ./sp_demo.sh status; exit \$?; }"
+
+echo ""
+echo "Step 6: Verifying sticky-sidebar assets on remote app..."
+sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no "$SSH_HOST" '
+set -euo pipefail
+
+for i in {1..20}; do
+  if curl -fsS http://127.0.0.1:8080/ >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+
+curl -fsS http://127.0.0.1:8080/css/framework.css > /tmp/sp_framework.css
+grep -q "sticky-sidebar-mobile-collapse" /tmp/sp_framework.css
+grep -q "sticky-sidebar-mobile-summary" /tmp/sp_framework.css
+grep -q "sticky-sidebar-content" /tmp/sp_framework.css
+
+curl -fsS "http://127.0.0.1:8080/docs/getting-started/01-installation-and-first-static-page" > /tmp/sp_docs.html
+grep -q "with-sticky-sidebar" /tmp/sp_docs.html
+grep -q "sticky-sidebar-aside" /tmp/sp_docs.html
+
+echo "✓ Remote sticky-sidebar CSS and docs markup verified"
+'
 
 echo ""
 echo "=== Deployment Script Finished ==="

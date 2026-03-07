@@ -5,21 +5,36 @@ import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Column component for controlling column width and behavior in a Row.
+ * Grid column for use inside {@link Row}.
+ *
+ * <p>Mutable and not thread-safe. Width/class mutators rewrite the same instance and should be
+ * used in a request-scoped build/render flow.</p>
  */
 public class Column extends HtmlTag {
 
+    /**
+     * Creates a column element. Base class is added lazily before render if missing.
+     */
     public Column() {
         super("div");
         // Don't set class here - let withWidth/withClass handle it
     }
 
+    /**
+     * Creates a new column.
+     *
+     * @return new column
+     */
     public static Column create() {
         return new Column();
     }
 
     /**
-     * Set specific column width (1-12 for 12-column grid)
+     * Sets fixed column width in the 12-column layout system.
+     *
+     * @param width width token from 1 to 12
+     * @return this column
+     * @throws IllegalArgumentException when width is outside {@code [1,12]}
      */
     public Column withWidth(int width) {
         if (width < 1 || width > 12) {
@@ -30,7 +45,9 @@ public class Column extends HtmlTag {
     }
 
     /**
-     * Set column to auto width
+     * Sets auto-sized column behavior via {@code col-auto}.
+     *
+     * @return this column
      */
     public Column auto() {
         this.withAttribute("class", "col col-auto");
@@ -38,31 +55,57 @@ public class Column extends HtmlTag {
     }
 
     /**
-     * Set column to take remaining space
+     * Sets fill behavior via {@code col-fill}.
+     *
+     * @return this column
      */
     public Column fill() {
         this.withAttribute("class", "col col-fill");
         return this;
     }
 
+    /**
+     * Sets id attribute.
+     *
+     * @param id element id
+     * @return this column
+     */
     @Override
     public Column withId(String id) {
         super.withId(id);
         return this;
     }
 
+    /**
+     * Replaces class attribute with {@code col <className>}.
+     *
+     * @param className additional class token(s)
+     * @return this column
+     */
     public Column withClass(String className) {
         String currentClass = "col";
         this.withAttribute("class", currentClass + " " + className);
         return this;
     }
 
+    /**
+     * Appends a child component.
+     *
+     * @param component child component
+     * @return this column
+     */
     @Override
     public Column withChild(Component component) {
         super.withChild(component);
         return this;
     }
 
+    /**
+     * Appends each child component in argument order.
+     *
+     * @param components components to append
+     * @return this column
+     */
     public Column withChildren(Component... components) {
         for (Component comp : components) {
             super.withChild(comp);
@@ -70,6 +113,11 @@ public class Column extends HtmlTag {
         return this;
     }
 
+    /**
+     * Ensures a {@code col} class exists before rendering.
+     *
+     * @return rendered HTML
+     */
     @Override
     public String render() {
         // Ensure "col" class is present before rendering
@@ -78,8 +126,7 @@ public class Column extends HtmlTag {
     }
 
     /**
-     * Ensures the "col" class is present on this component.
-     * This is called automatically before rendering.
+     * Ensures the {@code col} class token is present on the class attribute.
      */
     private void ensureColClass() {
         // Check if any class attribute exists

@@ -1,6 +1,7 @@
 package io.mindspice.simplypages.builders;
 
 import io.mindspice.simplypages.components.navigation.SideNav;
+import io.mindspice.simplypages.components.Paragraph;
 import io.mindspice.simplypages.core.Component;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,8 @@ class ShellBuilderTest {
         assertTrue(html.contains("<title>My Portal</title>"));
         assertTrue(html.contains("main-container has-sidebar"));
         assertTrue(html.contains("collapsible-sidebar"));
+        assertTrue(html.contains("mobile-sidebar-toggle"));
+        assertTrue(html.contains("toggleMobileSidebar()"));
         assertTrue(html.contains("sidebar-toggle"));
         assertTrue(html.contains("toggleSidebar"));
         assertTrue(html.contains("id=\"page-content\""));
@@ -158,6 +161,26 @@ class ShellBuilderTest {
 
         assertTrue(html.contains("shell-body"));
         assertTrue(html.contains("id=\"content-area\""));
+        assertFalse(html.contains("hx-get=\"/home\""));
+        assertFalse(html.contains("hx-trigger=\"load\""));
+    }
+
+    @Test
+    @DisplayName("ShellBuilder should not render mobile sidebar toggle without side nav")
+    void testNoMobileToggleWhenNoSidebar() {
+        String html = ShellBuilder.create().build();
+        assertFalse(html.contains("mobile-sidebar-toggle"));
+        assertFalse(html.contains("toggleMobileSidebar()"));
+    }
+
+    @Test
+    @DisplayName("ShellBuilder should render provided initial content and skip auto-load")
+    void testInitialContentDisablesAutoLoad() {
+        String html = ShellBuilder.create()
+            .withContent(new Paragraph("Initial body"))
+            .build();
+
+        assertTrue(html.contains("Initial body"));
         assertFalse(html.contains("hx-get=\"/home\""));
         assertFalse(html.contains("hx-trigger=\"load\""));
     }

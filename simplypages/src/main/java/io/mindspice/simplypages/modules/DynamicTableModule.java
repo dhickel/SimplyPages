@@ -8,14 +8,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Dynamic table module that can be rendered with specific data.
- * This module can be updated independently using HTMX.
+ * Mutable module that renders a string table with explicit headers.
+ *
+ * <p>Contract: each row may contain fewer cells than header count; missing cells are rendered as
+ * empty strings.</p>
+ *
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Header/row collections are
+ * mutable configuration state; mutate within a request-scoped flow. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
  */
 public class DynamicTableModule extends Module {
 
     private List<String[]> tableData;
     private String[] columnHeaders;
 
+    /** Creates a module with default header and sample rows. */
     public DynamicTableModule() {
         super("div");
         this.withClass("table-module");
@@ -26,10 +32,12 @@ public class DynamicTableModule extends Module {
         this.tableData.add(new String[]{"Row 2 Col 1", "Row 2 Col 2", "Row 2 Col 3"});
     }
 
+    /** Creates a new module instance. */
     public static DynamicTableModule create() {
         return new DynamicTableModule();
     }
 
+    /** Replaces headers and row data for subsequent rendering. */
     public DynamicTableModule withTableData(String[] headers, List<String[]> data) {
         this.columnHeaders = headers;
         this.tableData = data;

@@ -8,10 +8,18 @@ import io.mindspice.simplypages.core.SlotKeyMap;
 import java.util.Map;
 
 /**
- * Utility to auto-generate edit forms from slot mappings.
+ * Utility for generating basic edit form controls from slot metadata.
+ *
+ * <p>Contract: field type is inferred from {@code slotTypes}; unknown types fall back to a text
+ * input rendered from {@code toString()}.</p>
+ *
+ * <p>Mutability and thread-safety: stateless utility; thread-safe.</p>
  */
 public class EditFormBuilder {
 
+    /**
+     * Builds a form-like component tree from slot names, types, and current values.
+     */
     public static Component fromSlots(
         Map<String, SlotKey<?>> slotMapping,
         Map<String, Class<?>> slotTypes,
@@ -30,6 +38,9 @@ public class EditFormBuilder {
         return form;
     }
 
+    /**
+     * Creates the field component used for a single slot entry.
+     */
     private static Component createField(String name, Class<?> type, Object value) {
         String label = formatLabel(name);
 
@@ -51,6 +62,9 @@ public class EditFormBuilder {
         return FormFieldHelper.textField(label, name, fallback);
     }
 
+    /**
+     * Converts a camelCase slot name into a spaced label.
+     */
     private static String formatLabel(String name) {
         String result = name.substring(0, 1).toUpperCase() + name.substring(1);
         return result.replaceAll("([A-Z])", " $1").trim();

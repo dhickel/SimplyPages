@@ -3,7 +3,9 @@ package io.mindspice.simplypages.components.forms;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Button component with various styles and types.
+ * Form/button control with type, style, and size helpers.
+ *
+ * <p>Mutable and not thread-safe. Attribute and class mutators update this instance in place. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Button extends HtmlTag {
 

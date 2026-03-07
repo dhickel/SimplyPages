@@ -13,31 +13,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Comparison module for side-by-side comparisons.
+ * Module for side-by-side comparison tables.
  *
- * <p>Perfect for comparing products, research methods, or any
- * entities with similar attributes.</p>
- *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // Compare products
- * ComparisonModule.create()
- *     .withTitle("Product Comparison")
- *     .addColumn("Product A")
- *     .addColumn("Product B")
- *     .addColumn("Product C")
- *     .addRow("Category", "Type A", "Type B", "Type A")
- *     .addRow("Price", "$17-24", "$20-25", "$20-25")
- *     .addRow("Rating", "4.5/5", "4.7/5", "4.8/5")
- *     .addRow("Features", "Feature Set 1", "Feature Set 2", "Feature Set 3");
- *
- * // Compare with highlights
- * ComparisonModule.create()
- *     .addColumn("Free")
- *     .addColumn("Premium", true) // Highlighted
- *     .addRow("Storage", "1GB", "Unlimited")
- *     .addRow("Support", "Email", "24/7 Phone");
- * }</pre>
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Column and row collections are
+ * mutable and consumed during build; mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class ComparisonModule extends Module {
 

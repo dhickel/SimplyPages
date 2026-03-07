@@ -4,21 +4,38 @@ import io.mindspice.simplypages.core.Component;
 import org.owasp.encoder.Encode;
 
 /**
- * TextNode component for rendering plain text without any HTML tags.
- * Useful for mixing text with other components inside a container.
+ * Plain text component that always HTML-escapes output.
+ *
+ * <p>Immutable and thread-safe after construction.</p>
  */
 public class TextNode implements Component {
 
     private final String text;
 
+    /**
+     * Creates a text node.
+     *
+     * @param text untrusted or trusted text content
+     */
     public TextNode(String text) {
         this.text = text;
     }
 
+    /**
+     * Creates a text node.
+     *
+     * @param text text content
+     * @return new text node
+     */
     public static TextNode create(String text) {
         return new TextNode(text);
     }
 
+    /**
+     * Renders escaped HTML text.
+     *
+     * @return escaped text
+     */
     @Override
     public String render() {
         return Encode.forHtml(text);

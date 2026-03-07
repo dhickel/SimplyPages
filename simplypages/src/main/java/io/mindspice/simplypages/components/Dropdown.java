@@ -7,26 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Generic dropdown component for creating hover-based dropdown menus.
- * Can be used for navigation dropdowns, user menus, or any other dropdown needs.
+ * Builder for dropdown-style menu markup.
  *
- * <p>Example usage:</p>
- * <pre>{@code
- * // Navigation dropdown
- * Dropdown.create("Services")
- *     .addLink("Consulting", "/services/consulting")
- *     .addLink("Development", "/services/development")
- *     .addDivider()
- *     .addLink("Contact Us", "/contact")
- *     .build();
- *
- * // Custom dropdown with components
- * Dropdown dropdown = Dropdown.create("Account")
- *     .addItem(new Paragraph().withInnerText("Hello, user"))
- *     .addLink("Profile", "/profile")
- *     .addLink("Logout", "/logout")
- *     .build();
- * }</pre>
+ * <p>Mutable and not thread-safe. Items and configuration are accumulated on this builder until
+ * {@link #build()} is called.</p>
  */
 public class Dropdown {
 
@@ -35,19 +19,31 @@ public class Dropdown {
     private String customClass;
     private String alignment = "right"; // left, right, center
 
+    /**
+     * Creates a dropdown builder.
+     *
+     * @param triggerText visible trigger text
+     */
     private Dropdown(String triggerText) {
         this.triggerText = triggerText;
     }
 
     /**
-     * Create a new dropdown with the given trigger text.
+     * Creates a dropdown builder.
+     *
+     * @param triggerText visible trigger text
+     * @return new dropdown builder
      */
     public static Dropdown create(String triggerText) {
         return new Dropdown(triggerText);
     }
 
     /**
-     * Add a link item to the dropdown.
+     * Appends an anchor item.
+     *
+     * @param text link text
+     * @param href link href
+     * @return this dropdown builder
      */
     public Dropdown addLink(String text, String href) {
         HtmlTag link = new HtmlTag("a")
@@ -59,7 +55,10 @@ public class Dropdown {
     }
 
     /**
-     * Add a custom component to the dropdown.
+     * Appends a custom menu item component.
+     *
+     * @param component menu item component
+     * @return this dropdown builder
      */
     public Dropdown addItem(Component component) {
         items.add(component);
@@ -67,7 +66,9 @@ public class Dropdown {
     }
 
     /**
-     * Add a divider line between dropdown items.
+     * Appends a divider item.
+     *
+     * @return this dropdown builder
      */
     public Dropdown addDivider() {
         HtmlTag divider = new HtmlTag("div")
@@ -77,7 +78,10 @@ public class Dropdown {
     }
 
     /**
-     * Set custom CSS class for the dropdown container.
+     * Sets additional container class token(s).
+     *
+     * @param className class token(s)
+     * @return this dropdown builder
      */
     public Dropdown withClass(String className) {
         this.customClass = className;
@@ -85,8 +89,10 @@ public class Dropdown {
     }
 
     /**
-     * Set the alignment of the dropdown menu.
-     * @param alignment "left", "right", or "center" (default: "right")
+     * Sets dropdown alignment token.
+     *
+     * @param alignment expected tokens: {@code left}, {@code right}, or {@code center}
+     * @return this dropdown builder
      */
     public Dropdown withAlignment(String alignment) {
         this.alignment = alignment;
@@ -94,7 +100,9 @@ public class Dropdown {
     }
 
     /**
-     * Build the dropdown component.
+     * Builds and returns a static dropdown component tree.
+     *
+     * @return root dropdown component
      */
     public Component build() {
         HtmlTag container = new HtmlTag("div");

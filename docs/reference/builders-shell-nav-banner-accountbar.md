@@ -12,6 +12,7 @@ Core options:
 - `withAccountBar(...)`
 - `withSideNav(...)`
 - `withContentTarget(...)`
+- `withContent(...)`
 - `withPageTitle(...)`
 - `withHtmx(boolean)`
 - `withFrameworkCss(boolean)`
@@ -21,6 +22,8 @@ Core options:
 - `addCustomCss(String)`
 
 Returns full HTML document string from `build()`.
+
+When a sidebar is configured, shell output includes a mobile navigation toggle hook compatible with framework CSS/JS defaults.
 
 Stylesheet load order in `build()`:
 

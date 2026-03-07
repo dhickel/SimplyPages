@@ -9,36 +9,10 @@ import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Callout module for highlighted informational boxes.
+ * Module for highlighted informational callout blocks.
  *
- * <p>Callouts draw attention to important information with visual styling.
- * Supports different types (info, warning, success, error) for different contexts.</p>
- *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // Info callout
- * CalloutModule.create()
- *     .info()
- *     .withTitle("Did you know?")
- *     .withContent("Scientific research is rapidly expanding.");
- *
- * // Warning callout
- * CalloutModule.create()
- *     .warning()
- *     .withTitle("Important")
- *     .withContent("Always verify data sources before citing.");
- *
- * // Success callout
- * CalloutModule.create()
- *     .success()
- *     .withContent("Your submission was successful!");
- *
- * // Error callout
- * CalloutModule.create()
- *     .error()
- *     .withTitle("Error")
- *     .withContent("Failed to load data. Please try again.");
- * }</pre>
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Content/type flags are mutable
+ * configuration state; mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class CalloutModule extends Module {
 

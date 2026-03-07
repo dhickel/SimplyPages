@@ -9,9 +9,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = DemoApplication.class)
@@ -22,49 +23,42 @@ class EditingOobIntegrationTest {
     private MockMvc mockMvc;
 
     @Test
-    @DisplayName("Phase 6.5 save should return OOB swaps for modal + page content")
-    void phase6_5SaveReturnsOobSwaps() throws Exception {
-        mockMvc.perform(post("/test/phase6-5/save/module-3")
-                .param("title", "Updated Title")
-                .param("content", "Updated Content")
-                .param("width", "6"))
+    @DisplayName("Demos shell should render consolidated sidebar and top nav")
+    void demosShellRendersConsolidatedNavigation() throws Exception {
+        mockMvc.perform(get("/demos"))
             .andExpect(status().isOk())
-            .andExpect(content().string(containsString("hx-swap-oob=\"true\" id=\"edit-modal-container\"")))
-            .andExpect(content().string(containsString("hx-swap-oob=\"true\" id=\"page-content\"")));
+            .andExpect(header().string("Vary", containsString("HX-Request")))
+            .andExpect(content().string(containsString("Basics &amp; Forms")))
+            .andExpect(content().string(containsString("Display &amp; Data")))
+            .andExpect(content().string(containsString("Modules")))
+            .andExpect(content().string(containsString("HTMX &amp; Editing")));
     }
 
     @Test
-    @DisplayName("Phase 6.5 add module should return OOB swaps for modal + page content")
-    void phase6_5AddModuleReturnsOobSwaps() throws Exception {
-        mockMvc.perform(post("/test/phase6-5/add-module/row-4")
-                .param("title", "New Module")
-                .param("content", "Module Content")
-                .param("width", "12"))
-            .andExpect(status().isOk())
-            .andExpect(content().string(containsString("hx-swap-oob=\"true\" id=\"edit-modal-container\"")))
-            .andExpect(content().string(containsString("hx-swap-oob=\"true\" id=\"page-content\"")));
+    @DisplayName("Legacy flat route should be removed")
+    void legacyRoutesAreRemoved() throws Exception {
+        mockMvc.perform(get("/components"))
+            .andExpect(status().isNotFound());
     }
 
     @Test
-    @DisplayName("Phase 8 update should return OOB swaps for modal + refreshed container")
-    void phase8UpdateReturnsOobSwaps() throws Exception {
-        mockMvc.perform(post("/test/phase8/api/modules/module-1/update")
-                .param("user", "admin")
-                .param("title", "Public Content")
-                .param("content", "Updated by admin")
-                .param("useMarkdown", "on"))
+    @DisplayName("HTMX request should return page fragment without shell")
+    void htmxRequestReturnsFragment() throws Exception {
+        mockMvc.perform(get("/demos/modules").header("HX-Request", "true"))
             .andExpect(status().isOk())
-            .andExpect(content().string(containsString("hx-swap-oob=\"true\" id=\"edit-modal-container\"")))
-            .andExpect(content().string(containsString("hx-swap-oob=\"outerHTML\" class=\"container\"")));
+            .andExpect(content().string(containsString("Modules Library")))
+            .andExpect(content().string(org.hamcrest.Matchers.not(containsString("<!DOCTYPE html>"))));
     }
 
     @Test
-    @DisplayName("Phase 8 delete should return OOB swaps for modal + refreshed container")
-    void phase8DeleteReturnsOobSwaps() throws Exception {
-        mockMvc.perform(delete("/test/phase8/api/modules/module-2/delete")
-                .param("user", "admin"))
+    @DisplayName("Template API should return rendered module fragment")
+    void templateEndpointRendersCardModule() throws Exception {
+        mockMvc.perform(post("/demos/api/template-card")
+                .param("title", "Updated")
+                .param("body", "Body value"))
             .andExpect(status().isOk())
-            .andExpect(content().string(containsString("hx-swap-oob=\"true\" id=\"edit-modal-container\"")))
-            .andExpect(content().string(containsString("hx-swap-oob=\"outerHTML\" class=\"container\"")));
+            .andExpect(content().string(containsString("dynamic-card-preview")))
+            .andExpect(content().string(containsString("Updated")))
+            .andExpect(content().string(containsString("Body value")));
     }
 }

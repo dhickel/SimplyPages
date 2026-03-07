@@ -11,26 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Tabs module for organizing content into tabbed panels.
+ * Module that renders tab navigation and tab panels.
  *
- * <p>Tabs are useful for grouping related content and allowing users to
- * switch between different views without leaving the page.</p>
- *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // Basic tabs
- * TabsModule.create()
- *     .withTitle("Research Data")
- *     .addTab("Overview", "Summary of research findings...")
- *     .addTab("Methods", "Research methodology...")
- *     .addTab("Results", customComponent);
- *
- * // Tabs with custom styling
- * TabsModule.create()
- *     .addTab("Tab 1", content1)
- *     .addTab("Tab 2", content2)
- *     .withActiveTab(1); // Make second tab active
- * }</pre>
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Tab definitions and active state
+ * are mutable configuration data; mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class TabsModule extends Module {
 

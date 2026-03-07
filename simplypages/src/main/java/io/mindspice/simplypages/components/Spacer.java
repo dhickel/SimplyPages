@@ -3,31 +3,9 @@ package io.mindspice.simplypages.components;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Spacer component for adding vertical or horizontal spacing between elements.
+ * Empty spacing helper for vertical or horizontal gaps.
  *
- * <p>Spacers are empty divs with configurable height or width for creating
- * visual separation between components.</p>
- *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // Small vertical spacing (16px)
- * Spacer.vertical().small();
- *
- * // Medium vertical spacing (32px) - default
- * Spacer.vertical().medium();
- *
- * // Large vertical spacing (48px)
- * Spacer.vertical().large();
- *
- * // Extra large vertical spacing (64px)
- * Spacer.vertical().extraLarge();
- *
- * // Custom vertical spacing
- * Spacer.vertical().custom("100px");
- *
- * // Horizontal spacer with medium width
- * Spacer.horizontal().medium();
- * }</pre>
+ * <p>Mutable and not thread-safe. Orientation and size styles are applied to the same instance. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Spacer extends HtmlTag {
 

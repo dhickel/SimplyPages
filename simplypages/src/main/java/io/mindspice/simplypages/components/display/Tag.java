@@ -3,8 +3,9 @@ package io.mindspice.simplypages.components.display;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Tag component for categorization and labeling.
- * Similar to Badge but typically used for categories/keywords.
+ * Tag/keyword label component.
+ *
+ * <p>Mutable and not thread-safe. Color/removable helpers rewrite class attributes in place. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Tag extends HtmlTag {
 

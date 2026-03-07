@@ -2,26 +2,15 @@ package io.mindspice.simplypages.components.display;
 
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
-import io.mindspice.simplypages.components.forms.Button;
+import io.mindspice.simplypages.core.RenderContext;
 
 /**
- * Overlay modal component with backdrop.
+ * Backdrop-based modal renderer with configurable close behavior.
  *
- * Features:
- * - Semi-transparent backdrop overlay
- * - Centered on desktop, full-screen on mobile
- * - ESC key to close
- * - Click backdrop to close (optional)
- * - Z-index layering (backdrop: 1000, modal: 1001)
+ * <p>Mutable and not thread-safe. Configure and render within a request-scoped lifecycle. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
  *
- * Usage:
- * <pre>
- * Modal modal = Modal.create()
- *     .withTitle("Edit Module")
- *     .withBody(formComponent)
- *     .withFooter(buttonsComponent)
- *     .closeOnBackdrop(true);
- * </pre>
+ * <p>Security boundary: {@link #withModalId(String)} validates identifiers used in inline JS.
+ * Body/footer components are rendered as provided by caller.</p>
  */
 public class Modal extends HtmlTag {
 
@@ -38,7 +27,7 @@ public class Modal extends HtmlTag {
             java.util.regex.Pattern.compile("^[a-zA-Z][a-zA-Z0-9_-]*$");
 
     /**
-     * Private constructor. Use create() factory method.
+     * Creates a modal with generated id and default close behavior enabled.
      */
     private Modal() {
         super("div");
@@ -47,24 +36,20 @@ public class Modal extends HtmlTag {
     }
 
     /**
-     * Factory method to create a new Modal instance.
-     * @return A new Modal instance
+     * Creates a new modal instance.
+     *
+     * @return new modal
      */
     public static Modal create() {
         return new Modal();
     }
 
     /**
-     * Set the modal ID.
-     * <p>
-     * The ID must start with a letter and contain only letters, numbers,
-     * hyphens, and underscores. This is required for security as the ID
-     * is used in JavaScript.
-     * </p>
+     * Sets modal id used by generated close handlers.
      *
-     * @param modalId The modal identifier
-     * @return this for chaining
-     * @throws IllegalArgumentException if the ID contains invalid characters
+     * @param modalId id matching {@code ^[a-zA-Z][a-zA-Z0-9_-]*$}
+     * @return this modal
+     * @throws IllegalArgumentException when id format is invalid
      */
     public Modal withModalId(String modalId) {
         if (modalId == null || !VALID_ID_PATTERN.matcher(modalId).matches()) {
@@ -76,9 +61,10 @@ public class Modal extends HtmlTag {
     }
 
     /**
-     * Set the modal title.
-     * @param title The modal title
-     * @return this for chaining
+     * Sets modal title text.
+     *
+     * @param title title text
+     * @return this modal
      */
     public Modal withTitle(String title) {
         this.title = title;
@@ -86,9 +72,10 @@ public class Modal extends HtmlTag {
     }
 
     /**
-     * Set the modal body content.
-     * @param body The body component
-     * @return this for chaining
+     * Sets modal body component.
+     *
+     * @param body body component
+     * @return this modal
      */
     public Modal withBody(Component body) {
         this.body = body;
@@ -96,9 +83,10 @@ public class Modal extends HtmlTag {
     }
 
     /**
-     * Set the modal footer content.
-     * @param footer The footer component
-     * @return this for chaining
+     * Sets modal footer component.
+     *
+     * @param footer footer component
+     * @return this modal
      */
     public Modal withFooter(Component footer) {
         this.footer = footer;
@@ -106,9 +94,10 @@ public class Modal extends HtmlTag {
     }
 
     /**
-     * Enable or disable closing modal when clicking backdrop.
+     * Toggles close-on-backdrop behavior.
+     *
      * @param enabled true to enable backdrop click to close
-     * @return this for chaining
+     * @return this modal
      */
     public Modal closeOnBackdrop(boolean enabled) {
         this.closeOnBackdrop = enabled;
@@ -116,10 +105,10 @@ public class Modal extends HtmlTag {
     }
 
     /**
-     * Enable or disable closing modal when pressing Escape.
+     * Toggles close-on-escape behavior.
      *
      * @param enabled true to enable ESC key to close
-     * @return this for chaining
+     * @return this modal
      */
     public Modal closeOnEscape(boolean enabled) {
         this.closeOnEscape = enabled;
@@ -127,15 +116,21 @@ public class Modal extends HtmlTag {
     }
 
     /**
-     * Show or hide the close button in header.
+     * Toggles close button rendering in modal header.
+     *
      * @param show true to show close button
-     * @return this for chaining
+     * @return this modal
      */
     public Modal showCloseButton(boolean show) {
         this.showCloseButton = show;
         return this;
     }
 
+    /**
+     * Renders complete modal/backdrop markup with configured handlers/content.
+     *
+     * @return modal HTML
+     */
     @Override
     public String render() {
         StringBuilder html = new StringBuilder();
@@ -209,9 +204,21 @@ public class Modal extends HtmlTag {
     }
 
     /**
-     * Escape HTML special characters to prevent XSS.
-     * @param text The text to escape
-     * @return Escaped text
+     * Ensures modal markup rendering is identical for context-aware parent render paths.
+     *
+     * @param context render context (unused; modal currently renders static content tree)
+     * @return modal HTML
+     */
+    @Override
+    public String render(RenderContext context) {
+        return render();
+    }
+
+    /**
+     * Escapes title text for safe inline HTML insertion.
+     *
+     * @param text raw title text
+     * @return escaped title text
      */
     private String escapeHtml(String text) {
         if (text == null) {

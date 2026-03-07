@@ -6,47 +6,17 @@ import io.mindspice.simplypages.components.display.Modal;
 import java.util.function.Supplier;
 
 /**
- * Optional authentication/authorization wrapper for edit operations.
- * <p>
- * Provides a standardized pattern for protecting edit endpoints with permission checks.
- * Framework users can use this utility to wrap their edit actions with auth checks,
- * or implement their own authorization patterns.
- * </p>
+ * Small utility for wrapping edit actions with authorization checks.
  *
- * <h2>Usage Example:</h2>
- * <pre>{@code
- * @GetMapping("/api/modules/{id}/edit")
- * @ResponseBody
- * public String editModule(@PathVariable String id, Principal principal) {
- *     return AuthWrapper.requireForEdit(
- *         () -> canUserEdit(id, principal.name()),
- *         () -> {
- *             Module module = findModule(id);
- *             Editable<?> adapter = (Editable<?>) module;
- *             return EditModalBuilder.create()
- *                 .withTitle("Edit Module")
- *                 .withEditView(adapter.buildEditView())
- *                 .withSaveUrl("/api/modules/" + id + "/update")
- *                 .build()
- *                 .render();
- *         }
- *     );
- * }
- * }</pre>
+ * <p>Framework boundary: this class only gates execution and returns fallback UI content. It does
+ * not authenticate users or enforce transport-layer protections.</p>
  *
- * <h2>Custom Unauthorized Handler:</h2>
- * <pre>{@code
- * return AuthWrapper.require(
- *     () -> hasPermission(user, resource),
- *     () -> performAction(),
- *     () -> customUnauthorizedResponse()
- * );
- * }</pre>
+ * <p>Mutability and thread-safety: stateless utility methods; thread-safe.</p>
  */
 public class AuthWrapper {
 
     /**
-     * Generic authorization wrapper with custom unauthorized handler.
+     * Executes {@code action} when authorized, otherwise executes {@code unauthorizedHandler}.
      *
      * @param authCheck           Supplier that returns true if action is authorized
      * @param action              Action to perform if authorized
@@ -64,10 +34,6 @@ public class AuthWrapper {
 
     /**
      * Authorization wrapper for edit operations with default unauthorized modal.
-     * <p>
-     * Returns a Modal with "Unauthorized" title and "Permission denied" error message
-     * if the auth check fails.
-     * </p>
      *
      * @param authCheck Supplier that returns true if edit is authorized
      * @param action    Action to perform if authorized (typically returns Modal HTML)
@@ -88,7 +54,7 @@ public class AuthWrapper {
     }
 
     /**
-     * Authorization wrapper for edit operations with custom error message.
+     * Authorization wrapper for edit operations with custom error text.
      *
      * @param authCheck    Supplier that returns true if edit is authorized
      * @param action       Action to perform if authorized

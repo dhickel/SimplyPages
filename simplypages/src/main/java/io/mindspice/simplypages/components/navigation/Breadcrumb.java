@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Breadcrumb navigation component for showing hierarchical navigation.
+ * Breadcrumb navigation with explicit active/non-active item entries.
+ *
+ * <p>Mutable and not thread-safe. Item list is accumulated and rendered in insertion order. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Breadcrumb extends HtmlTag {
 

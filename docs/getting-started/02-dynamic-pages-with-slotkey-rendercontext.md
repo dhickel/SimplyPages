@@ -4,6 +4,9 @@
 
 This is the default dynamic rendering pattern in SimplyPages.
 
+`SlotKey`/`Slot` values also work with direct `Component.render(context)`, but template-wrapped
+rendering is the preferred reuse pattern for stable structures.
+
 ## Define Slots and a Template Once
 
 ```java
@@ -69,3 +72,5 @@ If you later call `ctx.put(key, newValue)`, compiled value for that key is repla
 Do not rebuild entire page/module trees on every dynamic update if only data changed.
 
 Use stable templates + slots for data churn.
+
+Do not share and mutate the same component/module instance concurrently across requests.

@@ -15,8 +15,10 @@ import io.mindspice.simplypages.editing.ValidationResult;
 import java.util.*;
 
 /**
- * Rich content module that can contain paragraphs, images, and links.
- * Demonstrates container module pattern with multiple component types as children.
+ * Editable module that renders heterogeneous content items (paragraphs, images, links, headers).
+ *
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Child component list is mutable
+ * and reused directly during rendering; mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class RichContentModule extends Module implements Editable<RichContentModule> {
 

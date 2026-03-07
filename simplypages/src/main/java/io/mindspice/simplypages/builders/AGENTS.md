@@ -11,6 +11,7 @@ Owns higher-level shell and navigation builder utilities.
 - Builders remain fluent and simple to compose.
 - `build()` output shape stays stable for consumers.
 - Default values keep generated output functional.
+- Shell sidebar markup keeps stable class hooks for responsive/mobile behavior.
 
 ## Do
 - Keep generated markup predictable and integration-friendly.

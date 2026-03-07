@@ -7,7 +7,9 @@ import io.mindspice.simplypages.core.RenderContext;
 import java.util.stream.Stream;
 
 /**
- * Blockquote component for quoted text.
+ * Quoted-text block with optional citation and source footer.
+ *
+ * <p>Mutable and not thread-safe. Quote metadata is stored on this instance and read at render time. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Blockquote extends HtmlTag {
 

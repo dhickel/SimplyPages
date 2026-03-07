@@ -12,6 +12,9 @@ This page explains how SimplyPages turns Java objects into HTML.
 4. `Template` or `Component` renders HTML.
 5. Response returns full page or fragment.
 
+Both render paths resolve `SlotKey` values from `RenderContext`. The template path is preferred for
+reusing shared render structure across requests.
+
 ```mermaid
 sequenceDiagram
     participant B as Browser
@@ -36,6 +39,9 @@ sequenceDiagram
 - Opaque component segments (fallback component rendering)
 
 Modules are built before compilation (`module.build()`).
+
+This means `Template` wraps the compiled component/module tree; callers typically interact with the
+template for repeated renders rather than mutating the original tree per request.
 
 ## Low-Level: Slot Resolution
 

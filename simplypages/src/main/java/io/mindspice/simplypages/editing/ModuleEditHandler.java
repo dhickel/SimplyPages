@@ -7,69 +7,17 @@ import java.util.Map;
 
 
 /**
- * Interface for handling module edit/update/delete operations.
- * <p>
- * Implement this interface in your Spring service layer to provide
- * custom editing logic and approval workflows for your modules.
- * </p>
- * <p>
- * Example implementation:
- * <pre>{@code
- * @Service
- * public class ContentModuleEditHandler implements ModuleEditHandler<ContentModule> {
+ * Application service contract for edit form rendering, update handling, and delete handling.
  *
- *     @Override
- *     public Component renderEditForm(String moduleId) {
- *         ModuleData data = moduleRepo.findById(moduleId);
- *         return FormModule.create()
- *             .addField("Title", TextInput.create("title").withValue(data.getTitle()))
- *             .addField("Content", TextArea.create("content").withValue(data.getContent()))
- *             .addField("", Button.submit("Save")
- *                 .withAttribute("hx-post", "/api/modules/" + moduleId + "/update")
- *                 .withAttribute("hx-target", "#" + moduleId)
- *                 .withAttribute("hx-swap", "outerHTML"));
- *     }
+ * <p>Framework boundary: SimplyPages invokes these hooks but does not decide persistence model,
+ * approval workflow, or authorization policy.</p>
  *
- *     @Override
- *     public Component handleUpdate(String moduleId, Map<String, String> editData, EditMode editMode) {
- *         if (editMode == EditMode.OWNER_EDIT) {
- *             moduleService.update(moduleId, editData);
- *             return EditableModule.wrap(moduleService.load(moduleId))
- *                 .withModuleId(moduleId)
- *                 .withEditUrl("/api/modules/" + moduleId + "/edit")
- *                 .withEditMode(editMode);
- *         } else {
- *             approvalService.submitEdit(moduleId, editData);
- *             return Alert.create().warning()
- *                 .withTitle("Pending Approval")
- *                 .withMessage("Your changes have been submitted for review.");
- *         }
- *     }
- *
- *     @Override
- *     public Component handleDelete(String moduleId, EditMode editMode) {
- *         if (editMode == EditMode.OWNER_EDIT) {
- *             moduleService.delete(moduleId);
- *             return new Div();  // Empty component for HTMX to remove
- *         } else {
- *             approvalService.submitDeletion(moduleId);
- *             return Alert.create().info().withMessage("Deletion request submitted.");
- *         }
- *     }
- * }
- * }</pre>
- *
- * @param <T> the type of module this handler manages
+ * @param <T> module type handled by this service
  */
 public interface ModuleEditHandler<T> {
 
     /**
-     * Called when a user requests to edit a module.
-     * Returns a component (typically a form) for editing the module.
-     * <p>
-     * The returned component should include HTMX attributes to submit
-     * the edit back to the update endpoint.
-     * </p>
+     * Renders edit UI for a module id.
      *
      * @param moduleId the unique identifier of the module to edit
      * @return Component representing the edit form
@@ -77,13 +25,10 @@ public interface ModuleEditHandler<T> {
     Component renderEditForm(String moduleId);
 
     /**
-     * Called when a user submits edits to a module.
-     * <p>
-     * Behavior depends on the edit mode:
-     * <ul>
-     *     <li>USER_EDIT: Save changes to approval queue, return approval pending message</li>
-     *     <li>OWNER_EDIT: Save changes directly, return updated module</li>
-     * </ul>
+     * Handles submitted edit payload.
+     *
+     * <p>Implementations typically branch on {@code editMode} to either apply immediately or
+     * enqueue approval. Returned component is rendered back to caller/HTMX target.</p>
      *
      * @param moduleId the unique identifier of the module being updated
      * @param editData the submitted edit data (form field name → value)
@@ -93,13 +38,10 @@ public interface ModuleEditHandler<T> {
     Component handleUpdate(String moduleId, Map<String, String> editData, EditMode editMode);
 
     /**
-     * Called when a user requests to delete a module.
-     * <p>
-     * Behavior depends on the edit mode:
-     * <ul>
-     *     <li>USER_EDIT: Submit deletion request for approval, return confirmation message</li>
-     *     <li>OWNER_EDIT: Delete immediately, return empty component</li>
-     * </ul>
+     * Handles delete request for a module id.
+     *
+     * <p>Implementations may apply immediate deletion or return approval-state feedback based on
+     * {@code editMode}.</p>
      *
      * @param moduleId the unique identifier of the module to delete
      * @param editMode the edit mode (USER_EDIT or OWNER_EDIT)

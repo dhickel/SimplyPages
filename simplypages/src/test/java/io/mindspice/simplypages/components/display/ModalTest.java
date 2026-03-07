@@ -2,6 +2,7 @@ package io.mindspice.simplypages.components.display;
 
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.components.forms.Button;
+import io.mindspice.simplypages.modules.ContentModule;
 import io.mindspice.simplypages.testutil.HtmlAssert;
 import io.mindspice.simplypages.testutil.SnapshotAssert;
 import org.junit.jupiter.api.DisplayName;
@@ -71,5 +72,23 @@ class ModalTest {
             .childOrder("div.modal-container", "div.modal-body", "div.modal-footer");
 
         SnapshotAssert.assertMatches("display/modal/content-only", html);
+    }
+
+    @Test
+    @DisplayName("Modal should render full structure when nested in context-aware parent render paths")
+    void testModalNestedInModuleRenderPath() {
+        String html = ContentModule.create()
+            .withTitle("Modal Host")
+            .withCustomContent(Modal.create()
+                .withModalId("nested-modal")
+                .withTitle("Nested Modal")
+                .withBody(new Div().withInnerText("Nested body")))
+            .render();
+
+        HtmlAssert.assertThat(html)
+            .hasElement("div.modal-backdrop#nested-modal")
+            .hasElement("div.modal-backdrop#nested-modal > div.modal-container")
+            .hasElement("div.modal-container > div.modal-body")
+            .elementTextEquals("div.modal-body", "Nested body");
     }
 }

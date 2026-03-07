@@ -146,6 +146,18 @@ Default answer: no.
 4. Namespace module styles under module IDs/classes.
 5. Keep overrides in CSS, not scattered inline styles.
 
+## Mobile Defaults in Framework CSS
+
+`framework.css` includes responsive defaults for shell and layout primitives:
+
+- mobile sidebar off-canvas behavior (`.main-sidebar.mobile-open`)
+- mobile sidebar toggle styling (`.mobile-sidebar-toggle`)
+- row/column stacking for narrow screens
+- text wrapping guards on columns/module content
+- sticky sidebar mobile stacking/collapse hooks
+
+Treat these as baseline behavior and layer app-specific responsive polish in custom CSS.
+
 ## Advanced Mode: No Framework CSS
 
 You can disable framework CSS:

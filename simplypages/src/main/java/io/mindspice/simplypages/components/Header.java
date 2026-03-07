@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Header component for text headings with alignment and decoration options.
+ * Heading component (H1-H6) with alignment and optional decorative bars.
  *
- * <p>Headers support H1-H6 levels, alignment, and optional top/bottom dividers.</p>
+ * <p>Mutable and not thread-safe. Content and decoration state are composed on this instance. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Header extends HtmlTag {
 

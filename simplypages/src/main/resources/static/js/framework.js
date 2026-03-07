@@ -28,6 +28,19 @@ document.addEventListener('click', function(event) {
     }
 });
 
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById('main-sidebar');
+    if (!sidebar) {
+        return;
+    }
+
+    const isOpen = sidebar.classList.toggle('mobile-open');
+    const mobileToggle = document.querySelector('.mobile-sidebar-toggle');
+    if (mobileToggle) {
+        mobileToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+}
+
 /**
  * Handle Accordion Logic
  * - Toggles active/expanded state
@@ -105,6 +118,13 @@ function handleCallout(button) {
         callout.style.display = 'none';
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileToggle = document.querySelector('.mobile-sidebar-toggle');
+    if (mobileToggle) {
+        mobileToggle.setAttribute('aria-expanded', 'false');
+    }
+});
 
 // HTMX history navigation should reset the window scroll position.
 // This keeps sidebar-driven page-to-page navigation predictable while avoiding

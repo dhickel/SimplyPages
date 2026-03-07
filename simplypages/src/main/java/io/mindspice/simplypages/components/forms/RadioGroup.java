@@ -9,8 +9,9 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Radio button group component.
- * Creates a group of mutually exclusive radio options.
+ * Radio button group with shared input name.
+ *
+ * <p>Mutable and not thread-safe. Options are accumulated in-memory and rendered in insertion order. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class RadioGroup extends Div {
 
@@ -18,37 +19,78 @@ public class RadioGroup extends Div {
     private final List<RadioOption> options = new ArrayList<>();
     private String selectedValue;
 
+    /**
+     * Creates a radio group.
+     *
+     * @param name shared radio input name
+     */
     public RadioGroup(String name) {
         super();
         this.name = name;
         this.withClass("form-radio-group");
     }
 
+    /**
+     * Creates a radio group.
+     *
+     * @param name shared radio input name
+     * @return new radio group
+     */
     public static RadioGroup create(String name) {
         return new RadioGroup(name);
     }
 
+    /**
+     * Appends one option.
+     *
+     * @param value option value
+     * @param label option label
+     * @return this group
+     */
     public RadioGroup addOption(String value, String label) {
         options.add(new RadioOption(value, label));
         return this;
     }
 
+    /**
+     * Sets selected option value.
+     *
+     * @param value value matched during render
+     * @return this group
+     */
     public RadioGroup withSelectedValue(String value) {
         this.selectedValue = value;
         return this;
     }
 
+    /**
+     * Marks all current options as required.
+     *
+     * <p>Options added after this call are not marked required unless this method is invoked again.</p>
+     *
+     * @return this group
+     */
     public RadioGroup required() {
         // Will be applied to all radio buttons
         options.forEach(opt -> opt.required = true);
         return this;
     }
 
+    /**
+     * Adds {@code radio-inline} class.
+     *
+     * @return this group
+     */
     public RadioGroup inline() {
         this.withClass("radio-inline");
         return this;
     }
 
+    /**
+     * Builds radio-option wrappers and appends inherited children.
+     *
+     * @return child stream
+     */
     @Override
     protected Stream<Component> getChildrenStream() {
         Stream<Component> optionsStream = options.stream().map(option -> {
@@ -83,11 +125,20 @@ public class RadioGroup extends Div {
         return Stream.concat(optionsStream, super.getChildrenStream());
     }
 
+    /**
+     * Internal mutable option model used at render time.
+     */
     private static class RadioOption {
         String value;
         String label;
         boolean required = false;
 
+        /**
+         * Creates an option with label/value.
+         *
+         * @param value option value
+         * @param label option label
+         */
         RadioOption(String value, String label) {
             this.value = value;
             this.label = label;

@@ -1,34 +1,44 @@
 package io.mindspice.simplypages.core;
 
 /**
- * Adapter class that wraps a {@link Template} and a {@link RenderContext} to make them usable as a standard {@link Component}.
+ * {@link Component} adapter that binds a compiled {@link Template} to a fixed {@link RenderContext}.
  *
- * <p>This component is crucial for the "Composite Pattern" of rendering, allowing high-performance,
- * pre-compiled templates to be mixed seamlessly into request-scoped component trees.</p>
+ * <p>Context contract: {@link #render(RenderContext)} ignores the parent context and always renders
+ * with the bound context.</p>
  *
- * <h2>Use Case</h2>
- * <ul>
- *   <li>Embedding a highly dynamic module (Pattern B) into a conditional page layout (Pattern A).</li>
- *   <li>Creating lists or grids of templates where the layout is built at runtime.</li>
- * </ul>
+ * <p>Mutability/thread-safety: immutable wrapper. Effective thread-safety depends on whether the
+ * bound context is mutated concurrently.</p>
  */
 public class TemplateComponent implements Component {
     private final Template template;
     private final RenderContext context;
 
+    /**
+     * Creates a template-backed component with a fixed render context.
+     *
+     * @param template compiled template to render
+     * @param context context used for all renders
+     */
     public TemplateComponent(Template template, RenderContext context) {
         this.template = template;
         this.context = context;
     }
 
+    /**
+     * Factory for {@link TemplateComponent}.
+     */
     public static TemplateComponent of(Template template, RenderContext context) {
         return new TemplateComponent(template, context);
     }
 
+    /**
+     * Renders using the bound context and ignores {@code parentContext}.
+     *
+     * @param parentContext ignored
+     * @return rendered HTML for the bound template/context pair
+     */
     @Override
     public String render(RenderContext parentContext) {
-        // We use the internal context, ignoring the parent context, because
-        // the template is bound to its specific data.
         return template.render(this.context);
     }
 }

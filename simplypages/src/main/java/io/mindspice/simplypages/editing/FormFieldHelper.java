@@ -8,7 +8,9 @@ import io.mindspice.simplypages.components.forms.TextInput;
 import io.mindspice.simplypages.core.Component;
 
 /**
- * Helper for building consistent form fields in Editable implementations.
+ * Utility for consistent labeled form-field fragments used by editable modules.
+ *
+ * <p>Mutability and thread-safety: stateless utility; thread-safe.</p>
  */
 public final class FormFieldHelper {
 

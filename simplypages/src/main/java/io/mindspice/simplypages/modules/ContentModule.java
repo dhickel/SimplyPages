@@ -17,7 +17,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Module for displaying content (text, markdown, etc.)
+ * Editable module for rendering text or custom content blocks.
+ *
+ * <p>Contract: when {@code customContent} is set it takes precedence; otherwise {@code content}
+ * is rendered as Markdown by default or as escaped text when markdown is disabled.</p>
+ *
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Edit flows mutate the same
+ * instance and call {@code rebuildContent()} to satisfy module build-once lifecycle semantics;
+ * mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class ContentModule extends Module implements Editable<ContentModule> {
 
@@ -25,25 +32,30 @@ public class ContentModule extends Module implements Editable<ContentModule> {
     private boolean useMarkdown = true;
     private Component customContent;
 
+    /** Creates an empty content module. */
     public ContentModule() {
         super("div");
         this.withClass("content-module");
     }
 
+    /** Creates a new module instance. */
     public static ContentModule create() {
         return new ContentModule();
     }
 
+    /** Sets text/markdown source content. */
     public ContentModule withContent(String content) {
         this.content = content;
         return this;
     }
 
+    /** Sets explicit custom content and bypasses text rendering when present. */
     public ContentModule withCustomContent(Component content) {
         this.customContent = content;
         return this;
     }
 
+    /** Disables Markdown rendering and renders content as escaped text. */
     public ContentModule disableMarkdown() {
         this.useMarkdown = false;
         return this;
@@ -82,8 +94,7 @@ public class ContentModule extends Module implements Editable<ContentModule> {
         super.withChild(contentWrapper);
     }
 
-    // ===== Editable Implementation =====
-
+    /** {@inheritDoc} */
     @Override
     public Component buildEditView() {
         Div editForm = new Div();
@@ -93,6 +104,7 @@ public class ContentModule extends Module implements Editable<ContentModule> {
         return editForm;
     }
 
+    /** {@inheritDoc} */
     @Override
     public ContentModule applyEdits(Map<String, String> formData) {
         if (formData.containsKey("title")) {
@@ -110,6 +122,7 @@ public class ContentModule extends Module implements Editable<ContentModule> {
         return this;
     }
 
+    /** {@inheritDoc} */
     @Override
     public ValidationResult validate(Map<String, String> formData) {
         List<String> errors = new ArrayList<>();

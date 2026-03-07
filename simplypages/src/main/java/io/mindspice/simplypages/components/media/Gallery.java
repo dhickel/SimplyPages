@@ -4,7 +4,9 @@ import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.layout.Grid;
 
 /**
- * Gallery component for displaying a grid of images.
+ * Grid-based image gallery component.
+ *
+ * <p>Mutable and not thread-safe through inherited grid/item mutation state. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
  */
 public class Gallery extends Grid {
 

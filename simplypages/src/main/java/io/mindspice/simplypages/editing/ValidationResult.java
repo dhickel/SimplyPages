@@ -5,26 +5,12 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Result of form validation for editable modules.
+ * Immutable validation outcome for edit-form processing.
  *
- * <p>This class encapsulates the outcome of validating form data,
- * including whether the validation passed and any error messages
- * if it failed.</p>
+ * <p>Contract: success is represented by {@link #isValid()} and optional error messages are
+ * exposed in insertion order.</p>
  *
- * <h3>Usage</h3>
- * <pre>
- * // Validation success
- * return ValidationResult.valid();
- *
- * // Validation failure with single error
- * return ValidationResult.invalid("Title cannot be empty");
- *
- * // Validation failure with multiple errors
- * return ValidationResult.invalid(
- *     "Title cannot be empty",
- *     "Content must be at least 10 characters"
- * );
- * </pre>
+ * <p>Mutability and thread-safety: immutable and thread-safe.</p>
  */
 public class ValidationResult {
 
@@ -32,7 +18,7 @@ public class ValidationResult {
     private final List<String> errors;
 
     /**
-     * Private constructor. Use static factory methods.
+     * Internal constructor used by factory methods.
      *
      * @param valid Whether validation passed
      * @param errors List of error messages (empty if valid)
@@ -42,20 +28,13 @@ public class ValidationResult {
         this.errors = errors != null ? errors : Collections.emptyList();
     }
 
-    /**
-     * Create a successful validation result.
-     *
-     * @return ValidationResult indicating validation passed
-     */
+    /** Creates a successful validation result. */
     public static ValidationResult valid() {
         return new ValidationResult(true, Collections.emptyList());
     }
 
     /**
-     * Create a failed validation result with error messages.
-     *
-     * @param errors One or more error messages
-     * @return ValidationResult indicating validation failed
+     * Creates a failed validation result from one or more error messages.
      */
     public static ValidationResult invalid(String... errors) {
         if (errors == null || errors.length == 0) {
@@ -65,10 +44,7 @@ public class ValidationResult {
     }
 
     /**
-     * Create a failed validation result with error messages.
-     *
-     * @param errors List of error messages
-     * @return ValidationResult indicating validation failed
+     * Creates a failed validation result from a message list.
      */
     public static ValidationResult invalid(List<String> errors) {
         if (errors == null || errors.isEmpty()) {
@@ -77,39 +53,24 @@ public class ValidationResult {
         return new ValidationResult(false, errors);
     }
 
-    /**
-     * Check if validation passed.
-     *
-     * @return true if validation passed, false otherwise
-     */
+    /** Returns whether validation succeeded. */
     public boolean isValid() {
         return valid;
     }
 
-    /**
-     * Get validation error messages.
-     *
-     * @return List of error messages (empty if validation passed)
-     */
+    /** Returns validation errors, or an empty list when valid. */
     public List<String> getErrors() {
         return errors;
     }
 
     /**
-     * Get all error messages as a single string.
-     *
-     * @param separator Separator between messages (e.g., ", " or "; ")
-     * @return Concatenated error messages
+     * Joins all errors with a caller-provided separator.
      */
     public String getErrorsAsString(String separator) {
         return String.join(separator, errors);
     }
 
-    /**
-     * Get all error messages as a single string (comma-separated).
-     *
-     * @return Concatenated error messages with comma separator
-     */
+    /** Joins all errors with a comma separator. */
     public String getErrorsAsString() {
         return getErrorsAsString(", ");
     }

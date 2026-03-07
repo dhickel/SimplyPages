@@ -5,41 +5,13 @@ import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Builder for creating flexible top banners with multiple layout options.
+ * Builds top-banner components across supported layout presets.
  *
- * <p>Supports several layout modes:</p>
- * <ul>
- *   <li><strong>HORIZONTAL:</strong> Image/logo on left, text on right (default)</li>
- *   <li><strong>CENTERED:</strong> Text centered horizontally</li>
- *   <li><strong>LEFT:</strong> Text aligned to the left</li>
- *   <li><strong>RIGHT:</strong> Text aligned to the right</li>
- *   <li><strong>IMAGE_OVERLAY:</strong> Background image with text overlay</li>
- * </ul>
+ * <p>Contract: {@link #build()} returns a new banner component containing either custom content
+ * or generated title/subtitle/image content based on the selected layout.</p>
  *
- * <p>Example usage:</p>
- * <pre>{@code
- * // Simple centered text banner
- * BannerBuilder.create()
- *     .withLayout(BannerLayout.CENTERED)
- *     .withTitle("Welcome")
- *     .withSubtitle("Research Portal")
- *     .build();
- *
- * // Banner with background image overlay
- * BannerBuilder.create()
- *     .withLayout(BannerLayout.IMAGE_OVERLAY)
- *     .withBackgroundImage("/images/banner-bg.jpg")
- *     .withTitle("Research Portal")
- *     .withTextAlignment(TextAlignment.CENTER)
- *     .build();
- *
- * // Horizontal banner with logo
- * BannerBuilder.create()
- *     .withLayout(BannerLayout.HORIZONTAL)
- *     .withImage("/logo.png", "Logo")
- *     .withTitle("My Site")
- *     .build();
- * }</pre>
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Use per composition flow and do
+ * not share across requests/threads.</p>
  */
 public class BannerBuilder {
 
@@ -83,6 +55,9 @@ public class BannerBuilder {
 
     private BannerBuilder() {}
 
+    /**
+     * Creates a new builder.
+     */
     public static BannerBuilder create() {
         return new BannerBuilder();
     }
@@ -186,7 +161,7 @@ public class BannerBuilder {
     }
 
     /**
-     * Build the banner component.
+     * Builds a new banner component snapshot from current configuration.
      */
     public Component build() {
         HtmlTag banner = new HtmlTag("div");

@@ -32,6 +32,7 @@ Head assets are added in this order:
 Body behavior:
 
 - top banner and account bar (if configured)
+- mobile sidebar toggle (when sidebar is configured)
 - shell layout container and content target
 - optional inline sidebar script (when collapsible sidebar is enabled)
 - optional inline HTMX nav-active script (when HTMX is enabled)
@@ -97,3 +98,13 @@ Nothing else is auto-loaded for you. Any additional app CSS/JS must be linked ex
 - Use framework defaults + custom CSS for fastest onboarding.
 - Use framework replacement or no-framework mode only if your team owns full design system styling.
 - If you disable framework CSS without replacement styles, built-in components will likely render unstyled.
+
+## Mobile Behavior Placement
+
+- Markup hooks come from shell/layout builders.
+- Responsive behavior is in `framework.css`.
+- Interactive sidebar open/close behavior is in `framework.js`.
+
+For a full mobile behavior map, read:
+
+- `docs/core/07-mobile-rendering-model-and-responsive-behavior.md`

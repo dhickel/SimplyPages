@@ -8,7 +8,9 @@ import io.mindspice.simplypages.components.Markdown;
 import java.util.stream.Stream;
 
 /**
- * Comment component for displaying individual comments.
+ * Forum comment block with author, timestamp, content, and depth metadata.
+ *
+ * <p>Mutable and not thread-safe. Content fields and markdown mode are applied at render time. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Comment extends HtmlTag {
 

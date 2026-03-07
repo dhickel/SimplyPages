@@ -4,14 +4,9 @@ import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
 
 /**
- * Simple list item component for list content.
+ * Mutable list item wrapper that stores text then writes it during render.
  *
- * <p>Example usage in a container module:</p>
- * <pre>
- * SimpleListModule list = SimpleListModule.create()
- *     .addItem(ListItem.create("First item"))
- *     .addItem(ListItem.create("Second item"));
- * </pre>
+ * <p>Not thread-safe. Reusing across concurrent renders can race on internal text state.</p>
  */
 public class ListItem extends HtmlTag {
 

@@ -8,19 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Paragraph component for text content with alignment options.
+ * Paragraph component with alignment class management helpers.
  *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // Basic paragraph
- * new Paragraph("Some text");
- *
- * // Centered paragraph
- * new Paragraph("Centered text").center();
- *
- * // Right-aligned paragraph
- * new Paragraph().withInnerText("Right aligned").right();
- * }</pre>
+ * <p>Mutable and not thread-safe. Text/alignment settings are updated in place and reflected at render time. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Paragraph extends HtmlTag {
 

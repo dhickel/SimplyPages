@@ -4,27 +4,10 @@ import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
 
 /**
- * Account widget component for displaying user authentication status.
- * Can show login/signup links or user account information.
- * Designed to be loaded dynamically via HTMX.
+ * Account-state widget that renders either guest links or authenticated user actions.
  *
- * <p>Example usage:</p>
- * <pre>{@code
- * // Guest user (not logged in)
- * AccountWidget.createGuest()
- *     .withLoginUrl("/login")
- *     .withSignupUrl("/signup")
- *     .build();
- *
- * // Authenticated user
- * AccountWidget.createAuthenticated("john_doe")
- *     .withProfileUrl("/profile")
- *     .withLogoutUrl("/logout")
- *     .build();
- *
- * // HTMX-enabled placeholder (loads content dynamically)
- * AccountWidget.createDynamic("/api/account-status");
- * }</pre>
+ * <p>Mutable and not thread-safe. Render methods rebuild child content on each call based on
+ * current authentication state fields. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
  */
 public class AccountWidget extends HtmlTag {
 
@@ -35,20 +18,28 @@ public class AccountWidget extends HtmlTag {
     private String logoutUrl = "/logout";
     private boolean isAuthenticated = false;
 
+    /**
+     * Creates a widget root with class {@code account-widget}.
+     */
     private AccountWidget() {
         super("div");
         this.withAttribute("class", "account-widget");
     }
 
     /**
-     * Create a widget for guest users (not logged in).
+     * Creates a guest-state widget.
+     *
+     * @return guest widget
      */
     public static AccountWidget createGuest() {
         return new AccountWidget();
     }
 
     /**
-     * Create a widget for authenticated users.
+     * Creates an authenticated-state widget.
+     *
+     * @param username display name
+     * @return authenticated widget
      */
     public static AccountWidget createAuthenticated(String username) {
         AccountWidget widget = new AccountWidget();
@@ -58,8 +49,10 @@ public class AccountWidget extends HtmlTag {
     }
 
     /**
-     * Create a dynamic widget that loads via HTMX.
-     * The endpoint should return HTML for either guest or authenticated state.
+     * Creates an HTMX placeholder that loads widget HTML from an endpoint.
+     *
+     * @param endpoint HTMX GET endpoint
+     * @return placeholder div
      */
     public static HtmlTag createDynamic(String endpoint) {
         return new HtmlTag("div")
@@ -70,7 +63,10 @@ public class AccountWidget extends HtmlTag {
     }
 
     /**
-     * Set the login URL.
+     * Sets login URL.
+     *
+     * @param url login URL
+     * @return this widget
      */
     public AccountWidget withLoginUrl(String url) {
         this.loginUrl = url;
@@ -78,7 +74,10 @@ public class AccountWidget extends HtmlTag {
     }
 
     /**
-     * Set the signup URL.
+     * Sets signup URL.
+     *
+     * @param url signup URL
+     * @return this widget
      */
     public AccountWidget withSignupUrl(String url) {
         this.signupUrl = url;
@@ -86,7 +85,10 @@ public class AccountWidget extends HtmlTag {
     }
 
     /**
-     * Set the profile URL.
+     * Sets profile URL.
+     *
+     * @param url profile URL
+     * @return this widget
      */
     public AccountWidget withProfileUrl(String url) {
         this.profileUrl = url;
@@ -94,13 +96,22 @@ public class AccountWidget extends HtmlTag {
     }
 
     /**
-     * Set the logout URL.
+     * Sets logout URL.
+     *
+     * @param url logout URL
+     * @return this widget
      */
     public AccountWidget withLogoutUrl(String url) {
         this.logoutUrl = url;
         return this;
     }
 
+    /**
+     * Rebuilds children for current auth state and renders root container.
+     *
+     * @param context render context
+     * @return widget HTML
+     */
     @Override
     public String render(RenderContext context) {
         children.clear();
@@ -112,13 +123,18 @@ public class AccountWidget extends HtmlTag {
         return super.render(context);
     }
 
+    /**
+     * Renders using empty context.
+     *
+     * @return widget HTML
+     */
     @Override
     public String render() {
         return render(RenderContext.empty());
     }
 
     /**
-     * Build content for authenticated users.
+     * Builds child nodes for authenticated state.
      */
     private void buildAuthenticatedContent() {
         // User info container
@@ -154,7 +170,7 @@ public class AccountWidget extends HtmlTag {
     }
 
     /**
-     * Build content for guest users.
+     * Builds child nodes for guest state.
      */
     private void buildGuestContent() {
         HtmlTag guestContainer = new HtmlTag("div")

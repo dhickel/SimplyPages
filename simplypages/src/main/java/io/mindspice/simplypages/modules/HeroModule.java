@@ -10,32 +10,10 @@ import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Hero module for creating prominent banner/header sections.
+ * Module for prominent hero/banner page sections with optional CTA links.
  *
- * <p>Hero modules are large, attention-grabbing sections typically placed at the
- * top of a page. They can include a title, subtitle, description, call-to-action
- * buttons, and optional background image.</p>
- *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // Basic hero
- * HeroModule.create()
- *     .withTitle("Welcome to Research Portal")
- *     .withSubtitle("Open source research data and community")
- *     .withDescription("Join researchers worldwide in documenting scientific data");
- *
- * // Hero with CTA buttons
- * HeroModule.create()
- *     .withTitle("Start Your Grow Journal")
- *     .withPrimaryButton("Get Started", "/register")
- *     .withSecondaryButton("Learn More", "/about");
- *
- * // Hero with background
- * HeroModule.create()
- *     .withTitle("Research Hub")
- *     .withBackgroundImage("/images/hero-bg.jpg")
- *     .centered();
- * }</pre>
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Hero content/button fields are
+ * mutable configuration state; mutate within a request-scoped flow. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
  */
 public class HeroModule extends Module {
 

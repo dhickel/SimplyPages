@@ -8,164 +8,50 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Abstract base class for all HTML tag components in the framework.
+ * Base mutable implementation for concrete HTML tag components.
  *
- * <p>HtmlTag provides the core functionality for rendering HTML elements with attributes,
- * children, and text content. This class implements the {@link Component} interface and
- * serves as the foundation for all concrete HTML components.</p>
+ * <p>Lifecycle: callers mutate a tag via fluent setters, then call {@link #render(RenderContext)}
+ * to produce HTML. Rendering is deterministic for current state and does not clear state.</p>
  *
- * <h2>Key Features</h2>
- * <ul>
- *   <li><strong>Fluent API:</strong> All configuration methods return {@code this} for method chaining</li>
- *   <li><strong>Attribute Management:</strong> Add any HTML attribute via {@link #withAttribute(String, String)}</li>
- *   <li><strong>Component Nesting:</strong> Build complex hierarchies with {@link #withChild(Component)}</li>
- *   <li><strong>Text Content:</strong> Set simple text content with {@link #withInnerText(String)}</li>
- *   <li><strong>Self-Closing Tags:</strong> Support for {@code <img />}, {@code <br />}, etc.</li>
- * </ul>
+ * <p>Security boundary:</p>
+ * <p>- attribute values are escaped by {@link Attribute#render()}</p>
+ * <p>- inner text is escaped by default</p>
+ * <p>- {@link #withUnsafeHtml(String)} inserts trusted HTML without escaping</p>
  *
- * <h2>Component Structure</h2>
- * <p>Every HtmlTag consists of:</p>
- * <ul>
- *   <li><strong>Tag Name:</strong> The HTML element type (div, p, h1, etc.)</li>
- *   <li><strong>Attributes:</strong> Zero or more HTML attributes (class, id, style, etc.)</li>
- *   <li><strong>Inner Text:</strong> Optional simple text content</li>
- *   <li><strong>Children:</strong> Zero or more nested {@link Component} instances</li>
- *   <li><strong>Self-Closing Flag:</strong> Whether the tag is self-closing</li>
- * </ul>
- *
- * <h2>Usage Examples</h2>
- *
- * <h3>Basic Element</h3>
- * <pre>{@code
- * HtmlTag div = new HtmlTag("div")
- *     .withAttribute("class", "container")
- *     .withInnerText("Hello World");
- *
- * div.render();
- * // Output: <div class="container">Hello World</div>
- * }</pre>
- *
- * <h3>Nested Structure</h3>
- * <pre>{@code
- * HtmlTag container = new HtmlTag("div")
- *     .withAttribute("class", "container")
- *     .withChild(new HtmlTag("h1").withInnerText("Title"))
- *     .withChild(new HtmlTag("p").withInnerText("Content"));
- *
- * container.render();
- * // Output: <div class="container"><h1>Title</h1><p>Content</p></div>
- * }</pre>
- *
- * <h3>Self-Closing Tag</h3>
- * <pre>{@code
- * HtmlTag img = new HtmlTag("img", true)
- *     .withAttribute("src", "/photo.jpg")
- *     .withAttribute("alt", "Photo");
- *
- * img.render();
- * // Output: <img src="/photo.jpg" alt="Photo" />
- * }</pre>
- *
- * <h3>HTMX Integration</h3>
- * <pre>{@code
- * HtmlTag button = new HtmlTag("button")
- *     .withInnerText("Load More")
- *     .withAttribute("hx-get", "/api/items")
- *     .withAttribute("hx-target", "#content")
- *     .withAttribute("hx-swap", "beforeend");
- *
- * button.render();
- * // Output: <button hx-get="/api/items" hx-target="#content" hx-swap="beforeend">Load More</button>
- * }</pre>
- *
- * <h3>Method Chaining (Fluent API)</h3>
- * <pre>{@code
- * HtmlTag card = new HtmlTag("div")
- *     .withAttribute("class", "card")
- *     .withAttribute("id", "user-card-123")
- *     .withChild(new HtmlTag("h2").withInnerText("User Profile"))
- *     .withChild(new HtmlTag("p").withInnerText("Name: John Doe"))
- *     .withChild(new HtmlTag("p").withInnerText("Email: john@example.com"));
- * }</pre>
- *
- * <h2>Subclassing HtmlTag</h2>
- * <p>Most concrete components extend HtmlTag to provide specialized functionality:</p>
- * <pre>{@code
- * public class Button extends HtmlTag {
- *     public Button() {
- *         super("button");
- *     }
- *
- *     public static Button create(String text) {
- *         return new Button().withInnerText(text);
- *     }
- *
- *     public Button primary() {
- *         return (Button) this.withAttribute("class", "btn btn-primary");
- *     }
- * }
- *
- * // Usage:
- * Button btn = Button.create("Click Me").primary();
- * }</pre>
- *
- * <h2>Rendering Process</h2>
- * <p>The {@link #render()} method generates HTML in this order:</p>
- * <ol>
- *   <li>Opening tag: {@code <tagName}</li>
- *   <li>Attributes: {@code  class="container" id="main"}</li>
- *   <li>Close opening tag: {@code >} (or {@code />} for self-closing)</li>
- *   <li>Inner text content (if any)</li>
- *   <li>Rendered children (recursively)</li>
- *   <li>Closing tag: {@code </tagName>} (if not self-closing)</li>
- * </ol>
- *
- * <h2>Thread Safety</h2>
- * <p>HtmlTag instances are <strong>not thread-safe</strong>. Each component should be constructed
- * for a single render operation. Do not share component instances across multiple requests.</p>
- *
- * <h2>Performance Considerations</h2>
- * <ul>
- *   <li>Components are rendered on-demand when {@link #render()} is called</li>
- *   <li>No caching is performed - each call to render() generates new HTML</li>
- *   <li>For large component trees, consider rendering in chunks or using pagination</li>
- * </ul>
- *
- * @see Component
- * @see Attribute
- * @see Module
+ * <p>Mutability/thread-safety: mutable and not thread-safe while being configured. Mutate within
+ * a request-scoped composition flow; for reuse, stop mutating and render a stable tree (typically
+ * via {@link Template}) with per-request {@link RenderContext} values.</p>
  */
 public class HtmlTag implements Component {
-    /** The HTML element name (e.g., "div", "p", "button") */
+    /** HTML tag name rendered in opening/closing tags. */
     protected final String tagName;
 
-    /** List of HTML attributes for this tag */
+    /** Mutable attribute list in insertion order. */
     protected final List<Attribute> attributes = new ArrayList<>();
 
-    /** List of child components nested within this tag */
+    /** Mutable child component list in render order. */
     protected final List<Component> children = new ArrayList<>();
 
-    /** Whether this is a self-closing tag (e.g., {@code <img />}) */
+    /** Whether this tag renders as self-closing. */
     protected final boolean selfClosing;
 
-    /** Simple text content (alternative to child components) */
+    /** Static inner text/HTML payload. */
     protected String innerText = "";
 
-    /** Dynamic text content key */
+    /** Slot key for dynamic text payload; when set, overrides {@link #innerText}. */
     protected SlotKey<String> innerTextSlot = null;
 
-    /** Whether the innerText contains trusted HTML that should not be escaped */
+    /** True when {@link #innerText} should bypass escaping. */
     protected boolean trustedHtml = false;
 
-    /** The HTML id of the element */
+    /** Cached id field mirrored into attributes during mutation/render. */
     protected String id;
 
     /**
-     * Creates a new HTML tag with the specified name and self-closing flag.
+     * Creates a tag with explicit self-closing behavior.
      *
-     * @param tagName the HTML element name (e.g., "div", "span", "button")
-     * @param selfClosing {@code true} for self-closing tags ({@code <img />}),
-     *                    {@code false} for normal tags ({@code <div></div>})
+     * @param tagName literal HTML tag name
+     * @param selfClosing whether output uses {@code <tag />} form
      */
     public HtmlTag(String tagName, boolean selfClosing) {
         this.tagName = tagName;
@@ -173,30 +59,21 @@ public class HtmlTag implements Component {
     }
 
     /**
-     * Creates a new non-self-closing HTML tag with the specified name.
-     *
-     * <p>This is the most common constructor for standard HTML elements.</p>
-     *
-     * @param tagName the HTML element name (e.g., "div", "span", "button")
+     * Creates a non-self-closing tag.
      */
     public HtmlTag(String tagName) {
         this(tagName, false);
     }
 
     /**
-     * Gets the HTML id of this element.
-     *
-     * @return the id, or null if not set
+     * Returns the currently assigned id value.
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Sets the HTML id attribute for this tag.
-     *
-     * @param id the HTML id attribute value
-     * @return this HtmlTag instance for method chaining
+     * Sets element id and synchronizes an {@code id} attribute when non-null.
      */
     public HtmlTag withId(String id) {
         this.id = id;
@@ -207,53 +84,19 @@ public class HtmlTag implements Component {
     }
 
     /**
-     * Adds an HTML attribute to this tag.
+     * Adds or replaces an attribute by name.
      *
-     * <p>Attributes are rendered in the order they are added.</p>
-     *
-     * <p>Common attributes:</p>
-     * <ul>
-     *   <li>{@code class} - CSS classes for styling</li>
-     *   <li>{@code id} - Unique element identifier</li>
-     *   <li>{@code style} - Inline CSS styles</li>
-     *   <li>{@code data-*} - Custom data attributes</li>
-     *   <li>{@code hx-*} - HTMX attributes for dynamic behavior</li>
-     * </ul>
-     *
-     * <p>Examples:</p>
-     * <pre>{@code
-     * tag.withAttribute("class", "btn btn-primary");
-     * tag.withAttribute("id", "submit-button");
-     * tag.withAttribute("hx-get", "/api/data");
-     * tag.withAttribute("required", "");  // Boolean attribute
-     * }</pre>
-     *
-     * @param name the attribute name (e.g., "class", "id", "href")
-     * @param value the attribute value (use empty string for boolean attributes)
-     * @return this HtmlTag instance for method chaining
+     * <p>Side effect: existing attribute with the same name is removed before insert, preventing
+     * duplicate names.</p>
      */
     public HtmlTag withAttribute(String name, String value) {
-        // Remove any existing attribute with the same name to prevent duplicates
         attributes.removeIf(attr -> attr.name().equals(name));
-        // Add the new attribute
         attributes.add(new Attribute(name, value));
         return this;
     }
 
     /**
-     * Adds a child component to this tag.
-     *
-     * <p>Children are rendered in the order they are added, after any inner text.</p>
-     *
-     * <p>Examples:</p>
-     * <pre>{@code
-     * div.withChild(new Header.H1("Title"));
-     * div.withChild(new Paragraph().withInnerText("Content"));
-     * div.withChild(Form.create().addField("Name", TextInput.create("name")));
-     * }</pre>
-     *
-     * @param component the child component to add
-     * @return this HtmlTag instance for method chaining
+     * Appends a child component in render order.
      */
     public HtmlTag withChild(Component component) {
         children.add(component);
@@ -261,43 +104,21 @@ public class HtmlTag implements Component {
     }
 
     /**
-     * Sets the simple text content for this tag.
+     * Sets static inner text rendered with HTML escaping.
      *
-     * <p>Inner text is rendered before any child components. For complex content
-     * with formatting, consider using child components instead.</p>
-     *
-     * <p><strong>Security:</strong> The text will be automatically HTML-escaped to prevent XSS attacks.
-     * Characters like {@code <}, {@code >}, {@code &}, {@code "}, and {@code '} will be converted
-     * to HTML entities.</p>
-     *
-     * <p>If you need to render trusted HTML (e.g., from a Markdown parser), use
-     * {@link #withUnsafeHtml(String)} instead.</p>
-     *
-     * <p>Examples:</p>
-     * <pre>{@code
-     * paragraph.withInnerText("Hello World");
-     * header.withInnerText("Welcome to JHF");
-     * button.withInnerText("Click Me");
-     *
-     * // User input is automatically safe:
-     * paragraph.withInnerText(userInput);  // HTML is escaped automatically
-     * }</pre>
-     *
-     * @param text the text content (will be automatically HTML-escaped)
-     * @return this HtmlTag instance for method chaining
+     * <p>Side effect: clears any dynamic text slot and marks content untrusted.</p>
      */
     public HtmlTag withInnerText(String text) {
         this.innerText = text;
         this.innerTextSlot = null;
-        this.trustedHtml = false;  // Mark as needs escaping
+        this.trustedHtml = false;
         return this;
     }
 
     /**
-     * Sets a slot key for dynamic inner text content.
+     * Sets dynamic text source resolved from {@code slotKey} at render time.
      *
-     * @param slotKey the slot key to resolve at render time
-     * @return this HtmlTag instance for method chaining
+     * <p>Resolved values are escaped as text.</p>
      */
     public HtmlTag withInnerText(SlotKey<String> slotKey) {
         this.innerTextSlot = slotKey;
@@ -307,60 +128,28 @@ public class HtmlTag implements Component {
     }
 
     /**
-     * Sets inner HTML content that will be rendered WITHOUT HTML escaping.
+     * Sets trusted inner HTML that bypasses escaping.
      *
-     * <p><strong>⚠️ SECURITY WARNING:</strong> Only use this for content you completely trust
-     * (e.g., HTML from a trusted Markdown parser). NEVER use with user-provided content,
-     * as it can lead to XSS vulnerabilities.</p>
-     *
-     * <p>For user-provided content, use {@link #withInnerText(String)} which automatically
-     * escapes HTML.</p>
-     *
-     * <p>Examples:</p>
-     * <pre>{@code
-     * // SAFE: Content from trusted Markdown parser
-     * Div div = new Div()
-     *     .withUnsafeHtml(markdownParser.parse(trustedMarkdown));
-     *
-     * // DANGEROUS: User input - DO NOT DO THIS!
-     * Div div = new Div()
-     *     .withUnsafeHtml(userInput);  // XSS vulnerability!
-     *
-     * // CORRECT for user input:
-     * Div div = new Div()
-     *     .withInnerText(userInput);  // Safe - automatically escaped
-     * }</pre>
-     *
-     * @param html trusted HTML content that will NOT be escaped
-     * @return this HtmlTag instance for method chaining
+     * <p>Security contract: call only with trusted, already-sanitized HTML.</p>
      */
     public HtmlTag withUnsafeHtml(String html) {
         this.innerText = html;
-        this.trustedHtml = true;  // Do not escape
+        this.trustedHtml = true;
         return this;
     }
 
     /**
-     * Validates that a CSS unit value is safe and well-formed.
-     * Prevents injection attacks and catches common formatting errors.
-     *
-     * @param value the CSS value to validate
-     * @return true if the value is a valid CSS unit, false otherwise
+     * Validates a restricted CSS size token used by width helpers.
      */
     private boolean isValidCssUnit(String value) {
         if (value == null || value.trim().isEmpty()) {
             return false;
         }
-        // Allow common CSS units: px, %, em, rem, vw, vh, vmin, vmax, ch, auto
         return value.matches("^(auto|0|\\d+(\\.\\d+)?(px|%|em|rem|vw|vh|vmin|vmax|ch))$");
     }
 
     /**
-     * Adds a CSS class to this tag.
-     * Appends to existing classes rather than replacing them.
-     *
-     * @param className the CSS class to add
-     * @return this HtmlTag instance for method chaining
+     * Adds a class token to the {@code class} attribute if not already present.
      */
     public HtmlTag addClass(String className) {
         Optional<Attribute> classAttr = attributes.stream()
@@ -370,7 +159,6 @@ public class HtmlTag implements Component {
         if (classAttr.isPresent()) {
             Attribute attr = classAttr.get();
             String current = attr.value();
-            // Check if class already exists to avoid duplicates
             boolean exists = false;
             for (String c : current.split("\\s+")) {
                 if (c.equals(className)) {
@@ -391,24 +179,15 @@ public class HtmlTag implements Component {
 
     /**
      * Alias for {@link #addClass(String)}.
-     *
-     * @param className the CSS class to add
-     * @return this HtmlTag instance for method chaining
      */
     public HtmlTag withClass(String className) {
         return addClass(className);
     }
 
     /**
-     * Adds or updates a CSS property in the style attribute.
-     * Merges with existing styles rather than replacing them.
-     *
-     * @param property the CSS property name (e.g., "width", "max-width")
-     * @param value the CSS property value (e.g., "300px", "50%")
-     * @return this HtmlTag instance for method chaining
+     * Adds or replaces one inline style property on the {@code style} attribute.
      */
     public HtmlTag addStyle(String property, String value) {
-        // Find existing style attribute
         Optional<String> existingStyle = attributes.stream()
                 .filter(attr -> "style".equals(attr.name()))
                 .map(Attribute::value)
@@ -416,9 +195,7 @@ public class HtmlTag implements Component {
 
         String newStyle;
         if (existingStyle.isPresent()) {
-            // Parse existing styles and update/add the property
             String styles = existingStyle.get();
-            // Simple approach: remove old property if exists, append new
             String propertyPattern = property + "\\s*:[^;]*;?";
             styles = styles.replaceAll(propertyPattern, "").trim();
             newStyle = styles.isEmpty() ?
@@ -432,27 +209,9 @@ public class HtmlTag implements Component {
     }
 
     /**
-     * Sets the width of this element using CSS.
+     * Sets inline {@code width} after restricted CSS token validation.
      *
-     * <p>Accepts any valid CSS width value including:</p>
-     * <ul>
-     *   <li>Pixels: "300px", "500px"</li>
-     *   <li>Percentages: "50%", "100%"</li>
-     *   <li>Relative units: "20rem", "10em"</li>
-     *   <li>Viewport units: "80vw"</li>
-     *   <li>Auto: "auto"</li>
-     * </ul>
-     *
-     * <p>Examples:</p>
-     * <pre>{@code
-     * TextInput.create("username").withWidth("300px");
-     * ContentModule.create().withWidth("50%");
-     * Card.create().withWidth("20rem");
-     * }</pre>
-     *
-     * @param width the CSS width value (e.g., "300px", "50%", "auto")
-     * @return this HtmlTag instance for method chaining
-     * @throws IllegalArgumentException if width is not a valid CSS unit
+     * @throws IllegalArgumentException when {@code width} fails validation
      */
     public HtmlTag withWidth(String width) {
         if (!isValidCssUnit(width)) {
@@ -465,19 +224,9 @@ public class HtmlTag implements Component {
     }
 
     /**
-     * Sets the maximum width of this element using CSS.
+     * Sets inline {@code max-width} after restricted CSS token validation.
      *
-     * <p>Useful for constraining elements while allowing them to shrink on smaller screens.</p>
-     *
-     * <p>Examples:</p>
-     * <pre>{@code
-     * FormModule.create().withMaxWidth("600px");  // Form won't exceed 600px
-     * TextInput.create("email").withMaxWidth("400px");  // Input constrained to 400px
-     * }</pre>
-     *
-     * @param maxWidth the CSS max-width value
-     * @return this HtmlTag instance for method chaining
-     * @throws IllegalArgumentException if maxWidth is not a valid CSS unit
+     * @throws IllegalArgumentException when {@code maxWidth} fails validation
      */
     public HtmlTag withMaxWidth(String maxWidth) {
         if (!isValidCssUnit(maxWidth)) {
@@ -490,19 +239,9 @@ public class HtmlTag implements Component {
     }
 
     /**
-     * Sets the minimum width of this element using CSS.
+     * Sets inline {@code min-width} after restricted CSS token validation.
      *
-     * <p>Prevents elements from becoming too narrow.</p>
-     *
-     * <p>Examples:</p>
-     * <pre>{@code
-     * Button.create("Submit").withMinWidth("120px");  // Button stays at least 120px
-     * Select.create("category").withMinWidth("200px");  // Dropdown min 200px
-     * }</pre>
-     *
-     * @param minWidth the CSS min-width value
-     * @return this HtmlTag instance for method chaining
-     * @throws IllegalArgumentException if minWidth is not a valid CSS unit
+     * @throws IllegalArgumentException when {@code minWidth} fails validation
      */
     public HtmlTag withMinWidth(String minWidth) {
         if (!isValidCssUnit(minWidth)) {
@@ -515,46 +254,24 @@ public class HtmlTag implements Component {
     }
 
     /**
-     * Gets the stream of child components to be rendered.
-     * <p>Subclasses can override this to provide a custom list of children,
-     * such as filtering empty components or enforcing a specific order.</p>
+     * Returns children to render, in order.
      *
-     * @return stream of components to render
+     * <p>Extension point: subclasses may override to filter/reorder children.</p>
      */
     protected java.util.stream.Stream<Component> getChildrenStream() {
         return children.stream();
     }
 
     /**
-     * Renders this tag and all its contents to an HTML string.
+     * Renders opening tag, text payload, child output, and closing tag.
      *
-     * <p>The rendering process:</p>
-     * <ol>
-     *   <li>Builds opening tag: {@code <tagName}</li>
-     *   <li>Appends all attributes: {@code  class="x" id="y"}</li>
-     *   <li>Closes opening tag: {@code >} or {@code />} for self-closing</li>
-     *   <li>Appends inner text (if present)</li>
-     *   <li>Recursively renders all children</li>
-     *   <li>Appends closing tag: {@code </tagName>} (if not self-closing)</li>
-     * </ol>
-     *
-     * <p>Example output:</p>
-     * <pre>{@code
-     * <div class="container" id="main">
-     *   Hello World
-     *   <h1>Title</h1>
-     *   <p>Content</p>
-     * </div>
-     * }</pre>
-     *
-     * @param context the context containing values for dynamic slots
-     * @return complete HTML string representation of this tag and its contents
+     * <p>Security contract: slot and plain text are escaped; trusted HTML payload is emitted
+     * verbatim.</p>
      */
     @Override
     public String render(RenderContext context) {
         StringBuilder sb = new StringBuilder("<").append(tagName);
 
-        // Ensure id is rendered if set via reflection/field
         if (id != null && attributes.stream().noneMatch(attr -> "id".equals(attr.name()))) {
             sb.append(new Attribute("id", id).render());
         }
@@ -569,15 +286,12 @@ public class HtmlTag implements Component {
 
         if (innerTextSlot != null) {
             String val = context.get(innerTextSlot).orElse("");
-            // If the slot value is used, we assume it might need escaping unless we have a way to specify otherwise.
-            // For now, always escape dynamic text in withInnerText to be safe, unless trustedHtml is set (which applies to static text usually).
-            // Let's assume dynamic text slots are untrusted by default.
             sb.append(Encode.forHtml(val));
         } else if (!innerText.isEmpty()) {
             if (trustedHtml) {
-                sb.append(innerText);  // Already safe - trusted HTML
+                sb.append(innerText);
             } else {
-                sb.append(Encode.forHtml(innerText));  // Escape user content
+                sb.append(Encode.forHtml(innerText));
             }
         }
 

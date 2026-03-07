@@ -1,17 +1,24 @@
 package io.mindspice.simplypages.core;
 
 /**
- * Represents an explicit slot entry stored in {@link RenderContext}.
+ * Tagged union for explicit slot storage entries inside {@link RenderContext}.
+ *
+ * <p>Mutability/thread-safety: all implementations are records and therefore immutable.</p>
  */
 public sealed interface SlotEntry permits SlotEntry.LiveEntry, SlotEntry.CompiledEntry {
 
     /**
-     * Live slot entry containing a value that should be rendered.
+     * Entry containing a live object that must be rendered on access.
+     *
+     * @param type runtime class of {@link #value()}
+     * @param value live value to render
      */
     record LiveEntry(Class<?> type, Object value) implements SlotEntry { }
 
     /**
-     * Compiled slot entry containing trusted, pre-rendered HTML.
+     * Entry containing trusted pre-rendered HTML.
+     *
+     * @param html HTML fragment inserted without additional escaping
      */
     record CompiledEntry(String html) implements SlotEntry { }
 }

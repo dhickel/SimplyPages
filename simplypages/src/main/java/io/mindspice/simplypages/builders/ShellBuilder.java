@@ -9,35 +9,13 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Comprehensive builder for creating the entire application shell/layout.
- * Supports top banner, account bar, side navigation, and main content area.
+ * Builds a full SimplyPages shell document (head + body) or body-only fragment.
  *
- * <p>Example usage:</p>
- * <pre>{@code
- * ShellBuilder.create()
- *     .withTopBanner(
- *         BannerBuilder.create()
- *             .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
- *             .withTitle("My App")
- *             .withImage("/logo.png", "Logo")
- *             .build()
- *     )
- *     .withAccountBar(
- *         AccountBarBuilder.create()
- *             .addLeftLink("Home", "/")
- *             .addRightLink("Login", "/login")
- *             .build()
- *     )
- *     .withSideNav(
- *         SideNavBuilder.create()
- *             .addSection("Main")
- *             .addLink("Dashboard", "/dashboard")
- *             .build(),
- *         true  // collapsible
- *     )
- *     .withContentTarget("content-area")
- *     .build();
- * }</pre>
+ * <p>Contract: output shape remains stable for integrators:
+ * optional header/account regions, optional side nav, and a main content target container.</p>
+ *
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Configure once per render flow
+ * and do not share mutable instances across concurrent requests.</p>
  */
 public class ShellBuilder {
 
@@ -51,9 +29,13 @@ public class ShellBuilder {
     private boolean includeFrameworkCss = true;
     private String frameworkCssPath = "/css/framework.css";
     private final Set<String> customCssPaths = new LinkedHashSet<>();
+    private Component content;
 
     private ShellBuilder() {}
 
+    /**
+     * Creates a new builder.
+     */
     public static ShellBuilder create() {
         return new ShellBuilder();
     }
@@ -116,6 +98,17 @@ public class ShellBuilder {
     }
 
     /**
+     * Sets initial shell content rendered inside the configured content target.
+     *
+     * <p>When initial content is provided, the content target is rendered without the
+     * default HTMX auto-load attributes.</p>
+     */
+    public ShellBuilder withContent(Component content) {
+        this.content = content;
+        return this;
+    }
+
+    /**
      * Enable/disable HTMX inclusion.
      */
     public ShellBuilder withHtmx(boolean include) {
@@ -171,8 +164,7 @@ public class ShellBuilder {
     }
 
     /**
-     * Build the complete shell HTML.
-     * This generates a full HTML document string.
+     * Builds a full HTML document string including doctype.
      */
     public String build() {
         HtmlTag html = new HtmlTag("html").withAttribute("lang", "en");
@@ -210,12 +202,18 @@ public class ShellBuilder {
     }
 
     /**
-     * Build just the body content (for use in existing HTML templates).
+     * Builds shell body content only, without {@code html/head} tags.
      */
     public Component buildBody() {
-        return new HtmlTag("div")
-            .withAttribute("class", "shell-body")
-            .withChild(buildMainContainer(false));
+        HtmlTag body = new HtmlTag("div")
+            .withAttribute("class", "shell-body");
+
+        if (sideNav != null) {
+            body.withChild(buildMobileSidebarToggle(false));
+        }
+
+        body.withChild(buildMainContainer(false));
+        return body;
     }
 
     private HtmlTag buildShellContent() {
@@ -228,6 +226,10 @@ public class ShellBuilder {
         }
         if (accountBar != null) {
             body.withChild(accountBar);
+        }
+
+        if (sideNav != null) {
+            body.withChild(buildMobileSidebarToggle(true));
         }
 
         body.withChild(buildMainContainer(true));
@@ -258,7 +260,9 @@ public class ShellBuilder {
         }
 
         HtmlTag contentArea = new HtmlTag("div").withAttribute("id", contentTarget);
-        if (includeHtmx) {
+        if (content != null) {
+            contentArea.withChild(content);
+        } else if (includeHtmx) {
             contentArea.withAttribute("hx-get", "/home")
                 .withAttribute("hx-trigger", "load");
         }
@@ -267,6 +271,22 @@ public class ShellBuilder {
             .withAttribute("class", "content-wrapper")
             .withChild(contentArea));
         return mainContainer;
+    }
+
+    private HtmlTag buildMobileSidebarToggle(boolean includeAriaLabel) {
+        HtmlTag mobileToggle = new HtmlTag("button")
+            .withAttribute("type", "button")
+            .withAttribute("class", "mobile-sidebar-toggle")
+            .withAttribute("onclick", "toggleMobileSidebar()")
+            .withAttribute("aria-controls", "main-sidebar")
+            .withAttribute("aria-expanded", "false")
+            .withInnerText("☰");
+
+        if (includeAriaLabel) {
+            mobileToggle.withAttribute("aria-label", "Toggle navigation");
+        }
+
+        return mobileToggle;
     }
 
     private void appendInlineScripts(HtmlTag body) {

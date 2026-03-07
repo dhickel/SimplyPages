@@ -5,6 +5,7 @@ Owns page composition classes used by demo controllers.
 
 ## Owns
 - Demo page builders/compositions under `demo.pages`
+- Consolidated demo pages for `/demos` sidebar navigation
 
 ## Invariants
 - Pages are examples of framework usage, not framework internals.
@@ -15,6 +16,7 @@ Owns page composition classes used by demo controllers.
 - Keep page classes focused on rendering/composition.
 - Prefer reusable helper patterns when examples repeat.
 - Update examples when APIs evolve.
+- Keep section-level in-page navigation concise and implementation-focused.
 
 ## Do Not
 - Embed business/domain persistence logic in page classes.

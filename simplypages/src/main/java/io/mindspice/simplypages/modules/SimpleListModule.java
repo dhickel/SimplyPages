@@ -15,22 +15,10 @@ import io.mindspice.simplypages.editing.ValidationResult;
 import java.util.*;
 
 /**
- * Simple list module demonstrating container pattern with list items.
+ * Editable module that renders a list of {@link ListItem} components.
  *
- * <p>This module contains a list of {@link ListItem} components. Demonstrates:</p>
- * <ul>
- *   <li>Module-level properties (title)</li>
- *   <li>List item rendering</li>
- *   <li>Programmatic item management</li>
- * </ul>
- *
- * <p>Example usage:</p>
- * <pre>
- * SimpleListModule module = SimpleListModule.create()
- *     .withTitle("My List")
- *     .addItem(ListItem.create("First item"))
- *     .addItem(ListItem.create("Second item"));
- * </pre>
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Item collection is mutable and
+ * should be managed within a single request/edit workflow. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
  */
 public class SimpleListModule extends Module implements Editable<SimpleListModule> {
 

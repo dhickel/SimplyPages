@@ -53,6 +53,7 @@ class FullPageRenderingTest {
             .elementTextEquals("html > head > title", "Portal Home")
             .hasElement("body > header.main-header .banner.banner-horizontal")
             .hasElement("body > div.account-bar > div.account-bar-left")
+            .hasElement("body > button.mobile-sidebar-toggle[onclick='toggleMobileSidebar()']")
             .hasElement("body > div.main-container.has-sidebar > aside#main-sidebar > nav.sidenav")
             .hasElement("#page-content > div.page-content")
             .attributeEquals("#page-content", "hx-get", "/home")
@@ -84,6 +85,7 @@ class FullPageRenderingTest {
         HtmlAssert.assertThat(html)
             .hasDoctype("html")
             .hasElement("body > div.main-container")
+            .doesNotHaveElement("body > button.mobile-sidebar-toggle")
             .doesNotHaveElement("body > div.main-container > aside#main-sidebar")
             .hasElement("body > div.main-container > main.content-wrapper > #page-content")
             .doesNotHaveElement("#page-content[hx-get]")
@@ -110,6 +112,7 @@ class FullPageRenderingTest {
 
         HtmlAssert.assertThat(html)
             .hasDoctype("html")
+            .hasElement("body > button.mobile-sidebar-toggle[onclick='toggleMobileSidebar()']")
             .hasElement("body > div.main-container.has-sidebar.collapsible-sidebar")
             .hasElement("aside#main-sidebar.collapsible > button.sidebar-toggle")
             .attributeEquals("aside#main-sidebar > button.sidebar-toggle", "aria-label", "Toggle sidebar")
@@ -171,6 +174,7 @@ class FullPageRenderingTest {
 
         HtmlAssert.assertThat(html)
             .hasElement("#page-content > div.page-content")
+            .hasElement("body > button.mobile-sidebar-toggle[onclick='toggleMobileSidebar()']")
             .hasElementCount("#page-content div.row", 2)
             .hasElement("#page-content div.row#hero-row > div.col.col-8")
             .hasElement("#page-content div.row#hero-row > div.col.col-4")

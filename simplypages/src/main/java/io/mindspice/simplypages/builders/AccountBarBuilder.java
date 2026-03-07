@@ -9,25 +9,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Builder for creating account/user bars.
- * Typically displayed under the top banner for navigation links and user authentication.
- * Functions as a horizontal flexbox (hbox) with left and right sections.
+ * Builds a two-sided account/navigation strip component.
  *
- * <p>Example usage:</p>
- * <pre>{@code
- * // Simple account bar with links
- * AccountBarBuilder.create()
- *     .addLeftLink("Home", "/")
- *     .addLeftLink("About", "/about")
- *     .addRightAccountWidget("/api/account-status")
- *     .build();
+ * <p>Contract: left and right items are emitted in insertion order under
+ * {@code .account-bar-left} and {@code .account-bar-right}. If either side is empty, that
+ * section is omitted.</p>
  *
- * // Account bar with custom components
- * AccountBarBuilder.create()
- *     .addLeftItem(Link.create("/", "Home"))
- *     .addRightItem(AccountWidget.createGuest())
- *     .build();
- * }</pre>
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Use one builder per composition
+ * flow and avoid concurrent mutation.</p>
  */
 public class AccountBarBuilder {
 
@@ -38,12 +27,15 @@ public class AccountBarBuilder {
 
     private AccountBarBuilder() {}
 
+    /**
+     * Creates a new builder.
+     */
     public static AccountBarBuilder create() {
         return new AccountBarBuilder();
     }
 
     /**
-     * Add an item to the left side of the account bar.
+     * Appends a component to the left section.
      */
     public AccountBarBuilder addLeftItem(Component item) {
         leftItems.add(item);
@@ -51,7 +43,7 @@ public class AccountBarBuilder {
     }
 
     /**
-     * Add an item to the right side of the account bar.
+     * Appends a component to the right section.
      */
     public AccountBarBuilder addRightItem(Component item) {
         rightItems.add(item);
@@ -59,7 +51,7 @@ public class AccountBarBuilder {
     }
 
     /**
-     * Add a link to the left side.
+     * Appends a standard link to the left section.
      */
     public AccountBarBuilder addLeftLink(String text, String href) {
         leftItems.add(Link.create(href, text));
@@ -67,7 +59,7 @@ public class AccountBarBuilder {
     }
 
     /**
-     * Add a link to the right side.
+     * Appends a standard link to the right section.
      */
     public AccountBarBuilder addRightLink(String text, String href) {
         rightItems.add(Link.create(href, text));
@@ -75,7 +67,7 @@ public class AccountBarBuilder {
     }
 
     /**
-     * Add custom CSS class to the account bar.
+     * Adds an extra class name to the root account bar element.
      */
     public AccountBarBuilder withClass(String className) {
         this.customClass = className;
@@ -83,7 +75,7 @@ public class AccountBarBuilder {
     }
 
     /**
-     * Set custom background color.
+     * Sets inline background color on the root account bar element.
      */
     public AccountBarBuilder withBackgroundColor(String color) {
         this.backgroundColor = color;
@@ -91,8 +83,7 @@ public class AccountBarBuilder {
     }
 
     /**
-     * Add an account widget to the right side that loads dynamically via HTMX.
-     * Convenience method for common use case.
+     * Appends a dynamic account widget (HTMX-backed) to the right section.
      */
     public AccountBarBuilder addRightAccountWidget(String endpoint) {
         rightItems.add(AccountWidget.createDynamic(endpoint));
@@ -100,7 +91,7 @@ public class AccountBarBuilder {
     }
 
     /**
-     * Add a guest account widget to the right side.
+     * Appends a guest account widget to the right section.
      */
     public AccountBarBuilder addRightGuestWidget() {
         rightItems.add(AccountWidget.createGuest());
@@ -108,7 +99,7 @@ public class AccountBarBuilder {
     }
 
     /**
-     * Add an authenticated account widget to the right side.
+     * Appends an authenticated account widget to the right section.
      */
     public AccountBarBuilder addRightAuthenticatedWidget(String username) {
         rightItems.add(AccountWidget.createAuthenticated(username));
@@ -116,7 +107,7 @@ public class AccountBarBuilder {
     }
 
     /**
-     * Build the account bar component.
+     * Builds a new account bar component snapshot from current builder state.
      */
     public Component build() {
         HtmlTag accountBar = new HtmlTag("div");

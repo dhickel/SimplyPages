@@ -16,89 +16,13 @@ import java.util.List;
 
 
 /**
- * Row wrapper that adds page-building UI for managing modules within a row.
- * <p>
- * EditableRow allows users to add, edit, and remove modules in a row,
- * with automatic layout calculation and a maximum module limit to maintain
- * layout integrity.
- * </p>
+ * Editable row wrapper that manages module wrappers and add-module controls.
  *
- * <h2>Features</h2>
- * <ul>
- *   <li><strong>Module Management:</strong> Add/edit/delete modules within the row</li>
- *   <li><strong>Auto Column Sizing:</strong> Automatically calculates equal column widths</li>
- *   <li><strong>Module Limit:</strong> Enforces max modules per row (default 3)</li>
- *   <li><strong>Add Module UI:</strong> Shows "Add Module" button when space available</li>
- *   <li><strong>HTMX Integration:</strong> Modal-based module addition workflow</li>
- * </ul>
+ * <p>Lifecycle: module list is mutable via configuration methods; row/column structure is rebuilt
+ * on each render call with equal-width columns.</p>
  *
- * <h2>Basic Usage</h2>
- * <pre>{@code
- * // Create empty row
- * Row row = new Row();
- * EditableRow editableRow = EditableRow.wrap(row, "row-1", "page-123");
- *
- * // Add modules (automatically wrapped in EditableModule)
- * editableRow.addEditableModule(
- *     ContentModule.create().withTitle("Module 1"),
- *     "module-1"
- * );
- *
- * editableRow.addEditableModule(
- *     GalleryModule.create().withTitle("Gallery"),
- *     "module-2"
- * );
- *
- * // Render - includes row + modules + "Add Module" button
- * String html = editableRow.render();
- * }</pre>
- *
- * <h2>Usage in Page Builder</h2>
- * <pre>{@code
- * @GetMapping("/vendor/page/{pageId}/edit")
- * public String editPage(@PathVariable String pageId) {
- *     PageData data = pageService.load(pageId);
- *
- *     EditablePage editablePage = EditablePage.create(pageId);
- *
- *     for (RowData rowData : data.getRows()) {
- *         Row row = new Row();
- *         EditableRow editableRow = EditableRow.wrap(row, rowData.getId(), pageId);
- *
- *         for (ModuleData moduleData : rowData.getModules()) {
- *             Module module = moduleFactory.create(moduleData);
- *             editableRow.addEditableModule(module, moduleData.getId());
- *         }
- *
- *         editablePage.addEditableRow(editableRow);
- *     }
- *
- *     return renderWithShell(editablePage);
- * }
- * }</pre>
- *
- * <h2>Add Module Flow</h2>
- * <ol>
- *   <li>User clicks "+ Add Module" button</li>
- *   <li>HTMX GET to `/api/pages/{pageId}/rows/{rowId}/add-module-form`</li>
- *   <li>Server returns modal with module type selector</li>
- *   <li>User selects type, fills form</li>
- *   <li>Submit POST to `/api/pages/{pageId}/rows/{rowId}/add-module`</li>
- *   <li>Server returns updated EditableRow HTML</li>
- *   <li>HTMX replaces entire row</li>
- * </ol>
- *
- * <h2>Customization</h2>
- * <pre>{@code
- * // Custom max modules
- * editableRow.withMaxModules(4);  // Allow up to 4 modules
- *
- * // Custom edit mode
- * editableRow.withEditMode(EditMode.OWNER_EDIT);
- * }</pre>
- *
- * @see EditableModule
- * @see EditablePage
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Intended for request-scoped page
+ * builder usage.</p>
  */
 public class EditableRow extends HtmlTag {
 
@@ -112,9 +36,7 @@ public class EditableRow extends HtmlTag {
     // Permission flags (Phase 6.5)
     private boolean canAddModule = true;
 
-    /**
-     * Internal class to track module information.
-     */
+    /** Internal immutable module registration entry. */
     private static class ModuleInfo {
         final Module module;
         final String moduleId;
@@ -125,13 +47,7 @@ public class EditableRow extends HtmlTag {
         }
     }
 
-    /**
-     * Private constructor - use {@link #wrap(Row, String, String)} instead.
-     *
-     * @param row the row to wrap
-     * @param rowId unique identifier for this row
-     * @param pageId the parent page identifier
-     */
+    /** Internal constructor; use {@link #wrap(Row, String, String)}. */
     private EditableRow(Row row, String rowId, String pageId) {
         super("div");
         this.wrappedRow = row;
@@ -141,23 +57,15 @@ public class EditableRow extends HtmlTag {
         this.withClass("editable-row-wrapper");
     }
 
-    /**
-     * Creates an EditableRow that wraps the given row.
-     *
-     * @param row the row to make editable
-     * @param rowId unique identifier for this row
-     * @param pageId the parent page identifier
-     * @return new EditableRow instance
-     */
+    /** Creates an editable wrapper around a row id scoped to a page id. */
     public static EditableRow wrap(Row row, String rowId, String pageId) {
         return new EditableRow(row, rowId, pageId);
     }
 
     /**
-     * Sets the maximum number of modules allowed in this row.
+     * Sets max modules allowed in the row.
      *
-     * @param max maximum modules (default 3)
-     * @return this EditableRow for method chaining
+     * @throws IllegalArgumentException when {@code max < 1}
      */
     public EditableRow withMaxModules(int max) {
         if (max < 1) {
@@ -167,46 +75,22 @@ public class EditableRow extends HtmlTag {
         return this;
     }
 
-    /**
-     * Sets the edit mode for all modules in this row.
-     *
-     * @param mode the edit mode to use
-     * @return this EditableRow for method chaining
-     */
+    /** Sets edit mode applied to generated {@link EditableModule} wrappers. */
     public EditableRow withEditMode(EditMode mode) {
         this.editMode = mode;
         return this;
     }
 
-    /**
-     * Sets whether modules can be added to this row (Phase 6.5).
-     * If false, the "Add Module" button will not be displayed.
-     *
-     * @param canAddModule true to allow adding modules, false to lock row
-     * @return this EditableRow for method chaining
-     */
+    /** Sets whether the add-module control is rendered. */
     public EditableRow withCanAddModule(boolean canAddModule) {
         this.canAddModule = canAddModule;
         return this;
     }
 
     /**
-     * Adds an editable module to this row.
-     * <p>
-     * The module is tracked and will be wrapped in EditableModule at render time
-     * with appropriate edit/delete URLs. Column width is calculated during render
-     * to ensure all modules share the 12-column grid evenly.
-     * </p>
-     * <p>
-     * <strong>Note:</strong> For simplicity, this implementation uses
-     * fixed equal-width columns. If you need more control over individual
-     * column widths, build the row manually with Column components.
-     * </p>
+     * Adds a module registration that will be wrapped at render time.
      *
-     * @param module the module to add
-     * @param moduleId unique identifier for this module
-     * @return this EditableRow for method chaining
-     * @throws IllegalStateException if max modules limit reached
+     * @throws IllegalStateException when module limit is reached
      */
     public EditableRow addEditableModule(Module module, String moduleId) {
         if (modules.size() >= maxModulesPerRow) {
@@ -222,9 +106,7 @@ public class EditableRow extends HtmlTag {
         return this;
     }
 
-    /**
-     * Renders the editable row with modules and add module UI.
-     */
+    /** Rebuilds and renders the row with editable wrappers and optional add control. */
     @Override
     public String render(RenderContext context) {
         children.clear();

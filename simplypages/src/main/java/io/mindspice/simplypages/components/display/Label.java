@@ -3,7 +3,9 @@ package io.mindspice.simplypages.components.display;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Label component for form labels and general text labels.
+ * Text label component for form/input association.
+ *
+ * <p>Mutable and not thread-safe. Attribute/class methods update this instance in place. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Label extends HtmlTag {
 

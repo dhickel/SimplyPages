@@ -10,26 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Module for displaying statistics and metrics in a grid layout.
+ * Module for rendering metric/value cards in a simple grid.
  *
- * <p>Stats modules are useful for showcasing key numbers, achievements, or
- * data points in a visually organized manner.</p>
- *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // Basic stats
- * StatsModule.create()
- *     .withTitle("Research Stats")
- *     .addStat("1,234", "Studies Documented")
- *     .addStat("567", "Active Researchers")
- *     .addStat("89", "Items Cataloged");
- *
- * // Custom column layout
- * StatsModule.create()
- *     .withColumns(4)
- *     .addStat("95%", "Accuracy", "Data verification rate")
- *     .addStat("24/7", "Available", "Platform uptime");
- * }</pre>
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Stats list and column count are
+ * mutable configuration state; mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class StatsModule extends Module {
 

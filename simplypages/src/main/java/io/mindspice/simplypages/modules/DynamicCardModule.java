@@ -5,14 +5,18 @@ import io.mindspice.simplypages.components.Header;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Dynamic card module that can be rendered with specific content.
- * This module can be updated independently using HTMX.
+ * Mutable module that renders a simple card header/body pair.
+ *
+ * <p>Lifecycle: title/content values are captured during module build and rendered as escaped text.</p>
+ *
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Use request-scoped instances. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
  */
 public class DynamicCardModule extends Module {
 
     private String cardTitle;
     private String cardContent;
 
+    /** Creates a card module with default title/content placeholders. */
     public DynamicCardModule() {
         super("div");
         this.withClass("card-module");
@@ -20,10 +24,12 @@ public class DynamicCardModule extends Module {
         this.cardContent = "Default content";
     }
 
+    /** Creates a new module instance. */
     public static DynamicCardModule create() {
         return new DynamicCardModule();
     }
 
+    /** Sets card header and body text. */
     public DynamicCardModule withCardContent(String title, String content) {
         this.cardTitle = title;
         this.cardContent = content;

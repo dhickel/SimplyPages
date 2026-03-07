@@ -6,8 +6,9 @@ import io.mindspice.simplypages.core.RenderContext;
 import org.owasp.encoder.Encode;
 
 /**
- * Navigation bar component.
- * Can be used for top navigation or side navigation.
+ * Navigation bar container with optional brand and item entries.
+ *
+ * <p>Mutable and not thread-safe. Child ordering and item state are assembled on this instance. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class NavBar extends HtmlTag {
 

@@ -5,7 +5,9 @@ import io.mindspice.simplypages.core.HtmlTag;
 import java.util.stream.Stream;
 
 /**
- * Spinner component for loading indicators.
+ * Loading spinner component with size, color, and optional message.
+ *
+ * <p>Mutable and not thread-safe. Size/color/message settings mutate render output. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Spinner extends HtmlTag {
 

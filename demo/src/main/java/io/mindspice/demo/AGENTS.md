@@ -5,7 +5,7 @@ Owns Spring Boot demo app wiring and integration examples for SimplyPages.
 
 ## Owns
 - Demo application bootstrap and controllers in this package
-- Example integration routes showcasing framework features
+- Consolidated `/demos/*` route surface and docs/javadocs integration routes
 
 ## Invariants
 - Demo remains illustrative and runnable.
@@ -16,6 +16,7 @@ Owns Spring Boot demo app wiring and integration examples for SimplyPages.
 - Keep demo endpoints focused on examples and docs support.
 - Update demo flows when framework APIs change.
 - Maintain clarity over completeness.
+- Keep top navigation stable (`Home`, `Demos`, `Javadocs`, `Docs`) and keep legacy routes removed.
 
 ## Do Not
 - Move framework logic into demo package as a workaround.

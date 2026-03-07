@@ -7,31 +7,9 @@ import io.mindspice.simplypages.components.Header;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Quote module for displaying testimonials, quotes, or highlighted text.
+ * Module for rendering emphasized quote/testimonial content.
  *
- * <p>Useful for testimonials, research quotes, user feedback, or any
- * content that benefits from visual emphasis.</p>
- *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // Simple quote
- * QuoteModule.create()
- *     .withQuote("This platform revolutionized our research process.")
- *     .withAuthor("Dr. Jane Smith");
- *
- * // Quote with attribution details
- * QuoteModule.create()
- *     .withQuote("Collaborative research yields better results.")
- *     .withAuthor("Dr. John Doe")
- *     .withAttribution("Professor of Botany, University of California")
- *     .withDate("January 2024");
- *
- * // Centered large quote
- * QuoteModule.create()
- *     .withQuote("Science is the future.")
- *     .large()
- *     .centered();
- * }</pre>
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Mutate within a request-scoped flow. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
  */
 public class QuoteModule extends Module {
 

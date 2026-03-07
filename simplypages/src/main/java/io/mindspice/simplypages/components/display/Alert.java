@@ -4,7 +4,9 @@ import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Alert component for displaying notifications and messages.
+ * Alert message component with severity style variants.
+ *
+ * <p>Mutable and not thread-safe. Styling methods mutate class attributes on this instance. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Alert extends HtmlTag {
 

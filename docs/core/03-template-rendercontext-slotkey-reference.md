@@ -22,10 +22,11 @@ Notes:
 
 - If slot value is a `Component`, component rendering is used.
 - Otherwise value is escaped and rendered as text.
+- Resolution happens in both direct `Component.render(context)` and `Template.render(context)` flows.
 
 ## RenderContext
 
-Mutable per-request value container.
+Mutable value container for slot resolution.
 
 ```java
 RenderContext ctx = RenderContext.builder()
@@ -40,6 +41,11 @@ Methods you will use most:
 - `remove(key)`
 - `clear()`
 - `withPolicy(...)`
+
+Reuse guidance:
+
+- Default: create per request/render flow.
+- Reuse is valid only with confined access (no concurrent mutation).
 
 ## Template
 
@@ -58,6 +64,11 @@ Render:
 ```java
 String html = CARD_TEMPLATE.render(ctx);
 ```
+
+Reuse guidance:
+
+- `Template` is the preferred wrapper for reusing stable component/module structures.
+- Configure/mutate structure first, then treat it as immutable and feed per-request values through `RenderContext`.
 
 ## Compile Policies
 

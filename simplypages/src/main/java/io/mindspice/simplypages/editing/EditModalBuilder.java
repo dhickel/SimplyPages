@@ -9,16 +9,14 @@ import java.util.regex.Pattern;
 import java.util.List;
 
 /**
- * Helper for building standardized edit modals.
+ * Builds standardized edit modals for module property and child-edit flows.
  *
- * <p>This builder simplifies the creation of edit modals with a consistent
- * layout and behavior. It handles:</p>
- * <ul>
- *   <li>Entity property editing (via {@link Editable#buildEditView()} or {@link Editable#buildEditView()})</li>
- *   <li>Nested child editing (via {@link Editable#getEditableChildren()})</li>
- *   <li>Footer layout (delete on left, cancel/save on right)</li>
- *   <li>HTMX attributes for dynamic updates</li>
- * </ul>
+ * <p>Contract: exactly one edit source must be provided ({@code editView} or {@code editable}).
+ * Save actions post to {@code saveUrl}; child actions are emitted only when corresponding URL
+ * templates are configured.</p>
+ *
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Configure and build within a
+ * single request flow.</p>
  */
 public class EditModalBuilder {
 
@@ -40,55 +38,72 @@ public class EditModalBuilder {
     private EditModalBuilder() {
     }
 
+    /**
+     * Creates a new builder instance.
+     */
     public static EditModalBuilder create() {
         return new EditModalBuilder();
     }
 
+    /** Sets modal title text. */
     public EditModalBuilder withTitle(String title) {
         this.title = title;
         return this;
     }
 
+    /** Sets the module identifier used by callers for endpoint construction. */
     public EditModalBuilder withModuleId(String moduleId) {
         this.moduleId = moduleId;
         return this;
     }
 
+    /** Sets pre-built edit view content for main module properties. */
     public EditModalBuilder withEditView(Component editView) {
         this.editView = editView;
         return this;
     }
 
+    /** Sets editable module adapter used to source edit view and child handles. */
     public EditModalBuilder withEditable(Editable<?> editable) {
         this.editable = editable;
         return this;
     }
 
+    /** Sets endpoint used by the Save action button. */
     public EditModalBuilder withSaveUrl(String saveUrl) {
         this.saveUrl = saveUrl;
         return this;
     }
 
+    /** Sets endpoint used by the Delete action button. */
     public EditModalBuilder withDeleteUrl(String deleteUrl) {
         this.deleteUrl = deleteUrl;
         return this;
     }
 
+    /** Sets child-edit URL template; {@code {id}} is replaced per child. */
     public EditModalBuilder withChildEditUrl(String childEditUrl) {
         this.childEditUrl = childEditUrl;
         return this;
     }
 
+    /** Sets child-delete URL template; {@code {id}} is replaced per child. */
     public EditModalBuilder withChildDeleteUrl(String childDeleteUrl) {
         this.childDeleteUrl = childDeleteUrl;
         return this;
     }
 
+    /** Hides the delete action in the modal footer. */
     public EditModalBuilder hideDelete() {
         this.showDelete = false;
         return this;
     }
 
+    /**
+     * Sets page container id targeted by delete operations.
+     *
+     * @throws IllegalArgumentException when id is null or fails identifier validation
+     */
     public EditModalBuilder withPageContainerId(String pageContainerId) {
         if (pageContainerId == null || !VALID_ID_PATTERN.matcher(pageContainerId).matches()) {
             throw new IllegalArgumentException("Invalid page container ID");
@@ -97,6 +112,11 @@ public class EditModalBuilder {
         return this;
     }
 
+    /**
+     * Sets modal container id targeted by modal updates.
+     *
+     * @throws IllegalArgumentException when id is null or fails identifier validation
+     */
     public EditModalBuilder withModalContainerId(String modalContainerId) {
         if (modalContainerId == null || !VALID_ID_PATTERN.matcher(modalContainerId).matches()) {
             throw new IllegalArgumentException("Invalid modal container ID");
@@ -105,6 +125,11 @@ public class EditModalBuilder {
         return this;
     }
 
+    /**
+     * Builds the configured modal.
+     *
+     * @throws IllegalStateException when required edit source or save URL is missing
+     */
     public Modal build() {
         // Use editable's view if editView not manually set
         if (editView == null && editable != null) {

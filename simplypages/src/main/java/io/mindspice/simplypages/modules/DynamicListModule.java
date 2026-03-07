@@ -8,13 +8,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Dynamic list module that can be rendered with specific items.
- * This module can be updated independently using HTMX.
+ * Mutable list module that renders string items as a styled {@code ul}.
+ *
+ * <p>Mutability and thread-safety: mutable and not thread-safe. The list reference provided to
+ * {@link #withListItems(List)} is used directly; mutate within a request-scoped flow. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
  */
 public class DynamicListModule extends Module {
     
     private List<String> listItems;
 
+    /** Creates a module with default example items. */
     public DynamicListModule() {
         super("div");
         this.withClass("list-module");
@@ -25,10 +28,12 @@ public class DynamicListModule extends Module {
         this.listItems.add("Item 3");
     }
 
+    /** Creates a new module instance. */
     public static DynamicListModule create() {
         return new DynamicListModule();
     }
 
+    /** Replaces the list backing this module. */
     public DynamicListModule withListItems(List<String> items) {
         this.listItems = items;
         return this;

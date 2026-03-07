@@ -11,6 +11,7 @@ Owns page composition and responsive layout primitives.
 - `Row.withChild` auto-wrap behavior for non-`Column` components stays predictable.
 - `Column.withWidth(int)` accepts only 1..12.
 - `Column.auto()` and `Column.fill()` semantics remain stable.
+- `Page.withStickySidebar(...)` keeps stable markup hooks used by responsive CSS.
 
 ## Do
 - Keep layout APIs fluent and simple.

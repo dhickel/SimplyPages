@@ -4,7 +4,9 @@ import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * InfoBox component for displaying highlighted information.
+ * Highlighted information block with title/value/icon regions.
+ *
+ * <p>Mutable and not thread-safe. Region content is stored in child tags on this instance. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class InfoBox extends HtmlTag {
 

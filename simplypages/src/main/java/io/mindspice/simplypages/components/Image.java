@@ -3,10 +3,12 @@ package io.mindspice.simplypages.components;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Image component for displaying images.
+ * Image element with basic source/size configuration helpers.
  *
- * <p><strong>Security:</strong> This component validates image URLs to prevent {@code javascript:}
- * and non-image {@code data:} URL injection attacks. Only {@code data:image/} URLs are allowed.</p>
+ * <p>Mutable and not thread-safe. Source and dimensions are retained on this instance. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
+ *
+ * <p>Security boundary: source URLs are validated to reject {@code javascript:} and non-image
+ * {@code data:} schemes.</p>
  */
 public class Image extends HtmlTag {
 

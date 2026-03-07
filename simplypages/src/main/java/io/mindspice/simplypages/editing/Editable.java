@@ -8,44 +8,50 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Interface for modules that support editing, including nested child components.
- * <p>
- * This replaces the primary editing contract.
- * </p>
+ * Primary editing contract for mutable SimplyPages modules.
  *
- * @param <T> The module type
+ * <p>Framework boundary: this interface defines rendering and mutation hooks only. Applications
+ * are responsible for authorization, CSRF, transport validation, and persistence policy.</p>
+ *
+ * <p>Mutability and thread-safety: implementations are typically mutable and request-scoped.
+ * Treat editable module instances as not thread-safe unless an implementation documents otherwise.</p>
+ *
+ * @param <T> editable module type
  */
 public interface Editable<T extends Module> {
 
     /**
-     * Build the edit form UI for the module's main properties.
+     * Builds the main-property edit view for this module.
      *
-     * @return Component with form fields
+     * @return component containing form controls
      */
     Component buildEditView();
 
     /**
-     * Apply form data to this module (mutates in place).
+     * Applies form data to this module instance.
      *
-     * @param formData Form field name → value map
-     * @return this (for method chaining)
+     * <p>Side effect: mutates this module. Implementations should rebuild cached/built structure
+     * when required by module lifecycle semantics.</p>
+     *
+     * @param formData form field name to value map
+     * @return this module instance
      */
     T applyEdits(Map<String, String> formData);
 
     /**
-     * Validate form data before applying.
+     * Validates form data before mutation.
      *
-     * @param formData Form field name → value map
-     * @return Validation result indicating success or failure with errors
+     * @param formData form field name to value map
+     * @return validation result; default is success
      */
     default ValidationResult validate(Map<String, String> formData) {
         return ValidationResult.valid();
     }
 
     /**
-     * Get a list of editable child components.
+     * Returns editable child handles for nested editing UIs.
      *
-     * @return List of editable children
+     * @return editable children in UI/display order; default is empty
      */
     default List<EditableChild> getEditableChildren() {
         return Collections.emptyList();

@@ -3,31 +3,9 @@ package io.mindspice.simplypages.components;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Icon component wrapper for icon fonts and SVG icons.
+ * Icon wrapper for multiple icon-library class conventions.
  *
- * <p>Provides a consistent interface for using icons from various icon libraries
- * (Font Awesome, Material Icons, Bootstrap Icons, etc.).</p>
- *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // Font Awesome icon
- * Icon.fontAwesome("user");
- *
- * // Font Awesome with size
- * Icon.fontAwesome("check").large();
- *
- * // Material Icons
- * Icon.material("settings");
- *
- * // Bootstrap Icons
- * Icon.bootstrap("heart-fill");
- *
- * // Custom icon class
- * Icon.custom("my-icon-class");
- *
- * // Icon with aria label for accessibility
- * Icon.fontAwesome("info-circle").withAriaLabel("Information");
- * }</pre>
+ * <p>Mutable and not thread-safe. Library/name/size settings rewrite class attributes in place. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Icon extends HtmlTag {
 

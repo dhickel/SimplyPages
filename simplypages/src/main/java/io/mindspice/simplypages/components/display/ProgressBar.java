@@ -5,7 +5,9 @@ import io.mindspice.simplypages.core.HtmlTag;
 import java.util.stream.Stream;
 
 /**
- * Progress bar component for showing completion progress.
+ * Progress bar component with configurable max, label, color, and animation flags.
+ *
+ * <p>Mutable and not thread-safe. Value/style flags are read when child markup is built. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class ProgressBar extends HtmlTag {
 

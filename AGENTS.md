@@ -132,4 +132,4 @@ cd demo && ../mvnw spring-boot:run
 - If no docs update is needed, explicitly note why in the PR/commit/task summary.
 
 ## Naming Conventions
-Use `SimplyPages` terminology in new docs and updates. `JHF` appears in older materials and should be treated as legacy naming.
+Use `SimplyPages` terminology in docs and updates.

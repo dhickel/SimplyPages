@@ -8,7 +8,9 @@ import io.mindspice.simplypages.core.RenderContext;
 import java.util.stream.Stream;
 
 /**
- * Forum post component for displaying individual forum posts.
+ * Forum post component with author/title/content and reaction metadata.
+ *
+ * <p>Mutable and not thread-safe. Field values and markdown mode are consumed during render. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class ForumPost extends HtmlTag {
 

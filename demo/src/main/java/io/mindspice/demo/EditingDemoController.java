@@ -798,11 +798,11 @@ public class EditingDemoController {
 
     private String renderWithShell(String content) {
         String shell = ShellBuilder.create()
-                .withPageTitle("JHF Editing Demo")
+                .withPageTitle("SimplyPages Editing Demo")
                 .withTopBanner(
                         BannerBuilder.create()
                                 .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
-                                .withTitle("Java HTML Framework - Editing Demo")
+                                .withTitle("SimplyPages - Editing Demo")
                                 .withSubtitle("Phase 6.5 patterns with permissions, row locking, and approval workflow")
                                 .withClass("banner-full-width")
                                 .withBackgroundColor("#2c3e50")

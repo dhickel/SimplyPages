@@ -30,6 +30,9 @@ class FrameworkAssetCompatibilityTest {
         assertTrue(css.contains(".top-banner-text"));
         assertTrue(css.contains(".top-banner-title"));
         assertTrue(css.contains(".top-banner-subtitle"));
+        assertTrue(css.contains(".mobile-sidebar-toggle"));
+        assertTrue(css.contains(".sticky-sidebar-mobile-collapse"));
+        assertTrue(css.contains(".sticky-sidebar-mobile-summary"));
     }
 
     @Test
@@ -41,6 +44,8 @@ class FrameworkAssetCompatibilityTest {
         assertTrue(js.contains("pushUrlRequest.trim().toLowerCase() !== 'false'"));
         assertTrue(js.contains("normalizedPushUrlAttr !== 'false'"));
         assertTrue(js.contains("window.scrollTo({top: 0, left: 0, behavior: 'auto'});"));
+        assertTrue(js.contains("function toggleMobileSidebar()"));
+        assertTrue(js.contains("sidebar.classList.toggle('mobile-open')"));
     }
 
     private String readClasspathResource(String path) throws IOException {

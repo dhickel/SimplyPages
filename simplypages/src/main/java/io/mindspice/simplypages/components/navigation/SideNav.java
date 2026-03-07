@@ -6,8 +6,9 @@ import io.mindspice.simplypages.core.RenderContext;
 import org.owasp.encoder.Encode;
 
 /**
- * Side navigation component specifically designed for vertical navigation.
- * Supports sections and nested items.
+ * Vertical navigation container with section and item entries.
+ *
+ * <p>Mutable and not thread-safe. Sections/items are appended as child components in insertion order. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class SideNav extends HtmlTag {
 

@@ -12,25 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Accordion module for collapsible content sections.
+ * Module for collapsible accordion sections.
  *
- * <p>Perfect for FAQs, documentation, or any content that benefits from
- * progressive disclosure.</p>
- *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // FAQ accordion
- * AccordionModule.create()
- *     .withTitle("Frequently Asked Questions")
- *     .addItem("What is research?", "Research is a process...")
- *     .addItem("How do I start?", "First, you need to...")
- *     .withFirstExpanded();
- *
- * // Documentation sections
- * AccordionModule.create()
- *     .addItem("Getting Started", customComponent)
- *     .addItem("Advanced Topics", moreContent);
- * }</pre>
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Item expansion flags are mutable
+ * and applied during build; mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class AccordionModule extends Module {
 

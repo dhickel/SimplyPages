@@ -3,26 +3,9 @@ package io.mindspice.simplypages.components;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Code component for displaying code snippets.
+ * Inline/code-block renderer with optional language and title metadata.
  *
- * <p>Supports both inline code and code blocks with optional syntax highlighting classes.</p>
- *
- * <h2>Usage Examples</h2>
- * <pre>{@code
- * // Inline code
- * Code.inline("System.out.println()");
- *
- * // Code block
- * Code.block("public static void main(String[] args) {\n    // code here\n}");
- *
- * // Code block with language
- * Code.block(codeString).withLanguage("java");
- *
- * // Code block with title
- * Code.block(codeString)
- *     .withLanguage("python")
- *     .withTitle("Example.py");
- * }</pre>
+ * <p>Mutable and not thread-safe. For block mode, markup is assembled lazily during render. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Code extends HtmlTag {
 

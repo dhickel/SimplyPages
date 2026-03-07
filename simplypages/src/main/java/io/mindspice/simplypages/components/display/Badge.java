@@ -3,7 +3,9 @@ package io.mindspice.simplypages.components.display;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Badge component for displaying small labels and counts.
+ * Small inline badge component with style presets.
+ *
+ * <p>Mutable and not thread-safe. Style/shape mutators replace class attributes in place. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Badge extends HtmlTag {
 

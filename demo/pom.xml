@@ -102,6 +102,45 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>verify-no-local-framework-css</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <available file="${project.basedir}/framework.css"
+                                           property="local.framework.css.present"/>
+                                <fail if="local.framework.css.present">
+                                    Remove ${project.basedir}/framework.css. Demo must consume /css/framework.css from simplypages artifact.
+                                </fail>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>verify-javadocs-copied</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <available file="${project.build.directory}/classes/static/javadocs/index.html"
+                                           property="javadocs.index.present"/>
+                                <fail unless="javadocs.index.present">
+                                    Missing Javadocs at ${project.build.directory}/classes/static/javadocs/index.html.
+                                    Ensure the simplypages module generated Javadocs and the demo copy-javadocs execution ran.
+                                </fail>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>

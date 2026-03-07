@@ -6,109 +6,16 @@ import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.Module;
 
 /**
- * Wrapper that adds edit/delete buttons to any module.
+ * Decorator that wraps a module/component with edit/delete controls.
  *
- * <p>EditableModule is a <strong>decorator</strong> that wraps existing modules and provides
- * framework-level edit and delete buttons with proper styling, z-index, and positioning.</p>
+ * <p>Lifecycle: wrapper markup is built lazily once on first render via {@code buildWrapper()}.
+ * Configure all options before first render.</p>
  *
- * <h2>Why EditableModule?</h2>
- * <ul>
- *   <li><strong>Framework-Level Styling:</strong> Edit/delete buttons styled via framework CSS classes</li>
- *   <li><strong>Z-Index Management:</strong> Buttons automatically layer above module content</li>
- *   <li><strong>Consistent UX:</strong> Standard button appearance and positioning across all modules</li>
- *   <li><strong>No Manual Styling:</strong> End users don't need to add CSS for edit buttons</li>
- * </ul>
+ * <p>Security boundary: this class emits client-side controls and HTMX attributes only. Endpoint
+ * authorization, CSRF handling, and edit policy enforcement remain application responsibilities.</p>
  *
- * <h2>Usage</h2>
- *
- * <h3>Basic Edit Functionality</h3>
- * <pre>{@code
- * ContentModule content = ContentModule.create()
- *     .withTitle("My Content")
- *     .withContent("# Welcome");
- *
- * EditableModule editable = EditableModule.wrap(content)
- *     .withEditUrl("/edit/" + moduleId)
- *     .withDeleteUrl("/delete/" + moduleId);
- *
- * // Renders module with ✏ edit and 🗑 delete buttons in top-right
- * String html = editable.render();
- * }</pre>
- *
- * <h3>Edit-Only (No Delete)</h3>
- * <pre>{@code
- * EditableModule editable = EditableModule.wrap(module)
- *     .withEditUrl("/edit/" + moduleId);
- * // Only shows ✏ edit button
- * }</pre>
- *
- * <h3>Delete-Only (No Edit)</h3>
- * <pre>{@code
- * EditableModule editable = EditableModule.wrap(module)
- *     .withDeleteUrl("/delete/" + moduleId);
- * // Only shows 🗑 delete button
- * }</pre>
- *
- * <h3>With Confirmation Dialog</h3>
- * <pre>{@code
- * EditableModule editable = EditableModule.wrap(module)
- *     .withEditUrl("/edit/123")
- *     .withDeleteUrl("/delete/123")
- *     .withDeleteConfirm("Are you sure you want to delete this module?");
- * }</pre>
- *
- * <h3>Custom Button Labels</h3>
- * <pre>{@code
- * EditableModule editable = EditableModule.wrap(module)
- *     .withEditUrl("/edit/123")
- *     .withEditButton("✎")  // Custom edit icon
- *     .withDeleteUrl("/delete/123")
- *     .withDeleteButton("✖");  // Custom delete icon
- * }</pre>
- *
- * <h2>HTMX Integration</h2>
- *
- * <p>EditableModule automatically sets up HTMX attributes for edit and delete operations:</p>
- * <ul>
- *   <li><strong>Edit:</strong> Uses {@code hx-get} to fetch edit modal</li>
- *   <li><strong>Delete:</strong> Uses {@code hx-delete} to remove module</li>
- *   <li><strong>Target:</strong> Edit targets {@code #edit-modal-container} by default</li>
- *   <li><strong>Swap:</strong> Edit uses {@code innerHTML} swap by default</li>
- * </ul>
- *
- * <h3>Custom HTMX Configuration</h3>
- * <pre>{@code
- * EditableModule editable = EditableModule.wrap(module)
- *     .withEditUrl("/edit/123")
- *     .withEditTarget("#custom-modal")  // Custom target
- *     .withDeleteUrl("/delete/123")
- *     .withDeleteTarget("#page-content")  // Custom delete target
- *     .withDeleteSwap("outerHTML");  // Custom swap strategy
- * }</pre>
- *
- * <h2>Framework CSS Classes</h2>
- *
- * <p>EditableModule uses framework CSS classes for consistent styling:</p>
- * <ul>
- *   <li><strong>.editable-module-wrapper:</strong> Wrapper div with {@code position: relative}</li>
- *   <li><strong>.module-edit-btn:</strong> Edit button style (gray, top-right: 30px, z-index: 10)</li>
- *   <li><strong>.module-delete-btn:</strong> Delete button style (red, top-right: 2px, z-index: 10)</li>
- * </ul>
- *
- * <p><strong>Note:</strong> Users don't need to add any custom CSS. All styling is framework-level.</p>
- *
- * <h2>Design Principles</h2>
- * <ul>
- *   <li><strong>Decorator Pattern:</strong> Wraps existing modules without modifying them</li>
- *   <li><strong>Framework-Level:</strong> All styling and positioning handled by framework</li>
- *   <li><strong>Single Modal Container:</strong> Edit button targets {@code #edit-modal-container}</li>
- *   <li><strong>Z-Index Automatic:</strong> Framework CSS ensures buttons appear above content</li>
- *   <li><strong>Fluent API:</strong> All configuration methods return {@code this}</li>
- * </ul>
- *
- * @see io.mindspice.simplypages.editing.Editable
- * @see io.mindspice.simplypages.editing.EditModalBuilder
- * @see io.mindspice.simplypages.components.display.Modal
+ * <p>Mutability and thread-safety: mutable and not thread-safe. Use request-scoped wrappers and
+ * avoid concurrent mutation/reuse after render.</p>
  */
 public class EditableModule extends Div {
 

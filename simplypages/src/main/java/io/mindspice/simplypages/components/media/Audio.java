@@ -3,7 +3,9 @@ package io.mindspice.simplypages.components.media;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Audio component for embedding audio content.
+ * HTML audio wrapper with boolean media attribute helpers.
+ *
+ * <p>Mutable and not thread-safe. Source/attribute configuration updates this instance in place. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Audio extends HtmlTag {
 

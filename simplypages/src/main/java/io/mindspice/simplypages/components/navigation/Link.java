@@ -4,18 +4,25 @@ import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Link component for creating hyperlinks.
- * Supports HTMX attributes for dynamic navigation.
+ * Hyperlink component with URL-scheme validation and HTMX helpers.
  *
- * <p><strong>Security:</strong> This component validates URLs and only allows
- * {@code http}, {@code https}, {@code mailto}, {@code tel}, or relative URLs. If you need to
- * use a custom scheme (not recommended), use {@code withAttribute("href", "...")} directly.</p>
+ * <p>Mutable and not thread-safe. Configure and render within a request-scoped lifecycle. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
+ *
+ * <p>Security boundary: {@link #withHref(String)} and constructor validate href schemes and allow
+ * only {@code http}, {@code https}, {@code mailto}, {@code tel}, or relative URLs.</p>
  */
 public class Link extends HtmlTag {
 
     private String href;
     private String text;
 
+    /**
+     * Creates a link with validated href and escaped text content.
+     *
+     * @param href target URL (allowlisted schemes or relative path)
+     * @param text link text
+     * @throws IllegalArgumentException when scheme is disallowed
+     */
     public Link(String href, String text) {
         super("a");
         this.href = href;
@@ -25,25 +32,40 @@ public class Link extends HtmlTag {
         this.withInnerText(text);
     }
 
+    /**
+     * Factory for a link.
+     *
+     * @param href target URL
+     * @param text link text
+     * @return new link
+     */
     public static Link create(String href, String text) {
         return new Link(href, text);
     }
 
-    // Getters
+    /**
+     * Returns current href value.
+     *
+     * @return href
+     */
     public String getHref() {
         return href;
     }
 
+    /**
+     * Returns current text value.
+     *
+     * @return text
+     */
     public String getText() {
         return text;
     }
 
-    // Fluent setters
     /**
-     * Sets the HTML id attribute for this link.
+     * Sets id attribute.
      *
-     * @param id the HTML id attribute value
-     * @return this Link for method chaining
+     * @param id element id
+     * @return this link
      */
     @Override
     public Link withId(String id) {
@@ -51,26 +73,32 @@ public class Link extends HtmlTag {
         return this;
     }
 
+    /**
+     * Sets target attribute.
+     *
+     * @param target target attribute value
+     * @return this link
+     */
     public Link withTarget(String target) {
         this.withAttribute("target", target);
         return this;
     }
 
+    /**
+     * Convenience for {@code target="_blank"}.
+     *
+     * @return this link
+     */
     public Link openInNewTab() {
         return this.withTarget("_blank");
     }
 
     /**
-     * Sets the URL that the link points to.
-     *
-     * <p><strong>Security:</strong> For safety, this method only allows {@code http},
-     * {@code https}, {@code mailto}, {@code tel}, or relative URLs. If you absolutely need
-     * a custom scheme (not recommended), use {@code withAttribute("href", "...")}
-     * directly and document why it's safe.</p>
+     * Sets href after allowlist validation.
      *
      * @param href the target URL
-     * @return this Link instance for method chaining
-     * @throws IllegalArgumentException if href is a {@code javascript:} URL
+     * @return this link
+     * @throws IllegalArgumentException when href scheme is disallowed
      */
     public Link withHref(String href) {
         validateUrl(href);
@@ -79,37 +107,78 @@ public class Link extends HtmlTag {
         return this;
     }
 
+    /**
+     * Replaces class attribute.
+     *
+     * @param className class token(s)
+     * @return this link
+     */
     public Link withClass(String className) {
         this.withAttribute("class", className);
         return this;
     }
 
-    // HTMX Integration
+    /**
+     * Sets {@code hx-get}.
+     *
+     * @param url HTMX GET endpoint
+     * @return this link
+     */
     public Link withHxGet(String url) {
         this.withAttribute("hx-get", url);
         return this;
     }
 
+    /**
+     * Sets {@code hx-post}.
+     *
+     * @param url HTMX POST endpoint
+     * @return this link
+     */
     public Link withHxPost(String url) {
         this.withAttribute("hx-post", url);
         return this;
     }
 
+    /**
+     * Sets {@code hx-target}.
+     *
+     * @param target HTMX target selector
+     * @return this link
+     */
     public Link withHxTarget(String target) {
         this.withAttribute("hx-target", target);
         return this;
     }
 
+    /**
+     * Sets {@code hx-swap}.
+     *
+     * @param swap HTMX swap mode
+     * @return this link
+     */
     public Link withHxSwap(String swap) {
         this.withAttribute("hx-swap", swap);
         return this;
     }
 
+    /**
+     * Sets {@code hx-push-url}.
+     *
+     * @param pushUrl whether browser URL should be pushed
+     * @return this link
+     */
     public Link withHxPushUrl(boolean pushUrl) {
         this.withAttribute("hx-push-url", String.valueOf(pushUrl));
         return this;
     }
 
+    /**
+     * Appends child content inside the anchor.
+     *
+     * @param component child component
+     * @return this link
+     */
     @Override
     public Link withChild(Component component) {
         super.withChild(component);
@@ -125,10 +194,7 @@ public class Link extends HtmlTag {
     };
 
     /**
-     * Validates that the URL is safe to use in a link.
-     * <p>
-     * Allows only http/https/mailto/tel schemes or relative URLs.
-     * </p>
+     * Validates href against scheme allowlist.
      *
      * @param url the URL to validate
      * @throws IllegalArgumentException if the URL uses a disallowed scheme

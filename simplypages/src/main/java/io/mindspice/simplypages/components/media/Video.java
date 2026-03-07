@@ -3,7 +3,9 @@ package io.mindspice.simplypages.components.media;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
- * Video component for embedding video content.
+ * HTML video wrapper with media attribute and sizing helpers.
+ *
+ * <p>Mutable and not thread-safe. Source/attribute configuration updates this instance in place. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Video extends HtmlTag {
 

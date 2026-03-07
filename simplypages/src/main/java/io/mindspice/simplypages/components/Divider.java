@@ -7,7 +7,9 @@ import io.mindspice.simplypages.core.RenderContext;
 import java.util.stream.Stream;
 
 /**
- * Divider component for creating horizontal or vertical visual separators.
+ * Visual separator supporting horizontal/vertical orientation and style options.
+ *
+ * <p>Mutable and not thread-safe. Style/orientation fields are applied when rendered. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class Divider extends HtmlTag {
 
