@@ -1,5 +1,6 @@
 package io.mindspice.simplypages.components.forum;
 
+import io.mindspice.simplypages.components.Image;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
@@ -17,6 +18,7 @@ public class Comment extends HtmlTag {
     private String author;
     private String timestamp;
     private String content;
+    private String avatarUrl;
     private boolean useMarkdown = true;
     private int depth = 0;
 
@@ -44,6 +46,11 @@ public class Comment extends HtmlTag {
         return this;
     }
 
+    public Comment withAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+        return this;
+    }
+
     public Comment disableMarkdown() {
         this.useMarkdown = false;
         return this;
@@ -64,21 +71,32 @@ public class Comment extends HtmlTag {
     protected Stream<Component> getChildrenStream() {
         Stream.Builder<Component> builder = Stream.builder();
 
-        // Header
-        HtmlTag header = new HtmlTag("div").withAttribute("class", "comment-header");
+        HtmlTag layout = new HtmlTag("div").withAttribute("class", "comment-layout");
 
+        HtmlTag identity = new HtmlTag("div").withAttribute("class", "comment-identity");
         HtmlTag authorSpan = new HtmlTag("span")
             .withAttribute("class", "comment-author")
             .withInnerText(author != null ? author : "Anonymous");
+        identity.withChild(authorSpan);
+
+        HtmlTag avatarSlot = new HtmlTag("div")
+            .withAttribute("class", "comment-avatar-slot")
+            .addStyle("width", "150px")
+            .addStyle("height", "150px");
+        if (avatarUrl != null && !avatarUrl.isBlank()) {
+            avatarSlot.withChild(Image.create(avatarUrl, "comment avatar")
+                .withClass("comment-avatar-image")
+                .withSize("150", "150"));
+        }
+        identity.withChild(avatarSlot);
+
+        HtmlTag main = new HtmlTag("div").withAttribute("class", "comment-main");
 
         HtmlTag timestampSpan = new HtmlTag("span")
             .withAttribute("class", "comment-timestamp")
             .withInnerText(timestamp != null ? timestamp : "");
+        main.withChild(timestampSpan);
 
-        header.withChild(authorSpan).withChild(timestampSpan);
-        builder.add(header);
-
-        // Content
         Component contentComponent;
         if (useMarkdown && content != null) {
             contentComponent = new HtmlTag("div")
@@ -89,7 +107,10 @@ public class Comment extends HtmlTag {
                 .withAttribute("class", "comment-content")
                 .withInnerText(content != null ? content : "");
         }
-        builder.add(contentComponent);
+        main.withChild(contentComponent);
+
+        layout.withChild(identity).withChild(main);
+        builder.add(layout);
 
         return Stream.concat(builder.build(), super.getChildrenStream());
     }

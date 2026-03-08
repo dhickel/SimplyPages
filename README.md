@@ -225,13 +225,16 @@ Recommended sequence:
   - `docs/patterns/02-dynamic-fragment-caching-patterns.md`
   - `docs/patterns/03-htmx-endpoint-and-swap-patterns.md`
   - `docs/patterns/04-editing-workflows-owner-user-approval.md`
+  - `docs/patterns/05-forum-helper-implementation-and-customization.md`
 - Security:
   - `docs/security/01-security-boundaries-and-safe-rendering.md`
   - `docs/security/02-authwrapper-authorizationchecker-integration.md`
 - Operations:
   - `docs/operations/01-performance-threading-and-cache-lifecycles.md`
   - `docs/operations/02-testing-and-troubleshooting-playbook.md`
+  - `docs/operations/03-writing-tests-for-components-and-modules.md`
 - Reference:
   - `docs/reference/components-and-modules-catalog.md`
   - `docs/reference/builders-shell-nav-banner-accountbar.md`
+  - `docs/reference/forum-helper-api-reference.md`
   - `docs/reference/editing-api-reference.md`

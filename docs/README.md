@@ -33,6 +33,7 @@ This page is the table of contents for all framework documentation.
 - [Dynamic Fragment Caching Patterns](patterns/02-dynamic-fragment-caching-patterns.md)
 - [HTMX Endpoint and Swap Patterns](patterns/03-htmx-endpoint-and-swap-patterns.md)
 - [Editing Workflows: Owner, User, Approval](patterns/04-editing-workflows-owner-user-approval.md)
+- [ForumHelper Implementation and Customization](patterns/05-forum-helper-implementation-and-customization.md)
 
 ## Security
 
@@ -43,9 +44,11 @@ This page is the table of contents for all framework documentation.
 
 - [Performance, Threading, and Cache Lifecycles](operations/01-performance-threading-and-cache-lifecycles.md)
 - [Testing and Troubleshooting Playbook](operations/02-testing-and-troubleshooting-playbook.md)
+- [Writing Tests for Components and Modules](operations/03-writing-tests-for-components-and-modules.md)
 
 ## Reference
 
 - [Components and Modules Catalog](reference/components-and-modules-catalog.md)
 - [Builders Reference: Shell, Navigation, Banner, Account Bar](reference/builders-shell-nav-banner-accountbar.md)
+- [ForumHelper API Reference](reference/forum-helper-api-reference.md)
 - [Editing API Reference](reference/editing-api-reference.md)

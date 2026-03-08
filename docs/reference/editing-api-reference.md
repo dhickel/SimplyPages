@@ -1,4 +1,4 @@
-[Previous](builders-shell-nav-banner-accountbar.md) | [Index](../INDEX.md)
+[Previous](forum-helper-api-reference.md) | [Index](../INDEX.md)
 
 # Editing API Reference
 

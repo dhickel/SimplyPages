@@ -51,8 +51,8 @@ class CommentThreadTest {
             .hasElement("div.comment-thread > div.comment.comment-depth-1")
             .hasElement("div.comment-depth-1 > div.comment-thread > div.comment.comment-depth-2")
             .hasElement("div.comment-depth-2 > div.comment-thread > div.comment.comment-depth-3")
-            .elementTextEquals("div.comment-depth-1 > div.comment-content", "First level")
-            .elementTextEquals("div.comment-depth-2 > div.comment-content", "Second level")
-            .elementTextEquals("div.comment-depth-3 > div.comment-content", "Third level");
+            .elementTextEquals("div.comment-depth-1 .comment-content", "First level")
+            .elementTextEquals("div.comment-depth-2 .comment-content", "Second level")
+            .elementTextEquals("div.comment-depth-3 .comment-content", "Third level");
     }
 }

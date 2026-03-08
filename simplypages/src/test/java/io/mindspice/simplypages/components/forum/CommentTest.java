@@ -19,10 +19,13 @@ class CommentTest {
 
         HtmlAssert.assertThat(html)
             .hasElement("div.comment.comment-depth-1")
-            .hasElement("div.comment > div.comment-header > span.comment-author")
-            .hasElement("div.comment > div.comment-content")
-            .elementTextEquals("span.comment-author", "Bob")
-            .elementTextEquals("div.comment-content", "Reply")
+            .hasElement("div.comment > div.comment-layout > div.comment-identity > span.comment-author")
+            .hasElement("div.comment > div.comment-layout > div.comment-identity > div.comment-avatar-slot")
+            .hasElement("div.comment > div.comment-layout > div.comment-main > div.comment-content")
+            .doesNotHaveElement("div.comment .comment-avatar-image")
+            .elementTextEquals("div.comment .comment-author", "Bob")
+            .elementTextEquals("div.comment .comment-content", "Reply")
+            .attributeEquals("div.comment .comment-avatar-slot", "style", "width: 150px; height: 150px;")
             .attributeEquals("div.comment.comment-depth-1", "style", "margin-left: 20px;");
     }
 
@@ -33,15 +36,19 @@ class CommentTest {
 
         String html = Comment.create()
             .withAuthor("Writer")
+            .withAvatarUrl("https://example.com/avatar.png")
             .withContent(markdown)
             .withDepth(2)
             .render();
 
         HtmlAssert.assertThat(html)
-            .hasElement("div.comment.comment-depth-2 > div.comment-content > h1")
-            .hasElement("div.comment.comment-depth-2 > div.comment-content > p")
-            .hasElement("div.comment.comment-depth-2 > div.comment-content > ul > li")
-            .hasElement("div.comment.comment-depth-2 > div.comment-content > table")
+            .hasElement("div.comment.comment-depth-2 .comment-avatar-image")
+            .attributeEquals("div.comment.comment-depth-2 .comment-avatar-image", "width", "150")
+            .attributeEquals("div.comment.comment-depth-2 .comment-avatar-image", "height", "150")
+            .hasElement("div.comment.comment-depth-2 > div.comment-layout > div.comment-main > div.comment-content > h1")
+            .hasElement("div.comment.comment-depth-2 > div.comment-layout > div.comment-main > div.comment-content > p")
+            .hasElement("div.comment.comment-depth-2 > div.comment-layout > div.comment-main > div.comment-content > ul > li")
+            .hasElement("div.comment.comment-depth-2 > div.comment-layout > div.comment-main > div.comment-content > table")
             .attributeEquals("div.comment.comment-depth-2", "style", "margin-left: 40px;");
     }
 }
