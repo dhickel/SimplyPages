@@ -11,7 +11,8 @@ Owns rendering primitives and contracts used by the whole framework.
 
 ## Invariants
 - Rendering must be safe by default for untrusted text/attributes.
-- `render(RenderContext)` behavior must remain compatible with `render()` defaults.
+- `Component` implementations must provide `render(RenderContext)`.
+- `render()` remains the empty-context convenience path.
 - `Module.build()` is idempotent and drives build-once lifecycle semantics.
 - Slot/template rendering must preserve type-safe key usage.
 

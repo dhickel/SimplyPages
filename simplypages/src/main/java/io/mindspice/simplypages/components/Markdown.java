@@ -1,6 +1,7 @@
 package io.mindspice.simplypages.components;
 
 import io.mindspice.simplypages.core.Component;
+import io.mindspice.simplypages.core.RenderContext;
 import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
@@ -85,7 +86,7 @@ public class Markdown implements Component {
      * @return rendered HTML
      */
     @Override
-    public String render() {
+    public String render(RenderContext context) {
         Node document = parser.parse(markdownText);
         HtmlRenderer renderer = allowRawHtml ? unsafeRenderer : sanitizedRenderer;
         return renderer.render(document);

@@ -29,6 +29,8 @@ public final class ArticleView {
 }
 ```
 
+`Template.of(...)` and `component.compile()` are equivalent compile paths.
+
 ## Render Per Request Using Context
 
 ```java

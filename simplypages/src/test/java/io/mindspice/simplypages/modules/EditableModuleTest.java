@@ -2,8 +2,18 @@ package io.mindspice.simplypages.modules;
 
 import io.mindspice.simplypages.components.Paragraph;
 import io.mindspice.simplypages.editing.EditMode;
+import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -64,5 +74,43 @@ class EditableModuleTest {
         assertFalse(html.contains("module-edit-btn"));
         assertFalse(html.contains("module-delete-btn"));
         assertTrue(html.contains("Body"));
+    }
+
+    @Test
+    @DisplayName("EditableModule should build wrapper once under concurrent first render")
+    void testConcurrentFirstRenderBuildOnce() throws Exception {
+        EditableModule editable = EditableModule.wrap(new Paragraph("Body"))
+            .withModuleId("module-concurrency")
+            .withEditUrl("/edit/concurrency")
+            .withDeleteUrl("/delete/concurrency");
+
+        int workers = 24;
+        ExecutorService pool = Executors.newFixedThreadPool(workers);
+        CountDownLatch ready = new CountDownLatch(workers);
+        CountDownLatch start = new CountDownLatch(1);
+        List<Callable<String>> tasks = new ArrayList<>();
+
+        for (int i = 0; i < workers; i++) {
+            tasks.add(() -> {
+                ready.countDown();
+                assertTrue(start.await(2, TimeUnit.SECONDS));
+                return editable.render();
+            });
+        }
+
+        List<Future<String>> futures = tasks.stream().map(pool::submit).toList();
+        assertTrue(ready.await(2, TimeUnit.SECONDS));
+        start.countDown();
+        for (Future<String> future : futures) {
+            future.get(3, TimeUnit.SECONDS);
+        }
+        pool.shutdownNow();
+
+        String html = editable.render();
+        HtmlAssert.assertThat(html)
+            .hasElementCount("div#module-concurrency > button.module-edit-btn", 1)
+            .hasElementCount("div#module-concurrency > button.module-delete-btn", 1)
+            .hasElementCount("div#module-concurrency > p", 1)
+            .elementTextEquals("div#module-concurrency > p", "Body");
     }
 }

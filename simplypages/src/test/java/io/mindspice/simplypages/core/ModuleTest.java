@@ -5,8 +5,18 @@ import io.mindspice.simplypages.testutil.SnapshotAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ModuleTest {
 
@@ -95,5 +105,41 @@ class ModuleTest {
         assertThrows(UnsupportedOperationException.class, () -> module.withWidth("50%"));
         assertThrows(UnsupportedOperationException.class, () -> module.withMaxWidth("100%"));
         assertThrows(UnsupportedOperationException.class, () -> module.withMinWidth("10%"));
+    }
+
+    @Test
+    @DisplayName("Module should build exactly once under concurrent first render")
+    void testModuleConcurrentBuildOnce() throws Exception {
+        TestModule module = new TestModule();
+        module.withTitle("Concurrent");
+        module.withContent("Body");
+        int workers = 24;
+
+        ExecutorService pool = Executors.newFixedThreadPool(workers);
+        CountDownLatch ready = new CountDownLatch(workers);
+        CountDownLatch start = new CountDownLatch(1);
+
+        List<Callable<String>> tasks = new ArrayList<>();
+        for (int i = 0; i < workers; i++) {
+            tasks.add(() -> {
+                ready.countDown();
+                assertTrue(start.await(2, TimeUnit.SECONDS));
+                return module.render(RenderContext.empty());
+            });
+        }
+
+        List<Future<String>> futures = tasks.stream().map(pool::submit).toList();
+        assertTrue(ready.await(2, TimeUnit.SECONDS));
+        start.countDown();
+
+        for (Future<String> future : futures) {
+            future.get(3, TimeUnit.SECONDS);
+        }
+        pool.shutdownNow();
+
+        assertEquals(1, module.buildCount);
+        HtmlAssert.assertThat(module.render())
+            .hasElementCount("div.module > h2.module-title", 1)
+            .hasElementCount("div.module > span.module-content", 1);
     }
 }

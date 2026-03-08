@@ -59,9 +59,9 @@ public class RenderContext {
      *
      * <p>{@code null} values remove existing entries.</p>
      */
-    public static RenderContext of(Map<SlotKey<?>, Object> values) {
+    public static RenderContext of(Map<? extends SlotKey<?>, ?> values) {
         RenderContext context = empty();
-        values.forEach((key, value) -> context.putUnchecked(key, value));
+        values.forEach((key, value) -> putContextValue(context, key, value));
         return context;
     }
 
@@ -187,6 +187,14 @@ public class RenderContext {
             return;
         }
         values.put(key, new SlotEntry.LiveEntry(value.getClass(), value));
+    }
+
+    /**
+     * Bridge helper to pass wildcard map values through generic {@link #put(SlotKey, Object)}.
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void putContextValue(RenderContext context, SlotKey<?> key, Object value) {
+        context.put((SlotKey) key, value);
     }
 
     /**

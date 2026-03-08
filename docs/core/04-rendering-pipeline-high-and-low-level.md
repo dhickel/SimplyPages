@@ -32,7 +32,7 @@ sequenceDiagram
 
 ## Low-Level: Template Compilation
 
-`Template.of(root)` compiles a component tree into segments:
+`Template.of(root)` compiles a component tree into segments (or use `root.compile()`):
 
 - Static string segments
 - Dynamic slot segments (`SlotKey` lookups)
@@ -45,7 +45,7 @@ template for repeated renders rather than mutating the original tree per request
 
 ## Low-Level: Slot Resolution
 
-During `template.render(context)`:
+During `template.render(context)` (or `template.render(Map<SlotKey<?>, Object>)`):
 
 1. For each segment, renderer appends output to a single `StringBuilder`.
 2. For a slot segment:

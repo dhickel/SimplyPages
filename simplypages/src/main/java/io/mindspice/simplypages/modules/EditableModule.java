@@ -5,6 +5,8 @@ import io.mindspice.simplypages.components.forms.Button;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.Module;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * Decorator that wraps a module/component with edit/delete controls.
  *
@@ -19,10 +21,11 @@ import io.mindspice.simplypages.core.Module;
  */
 public class EditableModule extends Div {
 
-    private static int idCounter = 0;  // For generating unique IDs
+    private static final AtomicInteger ID_COUNTER = new AtomicInteger(0);  // For generating unique IDs
 
     private final Component wrappedModule;
-    private boolean built = false;  // Track if buildWrapper has been called
+    private volatile boolean built = false;  // Track if buildWrapper has been called
+    private final Object buildLock = new Object();
     private String moduleId;  // ID for targeting
 
     // Permission flags (Phase 6.5)
@@ -55,7 +58,7 @@ public class EditableModule extends Div {
         this.wrappedModule = wrappedModule;
         this.withClass("editable-module-wrapper");
         // Generate a unique ID for targeting
-        this.moduleId = "editable-module-" + (++idCounter);
+        this.moduleId = "editable-module-" + ID_COUNTER.incrementAndGet();
         this.withAttribute("id", this.moduleId);
     }
 
@@ -279,45 +282,50 @@ public class EditableModule extends Div {
         if (built) {
             return;  // Already built, don't build again
         }
-        built = true;
-
-        // Add edit button if URL is set AND editing is permitted
-        if (canEdit && editUrl != null && !editUrl.isEmpty()) {
-            Button editBtn = Button.create(editButtonLabel)
-                    .withStyle(Button.ButtonStyle.LINK)
-                    .withClass("module-edit-btn");
-
-            editBtn.withAttribute("hx-get", appendEditModeParam(editUrl));
-            editBtn.withAttribute("hx-target", editTarget);
-            editBtn.withAttribute("hx-swap", editSwap);
-            editBtn.withAttribute("title", editTitle);
-
-            super.withChild(editBtn);
-        }
-
-        // Add delete button if URL is set AND deletion is permitted
-        if (canDelete && deleteUrl != null && !deleteUrl.isEmpty()) {
-            Button deleteBtn = Button.create(deleteButtonLabel)
-                    .withStyle(Button.ButtonStyle.LINK)
-                    .withClass("module-delete-btn");
-
-            deleteBtn.withAttribute("hx-delete", appendEditModeParam(deleteUrl));
-
-            // Set target - default to the wrapper's ID if not explicitly specified
-            String target = (deleteTarget != null) ? deleteTarget : "#" + moduleId;
-            deleteBtn.withAttribute("hx-target", target);
-            deleteBtn.withAttribute("hx-swap", deleteSwap);
-
-            if (deleteConfirm != null && !deleteConfirm.isEmpty()) {
-                deleteBtn.withAttribute("hx-confirm", deleteConfirm);
+        synchronized (buildLock) {
+            if (built) {
+                return;
             }
-            deleteBtn.withAttribute("title", deleteTitle);
 
-            super.withChild(deleteBtn);
+            // Add edit button if URL is set AND editing is permitted
+            if (canEdit && editUrl != null && !editUrl.isEmpty()) {
+                Button editBtn = Button.create(editButtonLabel)
+                        .withStyle(Button.ButtonStyle.LINK)
+                        .withClass("module-edit-btn");
+
+                editBtn.withAttribute("hx-get", appendEditModeParam(editUrl));
+                editBtn.withAttribute("hx-target", editTarget);
+                editBtn.withAttribute("hx-swap", editSwap);
+                editBtn.withAttribute("title", editTitle);
+
+                super.withChild(editBtn);
+            }
+
+            // Add delete button if URL is set AND deletion is permitted
+            if (canDelete && deleteUrl != null && !deleteUrl.isEmpty()) {
+                Button deleteBtn = Button.create(deleteButtonLabel)
+                        .withStyle(Button.ButtonStyle.LINK)
+                        .withClass("module-delete-btn");
+
+                deleteBtn.withAttribute("hx-delete", appendEditModeParam(deleteUrl));
+
+                // Set target - default to the wrapper's ID if not explicitly specified
+                String target = (deleteTarget != null) ? deleteTarget : "#" + moduleId;
+                deleteBtn.withAttribute("hx-target", target);
+                deleteBtn.withAttribute("hx-swap", deleteSwap);
+
+                if (deleteConfirm != null && !deleteConfirm.isEmpty()) {
+                    deleteBtn.withAttribute("hx-confirm", deleteConfirm);
+                }
+                deleteBtn.withAttribute("title", deleteTitle);
+
+                super.withChild(deleteBtn);
+            }
+
+            // Add the wrapped module
+            super.withChild(wrappedModule);
+            built = true;
         }
-
-        // Add the wrapped module
-        super.withChild(wrappedModule);
     }
 
     /**

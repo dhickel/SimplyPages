@@ -1,5 +1,7 @@
 package io.mindspice.simplypages.core;
 
+import java.util.Map;
+
 /**
  * Contract for any renderable SimplyPages UI node.
  *
@@ -19,9 +21,7 @@ public interface Component {
      * @param context context used for slot resolution and render policy
      * @return rendered HTML for this component
      */
-    default String render(RenderContext context) {
-        return render();
-    }
+    String render(RenderContext context);
 
     /**
      * Renders this component with an empty context.
@@ -30,5 +30,24 @@ public interface Component {
      */
     default String render() {
         return render(RenderContext.empty());
+    }
+
+    /**
+     * Renders this component from raw slot values.
+     *
+     * @param values raw slot values keyed by {@link SlotKey}
+     * @return rendered HTML for this component
+     */
+    default String render(Map<? extends SlotKey<?>, ?> values) {
+        return render(RenderContext.of(values));
+    }
+
+    /**
+     * Compiles this component into a reusable {@link Template}.
+     *
+     * @return compiled template
+     */
+    default Template compile() {
+        return Template.of(this);
     }
 }

@@ -46,7 +46,8 @@ SimplyPages is an active internal Java-first SSR framework for building data-hea
 ## Architecture (High-Level)
 
 ### Core Rendering Model
-- `Component` is the root interface and supports `render()` and `render(RenderContext)`
+- `Component` is the root interface; implementations must provide `render(RenderContext)`, while `render()` remains the empty-context convenience path
+- `Component.compile()` is the discoverable shortcut for `Template.of(component)`
 - `HtmlTag` is the common base for most concrete components
 - `Module` provides high-level composition with a build lifecycle (`build()` + `buildContent()`)
 - Escaping and attribute safety are handled at framework level via OWASP encoder in core rendering paths

@@ -44,6 +44,8 @@ public class Page extends HtmlTag {
         private int stickyMainWidth = 8;
         private int stickySidebarWidth = 4;
         private HtmlTag mainContent = null;
+        private boolean independentScrollingApplied = false;
+        private boolean stickyLayoutApplied = false;
 
         /**
          * Appends a row to page content. When sticky mode is enabled, appends to sticky main area.
@@ -152,19 +154,20 @@ public class Page extends HtmlTag {
         /**
          * Finalizes and returns the configured page.
          *
-         * <p>Build is idempotent for unchanged builder state but mutates the underlying {@link Page}
-         * by appending layout containers/classes as needed.</p>
+         * <p>Build is idempotent for unchanged builder state. Sticky-sidebar layout containers and
+         * scroll classes are only attached once.</p>
          *
          * @return configured page instance
          */
         public Page build() {
             // Apply independent scrolling class if enabled
-            if (independentScrolling) {
+            if (independentScrolling && !independentScrollingApplied) {
                 page.addClass("scrollable-page");
+                independentScrollingApplied = true;
             }
 
             // Build sticky sidebar layout if configured
-            if (stickyComponent != null) {
+            if (stickyComponent != null && !stickyLayoutApplied) {
                 page.addClass("with-sticky-sidebar");
 
                 // Add main content to page
@@ -186,6 +189,7 @@ public class Page extends HtmlTag {
                         .withChild(sidebarDetails);
 
                 page.withChild(sidebar);
+                stickyLayoutApplied = true;
             }
 
             return page;

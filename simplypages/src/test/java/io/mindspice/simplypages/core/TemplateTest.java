@@ -6,6 +6,7 @@ import io.mindspice.simplypages.testutil.SnapshotAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +27,34 @@ class TemplateTest {
             count.incrementAndGet();
             return "<span class=\"counted\">counted</span>";
         }
+    }
+
+    @Test
+    @DisplayName("Component compile shortcut should match Template.of rendering")
+    void testComponentCompileShortcut() {
+        SlotKey<String> key = SlotKey.of("title");
+        Div root = new Div().withChild(new HtmlTag("span").withClass("title").withInnerText(key));
+
+        Template explicit = Template.of(root);
+        Template shortcut = root.compile();
+        RenderContext context = RenderContext.of(key, "Quarterly Report");
+
+        assertEquals(explicit.render(context), shortcut.render(context));
+    }
+
+    @Test
+    @DisplayName("Template and Component should support map-based rendering")
+    void testMapBasedRenderingHelpers() {
+        SlotKey<String> key = SlotKey.of("name");
+        Div root = new Div().withChild(new HtmlTag("span").withClass("name").withInnerText(key));
+        Template template = root.compile();
+        Map<SlotKey<String>, String> values = Map.of(key, "Alice");
+
+        String templateHtml = template.render(values);
+        String componentHtml = root.render(values);
+
+        HtmlAssert.assertThat(templateHtml).elementTextEquals("div > span.name", "Alice");
+        HtmlAssert.assertThat(componentHtml).elementTextEquals("div > span.name", "Alice");
     }
 
     @Test

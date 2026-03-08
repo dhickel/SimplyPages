@@ -1,6 +1,7 @@
 package io.mindspice.simplypages.components;
 
 import io.mindspice.simplypages.core.Component;
+import io.mindspice.simplypages.core.RenderContext;
 
 /**
  * Renders trusted HTML without escaping.
@@ -38,7 +39,7 @@ public class RawHtml implements Component {
      * @return unescaped HTML
      */
     @Override
-    public String render() {
+    public String render(RenderContext context) {
         return html;
     }
 }

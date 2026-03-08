@@ -12,6 +12,7 @@ Owns page composition and responsive layout primitives.
 - `Column.withWidth(int)` accepts only 1..12.
 - `Column.auto()` and `Column.fill()` semantics remain stable.
 - `Page.withStickySidebar(...)` keeps stable markup hooks used by responsive CSS.
+- `PageBuilder.build()` remains idempotent for unchanged builder state.
 
 ## Do
 - Keep layout APIs fluent and simple.

@@ -16,6 +16,9 @@
 
 - `render(RenderContext)` is the context-aware path.
 - `render()` defaults to `RenderContext.empty()`.
+- Component implementations must provide `render(RenderContext)`.
+- `compile()` is a convenience alias for `Template.of(component)`.
+- `render(Map<SlotKey<?>, Object>)` is available for simple map-driven rendering.
 
 ## HtmlTag
 

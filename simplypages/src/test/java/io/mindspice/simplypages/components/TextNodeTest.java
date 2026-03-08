@@ -1,5 +1,6 @@
 package io.mindspice.simplypages.components;
 
+import io.mindspice.simplypages.core.RenderContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +12,7 @@ class TextNodeTest {
     @DisplayName("TextNode should escape HTML")
     void testTextNodeEscaping() {
         TextNode node = TextNode.create("<b>text</b>");
-        String html = node.render();
+        String html = node.render(RenderContext.empty());
 
         assertTrue(html.contains("&lt;b&gt;text&lt;/b&gt;"));
     }

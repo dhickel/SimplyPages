@@ -17,6 +17,8 @@ Page page = Page.builder()
     .build();
 ```
 
+`build()` is idempotent for unchanged builder state and does not duplicate sticky-sidebar wrappers when called repeatedly.
+
 ## Row Behavior
 
 `Row.withChild(component)` wraps non-column children in a default `.col` container.

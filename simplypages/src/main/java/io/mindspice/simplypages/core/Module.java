@@ -26,7 +26,9 @@ public abstract class Module extends HtmlTag {
     protected String title;
 
     /** Build guard enforcing idempotent {@link #build()} behavior. */
-    private boolean built = false;
+    private volatile boolean built = false;
+    /** Lock guarding first-build and explicit rebuild transitions. */
+    private final Object buildLock = new Object();
 
     /**
      * Creates a module backed by the provided container tag.
@@ -123,9 +125,11 @@ public abstract class Module extends HtmlTag {
      * Clears children, resets build guard, and immediately rebuilds structure.
      */
     protected void rebuildContent() {
-        children.clear();
-        built = false;
-        build();
+        synchronized (buildLock) {
+            children.clear();
+            built = false;
+            doBuildLocked();
+        }
     }
 
     /**
@@ -133,9 +137,11 @@ public abstract class Module extends HtmlTag {
      */
     public Module build() {
         if (!built) {
-            ensureModuleClass();
-            buildContent();
-            built = true;
+            synchronized (buildLock) {
+                if (!built) {
+                    doBuildLocked();
+                }
+            }
         }
         return this;
     }
@@ -162,6 +168,15 @@ public abstract class Module extends HtmlTag {
      */
     private void ensureModuleClass() {
         addClass("module");
+    }
+
+    /**
+     * Build implementation that must run while holding {@link #buildLock}.
+     */
+    private void doBuildLocked() {
+        ensureModuleClass();
+        buildContent();
+        built = true;
     }
 
     /**

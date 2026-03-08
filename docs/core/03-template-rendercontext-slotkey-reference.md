@@ -65,10 +65,23 @@ public static final Template CARD_TEMPLATE = Template.of(
 );
 ```
 
+Equivalent shortcut:
+
+```java
+Template CARD_TEMPLATE = someComponentTree.compile();
+```
+
 Render:
 
 ```java
 String html = CARD_TEMPLATE.render(ctx);
+```
+
+Map-based convenience:
+
+```java
+String html = CARD_TEMPLATE.render(Map.of(TITLE, "Quarterly Report"));
+String html2 = someComponentTree.render(Map.of(TITLE, "Quarterly Report"));
 ```
 
 Reuse guidance:

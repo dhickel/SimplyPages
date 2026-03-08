@@ -1,6 +1,7 @@
 package io.mindspice.simplypages.components;
 
 import io.mindspice.simplypages.core.Component;
+import io.mindspice.simplypages.core.RenderContext;
 import org.owasp.encoder.Encode;
 
 /**
@@ -37,7 +38,7 @@ public class TextNode implements Component {
      * @return escaped text
      */
     @Override
-    public String render() {
+    public String render(RenderContext context) {
         return Encode.forHtml(text);
     }
 }

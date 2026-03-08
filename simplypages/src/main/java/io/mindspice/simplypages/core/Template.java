@@ -4,6 +4,7 @@ import org.owasp.encoder.Encode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -207,6 +208,13 @@ public class Template {
              segment.render(context, sb);
          }
          return sb.toString();
+    }
+
+    /**
+     * Renders this template from raw slot values.
+     */
+    public String render(Map<? extends SlotKey<?>, ?> values) {
+        return render(RenderContext.of(values));
     }
 
     /**
