@@ -32,6 +32,7 @@ public class DemosOverviewPage implements DemoPage {
                         - [Display & Data](/demos/display-data)
                         - [Modules](/demos/modules)
                         - [HTMX & Editing](/demos/htmx-editing)
+                        - [Forum Demo](/forum)
                         """)))))
             .addRow(row -> row
                 .withChild(new Column().withWidth(6).withChild(ContentModule.create()

@@ -1,244 +1,165 @@
 [Previous](builders-shell-nav-banner-accountbar.md) | [Index](../INDEX.md)
 
-# ForumHelper API Reference
+# Forum Renderer API Reference
 
-This page summarizes public forum-helper related APIs and extension points.
+This page summarizes forum renderer APIs and extension points.
 
-## Core Entry Point
+## Core Entry Points
 
-- `ForumHelper<CATEGORY, TOPIC, COMMENT, VIEWER>`
+- `ForumCategoryRenderer<CATEGORY extends ForumCategoryData, CTX>`
+- `ForumTopicRenderer<TOPIC extends ForumTopicData, CTX>`
+- `ForumCommentRenderer<COMMENT extends ForumCommentData, CTX>`
 
 Factory:
 
-- `ForumHelper.builder(CategoryAdapter, TopicAdapter, CommentAdapter)`
+- `ForumCategoryRenderer.builder()`
+- `ForumTopicRenderer.builder()`
+- `ForumCommentRenderer.builder()`
 
 Render methods:
 
-- `renderCategoriesView(Collection<CATEGORY>, VIEWER)`
-- `renderTopicsView(Collection<TOPIC>, VIEWER)`
-- `renderTopicsView(Collection<TOPIC>, VIEWER, TopicPagination)`
-- `renderCommentsView(Collection<COMMENT>, VIEWER)`
-- `renderCommentsView(Collection<COMMENT>, VIEWER, CommentPagination)`
+- `ForumCategoryRenderer.render(Collection<CATEGORY>, CTX)`
+- `ForumTopicRenderer.render(Collection<TOPIC>, CTX)`
+- `ForumTopicRenderer.render(Collection<TOPIC>, CTX, TopicPagination)`
+- `ForumCommentRenderer.render(Collection<COMMENT>, CTX)`
+- `ForumCommentRenderer.render(Collection<COMMENT>, CTX, CommentPagination)`
 
-## Required Adapter Contracts
+## Required Data Contracts
 
-### `CategoryAdapter<CATEGORY>`
-
-Required:
-
-- `id(CATEGORY)`
-- `title(CATEGORY)`
-
-Optional defaults:
-
-- `description(CATEGORY)`
-- `topicCount(CATEGORY)`
-
-### `TopicAdapter<TOPIC>`
+### `ForumCategoryData`
 
 Required:
 
-- `id(TOPIC)`
-- `title(TOPIC)`
-- `body(TOPIC)`
+- `id()`
+- `title()`
 
 Optional defaults:
 
-- `author(TOPIC)`
-- `timestamp(TOPIC)`
-- `likes(TOPIC)`
-- `replies(TOPIC)`
+- `description()`
+- `topicCount()`
 
-### `CommentAdapter<COMMENT>`
+### `ForumTopicData`
 
 Required:
 
-- `id(COMMENT)`
-- `topicId(COMMENT)`
-- `body(COMMENT)`
+- `id()`
+- `title()`
+- `body()`
 
 Optional defaults:
 
-- `parentId(COMMENT)`
-- `author(COMMENT)`
-- `timestamp(COMMENT)`
-- `depth(COMMENT)`
-- `avatarUrl(COMMENT)`
-- `likes(COMMENT)`
-- `replies(COMMENT)`
+- `author()`
+- `timestamp()`
+- `likes()`
+- `replies()`
+
+### `ForumCommentData`
+
+Required:
+
+- `id()`
+- `topicId()`
+- `body()`
+
+Optional defaults:
+
+- `parentId()`
+- `depth()`
+- `author()`
+- `avatarUrl()`
+- `timestamp()`
+- `likes()`
+- `replies()`
+
+## Final Component Contracts
+
+### `ForumCategoryComponent`
+
+Renderer-populated fluent methods:
+
+- `withCategoryId(String)`
+- `withTitle(String)`
+- `withDescription(String)`
+- `withTopicCount(Integer)`
+
+### `ForumTopicComponent`
+
+Renderer-populated fluent methods:
+
+- `withTopicId(String)`
+- `withTitle(String)`
+- `withAuthor(String)`
+- `withTimestamp(String)`
+- `withBody(Component)`
+- `withActions(List<Component>)`
+- `withLikes(Integer)`
+- `withReplies(Integer)`
+
+### `ForumCommentComponent`
+
+Renderer-populated fluent methods:
+
+- `withCommentId(String)`
+- `withTopicId(String)`
+- `withParentId(String)`
+- `withDepth(int)`
+- `withAuthor(String)`
+- `withAvatarUrl(String)`
+- `withTimestamp(String)`
+- `withBody(Component)`
+- `withActions(List<Component>)`
+- `withLikes(Integer)`
+- `withReplies(Integer)`
 
 ## Builder Customization Hooks
 
-View rendering:
+Component suppliers:
 
-- `withCategoryRenderer(...)`
-- `withTopicRenderer(...)`
-- `withCommentRenderer(...)`
+- `withCategoryComponentSupplier(Supplier<? extends ForumCategoryComponent>)`
+- `withTopicComponentSupplier(Supplier<? extends ForumTopicComponent>)`
+- `withCommentComponentSupplier(Supplier<? extends ForumCommentComponent>)`
 
-Tag system:
+Actions:
 
-- `withTagParser(ForumTagParser)`
-- `withResolverRegistry(ForumTagResolverRegistry)`
+- `withActionProvider(ForumActionProvider<..., CTX>)` on topic/comment renderers
 
-Action decoration:
+Tags:
 
-- `withActionDecorator(ForumActionDecorator<VIEWER>)`
+- `withTagParser(ForumTagParser)` on topic/comment renderers
+- `withResolverRegistry(ForumTagResolverRegistry)` on topic/comment renderers
 
-Composer integration:
+Pagination HTMX:
 
-- `withTopicComposerLauncher(Function<VIEWER, Component>)`
-- `withCommentComposer(Function<VIEWER, Component>)`
+- Topic renderer:
+  - `withPaginationEndpointResolver(TopicPaginationEndpointResolver)`
+  - `withPaginationHxTarget(String)`
+  - `withPaginationHxSwap(String)`
+  - `withTopicScopeExtractor(Function<TOPIC, String>)`
+- Comment renderer:
+  - `withPaginationEndpointResolver(CommentPaginationEndpointResolver)`
+  - `withPaginationHxTarget(String)`
+  - `withPaginationHxSwap(String)`
 
-Comment pagination HTMX configuration:
+## Action Contracts
 
-- `withTopicPaginationEndpointResolver(TopicPaginationEndpointResolver)`
-- `withTopicsPaginationHxTarget(String)`
-- `withTopicsPaginationHxSwap(String)`
-- `withCommentPaginationEndpointResolver(CommentPaginationEndpointResolver)`
-- `withCommentsPaginationHxTarget(String)`
-- `withCommentsPaginationHxSwap(String)`
+### `ForumActionProvider<SOURCE, CTX>`
 
-Parsing toggles:
-
-- `parseTopicBodies(boolean)`
-- `parseCommentBodies(boolean)`
-
-## View Records Passed to Renderers
-
-- `CategoryView<CATEGORY, VIEWER>`
-- `TopicView<TOPIC, VIEWER>`
-- `CommentView<COMMENT, VIEWER>`
-
-These records carry both source object and resolved render fields.
-
-## Comment Pagination Types
-
-### `ForumHelper.TopicPagination`
-
-Fields:
-
-- `scopeId`
-- `page` (1-based)
-- `topicsPerPage`
-- `totalTopics`
-
-Helpers:
-
-- `totalPages()`
-- `currentPage()`
-- `hasPrevious()`
-- `hasNext()`
-
-Validation:
-
-- `scopeId` must be non-blank
-- `page` and `topicsPerPage` must be `>= 1`
-- `totalTopics` must be `>= 0`
-
-### `ForumHelper.TopicPaginationEndpointResolver`
-
-- `endpoint(String scopeId, int page, int topicsPerPage)`
-- used to build `hx-get` for enabled topic `Previous`/`Next` buttons
-- default endpoint: `/forum/topics?scope={scopeId}&page={page}&size={topicsPerPage}`
-
-### `ForumHelper.CommentPagination`
-
-Fields:
-
-- `topicId`
-- `page` (1-based)
-- `commentsPerPage`
-- `totalComments`
-
-Helpers:
-
-- `totalPages()`
-- `currentPage()`
-- `hasPrevious()`
-- `hasNext()`
-
-Validation:
-
-- `topicId` must be non-blank
-- `page` and `commentsPerPage` must be `>= 1`
-- `totalComments` must be `>= 0`
-
-### `ForumHelper.CommentPaginationEndpointResolver`
-
-- `endpoint(String topicId, int page, int commentsPerPage)`
-- used to build `hx-get` for enabled `Previous`/`Next` buttons
-- default endpoint: `/forum/topics/{topicId}/comments?page={page}&size={commentsPerPage}`
-
-## Tag Parsing
-
-Type:
-
-- `ForumTagParser`
-
-Key details:
-
-- token syntax: `[[key::value]]`
-- escaped literal token: `\[[key::value]]`
-- key normalization: lower-case dotted keys only (`a-z` and `.`)
-- malformed tokens are preserved as text
-
-Parser segment model:
-
-- `ForumTagParser.TextSegment`
-- `ForumTagParser.TagSegment`
-
-## Resolver Contracts
-
-### `ForumTagResolver`
-
-- `key()`
-- `resolveBatch(Set<String> values)`
-
-### `ForumTagResolverRegistry`
-
-Creation:
-
-- `create()`
-- `withBuiltIns()`
-
-Registration:
-
-- `register(ForumTagResolver)`
-- `registerBuiltIns()`
-
-Resolution:
-
-- `resolve(key, values)`
-- `resolveAll(valuesByKey)`
-
-Duplicate normalized key registration throws `IllegalArgumentException`.
-
-### `ForumTagResolvers` helper
-
-- `of(key, batchResolver)`
-- `quote()`
-- `image()`
-- `mention()`
-- `link()`
-
-## Action Decoration
-
-### `ForumActionDecorator<VIEWER>`
-
-- `decorate(ActionContext<VIEWER>)`
+- `provide(ForumActionContext<SOURCE, CTX>)`
 - `none()`
 
-`ActionContext` includes:
+### `ForumActionContext<SOURCE, CTX>`
 
-- `itemType` (`TOPIC` or `COMMENT`)
+Fields:
+
+- `itemType` (`ForumActionType.TOPIC` or `ForumActionType.COMMENT`)
 - `itemId`
 - `topicId`
 - `source`
-- `viewer`
+- `context`
 
-### `DefaultForumActionDecorator<VIEWER>`
+### `DefaultForumActionProvider<SOURCE, CTX>`
 
-Visibility predicates:
+Visibility:
 
 - `showQuoteWhen(...)`
 - `showEditWhen(...)`
@@ -256,38 +177,118 @@ Icon overrides:
 - `withEditIcon(...)`
 - `withDeleteIcon(...)`
 
-## Composer Modules
+HTMX defaults:
 
-### `ForumTopicComposerModule`
+- `withHxTarget(String)`
+- `withHxSwap(String)`
 
-Common methods:
+## Pagination Contracts
 
-- `withTitle(...)`
-- `withSubmitUrl(...)`
-- `withTitleFieldName(...)`
-- `withBodyFieldName(...)`
-- `withTitlePlaceholder(...)`
-- `withBodyPlaceholder(...)`
-- `withSubmitLabel(...)`
+### `ForumTopicRenderer.TopicPagination`
 
-### `ForumCommentComposerModule`
+Fields:
 
-Common methods:
+- `scopeId`
+- `page` (1-based)
+- `topicsPerPage`
+- `totalTopics`
 
-- `withTitle(...)`
-- `withSubmitUrl(...)`
-- `withBodyFieldName(...)`
-- `withBodyPlaceholder(...)`
-- `withSubmitLabel(...)`
-- `withTopicId(...)`
+Notes:
 
-## Primitive Compatibility
+- `scopeId` is used for pagination metadata and endpoint generation.
+- Topic filtering is application-owned by default.
+- If `withTopicScopeExtractor(...)` is configured, renderer filters to matching `scopeId` before page slicing.
+- `totalTopics` should represent all scoped topics (not only current page slice).
+- `topicsPerPage` is the hard render cap for one response. If `topicsPerPage=8`, the renderer outputs at most 8 topic items.
 
-Existing primitives remain available:
+Helpers:
 
-- `ForumPost`
-- `PostList`
-- `Comment`
-- `CommentThread`
+- `totalPages()`
+- `currentPage()`
+- `hasPrevious()`
+- `hasNext()`
 
-Use `ForumHelper` as the primary forum rendering API and primitives for ad-hoc/manual composition when needed.
+### `ForumTopicRenderer.TopicPaginationEndpointResolver`
+
+- `endpoint(String scopeId, int page, int topicsPerPage)`
+- default: `/forum/topics?scope={scopeId}&page={page}&size={topicsPerPage}`
+
+### `ForumCommentRenderer.CommentPagination`
+
+Fields:
+
+- `topicId`
+- `page` (1-based)
+- `commentsPerPage`
+- `totalComments`
+
+Notes:
+
+- When pagination is supplied, renderer filters incoming comments by `topicId` before slicing.
+- `totalComments` should represent all comments for the topic scope (not only current page slice).
+- `commentsPerPage` is the hard render cap for one response. If `commentsPerPage=8`, the renderer outputs at most 8 comment items.
+
+Helpers:
+
+- `totalPages()`
+- `currentPage()`
+- `hasPrevious()`
+- `hasNext()`
+
+### `ForumCommentRenderer.CommentPaginationEndpointResolver`
+
+- `endpoint(String topicId, int page, int commentsPerPage)`
+- default: `/forum/topics/{topicId}/comments?page={page}&size={commentsPerPage}`
+
+## Tag Contracts
+
+### `TagType`
+
+- normalized/validated key wrapper
+- use `TagType.of("custom.tag")`
+
+### `Tag`
+
+- value token (`TagType` + token value)
+
+### `ForumTagParser`
+
+- token syntax: `[[key::value]]`
+- escaped literal token: `\[[key::value]]`
+- malformed tokens are preserved as text
+
+### `ForumTagResolver`
+
+- `tagType()`
+- `resolveBatch(Set<Tag>)`
+
+### `ForumTagResolverRegistry`
+
+Creation:
+
+- `create()`
+- `withBuiltIns()`
+
+Registration:
+
+- `register(ForumTagResolver)`
+- `registerBuiltIns()`
+
+Resolution:
+
+- `resolve(TagType, Set<Tag>)`
+- `resolveAll(Map<TagType, Set<Tag>>)`
+- `hasResolver(TagType)`
+
+### `ForumTagResolvers`
+
+- `of(key, batchResolver)`
+- built-ins: `quote()`, `image()`, `mention()`, `link()`
+
+## Defaults
+
+- Default final components:
+  - `DefaultForumCategoryComponent`
+  - `DefaultForumTopicComponent`
+  - `DefaultForumCommentComponent`
+- All renderer builders default to these component suppliers.

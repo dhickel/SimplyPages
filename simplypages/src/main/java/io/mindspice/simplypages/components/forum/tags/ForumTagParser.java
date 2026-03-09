@@ -1,4 +1,4 @@
-package io.mindspice.simplypages.components.forum;
+package io.mindspice.simplypages.components.forum.tags;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -104,7 +104,7 @@ Snapshot review rules:
   - `simplypages/src/test/java/io/mindspice/simplypages/components/display/DataTableTest.java`
   - `simplypages/src/test/java/io/mindspice/simplypages/components/display/ModalTest.java`
 - Module + snapshot pattern from:
-  - `simplypages/src/test/java/io/mindspice/simplypages/modules/ForumModuleTest.java`
+  - `simplypages/src/test/java/io/mindspice/simplypages/components/forum/ForumTopicRendererTest.java`
   - `simplypages/src/test/java/io/mindspice/simplypages/modules/RichContentModuleTest.java`
 - Integration placement checks from:
   - `simplypages/src/test/java/io/mindspice/simplypages/integration/HtmxIntegrationTest.java`

@@ -7,7 +7,6 @@ Owns high-level composed modules built from components/layout primitives.
 - Content/data/form/forum/media modules
 - Dynamic modules and editable wrappers (`EditableModule`)
 - Opinionated feature modules (hero, stats, timeline, tabs, accordion, quote, callout, comparison)
-- Forum composer modules (`ForumTopicComposerModule`, `ForumCommentComposerModule`)
 
 ## Invariants
 - Modules compose structure in `buildContent()`.

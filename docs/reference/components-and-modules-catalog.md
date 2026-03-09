@@ -11,7 +11,7 @@ This is a practical catalog, not exhaustive class-level Javadoc.
 - Display: `Card`, `CardGrid`, `DataTable`, `Table`, `Alert`, `Badge`, `Tag`, `InfoBox`, `Spinner`
 - Media: `Image`, `Gallery`, `Video`, `Audio`
 - Navigation: `Link`, `NavBar`, `SideNav`, `Breadcrumb`
-- Forum: `ForumPost`, `Comment`, `CommentThread`, `PostList`, `ForumHelper` (including topic-list and topic-thread pagination), `ForumTagParser`, `ForumTagResolverRegistry`
+- Forum: `ForumCategoryRenderer`, `ForumTopicRenderer`, `ForumCommentRenderer`, `ForumCategoryData`, `ForumTopicData`, `ForumCommentData`, `ForumTagParser`, `ForumTagResolverRegistry`
 
 ## Layout Components
 
@@ -27,9 +27,6 @@ This is a practical catalog, not exhaustive class-level Javadoc.
 - `ContentModule`
 - `FormModule`
 - `DataModule`
-- `ForumModule`
-- `ForumTopicComposerModule`
-- `ForumCommentComposerModule`
 - `GalleryModule`
 - `HeroModule`
 - `SimpleListModule`

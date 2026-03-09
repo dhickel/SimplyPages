@@ -1,11 +1,13 @@
 package io.mindspice.demo;
 
 import io.mindspice.demo.pages.*;
+import io.mindspice.simplypages.builders.AccountBarBuilder;
 import io.mindspice.simplypages.builders.BannerBuilder;
 import io.mindspice.simplypages.builders.ShellBuilder;
 import io.mindspice.simplypages.builders.SideNavBuilder;
 import io.mindspice.simplypages.components.RawHtml;
 import io.mindspice.simplypages.components.display.Alert;
+import io.mindspice.simplypages.core.Component;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
@@ -178,6 +180,7 @@ public class DemoController {
                 .withTitle("SimplyPages")
                 .withSubtitle("Java-first server-side rendering framework")
                 .build())
+            .withAccountBar(buildGlobalAccountBar())
             .withContent(new RawHtml(page.render()))
             .build();
     }
@@ -195,6 +198,7 @@ public class DemoController {
                 .withTitle("SimplyPages")
                 .withSubtitle("Consolidated demo surface")
                 .build())
+            .withAccountBar(buildGlobalAccountBar())
             .withSideNav(SideNavBuilder.create()
                 .addSection("Demos")
                 .addLink("Overview", "/demos")
@@ -204,6 +208,16 @@ public class DemoController {
                 .addLink("HTMX & Editing", "/demos/htmx-editing")
                 .build())
             .withContent(new RawHtml(page.render()))
+            .build();
+    }
+
+    private Component buildGlobalAccountBar() {
+        return AccountBarBuilder.create()
+            .addLeftLink("Home", "/home")
+            .addLeftLink("Demos", "/demos")
+            .addLeftLink("Javadocs", "/javadocs-view")
+            .addLeftLink("Forum", "/forum")
+            .addLeftLink("Docs", "/docs")
             .build();
     }
 }

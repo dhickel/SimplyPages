@@ -4,7 +4,6 @@ import io.mindspice.simplypages.components.Header;
 import io.mindspice.simplypages.components.ListItem;
 import io.mindspice.simplypages.components.Paragraph;
 import io.mindspice.simplypages.components.forms.TextInput;
-import io.mindspice.simplypages.components.forum.ForumPost;
 import io.mindspice.simplypages.layout.Column;
 import io.mindspice.simplypages.layout.Page;
 import io.mindspice.simplypages.modules.*;
@@ -47,10 +46,6 @@ public class ModulesDemoPage implements DemoPage {
             .withColumns(2)
             .addImage("https://picsum.photos/id/1015/800/460", "mountain lake")
             .addImage("https://picsum.photos/id/1039/800/460", "forest river");
-
-        ForumModule forumModule = ForumModule.create()
-            .withTitle("ForumModule")
-            .addPost(ForumPost.create().withAuthor("maintainer").withTitle("ForumModule").withContent("Thread-ready module."));
 
         SimpleListModule simpleListModule = SimpleListModule.create()
             .withTitle("SimpleListModule")
@@ -126,7 +121,6 @@ public class ModulesDemoPage implements DemoPage {
             .addRow(row -> row.withJustify("center").withChild(centered(formModule)))
             .addRow(row -> row.withJustify("center").withChild(centered(dataModule)))
             .addRow(row -> row.withJustify("center").withChild(centered(galleryModule)))
-            .addRow(row -> row.withJustify("center").withChild(centered(forumModule)))
             .addRow(row -> row.withJustify("center").withChild(centered(simpleListModule)))
 
             .addRow(row -> row

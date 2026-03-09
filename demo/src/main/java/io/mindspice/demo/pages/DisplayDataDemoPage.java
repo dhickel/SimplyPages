@@ -6,10 +6,6 @@ import io.mindspice.simplypages.components.Image;
 import io.mindspice.simplypages.components.Markdown;
 import io.mindspice.simplypages.components.Paragraph;
 import io.mindspice.simplypages.components.display.*;
-import io.mindspice.simplypages.components.forum.Comment;
-import io.mindspice.simplypages.components.forum.CommentThread;
-import io.mindspice.simplypages.components.forum.ForumPost;
-import io.mindspice.simplypages.components.forum.PostList;
 import io.mindspice.simplypages.components.forms.Button;
 import io.mindspice.simplypages.components.media.Audio;
 import io.mindspice.simplypages.components.media.Gallery;
@@ -66,23 +62,6 @@ public class DisplayDataDemoPage implements DemoPage {
             .withBody(new Paragraph("Modal supports server-rendered body/footer content and safe ID validation."))
             .withFooter(Button.create("Close").withOnClick("document.getElementById('static-demo-modal').remove()"));
 
-        PostList postList = PostList.create().addPost(
-            ForumPost.create()
-                .withAuthor("maintainer")
-                .withTimestamp("today")
-                .withTitle("Release prep")
-                .withContent("Consolidated demo structure with richer example coverage.")
-                .withLikes(6)
-                .withReplies(2)
-        );
-
-        CommentThread commentThread = CommentThread.create().addComment(
-            Comment.create()
-                .withAuthor("reviewer")
-                .withContent("The grouped rows are much easier to scan.")
-                .withTimestamp("1h ago")
-        );
-
         return Page.builder()
             .addComponents(Header.H1("Display & Data"))
             .addComponents(new Markdown("""
@@ -90,7 +69,6 @@ public class DisplayDataDemoPage implements DemoPage {
                 - [Status Components](#status)
                 - [Data Views](#tables)
                 - [Navigation & Media](#media)
-                - [Forum Components](#forum)
                 """))
 
             .addRow(row -> row.withChild(new Div().withId("status").withChild(
@@ -168,22 +146,12 @@ public class DisplayDataDemoPage implements DemoPage {
                     .withChild(new Paragraph(""))
                     .withChild(Audio.create("https://www.w3schools.com/html/horse.ogg").withControls())))))
 
-            .addRow(row -> row.withChild(new Div().withId("forum").withChild(
-                ContentModule.create()
-                    .withTitle("Forum Components")
-                    .withContent("ForumPost, PostList, and threaded comments in dedicated columns.")
-            )))
-
-            .addRow(row -> row
-                .withChild(new Column().withWidth(6).withChild(section("PostList", postList)))
-                .withChild(new Column().withWidth(6).withChild(section("CommentThread", commentThread))))
-
             .addRow(row -> row.withChild(section("Catalog Coverage", new Markdown("""
                 Components covered on this page:
 
                 Alert, Badge, Tag, Label, Spinner, ProgressBar, InfoBox, Card, CardGrid, Modal,
                 Table, DataTable, OrderedList, UnorderedList, Breadcrumb, NavBar,
-                Gallery, Image, Video, Audio, ForumPost, PostList, Comment, CommentThread.
+                Gallery, Image, Video, Audio.
                 """))))
             .build()
             .render();

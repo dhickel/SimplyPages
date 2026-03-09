@@ -1,4 +1,4 @@
-package io.mindspice.simplypages.components.forum;
+package io.mindspice.simplypages.components.forum.actions;
 
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
@@ -10,76 +10,88 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * Default action decorator with configurable quote/edit/delete action rendering.
+ * Default quote/edit/delete action provider with configurable visibility and endpoints.
  */
-public class DefaultForumActionDecorator<VIEWER> implements ForumActionDecorator<VIEWER> {
+public class DefaultForumActionProvider<SOURCE, CTX> implements ForumActionProvider<SOURCE, CTX> {
 
-    private Predicate<ActionContext<VIEWER>> showQuote = context -> true;
-    private Predicate<ActionContext<VIEWER>> showEdit = context -> false;
-    private Predicate<ActionContext<VIEWER>> showDelete = context -> false;
+    private Predicate<ForumActionContext<SOURCE, CTX>> showQuote = context -> true;
+    private Predicate<ForumActionContext<SOURCE, CTX>> showEdit = context -> false;
+    private Predicate<ForumActionContext<SOURCE, CTX>> showDelete = context -> false;
 
-    private Function<ActionContext<VIEWER>, String> quoteEndpoint =
+    private Function<ForumActionContext<SOURCE, CTX>, String> quoteEndpoint =
         context -> defaultEndpoint(context, "quote");
-    private Function<ActionContext<VIEWER>, String> editEndpoint =
+    private Function<ForumActionContext<SOURCE, CTX>, String> editEndpoint =
         context -> defaultEndpoint(context, "edit");
-    private Function<ActionContext<VIEWER>, String> deleteEndpoint =
+    private Function<ForumActionContext<SOURCE, CTX>, String> deleteEndpoint =
         context -> defaultEndpoint(context, "delete");
 
     private String quoteIcon = "↩";
     private String editIcon = "✎";
     private String deleteIcon = "🗑";
+    private String hxTarget;
+    private String hxSwap;
 
-    public static <VIEWER> DefaultForumActionDecorator<VIEWER> create() {
-        return new DefaultForumActionDecorator<>();
+    public static <SOURCE, CTX> DefaultForumActionProvider<SOURCE, CTX> create() {
+        return new DefaultForumActionProvider<>();
     }
 
-    public DefaultForumActionDecorator<VIEWER> showQuoteWhen(Predicate<ActionContext<VIEWER>> predicate) {
+    public DefaultForumActionProvider<SOURCE, CTX> showQuoteWhen(Predicate<ForumActionContext<SOURCE, CTX>> predicate) {
         this.showQuote = Objects.requireNonNull(predicate, "predicate");
         return this;
     }
 
-    public DefaultForumActionDecorator<VIEWER> showEditWhen(Predicate<ActionContext<VIEWER>> predicate) {
+    public DefaultForumActionProvider<SOURCE, CTX> showEditWhen(Predicate<ForumActionContext<SOURCE, CTX>> predicate) {
         this.showEdit = Objects.requireNonNull(predicate, "predicate");
         return this;
     }
 
-    public DefaultForumActionDecorator<VIEWER> showDeleteWhen(Predicate<ActionContext<VIEWER>> predicate) {
+    public DefaultForumActionProvider<SOURCE, CTX> showDeleteWhen(Predicate<ForumActionContext<SOURCE, CTX>> predicate) {
         this.showDelete = Objects.requireNonNull(predicate, "predicate");
         return this;
     }
 
-    public DefaultForumActionDecorator<VIEWER> withQuoteEndpoint(Function<ActionContext<VIEWER>, String> endpoint) {
+    public DefaultForumActionProvider<SOURCE, CTX> withQuoteEndpoint(Function<ForumActionContext<SOURCE, CTX>, String> endpoint) {
         this.quoteEndpoint = Objects.requireNonNull(endpoint, "endpoint");
         return this;
     }
 
-    public DefaultForumActionDecorator<VIEWER> withEditEndpoint(Function<ActionContext<VIEWER>, String> endpoint) {
+    public DefaultForumActionProvider<SOURCE, CTX> withEditEndpoint(Function<ForumActionContext<SOURCE, CTX>, String> endpoint) {
         this.editEndpoint = Objects.requireNonNull(endpoint, "endpoint");
         return this;
     }
 
-    public DefaultForumActionDecorator<VIEWER> withDeleteEndpoint(Function<ActionContext<VIEWER>, String> endpoint) {
+    public DefaultForumActionProvider<SOURCE, CTX> withDeleteEndpoint(Function<ForumActionContext<SOURCE, CTX>, String> endpoint) {
         this.deleteEndpoint = Objects.requireNonNull(endpoint, "endpoint");
         return this;
     }
 
-    public DefaultForumActionDecorator<VIEWER> withQuoteIcon(String icon) {
+    public DefaultForumActionProvider<SOURCE, CTX> withQuoteIcon(String icon) {
         this.quoteIcon = icon == null ? "" : icon;
         return this;
     }
 
-    public DefaultForumActionDecorator<VIEWER> withEditIcon(String icon) {
+    public DefaultForumActionProvider<SOURCE, CTX> withEditIcon(String icon) {
         this.editIcon = icon == null ? "" : icon;
         return this;
     }
 
-    public DefaultForumActionDecorator<VIEWER> withDeleteIcon(String icon) {
+    public DefaultForumActionProvider<SOURCE, CTX> withDeleteIcon(String icon) {
         this.deleteIcon = icon == null ? "" : icon;
         return this;
     }
 
+    public DefaultForumActionProvider<SOURCE, CTX> withHxTarget(String hxTarget) {
+        this.hxTarget = normalizeAttributeValue(hxTarget);
+        return this;
+    }
+
+    public DefaultForumActionProvider<SOURCE, CTX> withHxSwap(String hxSwap) {
+        this.hxSwap = normalizeAttributeValue(hxSwap);
+        return this;
+    }
+
     @Override
-    public List<Component> decorate(ActionContext<VIEWER> context) {
+    public List<Component> provide(ForumActionContext<SOURCE, CTX> context) {
         List<Component> actions = new ArrayList<>();
 
         if (showQuote.test(context)) {
@@ -111,10 +123,10 @@ public class DefaultForumActionDecorator<VIEWER> implements ForumActionDecorator
             String icon,
             String label,
             String endpoint,
-            ActionContext<VIEWER> context
+            ForumActionContext<SOURCE, CTX> context
     ) {
         String text = (icon == null || icon.isBlank()) ? label : (icon + " " + label);
-        return new HtmlTag("button")
+        HtmlTag button = new HtmlTag("button")
             .withAttribute("type", "button")
             .withAttribute("class", "forum-action " + cssClass)
             .withAttribute("data-item-id", context.itemId())
@@ -122,10 +134,26 @@ public class DefaultForumActionDecorator<VIEWER> implements ForumActionDecorator
             .withAttribute("data-topic-id", context.topicId() == null ? "" : context.topicId())
             .withAttribute("hx-post", endpoint)
             .withInnerText(text);
+
+        if (hxTarget != null) {
+            button.withAttribute("hx-target", hxTarget);
+        }
+        if (hxSwap != null) {
+            button.withAttribute("hx-swap", hxSwap);
+        }
+        return button;
     }
 
-    private static <VIEWER> String defaultEndpoint(ActionContext<VIEWER> context, String action) {
-        String kind = context.itemType() == ItemType.TOPIC ? "topics" : "comments";
+    private static <SOURCE, CTX> String defaultEndpoint(ForumActionContext<SOURCE, CTX> context, String action) {
+        String kind = context.itemType() == ForumActionType.TOPIC ? "topics" : "comments";
         return "/forum/" + kind + "/" + context.itemId() + "/" + action;
+    }
+
+    private static String normalizeAttributeValue(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

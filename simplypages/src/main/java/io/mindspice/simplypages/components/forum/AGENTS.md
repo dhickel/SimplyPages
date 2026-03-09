@@ -4,24 +4,28 @@
 Owns discussion/community components and helper rendering contracts.
 
 ## Owns
-- `ForumPost`, `PostList`, `Comment`, `CommentThread`
-- `ForumHelper` unified category/topic/comment rendering API
+- `ForumCategoryRenderer`, `ForumTopicRenderer`, `ForumCommentRenderer`
+- Data contracts: `ForumCategoryData`, `ForumTopicData`, `ForumCommentData`
+- Final component contracts: `ForumCategoryComponent`, `ForumTopicComponent`, `ForumCommentComponent`
+- Default final components (`DefaultForumCategoryComponent`, `DefaultForumTopicComponent`, `DefaultForumCommentComponent`)
 - Forum tag parsing and hydration contracts (`ForumTagParser`, resolver registry/interfaces)
-- Forum action decorator contracts (`ForumActionDecorator`, `DefaultForumActionDecorator`)
-- Topic/comment pagination rendering contracts (`TopicPagination`, `CommentPagination`) with HTMX previous/next control wiring
+- Forum action contracts (`ForumActionProvider`, `DefaultForumActionProvider`, action context/type records)
+- Topic/comment pagination rendering contracts with HTMX previous/next control wiring
 
 ## Invariants
-- Forum component structure remains composable and render-safe.
+- Forum renderer output remains composable and render-safe.
 - Markdown/text content handling remains aligned with core escaping rules.
-- List/thread ordering behavior is predictable.
+- Topic/comment ordering behavior is predictable.
 - Tag parsing is fault-tolerant: malformed/unresolved tags preserve visible literal output.
 - Tag resolver registration is deterministic and duplicate keys fail fast.
 - Comment identity layout reserves a 150x150 avatar slot; missing avatars must remain blank without collapsing layout.
 - Pagination controls must enable/disable deterministically from page bounds and include scope/topic-scoped HTMX refresh links.
+- Topic scope filtering remains application-owned by default and becomes renderer-enforced only when a scope extractor is configured.
+- Renderer pipeline state stays per-call; do not persist mutable parse/resolve intermediates on renderer instances.
 
 ## Do
-- Keep components generic enough for multiple forum-like domains.
-- Preserve fluent builders for post/comment metadata.
+- Keep renderer and contract APIs generic enough for multiple forum-like domains.
+- Preserve fluent final component interfaces (`withX(...)`) used by renderer population.
 - Add tests for any structure or metadata output changes.
 - Keep data lookups out of render-time component paths; use batch resolver interfaces.
 
@@ -30,7 +34,7 @@ Owns discussion/community components and helper rendering contracts.
 - Depend on demo controller behavior.
 
 ## Common Pitfalls
-- Breaking nested comment/thread rendering structure.
+- Breaking topic/comment default structure contracts expected by CSS and tests.
 - Mixing trusted/raw HTML without explicit intent.
 - Drift between forum CSS classes and generated markup.
 - Introducing per-node lookup callbacks that create N+1 render-time behavior.
@@ -44,7 +48,7 @@ Owns discussion/community components and helper rendering contracts.
 - Keep independent from service/controller concerns.
 
 ## Maintenance Requirement
-Keep this file updated whenever forum component structure or rendering contracts change.
+Keep this file updated whenever forum renderer/component contracts change.
 
 See root `AGENTS.md` for global standards.
 
