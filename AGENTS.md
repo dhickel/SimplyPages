@@ -86,6 +86,7 @@ Package-specific operational rules live in package-level `AGENTS.md` files.
 - Keep fluent APIs consistent (`create()` factories, chaining methods, typed returns)
 - Keep module/component responsibilities clear: components are primitives, modules are compositions
 - Keep docs and tests aligned with behavior-changing code
+- For visual fixes affecting default framework components, update `simplypages/src/main/resources/static/css/framework.css` instead of demo-local styling.
 
 ### Security Responsibility Split
 - Framework responsibilities:
@@ -100,6 +101,11 @@ Package-specific operational rules live in package-level `AGENTS.md` files.
 - Always implement tests for new features in the same workstream; do not defer test coverage.
 - Prioritize regression coverage for rendering, escaping, lifecycle, editing flow, and layout behavior
 - Demo changes should not replace framework tests
+- For bug investigations, use the test/deploy/live-verify loop by default:
+  1) run relevant automated tests,
+  2) deploy to the live host,
+  3) verify behavior on the live site before deep-diving into local-only debugging.
+- For UI bug reports, explicitly validate both behavior and visual alignment/layout in the live browser before classifying the issue as framework-level.
 
 ## Build and Test Commands
 
@@ -123,6 +129,7 @@ cd demo && ../mvnw spring-boot:run
 ```bash
 ./deploy.sh host 192.168.1.113 host
 ```
+- Canonical live URL: `http://192.168.1.113:8080` (assume this is the primary deployment target unless explicitly told otherwise).
 - After a feature improvement or bug fix is finalized, always deploy to the live host and verify behavior.
 - After deployment, verify behavior on the live site before finalizing fixes.
 

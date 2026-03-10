@@ -42,6 +42,36 @@ class ForumDemoIntegrationTest {
     }
 
     @Test
+    @DisplayName("Viewer role dropdown should persist moderator selection across requests")
+    void viewerRoleDropdownPersistsModeratorSelection() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+
+        mockMvc.perform(post("/forum/viewer")
+                .session(session)
+                .header("HX-Request", "true")
+                .param("displayName", "Moderator User")
+                .param("userId", "user-moderator")
+                .param("role", "moderator")
+                .param("scope", "")
+                .param("topic", "")
+                .param("view", "categories")
+                .param("topicPage", "1")
+                .param("topicSize", "8")
+                .param("commentPage", "1")
+                .param("commentSize", "8"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("Viewer set to Moderator User (moderator)")))
+            .andExpect(content().string(containsString("Current viewer: Moderator User [user-moderator] · moderator")))
+            .andExpect(content().string(containsString("<option value=\"moderator\" selected>Moderator</option>")));
+
+        mockMvc.perform(get("/forum")
+                .session(session))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("Current viewer: Moderator User [user-moderator] · moderator")))
+            .andExpect(content().string(containsString("<option value=\"moderator\" selected>Moderator</option>")));
+    }
+
+    @Test
     @DisplayName("Forum should drill down from category topics into topic comments")
     void drillDownFlowRendersSingleStageAtATime() throws Exception {
         String parentBody = "Drilldown parent body that must render in thread comments view.";
@@ -176,6 +206,36 @@ class ForumDemoIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(content().string(containsString("forum-demo-quote")))
             .andExpect(content().string(containsString("Quoted comment by")));
+    }
+
+    @Test
+    @DisplayName("Quote scaffold should render full normalized quoted comment text without truncation")
+    void quoteScaffoldRendersFullQuotedCommentText() throws Exception {
+        ForumViewer viewer = new ForumViewer("user-quote-full", "Quote Full", false);
+        ForumDemoService.TopicView topic = forumService.createTopic(
+            "cat-feedback",
+            "Quote Full Text Topic",
+            "Topic body",
+            viewer
+        ).orElseThrow();
+
+        String quoteTailMarker = "QUOTE_FULL_TEXT_TAIL_MARKER";
+        String quotedBody = "Long quoted body " + "word ".repeat(90) + quoteTailMarker;
+        ForumDemoService.CommentView quoted = forumService.createComment(topic.id(), null, quotedBody, viewer).orElseThrow();
+        forumService.createComment(topic.id(), null, "[[quote::" + quoted.id() + "]]", viewer).orElseThrow();
+
+        mockMvc.perform(get("/forum/topics/{topicId}/comments", topic.id())
+                .header("HX-Request", "true")
+                .param("scope", topic.categoryId())
+                .param("topic", topic.id())
+                .param("view", "comments")
+                .param("topicPage", "1")
+                .param("topicSize", "8")
+                .param("commentPage", "1")
+                .param("commentSize", "100"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("forum-demo-quote")))
+            .andExpect(content().string(containsString(quoteTailMarker)));
     }
 
     @Test

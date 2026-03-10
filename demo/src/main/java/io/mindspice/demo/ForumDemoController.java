@@ -61,6 +61,7 @@ public class ForumDemoController {
     private static final ForumDisplaySettings FORUM_DISPLAY_SETTINGS = new ForumDisplaySettings(220);
     private static final Pattern FORUM_TAG_TOKEN_PATTERN = Pattern.compile("\\[\\[[^\\]]+]]");
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
+    private static final Pattern WHITESPACE_BLOCK_PATTERN = Pattern.compile("[ \t]+");
 
     private final ForumDemoService forumService;
 
@@ -1009,7 +1010,7 @@ public class ForumDemoController {
                 .withInnerText("Quoted comment by " + comment.get().author() + " · " + comment.get().timestamp()));
             quote.withChild(new HtmlTag("span")
                 .withAttribute("class", "forum-demo-quote-body")
-                .withInnerText(truncateForumText(comment.get().body(), 170)));
+                .withInnerText(normalizeForumText(comment.get().body())));
             return quote;
         }
 
@@ -1022,7 +1023,7 @@ public class ForumDemoController {
                 .withInnerText("Quoted topic by " + topic.get().author() + " · " + topic.get().timestamp()));
             quote.withChild(new HtmlTag("span")
                 .withAttribute("class", "forum-demo-quote-body")
-                .withInnerText(topic.get().title() + " — " + truncateForumText(topic.get().body(), 150)));
+                .withInnerText(topic.get().title() + " — " + normalizeForumText(topic.get().body())));
             return quote;
         }
 
@@ -1032,15 +1033,7 @@ public class ForumDemoController {
     }
 
     private String truncateForumText(String body, int maxChars) {
-        String raw = defaultString(body);
-        if (raw.isBlank()) {
-            return raw;
-        }
-        String withoutTags = FORUM_TAG_TOKEN_PATTERN.matcher(raw).replaceAll(" ");
-        String normalized = WHITESPACE_PATTERN.matcher(withoutTags).replaceAll(" ").trim();
-        if (normalized.isBlank()) {
-            normalized = WHITESPACE_PATTERN.matcher(raw).replaceAll(" ").trim();
-        }
+        String normalized = normalizeForumText(body);
         if (normalized.length() <= maxChars) {
             return normalized;
         }
@@ -1048,6 +1041,19 @@ public class ForumDemoController {
         int boundary = normalized.lastIndexOf(' ', maxChars);
         int cut = boundary > (maxChars / 2) ? boundary : maxChars;
         return normalized.substring(0, cut).trim() + "...";
+    }
+
+    private String normalizeForumText(String body) {
+        String raw = defaultString(body);
+        if (raw.isBlank()) {
+            return raw;
+        }
+        String withoutTags = FORUM_TAG_TOKEN_PATTERN.matcher(raw).replaceAll(" ");
+        String normalized = WHITESPACE_BLOCK_PATTERN.matcher(withoutTags).replaceAll(" ").trim();
+        if (normalized.isBlank()) {
+            normalized = WHITESPACE_BLOCK_PATTERN.matcher(raw).replaceAll(" ").trim();
+        }
+        return normalized;
     }
 
     private Component buildFlash(FlashType type, String message) {
