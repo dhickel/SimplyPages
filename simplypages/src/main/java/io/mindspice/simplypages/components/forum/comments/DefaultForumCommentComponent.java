@@ -103,9 +103,6 @@ public class DefaultForumCommentComponent implements ForumCommentComponent {
         if (parentId != null && !parentId.isBlank()) {
             comment.withAttribute("data-parent-id", parentId);
         }
-        if (depth > 0) {
-            comment.addStyle("margin-left", (depth * 20) + "px");
-        }
 
         HtmlTag layout = new HtmlTag("div").withAttribute("class", "forum-comment-layout");
         HtmlTag identity = new HtmlTag("div").withAttribute("class", "forum-comment-identity");

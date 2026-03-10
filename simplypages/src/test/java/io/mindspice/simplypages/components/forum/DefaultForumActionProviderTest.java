@@ -136,4 +136,30 @@ class DefaultForumActionProviderTest {
         assertTrue(html.contains("hx-target=\"#comment-thread\""));
         assertTrue(html.contains("hx-swap=\"outerHTML\""));
     }
+
+    @Test
+    @DisplayName("DefaultForumActionProvider should apply quote-only hx-include selector")
+    void quoteOnlyHxInclude() {
+        DefaultForumActionProvider<String, String> provider = DefaultForumActionProvider.<String, String>create()
+            .withQuoteHxInclude("#forum-comment-compose-body")
+            .showEditWhen(ctx -> true)
+            .showDeleteWhen(ctx -> true);
+
+        List<Component> actions = provider.provide(new ForumActionContext<>(
+            ForumActionType.COMMENT,
+            "c-9",
+            "t-9",
+            "source",
+            "ctx"
+        ));
+
+        assertEquals(3, actions.size());
+        String quoteHtml = actions.get(0).render();
+        String editHtml = actions.get(1).render();
+        String deleteHtml = actions.get(2).render();
+
+        assertTrue(quoteHtml.contains("hx-include=\"#forum-comment-compose-body\""));
+        assertFalse(editHtml.contains("hx-include="));
+        assertFalse(deleteHtml.contains("hx-include="));
+    }
 }

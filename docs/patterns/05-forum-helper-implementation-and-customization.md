@@ -27,6 +27,7 @@ The forum renderer stack provides one opinionated pipeline for:
 
 ```java
 import io.mindspice.simplypages.components.forum.actions.DefaultForumActionProvider;
+import io.mindspice.simplypages.components.forum.ForumCollapsibleComposer;
 import io.mindspice.simplypages.components.forum.comments.DefaultForumCommentComponent;
 import io.mindspice.simplypages.components.forum.comments.ForumCommentData;
 import io.mindspice.simplypages.components.forum.comments.ForumCommentRenderer;
@@ -109,6 +110,22 @@ Component pagedComments = commentRenderer.render(
 );
 ```
 
+Collapsible composer boxes (default collapsed):
+
+```java
+Component newTopicForm = buildTopicForm();   // application-owned form component
+Component newCommentForm = buildCommentForm();
+
+Component topicComposer = ForumCollapsibleComposer.create("New Topic", newTopicForm);
+Component commentComposer = ForumCollapsibleComposer.create("New Comment", newCommentForm);
+
+// Render topic composer above the topic list and comment composer below comment list.
+// Expand explicitly when handling edit-in-progress states.
+Component editTopicComposer = ForumCollapsibleComposer
+    .create("Edit Topic", newTopicForm)
+    .expandedByDefault();
+```
+
 Behavior:
 
 - renderer limits output to requested page window
@@ -177,6 +194,9 @@ Use `ForumActionProvider<SOURCE, CTX>` for item actions.
 - Visibility in rendered output is not authorization; controllers must validate permissions.
 - To set default HTMX response placement on generated buttons, use
   `DefaultForumActionProvider.withHxTarget(...)` and `withHxSwap(...)`.
+- To preserve in-progress composer text when using quote actions, set
+  `DefaultForumActionProvider.withQuoteHxInclude(...)` to include the active
+  composer textarea/input selector in quote requests.
 
 ## Demo Pipeline Reference (`/forum`)
 

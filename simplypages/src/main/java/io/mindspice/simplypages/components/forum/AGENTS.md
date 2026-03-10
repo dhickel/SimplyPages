@@ -9,6 +9,7 @@ Owns discussion/community components and helper rendering contracts.
 - Final component contracts: `ForumCategoryComponent`, `ForumTopicComponent`, `ForumCommentComponent`
 - Topic title-link metadata contract: `ForumTopicTitleLink`
 - Default final components (`DefaultForumCategoryComponent`, `DefaultForumTopicComponent`, `DefaultForumCommentComponent`)
+- Collapsible composer wrapper (`ForumCollapsibleComposer`) for reusable forum create/edit forms
 - Forum tag parsing and hydration contracts (`ForumTagParser`, resolver registry/interfaces)
 - Forum action contracts (`ForumActionProvider`, `DefaultForumActionProvider`, action context/type records)
 - Topic/comment pagination rendering contracts with HTMX previous/next control wiring
@@ -24,6 +25,8 @@ Owns discussion/community components and helper rendering contracts.
 - Topic scope filtering remains application-owned by default and becomes renderer-enforced only when a scope extractor is configured.
 - Topic body text can be transformed per-render via `withBodyTextResolver(...)`; this hook runs before tag parsing.
 - Topic title links are optional metadata; components that do not support links must remain compatible.
+- Composer wrappers default to collapsed and can be expanded explicitly for edit-in-progress flows.
+- Quote actions can include active composer fields via `DefaultForumActionProvider.withQuoteHxInclude(...)` to preserve draft text when inserting quote tokens.
 - Renderer pipeline state stays per-call; do not persist mutable parse/resolve intermediates on renderer instances.
 
 ## Do

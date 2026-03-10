@@ -7,10 +7,9 @@ import io.mindspice.simplypages.builders.AccountBarBuilder;
 import io.mindspice.simplypages.builders.BannerBuilder;
 import io.mindspice.simplypages.builders.ShellBuilder;
 import io.mindspice.simplypages.components.Div;
-import io.mindspice.simplypages.components.Header;
-import io.mindspice.simplypages.components.Markdown;
 import io.mindspice.simplypages.components.RawHtml;
 import io.mindspice.simplypages.components.display.Alert;
+import io.mindspice.simplypages.components.forum.ForumCollapsibleComposer;
 import io.mindspice.simplypages.components.forum.actions.DefaultForumActionProvider;
 import io.mindspice.simplypages.components.forum.actions.ForumActionProvider;
 import io.mindspice.simplypages.components.forum.categories.ForumCategoryRenderer;
@@ -254,7 +253,7 @@ public class ForumDemoController {
             return renderForumMain(requested, viewer, null, null, "Topic not found.", FlashType.DANGER);
         }
 
-        CommentDraft draft = new CommentDraft(null, false, "[[quote::" + topicId + "]]\n");
+        CommentDraft draft = new CommentDraft(null, false, appendQuoteTag(params.get("body"), topicId));
         ForumState next = new ForumState(topic.get().categoryId(), topicId, requested.topicPage(), requested.topicSize(), requested.commentPage(), requested.commentSize(), ForumStage.COMMENTS);
         return renderForumMain(next, viewer, null, draft, "Quote inserted into comment composer.", FlashType.INFO);
     }
@@ -280,7 +279,7 @@ public class ForumDemoController {
 
         Optional<ForumDemoService.TopicView> topic = forumService.findTopic(comment.get().topicId());
         String scopeId = topic.map(ForumDemoService.TopicView::categoryId).orElse(requested.scopeId());
-        CommentDraft draft = new CommentDraft(null, false, "[[quote::" + commentId + "]]\n");
+        CommentDraft draft = new CommentDraft(null, false, appendQuoteTag(params.get("body"), commentId));
 
         ForumState next = new ForumState(scopeId, comment.get().topicId(), requested.topicPage(), requested.topicSize(), requested.commentPage(), requested.commentSize(), ForumStage.COMMENTS);
         return renderForumMain(next, viewer, null, draft, "Quote inserted into comment composer.", FlashType.INFO);
@@ -531,16 +530,6 @@ public class ForumDemoController {
 
         Div root = new Div().withId("forum-main").withClass("forum-demo-main");
 
-        root.withChild(Header.H1("Forum Demo"));
-        root.withChild(new Markdown("""
-            Minimal full-page forum demo using the SimplyPages forum helpers.
-
-            - Session viewer identity controls ownership/moderation behavior.
-            - Category -> topic -> comment drill-down runs with HTMX fragment swaps.
-            - Topic and comment pagination are HTMX-wired with full fragment refresh.
-            - Quote, edit, delete, and create actions are end-to-end in-memory operations.
-            """));
-
         if (flashMessage != null && !flashMessage.isBlank()) {
             root.withChild(buildFlash(flashType, flashMessage));
         }
@@ -562,11 +551,11 @@ public class ForumDemoController {
                 root.withChild(Alert.warning("Select a category to view topics."));
                 root.withChild(buildCategorySection(groups, state.withStage(ForumStage.CATEGORIES).withScope("")));
             } else {
-                root.withChild(buildTopicsSection(state, viewer, scopedTopics, totalTopics));
                 TopicDraft effectiveTopicDraft = topicDraft == null
                     ? new TopicDraft(null, false, null, null)
                     : topicDraft;
                 root.withChild(buildTopicComposer(state, effectiveTopicDraft));
+                root.withChild(buildTopicsSection(state, viewer, scopedTopics, totalTopics));
             }
         } else if (selectedTopic.isPresent()) {
             List<ForumDemoService.CommentView> allComments = forumService.listAllCommentsOldestFirst();
@@ -711,6 +700,7 @@ public class ForumDemoController {
             .<ForumDemoService.TopicView, ForumViewer>create()
             .withHxTarget("#forum-main")
             .withHxSwap("outerHTML")
+            .withQuoteHxInclude("#forum-comment-compose-body")
             .showEditWhen(ctx -> canModifyTopic(ctx.context(), ctx.source()))
             .showDeleteWhen(ctx -> canModifyTopic(ctx.context(), ctx.source()))
             .withQuoteEndpoint(ctx -> endpointWithState("/forum/topics/" + ctx.itemId() + "/quote", state.withTopic(ctx.itemId()).withStage(ForumStage.COMMENTS)))
@@ -740,7 +730,7 @@ public class ForumDemoController {
         ));
 
         if (totalTopics == 0) {
-            section.withChild(Alert.info("No topics in this category yet. Create one below."));
+            section.withChild(Alert.info("No topics in this category yet. Use New Topic above."));
         }
 
         return section;
@@ -767,7 +757,7 @@ public class ForumDemoController {
         form.withChild(hidden("scope", state.scopeId()));
 
         form.addField("Title", TextInput.create("title").withValue(defaultString(topicDraft.title())).required());
-        form.addField("Body", TextArea.create("body").withRows(5).withValue(defaultString(topicDraft.body())).required());
+        form.addField("Body", TextArea.create("body").withRows(10).withValue(defaultString(topicDraft.body())).required());
 
         Div actions = new Div().withClass("forum-demo-form-actions");
         actions.withChild(new HtmlTag("button")
@@ -787,7 +777,9 @@ public class ForumDemoController {
 
         form.withChild(actions);
         section.withChild(form);
-        return section;
+        return ForumCollapsibleComposer.create(editing ? "Edit Topic" : "New Topic", section)
+            .withClass("forum-demo-composer-toggle")
+            .withExpanded(editing);
     }
 
     private Component buildCommentsSection(
@@ -810,6 +802,7 @@ public class ForumDemoController {
             .<ForumDemoService.CommentView, ForumViewer>create()
             .withHxTarget("#forum-main")
             .withHxSwap("outerHTML")
+            .withQuoteHxInclude("#forum-comment-compose-body")
             .showEditWhen(ctx -> canModifyComment(ctx.context(), ctx.source()))
             .showDeleteWhen(ctx -> canModifyComment(ctx.context(), ctx.source()))
             .withQuoteEndpoint(ctx -> endpointWithState("/forum/comments/" + ctx.itemId() + "/quote", state.withTopic(topic.id()).withStage(ForumStage.COMMENTS)))
@@ -857,7 +850,11 @@ public class ForumDemoController {
         appendStateHiddenFields(form, state.withTopic(topic.id()));
         form.withChild(hidden("topicId", topic.id()));
 
-        form.addField("Comment", TextArea.create("body").withRows(5).withValue(defaultString(commentDraft.body())).required());
+        form.addField("Comment", TextArea.create("body")
+            .withId("forum-comment-compose-body")
+            .withRows(10)
+            .withValue(defaultString(commentDraft.body()))
+            .required());
 
         Div actions = new Div().withClass("forum-demo-form-actions");
         actions.withChild(new HtmlTag("button")
@@ -877,7 +874,9 @@ public class ForumDemoController {
 
         form.withChild(actions);
         section.withChild(form);
-        return section;
+        return ForumCollapsibleComposer.create(editing ? "Edit Comment" : "New Comment", section)
+            .withClass("forum-demo-composer-toggle")
+            .withExpanded(editing || hasNonBlankText(commentDraft.body()));
     }
 
     private Component buildTopicSizeForm(ForumState state) {
@@ -956,6 +955,7 @@ public class ForumDemoController {
             .<ForumDemoService.TopicView, ForumViewer>create()
             .withHxTarget("#forum-main")
             .withHxSwap("outerHTML")
+            .withQuoteHxInclude("#forum-comment-compose-body")
             .showEditWhen(ctx -> canModifyTopic(ctx.context(), ctx.source()))
             .showDeleteWhen(ctx -> canModifyTopic(ctx.context(), ctx.source()))
             .withQuoteEndpoint(ctx -> endpointWithState("/forum/topics/" + ctx.itemId() + "/quote", state.withTopic(ctx.itemId()).withStage(ForumStage.COMMENTS)))
@@ -1030,6 +1030,21 @@ public class ForumDemoController {
         return new HtmlTag("span")
             .withAttribute("class", "forum-tag forum-tag-quote forum-demo-quote forum-demo-quote-missing")
             .withInnerText("Quoted reference unavailable: " + quoteId);
+    }
+
+    private String appendQuoteTag(String existingBody, String quoteId) {
+        String quoteTag = "[[quote::" + quoteId + "]]";
+        String body = existingBody == null ? "" : existingBody;
+        if (body.isBlank()) {
+            return quoteTag + "\n";
+        }
+
+        StringBuilder merged = new StringBuilder(body);
+        if (!body.endsWith("\n")) {
+            merged.append('\n');
+        }
+        merged.append(quoteTag).append('\n');
+        return merged.toString();
     }
 
     private String truncateForumText(String body, int maxChars) {
@@ -1205,6 +1220,10 @@ public class ForumDemoController {
 
     private static String defaultString(String value) {
         return value == null ? "" : value;
+    }
+
+    private static boolean hasNonBlankText(String value) {
+        return value != null && !value.isBlank();
     }
 
     private static String slugify(String value) {

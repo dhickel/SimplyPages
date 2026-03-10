@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -33,7 +34,6 @@ class ForumDemoIntegrationTest {
     void forumPageRenders() throws Exception {
         mockMvc.perform(get("/forum"))
             .andExpect(status().isOk())
-            .andExpect(content().string(containsString("Forum Demo")))
             .andExpect(content().string(containsString("id=\"forum-main\"")))
             .andExpect(content().string(containsString("Viewer Session")))
             .andExpect(content().string(containsString("Categories")))
@@ -149,6 +149,61 @@ class ForumDemoIntegrationTest {
     }
 
     @Test
+    @DisplayName("Topics view should render collapsed New Topic composer above topic list panel")
+    void topicsComposerCollapsedAndAboveList() throws Exception {
+        mockMvc.perform(get("/forum/topics")
+                .header("HX-Request", "true")
+                .param("scope", "cat-feedback")
+                .param("view", "topics")
+                .param("topicPage", "1")
+                .param("topicSize", "8")
+                .param("commentPage", "1")
+                .param("commentSize", "8"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("forum-demo-composer-toggle")))
+            .andExpect(content().string(containsString(">New Topic<")))
+            .andExpect(content().string(not(containsString("forum-demo-composer-toggle\" open"))))
+            .andExpect(result -> {
+                String html = result.getResponse().getContentAsString();
+                int composerIndex = html.indexOf("forum-demo-composer-toggle");
+                int topicsHeaderIndex = html.indexOf(">Topics<");
+                assertTrue(
+                    composerIndex >= 0 && topicsHeaderIndex >= 0 && composerIndex < topicsHeaderIndex,
+                    "Expected New Topic composer to render above Topics panel"
+                );
+            });
+    }
+
+    @Test
+    @DisplayName("Comments view should render collapsed New Comment composer below comments list")
+    void commentsComposerCollapsedAndBelowList() throws Exception {
+        ForumDemoService.TopicView topic = forumService.listAllTopicsNewestFirst().getFirst();
+
+        mockMvc.perform(get("/forum/topics/{topicId}/comments", topic.id())
+                .header("HX-Request", "true")
+                .param("scope", topic.categoryId())
+                .param("topic", topic.id())
+                .param("view", "comments")
+                .param("topicPage", "1")
+                .param("topicSize", "8")
+                .param("commentPage", "1")
+                .param("commentSize", "8"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("forum-demo-composer-toggle")))
+            .andExpect(content().string(containsString(">New Comment<")))
+            .andExpect(content().string(not(containsString("forum-demo-composer-toggle\" open"))))
+            .andExpect(result -> {
+                String html = result.getResponse().getContentAsString();
+                int commentsIndex = html.indexOf("forum-comments-view");
+                int composerIndex = html.lastIndexOf("forum-demo-composer-toggle");
+                assertTrue(
+                    commentsIndex >= 0 && composerIndex > commentsIndex,
+                    "Expected New Comment composer to render below comment list"
+                );
+            });
+    }
+
+    @Test
     @DisplayName("Topic pagination endpoint should return HTMX fragment content")
     void topicPaginationFragment() throws Exception {
         mockMvc.perform(get("/forum/topics")
@@ -182,7 +237,57 @@ class ForumDemoIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(content().string(containsString("forum-comment-meta")))
             .andExpect(content().string(containsString("forum-comment-actions")))
+            .andExpect(content().string(containsString("forum-demo-composer-toggle\" open")))
             .andExpect(content().string(containsString("[[quote::" + comment.id() + "]]")));
+    }
+
+    @Test
+    @DisplayName("Topic quote action should keep comment composer expanded")
+    void topicQuoteActionKeepsComposerExpanded() throws Exception {
+        ForumDemoService.TopicView topic = forumService.listAllTopicsNewestFirst().getFirst();
+
+        mockMvc.perform(post("/forum/topics/{topicId}/quote", topic.id())
+                .header("HX-Request", "true")
+                .param("scope", topic.categoryId())
+                .param("topic", topic.id())
+                .param("topicPage", "1")
+                .param("topicSize", "8")
+                .param("commentPage", "1")
+                .param("commentSize", "8"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("forum-demo-composer-toggle\" open")))
+            .andExpect(content().string(containsString("[[quote::" + topic.id() + "]]")));
+    }
+
+    @Test
+    @DisplayName("Quote action should append quote token to existing comment draft text")
+    void quoteActionAppendsToExistingDraftText() throws Exception {
+        ForumDemoService.CommentView comment = forumService.listAllCommentsOldestFirst().getFirst();
+        ForumDemoService.TopicView topic = forumService.findTopic(comment.topicId()).orElseThrow();
+        String existingDraft = "Already typing this comment.";
+
+        mockMvc.perform(post("/forum/comments/{commentId}/quote", comment.id())
+                .header("HX-Request", "true")
+                .param("scope", topic.categoryId())
+                .param("topic", topic.id())
+                .param("topicPage", "1")
+                .param("topicSize", "8")
+                .param("commentPage", "1")
+                .param("commentSize", "8")
+                .param("body", existingDraft))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString(existingDraft)))
+            .andExpect(content().string(containsString("forum-demo-composer-toggle\" open")))
+            .andExpect(content().string(containsString("[[quote::" + comment.id() + "]]")))
+            .andExpect(result -> {
+                String html = result.getResponse().getContentAsString();
+                int existingIndex = html.indexOf(existingDraft);
+                int quoteIndex = html.indexOf("[[quote::" + comment.id() + "]]");
+                assertTrue(
+                    existingIndex >= 0 && quoteIndex > existingIndex,
+                    "Expected quote token to be appended after existing draft text"
+                );
+            });
     }
 
     @Test

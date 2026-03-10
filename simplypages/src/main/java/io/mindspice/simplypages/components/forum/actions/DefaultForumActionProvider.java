@@ -30,6 +30,7 @@ public class DefaultForumActionProvider<SOURCE, CTX> implements ForumActionProvi
     private String deleteIcon = "🗑";
     private String hxTarget;
     private String hxSwap;
+    private String quoteHxInclude;
 
     public static <SOURCE, CTX> DefaultForumActionProvider<SOURCE, CTX> create() {
         return new DefaultForumActionProvider<>();
@@ -90,6 +91,11 @@ public class DefaultForumActionProvider<SOURCE, CTX> implements ForumActionProvi
         return this;
     }
 
+    public DefaultForumActionProvider<SOURCE, CTX> withQuoteHxInclude(String hxIncludeSelector) {
+        this.quoteHxInclude = normalizeAttributeValue(hxIncludeSelector);
+        return this;
+    }
+
     @Override
     public List<Component> provide(ForumActionContext<SOURCE, CTX> context) {
         List<Component> actions = new ArrayList<>();
@@ -97,21 +103,28 @@ public class DefaultForumActionProvider<SOURCE, CTX> implements ForumActionProvi
         if (showQuote.test(context)) {
             String endpoint = quoteEndpoint.apply(context);
             if (endpoint != null && !endpoint.isBlank()) {
-                actions.add(buildAction("forum-action-quote", quoteIcon, "Quote", endpoint, context));
+                actions.add(buildAction(
+                    "forum-action-quote",
+                    quoteIcon,
+                    "Quote",
+                    endpoint,
+                    context,
+                    quoteHxInclude
+                ));
             }
         }
 
         if (showEdit.test(context)) {
             String endpoint = editEndpoint.apply(context);
             if (endpoint != null && !endpoint.isBlank()) {
-                actions.add(buildAction("forum-action-edit", editIcon, "Edit", endpoint, context));
+                actions.add(buildAction("forum-action-edit", editIcon, "Edit", endpoint, context, null));
             }
         }
 
         if (showDelete.test(context)) {
             String endpoint = deleteEndpoint.apply(context);
             if (endpoint != null && !endpoint.isBlank()) {
-                actions.add(buildAction("forum-action-delete", deleteIcon, "Delete", endpoint, context));
+                actions.add(buildAction("forum-action-delete", deleteIcon, "Delete", endpoint, context, null));
             }
         }
 
@@ -123,7 +136,8 @@ public class DefaultForumActionProvider<SOURCE, CTX> implements ForumActionProvi
             String icon,
             String label,
             String endpoint,
-            ForumActionContext<SOURCE, CTX> context
+            ForumActionContext<SOURCE, CTX> context,
+            String hxInclude
     ) {
         String text = (icon == null || icon.isBlank()) ? label : (icon + " " + label);
         HtmlTag button = new HtmlTag("button")
@@ -140,6 +154,9 @@ public class DefaultForumActionProvider<SOURCE, CTX> implements ForumActionProvi
         }
         if (hxSwap != null) {
             button.withAttribute("hx-swap", hxSwap);
+        }
+        if (hxInclude != null) {
+            button.withAttribute("hx-include", hxInclude);
         }
         return button;
     }

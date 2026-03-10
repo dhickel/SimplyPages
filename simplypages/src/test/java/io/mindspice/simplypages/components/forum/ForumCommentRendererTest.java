@@ -128,7 +128,7 @@ class ForumCommentRendererTest {
 
         HtmlAssert.assertThat(html)
             .hasElement("div.forum-comments-view > div.forum-comment[data-comment-id=comment-1][data-topic-id=topic-1]")
-            .attributeEquals("div.forum-comment[data-comment-id=comment-1]", "style", "margin-left: 40px;")
+            .attributeEquals("div.forum-comment[data-comment-id=comment-1]", "style", "")
             .attributeEquals("div.forum-comment[data-comment-id=comment-1] .forum-comment-avatar-slot", "style", "width: 150px; height: 150px;")
             .doesNotHaveElement("div.forum-comment[data-comment-id=comment-1] .forum-comment-avatar-image")
             .hasElement("div.forum-comment[data-comment-id=comment-1] .forum-tag-mention")

@@ -9,6 +9,7 @@ This page summarizes forum renderer APIs and extension points.
 - `ForumCategoryRenderer<CATEGORY extends ForumCategoryData, CTX>`
 - `ForumTopicRenderer<TOPIC extends ForumTopicData, CTX>`
 - `ForumCommentRenderer<COMMENT extends ForumCommentData, CTX>`
+- `ForumCollapsibleComposer`
 
 Factory:
 
@@ -112,6 +113,26 @@ Renderer-populated fluent methods:
 - `withLikes(Integer)`
 - `withReplies(Integer)`
 
+### `ForumCollapsibleComposer`
+
+Factory:
+
+- `ForumCollapsibleComposer.create(String summaryText, Component content)`
+
+Fluent methods:
+
+- `withSummaryText(String)`
+- `withContent(Component)`
+- `withExpanded(boolean)`
+- `expandedByDefault()`
+- `withClass(String)`
+
+Behavior:
+
+- renders a `<details>` wrapper with a `<summary>` label and composer content region
+- default state is collapsed (no `open` attribute)
+- use `withExpanded(true)` or `expandedByDefault()` for edit-in-progress flows
+
 ## Builder Customization Hooks
 
 Component suppliers:
@@ -187,6 +208,7 @@ HTMX defaults:
 
 - `withHxTarget(String)`
 - `withHxSwap(String)`
+- `withQuoteHxInclude(String)` (quote-action-only `hx-include` selector)
 
 ## Pagination Contracts
 
