@@ -36,11 +36,13 @@ class FrameworkAssetCompatibilityTest {
     }
 
     @Test
-    @DisplayName("framework.js should keep navigation-only scroll reset and handle false push-url")
+    @DisplayName("framework.js should support tagged target-top reset and keep push-url fallback")
     void testFrameworkJsScrollGateLogic() throws IOException {
         String js = readClasspathResource("static/js/framework.js");
 
         assertTrue(js.contains("document.body.addEventListener('htmx:afterSettle'"));
+        assertTrue(js.contains("data-sp-scroll-top"));
+        assertTrue(js.contains("target.scrollIntoView({block: 'start', inline: 'nearest', behavior: 'auto'});"));
         assertTrue(js.contains("pushUrlRequest.trim().toLowerCase() !== 'false'"));
         assertTrue(js.contains("normalizedPushUrlAttr !== 'false'"));
         assertTrue(js.contains("window.scrollTo({top: 0, left: 0, behavior: 'auto'});"));

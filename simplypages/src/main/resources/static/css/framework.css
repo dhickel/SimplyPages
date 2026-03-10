@@ -1120,6 +1120,35 @@ pre::-webkit-scrollbar-thumb:hover {
     margin-top: var(--sp-space-2);
 }
 
+.forum-composer.forum-demo-parent-topic-toggle {
+    margin-top: var(--sp-space-2);
+    border-color: #cbd5e1;
+}
+
+.forum-demo-parent-topic-toggle > .forum-composer-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #0f172a;
+}
+
+.forum-demo-parent-topic-toggle:not([open]) > .forum-composer-summary {
+    background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+}
+
+.forum-demo-parent-topic-toggle:not([open]) > .forum-composer-summary::after {
+    content: "Thread starter";
+    margin-left: auto;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    padding: 2px 8px;
+}
+
 .forum-category,
 .forum-topic,
 .forum-comment {

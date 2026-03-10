@@ -14,7 +14,8 @@ class LinkTest {
         Link link = Link.create("/path", "Go")
             .withHxGet("/data")
             .withHxTarget("#target")
-            .withHxSwap("outerHTML");
+            .withHxSwap("outerHTML")
+            .withHxScrollTargetTop();
 
         String html = link.render();
 
@@ -22,6 +23,7 @@ class LinkTest {
         assertTrue(html.contains("hx-get=\"/data\""));
         assertTrue(html.contains("hx-target=\"#target\""));
         assertTrue(html.contains("hx-swap=\"outerHTML\""));
+        assertTrue(html.contains("data-sp-scroll-top=\"target\""));
     }
 
     @Test

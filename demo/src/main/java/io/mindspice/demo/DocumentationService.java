@@ -79,7 +79,8 @@ public class DocumentationService {
                 Link.create("/docs/" + filePath, title)
                     .withHxGet("/docs/" + filePath)
                     .withHxTarget("#docs-content")
-                    .withHxSwap("innerHTML show:window:top")
+                    .withHxSwap("innerHTML")
+                    .withHxScrollTargetTop()
                     .withHxPushUrl(true)
                     .withClass("text-decoration-none text-dark")
             ));

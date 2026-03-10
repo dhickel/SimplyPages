@@ -166,6 +166,16 @@ public class HtmlTag implements Component {
     }
 
     /**
+     * Tags the HTMX request so SimplyPages scrolls the swapped target fragment to top.
+     *
+     * <p>This sets {@code data-sp-scroll-top="target"} on the source element and is handled by
+     * framework JavaScript after settle.</p>
+     */
+    public HtmlTag hxScrollTargetTop() {
+        return withAttribute("data-sp-scroll-top", "target");
+    }
+
+    /**
      * Appends a child component in render order.
      */
     public HtmlTag withChild(Component component) {

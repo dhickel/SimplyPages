@@ -126,16 +126,98 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// HTMX history navigation should reset the window scroll position.
-// This keeps sidebar-driven page-to-page navigation predictable while avoiding
-// scroll jumps for non-navigation fragment updates.
-document.body.addEventListener('htmx:afterSettle', function(event) {
-    const requestConfig = event.detail && event.detail.requestConfig;
-    if (!requestConfig) {
-        return;
+function parseScrollTopDirective(sourceElement) {
+    if (!(sourceElement instanceof Element)) {
+        return null;
     }
 
-    const sourceElement = requestConfig.elt instanceof Element ? requestConfig.elt : null;
+    const directive = sourceElement.getAttribute('data-sp-scroll-top');
+    if (directive == null) {
+        return null;
+    }
+
+    const normalized = directive.trim().toLowerCase();
+    if (normalized === '' || normalized === 'true') {
+        return 'target';
+    }
+    return normalized;
+}
+
+function resolveSwapTarget(event, sourceElement) {
+    const detail = event.detail || {};
+    if (detail.elt instanceof Element && document.contains(detail.elt)) {
+        return detail.elt;
+    }
+    if (detail.target instanceof Element && document.contains(detail.target)) {
+        return detail.target;
+    }
+
+    const requestConfig = detail.requestConfig;
+    if (requestConfig) {
+        if (requestConfig.target instanceof Element && document.contains(requestConfig.target)) {
+            return requestConfig.target;
+        }
+        if (typeof requestConfig.target === 'string' && requestConfig.target.trim() !== '') {
+            const configuredTarget = document.querySelector(requestConfig.target.trim());
+            if (configuredTarget) {
+                return configuredTarget;
+            }
+        }
+    }
+
+    if (!(sourceElement instanceof Element)) {
+        return null;
+    }
+
+    const hxTarget = sourceElement.getAttribute('hx-target');
+    if (!hxTarget) {
+        return null;
+    }
+
+    const normalizedTarget = hxTarget.trim();
+    const unsupportedResolver = normalizedTarget.startsWith('closest ')
+        || normalizedTarget.startsWith('find ')
+        || normalizedTarget.startsWith('next ')
+        || normalizedTarget.startsWith('previous ');
+    if (unsupportedResolver) {
+        return null;
+    }
+
+    return document.querySelector(normalizedTarget);
+}
+
+function scrollTargetToTop(target) {
+    if (target === window) {
+        window.scrollTo({top: 0, left: 0, behavior: 'auto'});
+        return true;
+    }
+    if (!(target instanceof Element)) {
+        return false;
+    }
+
+    target.scrollIntoView({block: 'start', inline: 'nearest', behavior: 'auto'});
+    return true;
+}
+
+function applyTaggedScrollReset(event, sourceElement) {
+    const directive = parseScrollTopDirective(sourceElement);
+    if (!directive) {
+        return false;
+    }
+
+    if (directive === 'window') {
+        return scrollTargetToTop(window);
+    }
+    if (directive === 'target') {
+        const target = resolveSwapTarget(event, sourceElement);
+        return scrollTargetToTop(target);
+    }
+
+    const selected = document.querySelector(directive);
+    return scrollTargetToTop(selected);
+}
+
+function shouldScrollWindowForPushUrl(requestConfig, sourceElement) {
     const pushUrlAttr = sourceElement ? sourceElement.getAttribute('hx-push-url') : null;
     const normalizedPushUrlAttr = pushUrlAttr == null ? null : pushUrlAttr.trim().toLowerCase();
     const pushesUrlViaAttr = normalizedPushUrlAttr === ''
@@ -148,7 +230,23 @@ document.body.addEventListener('htmx:afterSettle', function(event) {
             && pushUrlRequest.trim() !== ''
             && pushUrlRequest.trim().toLowerCase() !== 'false');
 
-    if (!pushesUrlViaAttr && !pushesUrlViaRequest) {
+    return pushesUrlViaAttr || pushesUrlViaRequest;
+}
+
+// Tagged HTMX requests can reset the swapped target to top.
+// Fallback: history-pushing HTMX requests reset the window scroll position.
+document.body.addEventListener('htmx:afterSettle', function(event) {
+    const requestConfig = event.detail && event.detail.requestConfig;
+    if (!requestConfig) {
+        return;
+    }
+
+    const sourceElement = requestConfig.elt instanceof Element ? requestConfig.elt : null;
+    if (applyTaggedScrollReset(event, sourceElement)) {
+        return;
+    }
+
+    if (!shouldScrollWindowForPushUrl(requestConfig, sourceElement)) {
         return;
     }
 

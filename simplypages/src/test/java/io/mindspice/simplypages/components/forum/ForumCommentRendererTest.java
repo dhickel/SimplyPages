@@ -135,6 +135,7 @@ class ForumCommentRendererTest {
             .hasElement("div.forum-comment[data-comment-id=comment-1] .forum-comment-meta .forum-comment-timestamp")
             .hasElement("div.forum-comment[data-comment-id=comment-1] .forum-comment-meta .forum-comment-actions > .custom-action[data-item-id=comment-1]")
             .hasElement("div.forum-comment[data-comment-id=comment-2] .forum-comment-avatar-image")
+            .attributeEquals("button.forum-comments-page-next", "data-sp-scroll-top", "target")
             .attributeEquals("button.forum-comments-page-next", "hx-target", "closest .forum-comments-view");
     }
 

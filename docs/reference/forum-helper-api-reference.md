@@ -229,6 +229,7 @@ Notes:
 - `totalTopics` should represent all scoped topics (not only current page slice).
 - `topicsPerPage` is the hard render cap for one response. If `topicsPerPage=8`, the renderer outputs at most 8 topic items.
 - `topicsPerPage` controls topic-card count only; it does not control body preview length.
+- Enabled pagination controls include `data-sp-scroll-top="target"` for target-fragment top reset after HTMX swaps.
 
 Helpers:
 
@@ -271,6 +272,7 @@ Notes:
 - When pagination is supplied, renderer filters incoming comments by `topicId` before slicing.
 - `totalComments` should represent all comments for the topic scope (not only current page slice).
 - `commentsPerPage` is the hard render cap for one response. If `commentsPerPage=8`, the renderer outputs at most 8 comment items.
+- Enabled pagination controls include `data-sp-scroll-top="target"` for target-fragment top reset after HTMX swaps.
 
 Helpers:
 

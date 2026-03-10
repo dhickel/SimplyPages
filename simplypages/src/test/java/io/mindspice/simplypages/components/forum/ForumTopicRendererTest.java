@@ -118,6 +118,7 @@ class ForumTopicRendererTest {
             .doesNotHaveElement("div.forum-topic[data-topic-id=topic-1] .forum-topic-title-link")
             .hasElement("div.forum-topic[data-topic-id=topic-2] div.forum-topic-footer > span.forum-topic-likes")
             .hasElement("div.forum-topic[data-topic-id=topic-2] div.forum-topic-body-content blockquote.forum-tag-quote")
+            .attributeEquals("button.forum-topics-page-next", "data-sp-scroll-top", "target")
             .attributeEquals("button.forum-topics-page-next", "hx-target", "closest .forum-topics-view");
     }
 

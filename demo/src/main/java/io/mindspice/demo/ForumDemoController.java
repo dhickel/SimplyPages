@@ -794,7 +794,9 @@ public class ForumDemoController {
         section.withChild(new HtmlTag("p")
             .withAttribute("class", "forum-demo-panel-subtitle")
             .withInnerText("Author: " + topic.author() + " · " + topic.timestamp()));
-        section.withChild(buildParentTopicBody(state, viewer, topic));
+        section.withChild(ForumCollapsibleComposer.create("Parent Post", buildParentTopicBody(state, viewer, topic))
+            .withClass("forum-demo-parent-topic-toggle")
+            .withExpanded(state.commentPage() == 1));
 
         section.withChild(buildCommentSizeForm(state));
 
@@ -969,9 +971,6 @@ public class ForumDemoController {
             .build();
 
         Div parent = new Div().withClass("forum-demo-parent-topic");
-        parent.withChild(new HtmlTag("h3")
-            .withAttribute("class", "forum-demo-panel-subtitle")
-            .withInnerText("Parent Post"));
         parent.withChild(topicRenderer.render(List.of(topic), viewer));
         return parent;
     }

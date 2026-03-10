@@ -224,7 +224,8 @@ public final class ForumTopicRenderer<TOPIC extends ForumTopicData, CTX> {
                     pagination.topicsPerPage()
                 ))
                 .withAttribute("hx-target", paginationHxTarget)
-                .withAttribute("hx-swap", paginationHxSwap);
+                .withAttribute("hx-swap", paginationHxSwap)
+                .hxScrollTargetTop();
         } else {
             button.withAttribute("disabled", "");
         }

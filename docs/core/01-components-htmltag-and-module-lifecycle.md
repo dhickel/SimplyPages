@@ -30,7 +30,7 @@ Capabilities:
 - Children via `withChild`.
 - Escaped text via `withInnerText`.
 - Explicit unescaped HTML via `withUnsafeHtml`.
-- HTMX aliases via `hxGet`, `hxPost`, `hxPut`, `hxPatch`, `hxDelete`, `hxTarget`, `hxSwap`, `hxTrigger`, `hxInclude`, `hxPushUrl`.
+- HTMX aliases via `hxGet`, `hxPost`, `hxPut`, `hxPatch`, `hxDelete`, `hxTarget`, `hxSwap`, `hxTrigger`, `hxInclude`, `hxPushUrl`, `hxScrollTargetTop`.
 
 Example:
 
@@ -38,7 +38,8 @@ Example:
 HtmlTag panel = new HtmlTag("div")
     .hxGet("/orders/42/details")
     .hxTarget("#content-area")
-    .hxSwap("innerHTML");
+    .hxSwap("innerHTML")
+    .hxScrollTargetTop();
 ```
 
 ## Module

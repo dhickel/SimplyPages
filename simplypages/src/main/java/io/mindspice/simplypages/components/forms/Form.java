@@ -163,6 +163,16 @@ public class Form extends HtmlTag {
     }
 
     /**
+     * Tags this HTMX request to scroll the swapped target fragment to top after settle.
+     *
+     * @return this form
+     */
+    public Form withHxScrollTargetTop() {
+        this.withAttribute("data-sp-scroll-top", "target");
+        return this;
+    }
+
+    /**
      * Sets {@code enctype}.
      *
      * @param enctype encoding type

@@ -174,6 +174,16 @@ public class Link extends HtmlTag {
     }
 
     /**
+     * Tags this HTMX request to scroll the swapped target fragment to top after settle.
+     *
+     * @return this link
+     */
+    public Link withHxScrollTargetTop() {
+        this.withAttribute("data-sp-scroll-top", "target");
+        return this;
+    }
+
+    /**
      * Appends child content inside the anchor.
      *
      * @param component child component

@@ -38,6 +38,7 @@ class DocumentationServiceTest {
         DocumentationService service = new DocumentationService();
         String rendered = service.getDocsNavigation().render();
         assertTrue(rendered.contains("/docs/"), "Expected docs navigation to include at least one docs link");
+        assertTrue(rendered.contains("data-sp-scroll-top=\"target\""), "Expected docs HTMX links to tag target-top scroll reset");
     }
 
     @Test

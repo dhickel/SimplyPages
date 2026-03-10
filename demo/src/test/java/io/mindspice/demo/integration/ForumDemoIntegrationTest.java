@@ -107,6 +107,8 @@ class ForumDemoIntegrationTest {
                 .param("commentSize", "8"))
             .andExpect(status().isOk())
             .andExpect(content().string(containsString("Thread: " + topic.title())))
+            .andExpect(content().string(containsString("forum-demo-parent-topic-toggle\" open")))
+            .andExpect(content().string(containsString("Parent Post")))
             .andExpect(content().string(containsString(parentBody)))
             .andExpect(content().string(not(containsString(">Topics<"))));
     }
@@ -217,6 +219,7 @@ class ForumDemoIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(content().string(containsString("id=\"forum-main\"")))
             .andExpect(content().string(containsString("Page 2 of")))
+            .andExpect(content().string(containsString("data-sp-scroll-top=\"target\"")))
             .andExpect(content().string(not(containsString("<!DOCTYPE html>"))));
     }
 
@@ -498,6 +501,9 @@ class ForumDemoIntegrationTest {
                 .param("commentSize", "3"))
             .andExpect(status().isOk())
             .andExpect(content().string(containsString("Page 2 of")))
+            .andExpect(content().string(containsString("data-sp-scroll-top=\"target\"")))
+            .andExpect(content().string(containsString("Parent Post")))
+            .andExpect(content().string(not(containsString("forum-demo-parent-topic-toggle\" open"))))
             .andExpect(content().string(not(containsString("<!DOCTYPE html>"))));
     }
 }

@@ -231,7 +231,8 @@ public final class ForumCommentRenderer<COMMENT extends ForumCommentData, CTX> {
                     pagination.commentsPerPage()
                 ))
                 .withAttribute("hx-target", paginationHxTarget)
-                .withAttribute("hx-swap", paginationHxSwap);
+                .withAttribute("hx-swap", paginationHxSwap)
+                .hxScrollTargetTop();
         } else {
             button.withAttribute("disabled", "");
         }

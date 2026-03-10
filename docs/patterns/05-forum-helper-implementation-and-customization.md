@@ -132,6 +132,7 @@ Behavior:
 - renderer appends previous/next controls + page status
 - controls enable/disable from computed bounds
 - enabled controls emit `hx-get` with configured endpoint resolver
+- enabled controls tag `data-sp-scroll-top="target"` so HTMX swaps return to the top of the rendered forum fragment
 
 ### Pagination Data Ownership
 

@@ -84,6 +84,7 @@ class FormTest {
             .withHxDelete("/remove")
             .withHxTarget("#target")
             .withHxSwap("outerHTML")
+            .withHxScrollTargetTop()
             .withHxTrigger("submit")
             .withEnctype("application/x-www-form-urlencoded")
             .noValidate()
@@ -98,6 +99,7 @@ class FormTest {
             .attributeEquals("form#contact-form", "hx-delete", "/remove")
             .attributeEquals("form#contact-form", "hx-target", "#target")
             .attributeEquals("form#contact-form", "hx-swap", "outerHTML")
+            .attributeEquals("form#contact-form", "data-sp-scroll-top", "target")
             .attributeEquals("form#contact-form", "hx-trigger", "submit")
             .attributeEquals("form#contact-form", "enctype", "multipart/form-data")
             .attributeEquals("form#contact-form", "novalidate", "");

@@ -48,14 +48,15 @@ Use this when a sticky table-of-contents or side menu navigates between document
 Link.create("/docs/core/01-components-htmltag-and-module-lifecycle", "Components")
     .withHxGet("/docs/core/01-components-htmltag-and-module-lifecycle")
     .withHxTarget("#docs-content")
-    .withHxSwap("innerHTML show:window:top")
+    .withHxSwap("innerHTML")
+    .withHxScrollTargetTop()
     .withHxPushUrl(true);
 ```
 
 Notes:
-1. `show:window:top` ensures the viewport returns to the top on each navigation.
+1. `withHxScrollTargetTop()` tags the request so the swapped HTMX target fragment scrolls to top.
 2. Keep in-document anchors (`#section-id`) as normal links for same-page jumps.
-3. SimplyPages also resets scroll for HTMX requests that push browser history (`hx-push-url`), so this pattern works even when navigation is initiated from reusable side-nav components.
+3. If no scroll tag is present, SimplyPages keeps push-url window scroll fallback behavior for history-style navigation.
 
 ## Endpoint Contracts
 
