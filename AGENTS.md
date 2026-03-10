@@ -117,6 +117,15 @@ cd simplypages && ../mvnw test
 cd demo && ../mvnw spring-boot:run
 ```
 
+## Live Deploy and Test
+- Agents are authorized to deploy and validate changes against the live host for debugging and verification.
+- Use this command for live testing deployments:
+```bash
+./deploy.sh host 192.168.1.113 host
+```
+- After a feature improvement or bug fix is finalized, always deploy to the live host and verify behavior.
+- After deployment, verify behavior on the live site before finalizing fixes.
+
 ## Documentation TOC (Terse)
 - Full index: `docs/INDEX.md`
 - Fundamentals: `docs/fundamentals/01-web-and-htmx-primer.md`, `docs/fundamentals/02-simplypages-mental-model.md`, `docs/fundamentals/03-css-fundamentals.md`

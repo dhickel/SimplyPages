@@ -44,7 +44,7 @@ class PageTest {
     }
 
     @Test
-    @DisplayName("Page sticky sidebar should render mobile collapse structure")
+    @DisplayName("Page sticky sidebar should render mobile collapse structure with default-open details")
     void testStickySidebarMobileCollapseMarkup() {
         Page page = Page.builder()
             .withStickySidebar(new Div().withInnerText("Sidebar"), 8, 4)
@@ -55,7 +55,7 @@ class PageTest {
 
         HtmlAssert.assertThat(html)
             .hasElement(".sticky-sidebar-mobile-collapse")
-            .doesNotHaveElement(".sticky-sidebar-mobile-collapse[open]")
+            .hasElement(".sticky-sidebar-mobile-collapse[open]")
             .hasElement(".sticky-sidebar-mobile-summary")
             .hasElement(".sticky-sidebar-content");
     }
