@@ -130,17 +130,20 @@ public class DefaultForumCommentComponent implements ForumCommentComponent {
         identity.withChild(avatarSlot);
 
         HtmlTag main = new HtmlTag("div").withAttribute("class", "forum-comment-main");
-        main.withChild(new HtmlTag("span")
+        HtmlTag meta = new HtmlTag("div").withAttribute("class", "forum-comment-meta");
+        meta.withChild(new HtmlTag("span")
             .withAttribute("class", "forum-comment-timestamp")
             .withInnerText(timestamp == null ? "" : timestamp));
 
         if (!actions.isEmpty()) {
-            HtmlTag actionContainer = new HtmlTag("div").withAttribute("class", "forum-comment-annotations");
+            HtmlTag actionContainer = new HtmlTag("div")
+                .withAttribute("class", "forum-comment-actions forum-comment-annotations");
             for (Component action : actions) {
                 actionContainer.withChild(action);
             }
-            main.withChild(actionContainer);
+            meta.withChild(actionContainer);
         }
+        main.withChild(meta);
 
         if (body != null) {
             main.withChild(body);

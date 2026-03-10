@@ -7,6 +7,7 @@ Owns discussion/community components and helper rendering contracts.
 - `ForumCategoryRenderer`, `ForumTopicRenderer`, `ForumCommentRenderer`
 - Data contracts: `ForumCategoryData`, `ForumTopicData`, `ForumCommentData`
 - Final component contracts: `ForumCategoryComponent`, `ForumTopicComponent`, `ForumCommentComponent`
+- Topic title-link metadata contract: `ForumTopicTitleLink`
 - Default final components (`DefaultForumCategoryComponent`, `DefaultForumTopicComponent`, `DefaultForumCommentComponent`)
 - Forum tag parsing and hydration contracts (`ForumTagParser`, resolver registry/interfaces)
 - Forum action contracts (`ForumActionProvider`, `DefaultForumActionProvider`, action context/type records)
@@ -21,6 +22,8 @@ Owns discussion/community components and helper rendering contracts.
 - Comment identity layout reserves a 150x150 avatar slot; missing avatars must remain blank without collapsing layout.
 - Pagination controls must enable/disable deterministically from page bounds and include scope/topic-scoped HTMX refresh links.
 - Topic scope filtering remains application-owned by default and becomes renderer-enforced only when a scope extractor is configured.
+- Topic body text can be transformed per-render via `withBodyTextResolver(...)`; this hook runs before tag parsing.
+- Topic title links are optional metadata; components that do not support links must remain compatible.
 - Renderer pipeline state stays per-call; do not persist mutable parse/resolve intermediates on renderer instances.
 
 ## Do

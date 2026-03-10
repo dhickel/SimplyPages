@@ -7,6 +7,7 @@ import io.mindspice.simplypages.components.forum.tags.TagType;
 import io.mindspice.simplypages.components.forum.topics.ForumTopicComponent;
 import io.mindspice.simplypages.components.forum.topics.ForumTopicData;
 import io.mindspice.simplypages.components.forum.topics.ForumTopicRenderer;
+import io.mindspice.simplypages.components.forum.topics.ForumTopicTitleLink;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
@@ -113,7 +114,8 @@ class ForumTopicRendererTest {
         HtmlAssert.assertThat(html)
             .hasElement("div.forum-topic[data-topic-id=topic-1] .resolved-custom")
             .hasElement("div.forum-topic[data-topic-id=topic-1] span.forum-tag-literal")
-            .hasElement("div.forum-topic[data-topic-id=topic-1] div.forum-topic-annotations > button.custom-action[data-item-id=topic-1]")
+            .hasElement("div.forum-topic[data-topic-id=topic-1] .forum-topic-header .forum-topic-actions > button.custom-action[data-item-id=topic-1]")
+            .doesNotHaveElement("div.forum-topic[data-topic-id=topic-1] .forum-topic-title-link")
             .hasElement("div.forum-topic[data-topic-id=topic-2] div.forum-topic-footer > span.forum-topic-likes")
             .hasElement("div.forum-topic[data-topic-id=topic-2] div.forum-topic-body-content blockquote.forum-tag-quote")
             .attributeEquals("button.forum-topics-page-next", "hx-target", "closest .forum-topics-view");
@@ -276,5 +278,47 @@ class ForumTopicRendererTest {
             .doesNotHaveElement("div.forum-topic[data-topic-id=t1]")
             .doesNotHaveElement("div.forum-topic[data-topic-id=t2]")
             .hasElement("div.forum-topic[data-topic-id=t3]");
+    }
+
+    @Test
+    @DisplayName("ForumTopicRenderer should use body text resolver when provided")
+    void bodyTextResolverOverridesSourceBody() {
+        ForumTopicRenderer<Topic, String> renderer = ForumTopicRenderer.<Topic, String>builder()
+            .withBodyTextResolver((topic, context) -> "Preview for " + topic.id())
+            .build();
+
+        String html = renderer.render(List.of(
+            new Topic("topic-9", "Resolver", "Original body text", "a", "t", null, null)
+        ), "ctx").render();
+
+        HtmlAssert.assertThat(html)
+            .hasElement("div.forum-topic[data-topic-id=topic-9] .forum-topic-body-content");
+        org.junit.jupiter.api.Assertions.assertTrue(html.contains("Preview for topic-9"));
+        org.junit.jupiter.api.Assertions.assertFalse(html.contains("Original body text"));
+    }
+
+    @Test
+    @DisplayName("ForumTopicRenderer should apply topic title link metadata from resolver")
+    void titleLinkResolverRendersLinkedTitle() {
+        ForumTopicRenderer<Topic, String> renderer = ForumTopicRenderer.<Topic, String>builder()
+            .withTitleLinkResolver((topic, context) -> ForumTopicTitleLink.htmx(
+                "/forum?topic=" + topic.id(),
+                "/forum/topics/" + topic.id() + "/comments",
+                "#forum-main",
+                "outerHTML",
+                "/forum?view=comments&topic=" + topic.id()
+            ))
+            .build();
+
+        String html = renderer.render(List.of(
+            new Topic("topic-10", "Linked Title", "Body", "a", "t", null, null)
+        ), "ctx").render();
+
+        HtmlAssert.assertThat(html)
+            .attributeEquals("div.forum-topic[data-topic-id=topic-10] .forum-topic-title-link", "href", "/forum?topic=topic-10")
+            .attributeEquals("div.forum-topic[data-topic-id=topic-10] .forum-topic-title-link", "hx-get", "/forum/topics/topic-10/comments")
+            .attributeEquals("div.forum-topic[data-topic-id=topic-10] .forum-topic-title-link", "hx-target", "#forum-main")
+            .attributeEquals("div.forum-topic[data-topic-id=topic-10] .forum-topic-title-link", "hx-swap", "outerHTML")
+            .attributeEquals("div.forum-topic[data-topic-id=topic-10] .forum-topic-title-link", "hx-push-url", "/forum?view=comments&topic=topic-10");
     }
 }

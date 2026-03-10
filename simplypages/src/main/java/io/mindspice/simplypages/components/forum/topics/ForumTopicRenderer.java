@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -78,6 +79,8 @@ public final class ForumTopicRenderer<TOPIC extends ForumTopicData, CTX> {
     private final String paginationHxTarget;
     private final String paginationHxSwap;
     private final Function<TOPIC, String> topicScopeExtractor;
+    private final BiFunction<TOPIC, CTX, String> bodyTextResolver;
+    private final BiFunction<TOPIC, CTX, ForumTopicTitleLink> titleLinkResolver;
 
     private ForumTopicRenderer(Builder<TOPIC, CTX> builder) {
         this.componentSupplier = builder.componentSupplier;
@@ -88,6 +91,8 @@ public final class ForumTopicRenderer<TOPIC extends ForumTopicData, CTX> {
         this.paginationHxTarget = builder.paginationHxTarget;
         this.paginationHxSwap = builder.paginationHxSwap;
         this.topicScopeExtractor = builder.topicScopeExtractor;
+        this.bodyTextResolver = builder.bodyTextResolver;
+        this.titleLinkResolver = builder.titleLinkResolver;
     }
 
     public static <TOPIC extends ForumTopicData, CTX> Builder<TOPIC, CTX> builder() {
@@ -123,7 +128,7 @@ public final class ForumTopicRenderer<TOPIC extends ForumTopicData, CTX> {
 
         for (TOPIC topic : topicList) {
             requireId(topic.id(), "topic id");
-            List<ForumTagParser.Segment> segments = parseBody(topic.body());
+            List<ForumTagParser.Segment> segments = parseBody(bodyTextResolver.apply(topic, context));
             parsed.add(segments);
             collectTagRequests(requested, segments);
         }
@@ -151,6 +156,7 @@ public final class ForumTopicRenderer<TOPIC extends ForumTopicData, CTX> {
             root.withChild(rendered
                 .withTopicId(topicId)
                 .withTitle(safe(topic.title()))
+                .withTitleLink(titleLinkResolver.apply(topic, context))
                 .withAuthor(safe(topic.author()))
                 .withTimestamp(safe(topic.timestamp()))
                 .withBody(body)
@@ -326,6 +332,8 @@ public final class ForumTopicRenderer<TOPIC extends ForumTopicData, CTX> {
         private String paginationHxTarget = "closest .forum-topics-view";
         private String paginationHxSwap = "outerHTML";
         private Function<TOPIC, String> topicScopeExtractor;
+        private BiFunction<TOPIC, CTX, String> bodyTextResolver = (topic, context) -> topic.body();
+        private BiFunction<TOPIC, CTX, ForumTopicTitleLink> titleLinkResolver = (topic, context) -> null;
 
         public Builder<TOPIC, CTX> withTopicComponentSupplier(
                 Supplier<? extends ForumTopicComponent> componentSupplier
@@ -366,6 +374,18 @@ public final class ForumTopicRenderer<TOPIC extends ForumTopicData, CTX> {
 
         public Builder<TOPIC, CTX> withTopicScopeExtractor(Function<TOPIC, String> topicScopeExtractor) {
             this.topicScopeExtractor = Objects.requireNonNull(topicScopeExtractor, "topicScopeExtractor");
+            return this;
+        }
+
+        public Builder<TOPIC, CTX> withBodyTextResolver(BiFunction<TOPIC, CTX, String> bodyTextResolver) {
+            this.bodyTextResolver = Objects.requireNonNull(bodyTextResolver, "bodyTextResolver");
+            return this;
+        }
+
+        public Builder<TOPIC, CTX> withTitleLinkResolver(
+            BiFunction<TOPIC, CTX, ForumTopicTitleLink> titleLinkResolver
+        ) {
+            this.titleLinkResolver = Objects.requireNonNull(titleLinkResolver, "titleLinkResolver");
             return this;
         }
 

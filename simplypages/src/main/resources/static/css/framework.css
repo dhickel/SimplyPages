@@ -1076,6 +1076,12 @@ pre::-webkit-scrollbar-thumb:hover {
     font-size: 1rem;
 }
 
+.forum-demo-parent-topic {
+    display: grid;
+    gap: var(--sp-space-2);
+    margin-top: var(--sp-space-2);
+}
+
 .forum-category,
 .forum-topic,
 .forum-comment {
@@ -1123,15 +1129,33 @@ pre::-webkit-scrollbar-thumb:hover {
 
 .forum-topic-header {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: var(--sp-space-sm);
     color: #4b5563;
     font-size: 0.9rem;
 }
 
+.forum-topic-meta-left {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-space-2);
+    min-width: 0;
+}
+
 .forum-topic-title {
     margin-top: var(--sp-space-3);
+}
+
+.forum-topic-title-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.forum-topic-title-link:hover {
+    color: #2563eb;
+    text-decoration: underline;
 }
 
 .forum-topic-body-content {
@@ -1154,6 +1178,12 @@ pre::-webkit-scrollbar-thumb:hover {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.forum-topic-actions,
+.forum-comment-actions {
+    margin-left: auto;
+    justify-content: flex-end;
 }
 
 .forum-comment {
@@ -1186,6 +1216,13 @@ pre::-webkit-scrollbar-thumb:hover {
 
 .forum-comment-main {
     display: grid;
+    gap: var(--sp-space-2);
+    min-width: 0;
+}
+
+.forum-comment-meta {
+    display: flex;
+    align-items: center;
     gap: var(--sp-space-2);
     min-width: 0;
 }
@@ -1258,6 +1295,35 @@ pre::-webkit-scrollbar-thumb:hover {
 .forum-tag-link,
 .forum-tag-quote-link {
     color: #2563eb;
+}
+
+.forum-demo-quote {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 2px 0;
+    max-width: 100%;
+    padding: 6px 10px;
+    border-left: 3px solid #60a5fa;
+    border-radius: 8px;
+    background-color: #eff6ff;
+}
+
+.forum-demo-quote-meta {
+    color: #1e3a8a;
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+
+.forum-demo-quote-body {
+    color: #334155;
+    font-size: 0.82rem;
+}
+
+.forum-demo-quote-missing {
+    border-left-color: #94a3b8;
+    background-color: #f8fafc;
+    color: #475569;
 }
 
 .forum-tag-literal {

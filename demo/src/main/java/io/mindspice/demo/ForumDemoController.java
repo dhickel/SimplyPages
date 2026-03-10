@@ -15,7 +15,11 @@ import io.mindspice.simplypages.components.forum.actions.DefaultForumActionProvi
 import io.mindspice.simplypages.components.forum.actions.ForumActionProvider;
 import io.mindspice.simplypages.components.forum.categories.ForumCategoryRenderer;
 import io.mindspice.simplypages.components.forum.comments.ForumCommentRenderer;
+import io.mindspice.simplypages.components.forum.tags.ForumTagResolverRegistry;
+import io.mindspice.simplypages.components.forum.tags.ForumTagResolvers;
+import io.mindspice.simplypages.components.forum.tags.Tag;
 import io.mindspice.simplypages.components.forum.topics.ForumTopicRenderer;
+import io.mindspice.simplypages.components.forum.topics.ForumTopicTitleLink;
 import io.mindspice.simplypages.components.forms.Form;
 import io.mindspice.simplypages.components.forms.Select;
 import io.mindspice.simplypages.components.forms.TextArea;
@@ -36,12 +40,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Controller
 @RequestMapping("/forum")
@@ -54,6 +58,9 @@ public class ForumDemoController {
     private static final int DEFAULT_TOPICS_PER_PAGE = 8;
     private static final int DEFAULT_COMMENTS_PER_PAGE = 8;
     private static final int MAX_PAGE_SIZE = 24;
+    private static final ForumDisplaySettings FORUM_DISPLAY_SETTINGS = new ForumDisplaySettings(220);
+    private static final Pattern FORUM_TAG_TOKEN_PATTERN = Pattern.compile("\\[\\[[^\\]]+]]");
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
 
     private final ForumDemoService forumService;
 
@@ -709,31 +716,14 @@ public class ForumDemoController {
             .withEditEndpoint(ctx -> endpointWithState("/forum/topics/" + ctx.itemId() + "/edit", state.withTopic(ctx.itemId()).withStage(ForumStage.TOPICS)))
             .withDeleteEndpoint(ctx -> endpointWithState("/forum/topics/" + ctx.itemId() + "/delete", state.withTopic(ctx.itemId()).withStage(ForumStage.TOPICS)));
 
-        ForumActionProvider<ForumDemoService.TopicView, ForumViewer> topicActions = context -> {
-            List<Component> actions = new ArrayList<>();
-            String threadPath = "/forum/topics/" + context.itemId() + "/comments";
-            ForumState threadState = state
-                .withScope(context.source().categoryId())
-                .withTopic(context.itemId())
-                .withStage(ForumStage.COMMENTS)
-                .withCommentPage(1);
-
-            HtmlTag openThread = new HtmlTag("button")
-                .withAttribute("type", "button")
-                .withAttribute("class", "forum-action forum-action-open")
-                .withAttribute("hx-get", endpointWithState(threadPath, threadState))
-                .withAttribute("hx-target", "#forum-main")
-                .withAttribute("hx-swap", "outerHTML")
-                .withAttribute("hx-push-url", "/forum?" + threadState.toQueryString())
-                .withInnerText("Open Thread");
-            actions.add(openThread);
-            actions.addAll(defaults.provide(context));
-            return List.copyOf(actions);
-        };
+        ForumActionProvider<ForumDemoService.TopicView, ForumViewer> topicActions = defaults::provide;
 
         ForumTopicRenderer<ForumDemoService.TopicView, ForumViewer> topicRenderer = ForumTopicRenderer
             .<ForumDemoService.TopicView, ForumViewer>builder()
             .withActionProvider(topicActions)
+            .withBodyTextResolver((topic, context) -> buildTopicPreview(topic.body()))
+            .withTitleLinkResolver((topic, context) -> buildThreadTitleLink(state, topic))
+            .withResolverRegistry(buildDemoTagResolverRegistry())
             .withPaginationHxTarget("#forum-main")
             .withPaginationHxSwap("outerHTML")
             .withPaginationEndpointResolver((scopeId, page, size) -> endpointWithState(
@@ -811,6 +801,7 @@ public class ForumDemoController {
         section.withChild(new HtmlTag("p")
             .withAttribute("class", "forum-demo-panel-subtitle")
             .withInnerText("Author: " + topic.author() + " · " + topic.timestamp()));
+        section.withChild(buildParentTopicBody(state, viewer, topic));
 
         section.withChild(buildCommentSizeForm(state));
 
@@ -827,6 +818,7 @@ public class ForumDemoController {
         ForumCommentRenderer<ForumDemoService.CommentView, ForumViewer> commentRenderer = ForumCommentRenderer
             .<ForumDemoService.CommentView, ForumViewer>builder()
             .withActionProvider(commentActions)
+            .withResolverRegistry(buildDemoTagResolverRegistry())
             .withPaginationHxTarget("#forum-main")
             .withPaginationHxSwap("outerHTML")
             .withPaginationEndpointResolver((topicId, page, size) -> endpointWithState(
@@ -939,6 +931,123 @@ public class ForumDemoController {
             .withAttribute("class", "forum-action")
             .withInnerText("Apply"));
         return form;
+    }
+
+    private ForumTopicTitleLink buildThreadTitleLink(ForumState state, ForumDemoService.TopicView topic) {
+        ForumState threadState = state
+            .withScope(topic.categoryId())
+            .withTopic(topic.id())
+            .withStage(ForumStage.COMMENTS)
+            .withCommentPage(1);
+
+        String url = "/forum?" + threadState.toQueryString();
+        return ForumTopicTitleLink.htmx(
+            url,
+            endpointWithState("/forum/topics/" + topic.id() + "/comments", threadState),
+            "#forum-main",
+            "outerHTML",
+            url
+        );
+    }
+
+    private Component buildParentTopicBody(ForumState state, ForumViewer viewer, ForumDemoService.TopicView topic) {
+        DefaultForumActionProvider<ForumDemoService.TopicView, ForumViewer> topicActions = DefaultForumActionProvider
+            .<ForumDemoService.TopicView, ForumViewer>create()
+            .withHxTarget("#forum-main")
+            .withHxSwap("outerHTML")
+            .showEditWhen(ctx -> canModifyTopic(ctx.context(), ctx.source()))
+            .showDeleteWhen(ctx -> canModifyTopic(ctx.context(), ctx.source()))
+            .withQuoteEndpoint(ctx -> endpointWithState("/forum/topics/" + ctx.itemId() + "/quote", state.withTopic(ctx.itemId()).withStage(ForumStage.COMMENTS)))
+            .withEditEndpoint(ctx -> endpointWithState("/forum/topics/" + ctx.itemId() + "/edit", state.withTopic(ctx.itemId()).withStage(ForumStage.TOPICS)))
+            .withDeleteEndpoint(ctx -> endpointWithState("/forum/topics/" + ctx.itemId() + "/delete", state.withTopic(ctx.itemId()).withStage(ForumStage.TOPICS)));
+
+        ForumTopicRenderer<ForumDemoService.TopicView, ForumViewer> topicRenderer = ForumTopicRenderer
+            .<ForumDemoService.TopicView, ForumViewer>builder()
+            .withActionProvider(topicActions)
+            .withResolverRegistry(buildDemoTagResolverRegistry())
+            .build();
+
+        Div parent = new Div().withClass("forum-demo-parent-topic");
+        parent.withChild(new HtmlTag("h3")
+            .withAttribute("class", "forum-demo-panel-subtitle")
+            .withInnerText("Parent Post"));
+        parent.withChild(topicRenderer.render(List.of(topic), viewer));
+        return parent;
+    }
+
+    private String buildTopicPreview(String body) {
+        String raw = defaultString(body);
+        if (raw.isBlank()) {
+            return raw;
+        }
+
+        int maxChars = Math.max(32, FORUM_DISPLAY_SETTINGS.topicPreviewChars());
+        return truncateForumText(raw, maxChars);
+    }
+
+    private ForumTagResolverRegistry buildDemoTagResolverRegistry() {
+        return ForumTagResolverRegistry.create()
+            .register(ForumTagResolvers.of("quote", tags -> {
+                Map<Tag, Component> resolved = new LinkedHashMap<>();
+                for (Tag tag : tags) {
+                    resolved.put(tag, buildQuoteScaffold(tag.value()));
+                }
+                return resolved;
+            }))
+            .register(ForumTagResolvers.image())
+            .register(ForumTagResolvers.mention())
+            .register(ForumTagResolvers.link());
+    }
+
+    private Component buildQuoteScaffold(String quoteId) {
+        Optional<ForumDemoService.CommentView> comment = forumService.findComment(quoteId);
+        if (comment.isPresent()) {
+            HtmlTag quote = new HtmlTag("span")
+                .withAttribute("class", "forum-tag forum-tag-quote forum-demo-quote");
+            quote.withChild(new HtmlTag("span")
+                .withAttribute("class", "forum-demo-quote-meta")
+                .withInnerText("Quoted comment by " + comment.get().author() + " · " + comment.get().timestamp()));
+            quote.withChild(new HtmlTag("span")
+                .withAttribute("class", "forum-demo-quote-body")
+                .withInnerText(truncateForumText(comment.get().body(), 170)));
+            return quote;
+        }
+
+        Optional<ForumDemoService.TopicView> topic = forumService.findTopic(quoteId);
+        if (topic.isPresent()) {
+            HtmlTag quote = new HtmlTag("span")
+                .withAttribute("class", "forum-tag forum-tag-quote forum-demo-quote");
+            quote.withChild(new HtmlTag("span")
+                .withAttribute("class", "forum-demo-quote-meta")
+                .withInnerText("Quoted topic by " + topic.get().author() + " · " + topic.get().timestamp()));
+            quote.withChild(new HtmlTag("span")
+                .withAttribute("class", "forum-demo-quote-body")
+                .withInnerText(topic.get().title() + " — " + truncateForumText(topic.get().body(), 150)));
+            return quote;
+        }
+
+        return new HtmlTag("span")
+            .withAttribute("class", "forum-tag forum-tag-quote forum-demo-quote forum-demo-quote-missing")
+            .withInnerText("Quoted reference unavailable: " + quoteId);
+    }
+
+    private String truncateForumText(String body, int maxChars) {
+        String raw = defaultString(body);
+        if (raw.isBlank()) {
+            return raw;
+        }
+        String withoutTags = FORUM_TAG_TOKEN_PATTERN.matcher(raw).replaceAll(" ");
+        String normalized = WHITESPACE_PATTERN.matcher(withoutTags).replaceAll(" ").trim();
+        if (normalized.isBlank()) {
+            normalized = WHITESPACE_PATTERN.matcher(raw).replaceAll(" ").trim();
+        }
+        if (normalized.length() <= maxChars) {
+            return normalized;
+        }
+
+        int boundary = normalized.lastIndexOf(' ', maxChars);
+        int cut = boundary > (maxChars / 2) ? boundary : maxChars;
+        return normalized.substring(0, cut).trim() + "...";
     }
 
     private Component buildFlash(FlashType type, String message) {
@@ -1119,6 +1228,12 @@ public class ForumDemoController {
             .addLeftLink("Forum", "/forum")
             .addLeftLink("Docs", "/docs")
             .build();
+    }
+
+    private record ForumDisplaySettings(int topicPreviewChars) {
+        private ForumDisplaySettings {
+            topicPreviewChars = Math.max(32, topicPreviewChars);
+        }
     }
 
     private enum FlashType {

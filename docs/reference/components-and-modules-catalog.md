@@ -11,7 +11,7 @@ This is a practical catalog, not exhaustive class-level Javadoc.
 - Display: `Card`, `CardGrid`, `DataTable`, `Table`, `Alert`, `Badge`, `Tag`, `InfoBox`, `Spinner`
 - Media: `Image`, `Gallery`, `Video`, `Audio`
 - Navigation: `Link`, `NavBar`, `SideNav`, `Breadcrumb`
-- Forum: `ForumCategoryRenderer`, `ForumTopicRenderer`, `ForumCommentRenderer`, `ForumCategoryData`, `ForumTopicData`, `ForumCommentData`, `ForumTagParser`, `ForumTagResolverRegistry`
+- Forum: `ForumCategoryRenderer`, `ForumTopicRenderer`, `ForumCommentRenderer`, `ForumCategoryData`, `ForumTopicData`, `ForumCommentData`, `ForumTopicTitleLink`, `ForumTagParser`, `ForumTagResolverRegistry`
 
 ## Layout Components
 

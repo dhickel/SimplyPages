@@ -10,6 +10,9 @@ import java.util.List;
 public interface ForumTopicComponent extends Component {
     ForumTopicComponent withTopicId(String id);
     ForumTopicComponent withTitle(String title);
+    default ForumTopicComponent withTitleLink(ForumTopicTitleLink titleLink) {
+        return this;
+    }
     ForumTopicComponent withAuthor(String author);
     ForumTopicComponent withTimestamp(String timestamp);
     ForumTopicComponent withBody(Component body);

@@ -3,6 +3,7 @@ package io.mindspice.simplypages.components.forum.topics;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
+import io.mindspice.simplypages.components.navigation.Link;
 
 import java.util.List;
 
@@ -14,6 +15,7 @@ public class DefaultForumTopicComponent implements ForumTopicComponent {
     private String title;
     private String author;
     private String timestamp;
+    private ForumTopicTitleLink titleLink;
     private Component body;
     private List<Component> actions = List.of();
     private Integer likes;
@@ -38,6 +40,12 @@ public class DefaultForumTopicComponent implements ForumTopicComponent {
     @Override
     public ForumTopicComponent withAuthor(String author) {
         this.author = author;
+        return this;
+    }
+
+    @Override
+    public ForumTopicComponent withTitleLink(ForumTopicTitleLink titleLink) {
+        this.titleLink = titleLink;
         return this;
     }
 
@@ -77,21 +85,45 @@ public class DefaultForumTopicComponent implements ForumTopicComponent {
             .withAttribute("class", "forum-topic")
             .withAttribute("data-topic-id", id == null ? "" : id);
 
+        HtmlTag header = new HtmlTag("div")
+            .withAttribute("class", "forum-topic-header");
+        HtmlTag meta = new HtmlTag("div")
+            .withAttribute("class", "forum-topic-meta-left")
+            .withChild(new HtmlTag("span").withAttribute("class", "forum-topic-author").withInnerText(author == null ? "" : author))
+            .withChild(new HtmlTag("span").withAttribute("class", "forum-topic-timestamp").withInnerText(timestamp == null ? "" : timestamp));
+        header.withChild(meta);
+
         if (!actions.isEmpty()) {
-            HtmlTag actionContainer = new HtmlTag("div").withAttribute("class", "forum-topic-annotations");
+            HtmlTag actionContainer = new HtmlTag("div")
+                .withAttribute("class", "forum-topic-actions forum-topic-annotations");
             for (Component action : actions) {
                 actionContainer.withChild(action);
             }
-            topic.withChild(actionContainer);
+            header.withChild(actionContainer);
         }
 
-        HtmlTag header = new HtmlTag("div")
-            .withAttribute("class", "forum-topic-header")
-            .withChild(new HtmlTag("div").withAttribute("class", "forum-topic-author").withInnerText(author == null ? "" : author))
-            .withChild(new HtmlTag("div").withAttribute("class", "forum-topic-timestamp").withInnerText(timestamp == null ? "" : timestamp));
-
         topic.withChild(header);
-        topic.withChild(new HtmlTag("h3").withAttribute("class", "forum-topic-title").withInnerText(title == null ? "" : title));
+        String safeTitle = title == null ? "" : title;
+        HtmlTag titleNode = new HtmlTag("h3").withAttribute("class", "forum-topic-title");
+        if (titleLink != null) {
+            Link linkedTitle = Link.create(titleLink.href(), safeTitle).withClass("forum-topic-title-link");
+            if (titleLink.hxGet() != null) {
+                linkedTitle.withHxGet(titleLink.hxGet());
+            }
+            if (titleLink.hxTarget() != null) {
+                linkedTitle.withHxTarget(titleLink.hxTarget());
+            }
+            if (titleLink.hxSwap() != null) {
+                linkedTitle.withHxSwap(titleLink.hxSwap());
+            }
+            if (titleLink.hxPushUrl() != null) {
+                linkedTitle.withAttribute("hx-push-url", titleLink.hxPushUrl());
+            }
+            titleNode.withChild(linkedTitle);
+        } else {
+            titleNode.withInnerText(safeTitle);
+        }
+        topic.withChild(titleNode);
         if (body != null) {
             topic.withChild(body);
         }

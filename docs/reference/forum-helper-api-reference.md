@@ -88,6 +88,7 @@ Renderer-populated fluent methods:
 
 - `withTopicId(String)`
 - `withTitle(String)`
+- `withTitleLink(ForumTopicTitleLink)` (default no-op for custom components)
 - `withAuthor(String)`
 - `withTimestamp(String)`
 - `withBody(Component)`
@@ -118,6 +119,11 @@ Component suppliers:
 - `withCategoryComponentSupplier(Supplier<? extends ForumCategoryComponent>)`
 - `withTopicComponentSupplier(Supplier<? extends ForumTopicComponent>)`
 - `withCommentComponentSupplier(Supplier<? extends ForumCommentComponent>)`
+
+Topic content/title hooks:
+
+- `withBodyTextResolver(BiFunction<TOPIC, CTX, String>)`
+- `withTitleLinkResolver(BiFunction<TOPIC, CTX, ForumTopicTitleLink>)`
 
 Actions:
 
@@ -200,6 +206,7 @@ Notes:
 - If `withTopicScopeExtractor(...)` is configured, renderer filters to matching `scopeId` before page slicing.
 - `totalTopics` should represent all scoped topics (not only current page slice).
 - `topicsPerPage` is the hard render cap for one response. If `topicsPerPage=8`, the renderer outputs at most 8 topic items.
+- `topicsPerPage` controls topic-card count only; it does not control body preview length.
 
 Helpers:
 
@@ -212,6 +219,21 @@ Helpers:
 
 - `endpoint(String scopeId, int page, int topicsPerPage)`
 - default: `/forum/topics?scope={scopeId}&page={page}&size={topicsPerPage}`
+
+### `ForumTopicTitleLink`
+
+Fields:
+
+- `href` (required)
+- `hxGet` (optional)
+- `hxTarget` (optional)
+- `hxSwap` (optional)
+- `hxPushUrl` (optional)
+
+Factories:
+
+- `ForumTopicTitleLink.href(String href)`
+- `ForumTopicTitleLink.htmx(String href, String hxGet, String hxTarget, String hxSwap, String hxPushUrl)`
 
 ### `ForumCommentRenderer.CommentPagination`
 

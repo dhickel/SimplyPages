@@ -2,6 +2,7 @@ package io.mindspice.demo.integration;
 
 import io.mindspice.demo.DemoApplication;
 import io.mindspice.demo.forum.ForumDemoService;
+import io.mindspice.demo.forum.ForumViewer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +44,13 @@ class ForumDemoIntegrationTest {
     @Test
     @DisplayName("Forum should drill down from category topics into topic comments")
     void drillDownFlowRendersSingleStageAtATime() throws Exception {
-        ForumDemoService.TopicView topic = forumService.listTopicsForCategory("cat-feedback").getFirst();
+        String parentBody = "Drilldown parent body that must render in thread comments view.";
+        ForumDemoService.TopicView topic = forumService.createTopic(
+            "cat-feedback",
+            "Drilldown Parent Topic",
+            parentBody,
+            new ForumViewer("user-drill", "Drill User", false)
+        ).orElseThrow();
 
         mockMvc.perform(get("/forum/topics")
                 .header("HX-Request", "true")
@@ -55,6 +62,8 @@ class ForumDemoIntegrationTest {
                 .param("commentSize", "8"))
             .andExpect(status().isOk())
             .andExpect(content().string(containsString(">Topics<")))
+            .andExpect(content().string(containsString("forum-topic-title-link")))
+            .andExpect(content().string(not(containsString("Open Thread"))))
             .andExpect(content().string(not(containsString("Thread:"))));
 
         mockMvc.perform(get("/forum/topics/{topicId}/comments", topic.id())
@@ -68,7 +77,45 @@ class ForumDemoIntegrationTest {
                 .param("commentSize", "8"))
             .andExpect(status().isOk())
             .andExpect(content().string(containsString("Thread: " + topic.title())))
+            .andExpect(content().string(containsString(parentBody)))
             .andExpect(content().string(not(containsString(">Topics<"))));
+    }
+
+    @Test
+    @DisplayName("Topic page should render preview text while thread page renders full parent body")
+    void previewInTopicsAndFullBodyInThread() throws Exception {
+        String longBody = "Preview verification body " + "x".repeat(260) + " ENDMARKER";
+        ForumDemoService.TopicView topic = forumService.createTopic(
+            "cat-feedback",
+            "Preview Body Topic",
+            longBody,
+            new ForumViewer("user-preview", "Preview User", false)
+        ).orElseThrow();
+
+        mockMvc.perform(get("/forum/topics")
+                .header("HX-Request", "true")
+                .param("scope", "cat-feedback")
+                .param("view", "topics")
+                .param("topicPage", "1")
+                .param("topicSize", "8")
+                .param("commentPage", "1")
+                .param("commentSize", "8"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("Preview verification body")))
+            .andExpect(content().string(containsString("...")))
+            .andExpect(content().string(not(containsString("ENDMARKER"))));
+
+        mockMvc.perform(get("/forum/topics/{topicId}/comments", topic.id())
+                .header("HX-Request", "true")
+                .param("scope", "cat-feedback")
+                .param("topic", topic.id())
+                .param("view", "comments")
+                .param("topicPage", "1")
+                .param("topicSize", "8")
+                .param("commentPage", "1")
+                .param("commentSize", "8"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("ENDMARKER")));
     }
 
     @Test
@@ -103,7 +150,32 @@ class ForumDemoIntegrationTest {
                 .param("commentPage", "1")
                 .param("commentSize", "8"))
             .andExpect(status().isOk())
+            .andExpect(content().string(containsString("forum-comment-meta")))
+            .andExpect(content().string(containsString("forum-comment-actions")))
             .andExpect(content().string(containsString("[[quote::" + comment.id() + "]]")));
+    }
+
+    @Test
+    @DisplayName("Comments view should resolve quote tags into demo quote scaffolding")
+    void quoteTagsResolveToDemoScaffold() throws Exception {
+        ForumDemoService.CommentView quotedComment = forumService.listAllCommentsOldestFirst().stream()
+            .filter(comment -> comment.body().contains("[[quote::"))
+            .findFirst()
+            .orElseThrow();
+        ForumDemoService.TopicView topic = forumService.findTopic(quotedComment.topicId()).orElseThrow();
+
+        mockMvc.perform(get("/forum/topics/{topicId}/comments", topic.id())
+                .header("HX-Request", "true")
+                .param("scope", topic.categoryId())
+                .param("topic", topic.id())
+                .param("view", "comments")
+                .param("topicPage", "1")
+                .param("topicSize", "8")
+                .param("commentPage", "1")
+                .param("commentSize", "8"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("forum-demo-quote")))
+            .andExpect(content().string(containsString("Quoted comment by")));
     }
 
     @Test

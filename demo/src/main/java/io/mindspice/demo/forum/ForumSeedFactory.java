@@ -41,19 +41,59 @@ final class ForumSeedFactory {
         );
 
         List<String> topicBodies = List.of(
-            "We are validating forum pagination behavior across scoped categories and HTMX fragments.",
-            "Current test run includes inline tags like [[mention::qa-team]] and [[link::https://example.com/release-notes]].",
-            "This thread tracks implementation notes and expected rendering outcomes for contributors.",
-            "We are checking edit/delete ownership rules with temporary session identity.",
-            "Please share reproducible flows and annotate with [[mention::docs]] when documentation should be updated."
+            """
+            We are validating forum pagination behavior across scoped categories and HTMX fragments. The latest pass looked stable for category and topic transitions, but we still need to observe thread navigation after repeated swaps.
+
+            If you notice odd jumps in page position, include the category, topic page, and comment page in your report so we can replay the sequence quickly.
+            """,
+            """
+            Current test run includes inline tags like [[mention::qa-team]] and [[link::https://example.com/release-notes]]. Please use them when linking release context or tagging owners for follow-up.
+
+            Add one concrete reproduction path and one expected result so new contributors can verify behavior without guessing.
+            """,
+            """
+            This thread tracks implementation notes and expected rendering outcomes for contributors. Keep observations grouped by view stage to make regressions easier to isolate.
+
+            Categories should feel clean, topic previews should stay concise, and thread pages should prioritize readable parent context before replies.
+            """,
+            """
+            We are checking edit/delete ownership rules with temporary session identity. The goal is simple authorization behavior that is obvious in demos and easy to inspect in tests.
+
+            Please note whether the viewer is owner, moderator, or non-owner when posting results so permission outcomes are unambiguous.
+            """,
+            """
+            Please share reproducible flows and annotate with [[mention::docs]] when documentation should be updated. Short notes are fine, but keep enough detail for someone else to replay your path.
+
+            If a behavior feels surprising, call out whether it looks like a framework default or an application-layer decision.
+            """
         );
 
         List<String> commentBodies = List.of(
-            "Confirmed on latest branch. Pagination controls look stable.",
-            "I can reproduce this with the default dataset and forum actions.",
-            "The new renderer classes are much cleaner than the legacy output.",
-            "Can we verify this with one more category scope before merging?",
-            "I tested quote/edit/delete and the flow is working in HTMX fragments."
+            """
+            Confirmed on latest branch. Pagination controls look stable in both topics and comments view.
+
+            I clicked through several boundaries and did not see duplicate rows or empty pages.
+            """,
+            """
+            I can reproduce this with the default dataset and forum actions. The issue appears after switching category scope twice and then opening a thread from page two.
+
+            It is predictable enough that we can keep it in an integration test.
+            """,
+            """
+            The new renderer classes are much cleaner than the legacy output, especially around action wiring and tag handling.
+
+            We should still keep an eye on long markdown blocks so spacing remains readable in compact cards.
+            """,
+            """
+            Can we verify this with one more category scope before merging? I want to confirm the same behavior in guides and feedback, not just announcements.
+
+            If the result is consistent, we can document it as expected behavior.
+            """,
+            """
+            I tested quote/edit/delete and the flow is working in HTMX fragments. Session-based ownership checks are also applying correctly in my run.
+
+            Next pass could add a small smoke script that exercises all three actions in sequence.
+            """
         );
 
         List<TopicSeed> topics = new ArrayList<>();

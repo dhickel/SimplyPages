@@ -35,6 +35,7 @@ import io.mindspice.simplypages.components.forum.tags.ForumTagResolvers;
 import io.mindspice.simplypages.components.forum.topics.DefaultForumTopicComponent;
 import io.mindspice.simplypages.components.forum.topics.ForumTopicData;
 import io.mindspice.simplypages.components.forum.topics.ForumTopicRenderer;
+import io.mindspice.simplypages.components.forum.topics.ForumTopicTitleLink;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 
@@ -59,6 +60,14 @@ DefaultForumActionProvider<TopicDto, Viewer> topicActions = DefaultForumActionPr
 ForumTopicRenderer<TopicDto, Viewer> topicRenderer = ForumTopicRenderer.<TopicDto, Viewer>builder()
     .withResolverRegistry(tagRegistry)
     .withActionProvider(topicActions)
+    .withBodyTextResolver((topic, viewerCtx) -> topic.body()) // replace with preview text when needed
+    .withTitleLinkResolver((topic, viewerCtx) -> ForumTopicTitleLink.htmx(
+        "/forum?view=comments&topic=" + topic.id(),
+        "/forum/topics/" + topic.id() + "/comments",
+        "#forum-main",
+        "outerHTML",
+        "/forum?view=comments&topic=" + topic.id()
+    ))
     .withTopicComponentSupplier(DefaultForumTopicComponent::create)
     .build();
 
@@ -133,6 +142,7 @@ How many posts/comments render per response:
 - `commentsPerPage` is the strict maximum number of comment cards rendered by `ForumCommentRenderer` for one request.
 - If totals are larger than page size, the remainder is available through pagination controls.
 - If requested page is out of range, renderers clamp to the last valid page.
+- Preview/body length is separate from pagination size. Use `withBodyTextResolver(...)` when topic list pages should render snippets instead of full body text.
 
 Optional topic scope filtering:
 
