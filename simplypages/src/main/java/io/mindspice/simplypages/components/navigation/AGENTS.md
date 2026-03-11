@@ -10,6 +10,7 @@ Owns navigation primitives and reusable nav structures.
 - Navigation components remain semantic and link-safe.
 - Active/selected state APIs produce stable class and attribute output.
 - Side navigation structure remains builder-friendly.
+- `NavBar` supports primary item and utility item regions without breaking legacy item rendering.
 
 ## Do
 - Keep navigation APIs concise and predictable.

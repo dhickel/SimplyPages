@@ -30,9 +30,44 @@ class FrameworkAssetCompatibilityTest {
         assertTrue(css.contains(".top-banner-text"));
         assertTrue(css.contains(".top-banner-title"));
         assertTrue(css.contains(".top-banner-subtitle"));
+        assertTrue(css.contains(".banner-horizontal .banner-content:not(:has(.banner-image)):not(:has(.top-banner-image))"));
+        assertTrue(css.contains(".banner-horizontal .banner-content > .banner-text:only-child"));
+        assertTrue(css.contains(".banner-horizontal .banner-content,\n    .banner-horizontal .top-banner-content {\n        flex-direction: row;"));
+        assertTrue(css.contains(".home-landing-nav-card"));
         assertTrue(css.contains(".mobile-sidebar-toggle"));
         assertTrue(css.contains(".sticky-sidebar-mobile-collapse"));
         assertTrue(css.contains(".sticky-sidebar-mobile-summary"));
+    }
+
+    @Test
+    @DisplayName("framework.css should expose semantic theme tokens and keep hero styling contract")
+    void testFrameworkCssThemeTokensAndHeroContract() throws IOException {
+        String css = readClasspathResource("static/css/framework.css");
+
+        assertTrue(css.contains("--sp-theme-bg-canvas"));
+        assertTrue(css.contains("--sp-theme-accent"));
+        assertTrue(css.contains("--sp-gradient-surface-panel"));
+        assertTrue(css.contains("--sp-gradient-shell-bg"));
+        assertTrue(css.contains("--sp-gradient-nav-shell"));
+        assertTrue(css.contains("--sp-gradient-nav-shell-muted"));
+        assertTrue(css.contains("--sp-gradient-banner"));
+        assertTrue(css.contains("--sp-top-nav-bg"));
+        assertTrue(css.contains("--sp-gradient-hero"));
+        assertTrue(css.contains(".card {"));
+        assertTrue(css.contains("background: var(--sp-gradient-surface-panel);"));
+        assertTrue(css.contains(".banner,\n.top-banner {"));
+        assertTrue(css.contains("background: var(--sp-gradient-banner);"));
+        assertTrue(css.contains(".header-top-nav-wrap"));
+        assertTrue(css.contains(".top-nav"));
+        assertTrue(css.contains(".account-bar a {"));
+        assertTrue(css.contains("background-color: var(--sp-top-nav-item-hover-bg);"));
+        assertTrue(css.contains(".sidenav-item {"));
+        assertTrue(css.contains("background: transparent;"));
+
+        assertTrue(css.contains(".hero-module {"));
+        assertTrue(css.contains("background: var(--sp-gradient-hero);"));
+        assertTrue(css.contains(".hero-module .btn-primary:hover {"));
+        assertTrue(css.contains("background-color: var(--sp-hero-button-primary-hover-bg);"));
     }
 
     @Test

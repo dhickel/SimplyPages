@@ -17,7 +17,10 @@ import java.util.List;
  *
  * <p>Mutability and thread-safety: mutable and not thread-safe. Use one builder per composition
  * flow and avoid concurrent mutation.</p>
+ *
+ * @deprecated Prefer {@link TopNavBuilder} for new top navigation composition.
  */
+@Deprecated
 public class AccountBarBuilder {
 
     private final List<Component> leftItems = new ArrayList<>();
@@ -29,7 +32,10 @@ public class AccountBarBuilder {
 
     /**
      * Creates a new builder.
+     *
+     * @deprecated Prefer {@link TopNavBuilder#create()}.
      */
+    @Deprecated
     public static AccountBarBuilder create() {
         return new AccountBarBuilder();
     }

@@ -13,6 +13,7 @@ import org.owasp.encoder.Encode;
 public class NavBar extends HtmlTag {
 
     private final HtmlTag itemsContainer;
+    private HtmlTag utilityContainer;
     private HtmlTag brandDiv;
 
     public NavBar() {
@@ -57,8 +58,31 @@ public class NavBar extends HtmlTag {
         return this;
     }
 
+    public NavBar addItem(Component component) {
+        itemsContainer.withChild(component);
+        return this;
+    }
+
     public NavBar addItem(NavItem navItem) {
         itemsContainer.withChild(navItem);
+        return this;
+    }
+
+    public NavBar addUtilityItem(Component component) {
+        ensureUtilityContainer().withChild(component);
+        return this;
+    }
+
+    public NavBar addUtilityLink(String text, String href) {
+        return addUtilityLink(text, href, false);
+    }
+
+    public NavBar addUtilityLink(String text, String href, boolean active) {
+        HtmlTag link = new HtmlTag("a")
+            .withAttribute("href", href == null ? "" : href)
+            .withAttribute("class", active ? "navbar-item navbar-utility-item active" : "navbar-item navbar-utility-item")
+            .withInnerText(text == null ? "" : text);
+        ensureUtilityContainer().withChild(link);
         return this;
     }
 
@@ -76,6 +100,14 @@ public class NavBar extends HtmlTag {
     public NavBar withClass(String className) {
         super.addClass(className);
         return this;
+    }
+
+    private HtmlTag ensureUtilityContainer() {
+        if (utilityContainer == null) {
+            utilityContainer = new HtmlTag("div").withAttribute("class", "navbar-utility");
+            this.withChild(utilityContainer);
+        }
+        return utilityContainer;
     }
 
     // Removed getChildrenStream override

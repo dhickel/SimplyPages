@@ -32,7 +32,7 @@ Head assets are added in this order:
 
 Body behavior:
 
-- top banner and account bar (if configured)
+- top banner and top nav (if configured; `withAccountBar(...)` remains compatibility alias)
 - mobile sidebar toggle (when sidebar is configured)
 - shell layout container and content target
 - optional inline sidebar script (when collapsible sidebar is enabled)
