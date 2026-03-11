@@ -52,12 +52,15 @@ class FrameworkAssetCompatibilityTest {
         assertTrue(css.contains("--sp-gradient-nav-shell-muted"));
         assertTrue(css.contains("--sp-gradient-banner"));
         assertTrue(css.contains("--sp-top-nav-bg"));
+        assertTrue(css.contains("--sp-top-nav-max-span"));
         assertTrue(css.contains("--sp-gradient-hero"));
         assertTrue(css.contains(".card {"));
         assertTrue(css.contains("background: var(--sp-gradient-surface-panel);"));
         assertTrue(css.contains(".banner,\n.top-banner {"));
         assertTrue(css.contains("background: var(--sp-gradient-banner);"));
         assertTrue(css.contains(".header-top-nav-wrap"));
+        assertTrue(css.contains("width: fit-content;"));
+        assertTrue(css.contains("min-width: min(var(--sp-top-nav-width), var(--sp-top-nav-max-span));"));
         assertTrue(css.contains(".top-nav"));
         assertTrue(css.contains(".account-bar a {"));
         assertTrue(css.contains("background-color: var(--sp-top-nav-item-hover-bg);"));
@@ -66,6 +69,7 @@ class FrameworkAssetCompatibilityTest {
 
         assertTrue(css.contains(".hero-module {"));
         assertTrue(css.contains("background: var(--sp-gradient-hero);"));
+        assertTrue(css.contains("border-radius: var(--sp-radius-hero);"));
         assertTrue(css.contains(".hero-module .btn-primary:hover {"));
         assertTrue(css.contains("background-color: var(--sp-hero-button-primary-hover-bg);"));
     }

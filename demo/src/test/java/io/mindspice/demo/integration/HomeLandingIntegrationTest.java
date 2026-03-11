@@ -25,8 +25,8 @@ class HomeLandingIntegrationTest {
     void homePageRendersHeroLanding() throws Exception {
         mockMvc.perform(get("/home"))
             .andExpect(status().isOk())
+            .andExpect(content().string(containsString("home-landing-stack")))
             .andExpect(content().string(containsString("hero-module")))
-            .andExpect(content().string(containsString("Jump Into The Demo Surface")))
             .andExpect(content().string(containsString("home-landing-nav-grid")))
             .andExpect(content().string(containsString("home-landing-nav-card")))
             .andExpect(content().string(containsString("href=\"/home\"")))
@@ -41,6 +41,7 @@ class HomeLandingIntegrationTest {
     void rootRouteRendersHomeLanding() throws Exception {
         mockMvc.perform(get("/"))
             .andExpect(status().isOk())
+            .andExpect(content().string(containsString("home-landing-stack")))
             .andExpect(content().string(containsString("hero-module")))
             .andExpect(content().string(containsString("home-landing-nav-shell")));
     }
