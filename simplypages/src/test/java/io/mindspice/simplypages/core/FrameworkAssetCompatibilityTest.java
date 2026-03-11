@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FrameworkAssetCompatibilityTest {
@@ -66,6 +67,11 @@ class FrameworkAssetCompatibilityTest {
         assertTrue(css.contains("background-color: var(--sp-top-nav-item-hover-bg);"));
         assertTrue(css.contains(".sidenav-item {"));
         assertTrue(css.contains("background: transparent;"));
+        assertTrue(css.contains(".module {\n    margin-bottom: 12px;\n}"));
+        assertFalse(css.contains(".module {\n    margin-bottom: 12px;\n    padding:"));
+        assertTrue(css.contains(".module > .module {"));
+        assertTrue(css.contains(".row {\n    display: flex;"));
+        assertTrue(css.contains(".col-6 { flex: 0 0 50%; max-width: 50%; }"));
 
         assertTrue(css.contains(".hero-module {"));
         assertTrue(css.contains("background: var(--sp-gradient-hero);"));
