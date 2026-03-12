@@ -206,6 +206,7 @@ public class DemoController {
                 .addLink("Display & Data", "/demos/display-data")
                 .addLink("Modules", "/demos/modules")
                 .addLink("HTMX & Editing", "/demos/htmx-editing")
+                .addLink("Chat", "/chat")
                 .build())
             .withContent(new RawHtml(page.render()))
             .build();
@@ -218,6 +219,8 @@ public class DemoController {
             .addPrimaryLink("Demos", "/demos")
             .addPrimaryLink("Javadocs", "/javadocs-view")
             .addPrimaryLink("Forum", "/forum")
+            .addPrimaryLink("Chat", "/chat")
+            .addPrimaryLink("Blog", "/blog")
             .addPrimaryLink("Docs", "/docs")
             .build();
     }

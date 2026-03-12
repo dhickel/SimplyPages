@@ -11,6 +11,8 @@ import io.mindspice.simplypages.components.forum.tags.TagType;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -321,7 +323,14 @@ public final class ForumTopicRenderer<TOPIC extends ForumTopicData, CTX> {
     }
 
     private static String defaultPaginationEndpoint(String scopeId, int page, int topicsPerPage) {
-        return "/forum/topics?scope=" + scopeId + "&page=" + page + "&size=" + topicsPerPage;
+        return "/forum/topics?scope=" + encodeQueryValue(scopeId) + "&page=" + page + "&size=" + topicsPerPage;
+    }
+
+    private static String encodeQueryValue(String value) {
+        if (value == null) {
+            return "";
+        }
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
     public static final class Builder<TOPIC extends ForumTopicData, CTX> {

@@ -38,6 +38,7 @@ class ForumDemoIntegrationTest {
             .andExpect(content().string(containsString("Viewer Session")))
             .andExpect(content().string(containsString("Categories")))
             .andExpect(content().string(not(containsString(">Topics<"))))
+            .andExpect(content().string(containsString("href=\"/blog\"")))
             .andExpect(content().string(containsString("Forum")));
     }
 

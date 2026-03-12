@@ -1,4 +1,4 @@
-[Previous](forum-helper-api-reference.md) | [Index](../INDEX.md)
+[Previous](content-helper-api-reference.md) | [Index](../INDEX.md)
 
 # Editing API Reference
 

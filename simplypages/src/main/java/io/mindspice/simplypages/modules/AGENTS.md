@@ -5,6 +5,7 @@ Owns high-level composed modules built from components/layout primitives.
 
 ## Owns
 - Content/data/form/forum/media modules
+- Chat module (`ChatModule`) for embeddable transcript/composer shells
 - Dynamic modules and editable wrappers (`EditableModule`)
 - Opinionated feature modules (hero, stats, timeline, tabs, accordion, quote, callout, comparison)
 

@@ -1251,6 +1251,8 @@ public class ForumDemoController {
             .addPrimaryLink("Demos", "/demos")
             .addPrimaryLink("Javadocs", "/javadocs-view")
             .addPrimaryLink("Forum", "/forum")
+            .addPrimaryLink("Chat", "/chat")
+            .addPrimaryLink("Blog", "/blog")
             .addPrimaryLink("Docs", "/docs")
             .build();
     }

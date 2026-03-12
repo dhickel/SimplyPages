@@ -3,6 +3,8 @@ package io.mindspice.simplypages.components.forum.actions;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -163,7 +165,7 @@ public class DefaultForumActionProvider<SOURCE, CTX> implements ForumActionProvi
 
     private static <SOURCE, CTX> String defaultEndpoint(ForumActionContext<SOURCE, CTX> context, String action) {
         String kind = context.itemType() == ForumActionType.TOPIC ? "topics" : "comments";
-        return "/forum/" + kind + "/" + context.itemId() + "/" + action;
+        return "/forum/" + kind + "/" + encodePathSegment(context.itemId()) + "/" + action;
     }
 
     private static String normalizeAttributeValue(String value) {
@@ -172,5 +174,13 @@ public class DefaultForumActionProvider<SOURCE, CTX> implements ForumActionProvi
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private static String encodePathSegment(String value) {
+        if (value == null) {
+            return "";
+        }
+        // URLEncoder is form-oriented; convert '+' back to '%20' for path segment usage.
+        return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
     }
 }

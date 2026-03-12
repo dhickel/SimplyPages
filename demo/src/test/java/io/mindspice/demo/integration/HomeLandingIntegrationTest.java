@@ -33,6 +33,8 @@ class HomeLandingIntegrationTest {
             .andExpect(content().string(containsString("href=\"/demos\"")))
             .andExpect(content().string(containsString("href=\"/javadocs-view\"")))
             .andExpect(content().string(containsString("href=\"/forum\"")))
+            .andExpect(content().string(containsString("href=\"/chat\"")))
+            .andExpect(content().string(containsString("href=\"/blog\"")))
             .andExpect(content().string(containsString("href=\"/docs\"")));
     }
 

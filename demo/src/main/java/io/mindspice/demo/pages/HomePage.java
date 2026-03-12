@@ -28,6 +28,8 @@ public class HomePage implements DemoPage {
             .withChild(navCard("Examples", "Demos", "Component and module demos organized by surface area.", "/demos"))
             .withChild(navCard("API", "Javadocs", "Generated API docs for the framework module.", "/javadocs-view"))
             .withChild(navCard("Community", "Forum", "Forum helper rendering and interaction demo flow.", "/forum"))
+            .withChild(navCard("Realtime", "Chat", "Chat module smoke test with SSE update hooks.", "/chat"))
+            .withChild(navCard("Stories", "Blog", "Static content helper posts and feature walkthroughs.", "/blog"))
             .withChild(navCard("Guides", "Docs", "Fundamentals, core guides, and reference docs.", "/docs"));
 
         Div navShell = new Div()

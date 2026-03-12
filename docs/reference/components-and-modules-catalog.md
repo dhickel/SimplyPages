@@ -12,6 +12,8 @@ This is a practical catalog, not exhaustive class-level Javadoc.
 - Media: `Image`, `Gallery`, `Video`, `Audio`
 - Navigation: `Link`, `NavBar`, `SideNav`, `Breadcrumb`
 - Forum: `ForumCategoryRenderer`, `ForumTopicRenderer`, `ForumCommentRenderer`, `ForumCategoryData`, `ForumTopicData`, `ForumCommentData`, `ForumTopicTitleLink`, `ForumTagParser`, `ForumTagResolverRegistry`
+- Chat: `ChatTranscriptRenderer`, `ChatMessageData`, `ChatMessageComponent`, `DefaultChatMessageComponent`, `ChatUiConfig`, `ChatTransportMode`
+- Static content helper: `StaticContentSiteBuilder`, `StaticContentSite`, `ContentSectionConfig`, `ContentRouteIndex`, `ContentListItemComponent`, `DefaultContentListItemComponent`
 
 ## Layout Components
 
@@ -30,6 +32,7 @@ This is a practical catalog, not exhaustive class-level Javadoc.
 - `GalleryModule`
 - `HeroModule`
 - `SimpleListModule`
+- `ChatModule`
 - `EditableModule` (wrapper/decorator)
 
 ## Selection Guidance

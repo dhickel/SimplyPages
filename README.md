@@ -226,6 +226,9 @@ Recommended sequence:
   - `docs/patterns/03-htmx-endpoint-and-swap-patterns.md`
   - `docs/patterns/04-editing-workflows-owner-user-approval.md`
   - `docs/patterns/05-forum-helper-implementation-and-customization.md`
+  - `docs/patterns/06-chat-helper-sse-and-ws-hooks.md`
+  - `docs/patterns/07-chat-conversation-scoping-and-authorization-patterns.md`
+  - `docs/patterns/08-static-content-helper-markdown-directory-pipeline.md`
 - Security:
   - `docs/security/01-security-boundaries-and-safe-rendering.md`
   - `docs/security/02-authwrapper-authorizationchecker-integration.md`
@@ -237,4 +240,6 @@ Recommended sequence:
   - `docs/reference/components-and-modules-catalog.md`
   - `docs/reference/builders-shell-nav-banner-accountbar.md`
   - `docs/reference/forum-helper-api-reference.md`
+  - `docs/reference/chat-helper-api-reference.md`
+  - `docs/reference/content-helper-api-reference.md`
   - `docs/reference/editing-api-reference.md`
