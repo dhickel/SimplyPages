@@ -244,6 +244,26 @@ class ForumTopicRendererTest {
     }
 
     @Test
+    @DisplayName("ForumTopicRenderer default pagination endpoint should URL-encode scope values")
+    void defaultPaginationEndpointEncodesScope() {
+        ForumTopicRenderer<Topic, String> renderer = ForumTopicRenderer.<Topic, String>builder()
+            .build();
+
+        String html = renderer.render(
+            List.of(new Topic("t1", "One", "body", "a", "t", null, null)),
+            "ctx",
+            new ForumTopicRenderer.TopicPagination("cat/a &b?#x", 1, 2, 3)
+        ).render();
+
+        HtmlAssert.assertThat(html)
+            .attributeEquals(
+                "button.forum-topics-page-next",
+                "hx-get",
+                "/forum/topics?scope=cat%2Fa+%26b%3F%23x&page=2&size=2"
+            );
+    }
+
+    @Test
     @DisplayName("ForumTopicRenderer should optionally filter topics by pagination scope before slicing")
     void topicScopeExtractorFiltersBeforePagination() {
         record ScopedTopic(String id, String scopeId, String title, String body) implements ForumTopicData {}

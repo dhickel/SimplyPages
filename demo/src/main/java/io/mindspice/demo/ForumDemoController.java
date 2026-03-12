@@ -3,9 +3,9 @@ package io.mindspice.demo;
 import io.mindspice.demo.forum.ForumDemoCategoryComponent;
 import io.mindspice.demo.forum.ForumDemoService;
 import io.mindspice.demo.forum.ForumViewer;
-import io.mindspice.simplypages.builders.AccountBarBuilder;
 import io.mindspice.simplypages.builders.BannerBuilder;
 import io.mindspice.simplypages.builders.ShellBuilder;
+import io.mindspice.simplypages.builders.TopNavBuilder;
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.components.RawHtml;
 import io.mindspice.simplypages.components.display.Alert;
@@ -93,7 +93,7 @@ public class ForumDemoController {
                 .withTitle("SimplyPages")
                 .withSubtitle("Forum helper end-to-end demo")
                 .build())
-            .withAccountBar(buildGlobalAccountBar())
+            .withTopNav(buildGlobalTopNav())
             .withContent(new RawHtml(main))
             .build();
     }
@@ -1244,13 +1244,16 @@ public class ForumDemoController {
         return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8);
     }
 
-    private Component buildGlobalAccountBar() {
-        return AccountBarBuilder.create()
-            .addLeftLink("Home", "/home")
-            .addLeftLink("Demos", "/demos")
-            .addLeftLink("Javadocs", "/javadocs-view")
-            .addLeftLink("Forum", "/forum")
-            .addLeftLink("Docs", "/docs")
+    private Component buildGlobalTopNav() {
+        return TopNavBuilder.create()
+            .withHtmxNavigation(false)
+            .addPrimaryLink("Home", "/home")
+            .addPrimaryLink("Demos", "/demos")
+            .addPrimaryLink("Javadocs", "/javadocs-view")
+            .addPrimaryLink("Forum", "/forum")
+            .addPrimaryLink("Chat", "/chat")
+            .addPrimaryLink("Blog", "/blog")
+            .addPrimaryLink("Docs", "/docs")
             .build();
     }
 

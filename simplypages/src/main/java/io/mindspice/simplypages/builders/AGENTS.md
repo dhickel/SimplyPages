@@ -11,6 +11,8 @@ Owns higher-level shell and navigation builder utilities.
 - Builders remain fluent and simple to compose.
 - `build()` output shape stays stable for consumers.
 - Default values keep generated output functional.
+- Shell header supports banner + embedded top-nav composition (`withTopNav(...)`).
+- `withAccountBar(...)` remains a compatibility alias path and should not regress existing integrations.
 - Shell sidebar markup keeps stable class hooks for responsive/mobile behavior.
 - Shell head script order remains deterministic: HTMX (optional), framework JS, then custom JS.
 - Shell content target/wrapper hooks (`withContentTargetId`, `withContentTargetClass`, `withContentWrapper`) stay consistent across `build()` and `buildBody()`.

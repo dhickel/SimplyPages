@@ -264,6 +264,26 @@ class ForumCommentRendererTest {
     }
 
     @Test
+    @DisplayName("ForumCommentRenderer default pagination endpoint should URL-encode topic ids")
+    void defaultPaginationEndpointEncodesTopicId() {
+        ForumCommentRenderer<Comment, String> renderer = ForumCommentRenderer.<Comment, String>builder()
+            .build();
+
+        String html = renderer.render(
+            List.of(new Comment("c1", "id/a ?#&b", null, 0, "body", "a", null, "t", null, null)),
+            "ctx",
+            new ForumCommentRenderer.CommentPagination("id/a ?#&b", 1, 2, 3)
+        ).render();
+
+        HtmlAssert.assertThat(html)
+            .attributeEquals(
+                "button.forum-comments-page-next",
+                "hx-get",
+                "/forum/topics/id%2Fa%20%3F%23%26b/comments?page=2&size=2"
+            );
+    }
+
+    @Test
     @DisplayName("ForumCommentRenderer should ignore null actions from providers")
     void nullActionsAreFiltered() {
         ForumCommentRenderer<Comment, String> renderer = ForumCommentRenderer.<Comment, String>builder()

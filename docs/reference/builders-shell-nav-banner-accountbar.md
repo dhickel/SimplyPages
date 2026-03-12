@@ -9,7 +9,8 @@
 Core options:
 
 - `withTopBanner(...)`
-- `withAccountBar(...)`
+- `withTopNav(...)`
+- `withAccountBar(...)` (deprecated alias for `withTopNav(...)`)
 - `withSideNav(...)`
 - `withSideNav(..., boolean collapsible)`
 - `withCollapsibleSideNav(boolean)`
@@ -66,6 +67,7 @@ Guidance:
 
 1. Keep labels and URLs as data, not hardcoded in controllers.
 2. Keep active-state logic deterministic.
+3. Prefer `TopNavBuilder` for header-level nav composition (primary links, utility links/dropdowns, account widgets).
 
 ## BannerBuilder
 
@@ -73,7 +75,7 @@ Use for app or area-level brand/title/banner composition.
 
 ## AccountBarBuilder
 
-Use for account context links and utility actions.
+Legacy compatibility builder. Prefer `TopNavBuilder` for new work.
 
 ## Minimal Shell Example
 

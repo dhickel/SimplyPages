@@ -82,7 +82,9 @@ Prefer CSS variables for app-wide theme values:
 
 ```css
 :root {
-  --brand-primary: #0f766e;
+  --sp-theme-accent: #0f766e;
+  --sp-theme-accent-hover: #115e59;
+  --sp-theme-surface-raised: #f8fafc;
   --page-gutter: 20px;
 }
 ```
@@ -91,7 +93,7 @@ Then consume the variables in your selectors:
 
 ```css
 .metric-card {
-  border-color: var(--brand-primary);
+  border-color: var(--sp-theme-accent);
   padding: var(--page-gutter);
 }
 ```

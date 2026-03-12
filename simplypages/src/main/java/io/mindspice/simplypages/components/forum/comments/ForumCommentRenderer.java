@@ -11,6 +11,8 @@ import io.mindspice.simplypages.components.forum.tags.TagType;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -307,7 +309,15 @@ public final class ForumCommentRenderer<COMMENT extends ForumCommentData, CTX> {
     }
 
     private static String defaultPaginationEndpoint(String topicId, int page, int commentsPerPage) {
-        return "/forum/topics/" + topicId + "/comments?page=" + page + "&size=" + commentsPerPage;
+        return "/forum/topics/" + encodePathSegment(topicId) + "/comments?page=" + page + "&size=" + commentsPerPage;
+    }
+
+    private static String encodePathSegment(String value) {
+        if (value == null) {
+            return "";
+        }
+        // URLEncoder is form-oriented; convert '+' back to '%20' for path segment usage.
+        return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
     public static final class Builder<COMMENT extends ForumCommentData, CTX> {

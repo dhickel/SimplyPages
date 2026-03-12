@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FrameworkAssetCompatibilityTest {
@@ -30,9 +31,53 @@ class FrameworkAssetCompatibilityTest {
         assertTrue(css.contains(".top-banner-text"));
         assertTrue(css.contains(".top-banner-title"));
         assertTrue(css.contains(".top-banner-subtitle"));
+        assertTrue(css.contains(".banner-horizontal .banner-content:not(:has(.banner-image)):not(:has(.top-banner-image))"));
+        assertTrue(css.contains(".banner-horizontal .banner-content > .banner-text:only-child"));
+        assertTrue(css.contains(".banner-horizontal .banner-content,\n    .banner-horizontal .top-banner-content {\n        flex-direction: row;"));
+        assertTrue(css.contains(".home-landing-nav-card"));
         assertTrue(css.contains(".mobile-sidebar-toggle"));
         assertTrue(css.contains(".sticky-sidebar-mobile-collapse"));
         assertTrue(css.contains(".sticky-sidebar-mobile-summary"));
+    }
+
+    @Test
+    @DisplayName("framework.css should expose semantic theme tokens and keep hero styling contract")
+    void testFrameworkCssThemeTokensAndHeroContract() throws IOException {
+        String css = readClasspathResource("static/css/framework.css");
+
+        assertTrue(css.contains("--sp-theme-bg-canvas"));
+        assertTrue(css.contains("--sp-theme-accent"));
+        assertTrue(css.contains("--sp-gradient-surface-panel"));
+        assertTrue(css.contains("--sp-gradient-shell-bg"));
+        assertTrue(css.contains("--sp-gradient-nav-shell"));
+        assertTrue(css.contains("--sp-gradient-nav-shell-muted"));
+        assertTrue(css.contains("--sp-gradient-banner"));
+        assertTrue(css.contains("--sp-top-nav-bg"));
+        assertTrue(css.contains("--sp-top-nav-max-span"));
+        assertTrue(css.contains("--sp-gradient-hero"));
+        assertTrue(css.contains(".card {"));
+        assertTrue(css.contains("background: var(--sp-gradient-surface-panel);"));
+        assertTrue(css.contains(".banner,\n.top-banner {"));
+        assertTrue(css.contains("background: var(--sp-gradient-banner);"));
+        assertTrue(css.contains(".header-top-nav-wrap"));
+        assertTrue(css.contains("width: fit-content;"));
+        assertTrue(css.contains("min-width: min(var(--sp-top-nav-width), var(--sp-top-nav-max-span));"));
+        assertTrue(css.contains(".top-nav"));
+        assertTrue(css.contains(".account-bar a {"));
+        assertTrue(css.contains("background-color: var(--sp-top-nav-item-hover-bg);"));
+        assertTrue(css.contains(".sidenav-item {"));
+        assertTrue(css.contains("background: transparent;"));
+        assertTrue(css.contains(".module {\n    margin-bottom: 12px;\n}"));
+        assertFalse(css.contains(".module {\n    margin-bottom: 12px;\n    padding:"));
+        assertTrue(css.contains(".module > .module {"));
+        assertTrue(css.contains(".row {\n    display: flex;"));
+        assertTrue(css.contains(".col-6 { flex: 0 0 50%; max-width: 50%; }"));
+
+        assertTrue(css.contains(".hero-module {"));
+        assertTrue(css.contains("background: var(--sp-gradient-hero);"));
+        assertTrue(css.contains("border-radius: var(--sp-radius-hero);"));
+        assertTrue(css.contains(".hero-module .btn-primary:hover {"));
+        assertTrue(css.contains("background-color: var(--sp-hero-button-primary-hover-bg);"));
     }
 
     @Test

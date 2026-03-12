@@ -33,7 +33,7 @@ class ShellBuilderTest {
                     .withTitle("Portal")
                     .build()
             )
-            .withAccountBar(AccountBarBuilder.create().addLeftLink("Home", "/").build())
+            .withTopNav(TopNavBuilder.create().addPrimaryLink("Home", "/").build())
             .withSideNav(sideNav, true)
             .withContentTarget("page-content")
             .withCustomCss("/css/custom.css")
@@ -49,9 +49,23 @@ class ShellBuilderTest {
         assertTrue(html.contains("sidebar-toggle"));
         assertTrue(html.contains("toggleSidebar"));
         assertTrue(html.contains("id=\"page-content\""));
+        assertTrue(html.contains("header-top-nav-wrap"));
+        assertTrue(html.contains("top-nav"));
         assertTrue(html.contains("hx-get=\"/home\""));
         assertTrue(html.contains("/css/custom.css"));
         assertTrue(html.contains("htmx.min.js"));
+    }
+
+    @Test
+    @DisplayName("ShellBuilder withAccountBar should map to embedded top nav region")
+    void testAccountBarCompatibilityAlias() {
+        String html = ShellBuilder.create()
+            .withTopBanner(BannerBuilder.create().withTitle("Portal").build())
+            .withAccountBar(AccountBarBuilder.create().addLeftLink("Home", "/").build())
+            .build();
+
+        assertTrue(html.contains("header-top-nav-wrap"));
+        assertTrue(html.contains("account-bar"));
     }
 
     @Test

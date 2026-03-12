@@ -35,18 +35,28 @@ If `withFrameworkCss(false)` is set, only custom stylesheets are included.
 
 ## Shared Framework Tokens
 
-`framework.css` exposes shared `:root` variables with `--sp-*` names. Start customization by overriding these in your app CSS:
+`framework.css` exposes shared `:root` variables with `--sp-*` names.
+
+Token model:
+
+- Preferred semantic tokens: `--sp-theme-*` (surfaces, text, borders, accents, status colors, gradients).
+- Component tokens: `--sp-banner-*`, `--sp-top-nav-*`, `--sp-home-*`, `--sp-hero-*` for focused shell/module retheming.
+- Compatibility tokens: `--sp-color-*` (retained so older overrides still work).
+
+Start customization by overriding semantic tokens in your app CSS:
 
 ```css
 :root {
-  --sp-color-primary: #0f766e;
-  --sp-color-primary-hover: #115e59;
+  --sp-theme-accent: #0f766e;
+  --sp-theme-accent-hover: #115e59;
+  --sp-theme-surface-raised: #f8fafc;
+  --sp-gradient-surface-panel: linear-gradient(180deg, #ffffff, #f3f7ff);
   --sp-space-md: 24px;
   --sp-radius-lg: 12px;
 }
 ```
 
-This keeps framework component selectors intact while changing theme globally.
+If you already use `--sp-color-*` overrides, they remain valid. New projects should prefer `--sp-theme-*` for clearer intent and broader coverage.
 
 ## Where You Put Your App CSS
 

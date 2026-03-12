@@ -34,6 +34,9 @@ This page is the table of contents for all framework documentation.
 - [HTMX Endpoint and Swap Patterns](patterns/03-htmx-endpoint-and-swap-patterns.md)
 - [Editing Workflows: Owner, User, Approval](patterns/04-editing-workflows-owner-user-approval.md)
 - [Forum Renderer Implementation and Customization](patterns/05-forum-helper-implementation-and-customization.md)
+- [Chat Helper with SSE and WebSocket Hooks](patterns/06-chat-helper-sse-and-ws-hooks.md)
+- [Chat Conversation Scoping and Authorization Patterns](patterns/07-chat-conversation-scoping-and-authorization-patterns.md)
+- [Static Content Helper Markdown Directory Pipeline](patterns/08-static-content-helper-markdown-directory-pipeline.md)
 
 ## Security
 
@@ -51,4 +54,6 @@ This page is the table of contents for all framework documentation.
 - [Components and Modules Catalog](reference/components-and-modules-catalog.md)
 - [Builders Reference: Shell, Navigation, Banner, Account Bar](reference/builders-shell-nav-banner-accountbar.md)
 - [Forum Renderer API Reference](reference/forum-helper-api-reference.md)
+- [Chat Helper API Reference](reference/chat-helper-api-reference.md)
+- [Static Content Helper API Reference](reference/content-helper-api-reference.md)
 - [Editing API Reference](reference/editing-api-reference.md)

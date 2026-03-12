@@ -31,11 +31,13 @@ class EditingOobIntegrationTest {
             .andExpect(content().string(containsString("Home")))
             .andExpect(content().string(containsString("Javadocs")))
             .andExpect(content().string(containsString("Forum")))
+            .andExpect(content().string(containsString("Chat")))
             .andExpect(content().string(containsString("Docs")))
             .andExpect(content().string(containsString("Basics &amp; Forms")))
             .andExpect(content().string(containsString("Display &amp; Data")))
             .andExpect(content().string(containsString("Modules")))
-            .andExpect(content().string(containsString("HTMX &amp; Editing")));
+            .andExpect(content().string(containsString("HTMX &amp; Editing")))
+            .andExpect(content().string(containsString(">Chat<")));
     }
 
     @Test

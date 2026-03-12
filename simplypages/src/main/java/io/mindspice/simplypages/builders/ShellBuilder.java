@@ -21,7 +21,7 @@ import java.util.function.Function;
 public class ShellBuilder {
 
     private Component topBanner;
-    private Component accountBar;
+    private Component topNav;
     private SideNav sideNav;
     private boolean collapsibleSideNav = false;
     private String contentTarget = "content-area";
@@ -53,11 +53,19 @@ public class ShellBuilder {
     }
 
     /**
-     * Set the account bar component (displayed under the top banner).
+     * Set the top navigation component rendered in the header region.
      */
-    public ShellBuilder withAccountBar(Component accountBar) {
-        this.accountBar = accountBar;
+    public ShellBuilder withTopNav(Component topNav) {
+        this.topNav = topNav;
         return this;
+    }
+
+    /**
+     * Legacy alias for top navigation configuration.
+     */
+    @Deprecated
+    public ShellBuilder withAccountBar(Component accountBar) {
+        return withTopNav(accountBar);
     }
 
     /**
@@ -285,13 +293,18 @@ public class ShellBuilder {
     private HtmlTag buildShellContent() {
         HtmlTag body = new HtmlTag("body");
 
-        if (topBanner != null) {
-            body.withChild(new HtmlTag("header")
-                .withAttribute("class", "main-header")
-                .withChild(topBanner));
-        }
-        if (accountBar != null) {
-            body.withChild(accountBar);
+        if (topBanner != null || topNav != null) {
+            HtmlTag header = new HtmlTag("header")
+                .withAttribute("class", getHeaderClass());
+            if (topBanner != null) {
+                header.withChild(topBanner);
+            }
+            if (topNav != null) {
+                header.withChild(new HtmlTag("div")
+                    .withAttribute("class", "header-top-nav-wrap")
+                    .withChild(topNav));
+            }
+            body.withChild(header);
         }
 
         if (sideNav != null) {
@@ -300,6 +313,17 @@ public class ShellBuilder {
 
         body.withChild(buildMainContainer(true));
         return body;
+    }
+
+    private String getHeaderClass() {
+        StringBuilder classes = new StringBuilder("main-header");
+        if (topBanner != null) {
+            classes.append(" has-top-banner");
+        }
+        if (topNav != null) {
+            classes.append(" has-top-nav");
+        }
+        return classes.toString();
     }
 
     private HtmlTag buildMainContainer(boolean includeAriaLabel) {

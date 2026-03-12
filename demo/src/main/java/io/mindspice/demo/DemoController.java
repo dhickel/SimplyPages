@@ -1,10 +1,10 @@
 package io.mindspice.demo;
 
 import io.mindspice.demo.pages.*;
-import io.mindspice.simplypages.builders.AccountBarBuilder;
 import io.mindspice.simplypages.builders.BannerBuilder;
 import io.mindspice.simplypages.builders.ShellBuilder;
 import io.mindspice.simplypages.builders.SideNavBuilder;
+import io.mindspice.simplypages.builders.TopNavBuilder;
 import io.mindspice.simplypages.components.RawHtml;
 import io.mindspice.simplypages.components.display.Alert;
 import io.mindspice.simplypages.core.Component;
@@ -180,7 +180,7 @@ public class DemoController {
                 .withTitle("SimplyPages")
                 .withSubtitle("Java-first server-side rendering framework")
                 .build())
-            .withAccountBar(buildGlobalAccountBar())
+            .withTopNav(buildGlobalTopNav())
             .withContent(new RawHtml(page.render()))
             .build();
     }
@@ -198,7 +198,7 @@ public class DemoController {
                 .withTitle("SimplyPages")
                 .withSubtitle("Consolidated demo surface")
                 .build())
-            .withAccountBar(buildGlobalAccountBar())
+            .withTopNav(buildGlobalTopNav())
             .withSideNav(SideNavBuilder.create()
                 .addSection("Demos")
                 .addLink("Overview", "/demos")
@@ -206,18 +206,22 @@ public class DemoController {
                 .addLink("Display & Data", "/demos/display-data")
                 .addLink("Modules", "/demos/modules")
                 .addLink("HTMX & Editing", "/demos/htmx-editing")
+                .addLink("Chat", "/chat")
                 .build())
             .withContent(new RawHtml(page.render()))
             .build();
     }
 
-    private Component buildGlobalAccountBar() {
-        return AccountBarBuilder.create()
-            .addLeftLink("Home", "/home")
-            .addLeftLink("Demos", "/demos")
-            .addLeftLink("Javadocs", "/javadocs-view")
-            .addLeftLink("Forum", "/forum")
-            .addLeftLink("Docs", "/docs")
+    private Component buildGlobalTopNav() {
+        return TopNavBuilder.create()
+            .withHtmxNavigation(false)
+            .addPrimaryLink("Home", "/home")
+            .addPrimaryLink("Demos", "/demos")
+            .addPrimaryLink("Javadocs", "/javadocs-view")
+            .addPrimaryLink("Forum", "/forum")
+            .addPrimaryLink("Chat", "/chat")
+            .addPrimaryLink("Blog", "/blog")
+            .addPrimaryLink("Docs", "/docs")
             .build();
     }
 }

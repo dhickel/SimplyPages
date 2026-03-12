@@ -35,6 +35,26 @@ class DefaultForumActionProviderTest {
     }
 
     @Test
+    @DisplayName("DefaultForumActionProvider should URL-encode dynamic item ids in default endpoints")
+    void defaultEndpointEncodesItemId() {
+        DefaultForumActionProvider<String, String> provider = DefaultForumActionProvider.<String, String>create()
+            .showEditWhen(ctx -> false)
+            .showDeleteWhen(ctx -> false);
+
+        List<Component> actions = provider.provide(new ForumActionContext<>(
+            ForumActionType.COMMENT,
+            "id/a ?#&b",
+            "topic-1",
+            "source",
+            "ctx"
+        ));
+
+        assertEquals(1, actions.size());
+        String html = actions.getFirst().render();
+        assertTrue(html.contains("hx-post=\"/forum/comments/id%2Fa%20%3F%23%26b/quote\""));
+    }
+
+    @Test
     @DisplayName("DefaultForumActionProvider should support edit and delete visibility")
     void editDeleteVisibility() {
         DefaultForumActionProvider<String, String> provider = DefaultForumActionProvider.<String, String>create()

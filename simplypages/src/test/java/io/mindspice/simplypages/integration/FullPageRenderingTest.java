@@ -1,9 +1,9 @@
 package io.mindspice.simplypages.integration;
 
-import io.mindspice.simplypages.builders.AccountBarBuilder;
 import io.mindspice.simplypages.builders.BannerBuilder;
 import io.mindspice.simplypages.builders.ShellBuilder;
 import io.mindspice.simplypages.builders.SideNavBuilder;
+import io.mindspice.simplypages.builders.TopNavBuilder;
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.components.navigation.SideNav;
 import io.mindspice.simplypages.components.display.DataTable;
@@ -35,10 +35,10 @@ class FullPageRenderingTest {
                     .withTitle("SimplyPages")
                     .withSubtitle("Internal Portal")
                     .build())
-                .withAccountBar(AccountBarBuilder.create()
-                    .addLeftLink("Home", "/")
-                    .addLeftLink("Reports", "/reports")
-                    .addRightLink("Account", "/account")
+                .withTopNav(TopNavBuilder.create()
+                    .addPrimaryLink("Home", "/")
+                    .addPrimaryLink("Reports", "/reports")
+                    .withGuestAccountWidget()
                     .build())
                 .withSideNav(defaultSideNav(), false)
                 .withContentTarget("page-content")
@@ -52,7 +52,7 @@ class FullPageRenderingTest {
             .hasElement("html > head > title")
             .elementTextEquals("html > head > title", "Portal Home")
             .hasElement("body > header.main-header .banner.banner-horizontal")
-            .hasElement("body > div.account-bar > div.account-bar-left")
+            .hasElement("body > header.main-header .header-top-nav-wrap > nav.top-nav")
             .hasElement("body > button.mobile-sidebar-toggle[onclick='toggleMobileSidebar()']")
             .hasElement("body > div.main-container.has-sidebar > aside#main-sidebar > nav.sidenav")
             .hasElement("#page-content > div.page-content")
@@ -73,8 +73,8 @@ class FullPageRenderingTest {
                     .withLayout(BannerBuilder.BannerLayout.CENTERED)
                     .withTitle("SimplyPages")
                     .build())
-                .withAccountBar(AccountBarBuilder.create()
-                    .addLeftLink("Home", "/")
+                .withTopNav(TopNavBuilder.create()
+                    .addPrimaryLink("Home", "/")
                     .build())
                 .withHtmx(false)
                 .withContentTarget("page-content"),
@@ -163,9 +163,9 @@ class FullPageRenderingTest {
                     .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
                     .withTitle("SimplyPages")
                     .build())
-                .withAccountBar(AccountBarBuilder.create()
-                    .addLeftLink("Dashboard", "/")
-                    .addRightLink("Profile", "/profile")
+                .withTopNav(TopNavBuilder.create()
+                    .addPrimaryLink("Dashboard", "/")
+                    .addUtilityLink("Profile", "/profile")
                     .build())
                 .withSideNav(defaultSideNav(), false)
                 .withContentTarget("page-content"),
