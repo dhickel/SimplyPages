@@ -16,6 +16,8 @@ Owns higher-level shell and navigation builder utilities.
 - Shell sidebar markup keeps stable class hooks for responsive/mobile behavior.
 - Shell head script order remains deterministic: HTMX (optional), framework JS, then custom JS.
 - Shell content target/wrapper hooks (`withContentTargetId`, `withContentTargetClass`, `withContentWrapper`) stay consistent across `build()` and `buildBody()`.
+- `buildTemplate()` returns a reusable compiled shell wrapper with a dedicated content slot.
+- Template shell mode does not emit shell content auto-load attributes (`hx-get="/home"`, `hx-trigger="load"`).
 
 ## Do
 - Keep generated markup predictable and integration-friendly.

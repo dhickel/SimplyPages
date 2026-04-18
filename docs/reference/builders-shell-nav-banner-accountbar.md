@@ -19,6 +19,7 @@ Core options:
 - `withContentTargetClass(...)`
 - `withContentWrapper(Function<Component, Component>)`
 - `withContent(...)`
+- `buildTemplate()`
 - `withPageTitle(...)`
 - `withHtmx(boolean)`
 - `withFrameworkCss(boolean)`
@@ -32,6 +33,8 @@ Core options:
 - `buildBody()`
 
 Returns full HTML document string from `build()`.
+
+`buildTemplate()` returns a reusable `ShellTemplate` (compiled template wrapper) with a dedicated content slot for request-time content injection.
 
 When a sidebar is configured, shell output includes a mobile navigation toggle hook compatible with framework CSS/JS defaults.
 
@@ -58,6 +61,25 @@ String shell = ShellBuilder.create()
         .withChild(content))
     .build();
 ```
+
+## Template Shell Reuse
+
+Use `buildTemplate()` when shell chrome is stable and page content changes per request.
+
+```java
+ShellTemplate shellTemplate = ShellBuilder.create()
+    .withPageTitle("Admin Portal")
+    .withTopNav(topNav)
+    .buildTemplate();
+
+String html = shellTemplate.renderWithContent(pageComponent);
+```
+
+Notes:
+
+- `ShellTemplate.renderWithContent(...)` renders full document HTML (with doctype).
+- If `withContent(...)` was configured before `buildTemplate()`, that content becomes default slot content.
+- Template mode does not emit shell content auto-load attributes (`hx-get="/home"`, `hx-trigger="load"`).
 
 ## SideNavBuilder and TopNavBuilder
 

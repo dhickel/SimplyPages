@@ -22,6 +22,8 @@ Typical application assets (Spring Boot):
 
 `ShellBuilder.build()` generates a full HTML document (`<!DOCTYPE html>`, `<html>`, `<head>`, `<body>`).
 
+`ShellBuilder.buildTemplate()` generates a reusable compiled shell template with a dedicated content slot.
+
 Head assets are added in this order:
 
 1. framework CSS (if enabled)
@@ -109,6 +111,12 @@ ShellBuilder automatically handles:
 - optional HTMX bootstrap script inclusion
 - default content target ID (`content-area`) and optional HTMX load trigger (`hx-get="/home"` when HTMX is enabled)
 - optional content target hooks (`withContentTargetId`, `withContentTargetClass`, `withContentWrapper`)
+
+Template mode behavior (`buildTemplate()`):
+
+- uses explicit content-slot rendering for the content target
+- treats `withContent(...)` as default slot content
+- does not emit shell auto-load attributes (`hx-get="/home"`, `hx-trigger="load"`) on the content target
 
 Nothing else is auto-loaded for you. Any additional app CSS/JS must be linked explicitly by your app shell strategy.
 

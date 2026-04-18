@@ -3,6 +3,9 @@ package io.mindspice.simplypages.builders;
 import io.mindspice.simplypages.components.navigation.SideNav;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.core.Slot;
+import io.mindspice.simplypages.core.SlotKey;
+import io.mindspice.simplypages.core.Template;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -19,6 +22,7 @@ import java.util.function.Function;
  * and do not share mutable instances across concurrent requests.</p>
  */
 public class ShellBuilder {
+    private static final String TEMPLATE_CONTENT_SLOT_NAME = "shell.content";
 
     private Component topBanner;
     private Component topNav;
@@ -286,11 +290,61 @@ public class ShellBuilder {
             body.withChild(buildMobileSidebarToggle(false));
         }
 
-        body.withChild(buildMainContainer(false));
+        body.withChild(buildMainContainer(false, null));
         return body;
     }
 
-    private HtmlTag buildShellContent() {
+    /**
+     * Builds a reusable shell template with a dedicated content slot.
+     *
+     * <p>Template mode always uses explicit content rendering and does not emit shell-level
+     * content auto-load attributes on the content target.</p>
+     */
+    public ShellTemplate buildTemplate() {
+        Component defaultContent = this.content;
+        SlotKey<Component> contentSlot = SlotKey.of(TEMPLATE_CONTENT_SLOT_NAME, ctx -> defaultContent);
+
+        HtmlTag html = new HtmlTag("html").withAttribute("lang", "en");
+
+        HtmlTag head = new HtmlTag("head")
+            .withChild(new HtmlTag("meta", true).withAttribute("charset", "UTF-8"))
+            .withChild(new HtmlTag("meta", true).withAttribute("name", "viewport")
+                .withAttribute("content", "width=device-width, initial-scale=1.0"))
+            .withChild(new HtmlTag("title").withInnerText(pageTitle));
+
+        if (includeFrameworkCss) {
+            head.withChild(new HtmlTag("link", true).withAttribute("rel", "stylesheet")
+                .withAttribute("href", frameworkCssPath));
+        }
+
+        for (String customCssPath : customCssPaths) {
+            head.withChild(new HtmlTag("link", true).withAttribute("rel", "stylesheet")
+                .withAttribute("href", customCssPath));
+        }
+
+        if (includeHtmx) {
+            head.withChild(new HtmlTag("script")
+                .withAttribute("src", "/webjars/htmx.org/dist/htmx.min.js")
+                .withAttribute("defer", ""));
+        }
+        head.withChild(new HtmlTag("script")
+            .withAttribute("src", "/js/framework.js")
+            .withAttribute("defer", ""));
+        for (String customJsPath : customJsPaths) {
+            head.withChild(new HtmlTag("script")
+                .withAttribute("src", customJsPath)
+                .withAttribute("defer", ""));
+        }
+
+        HtmlTag body = buildShellContent(contentSlot);
+        appendInlineScripts(body);
+
+        html.withChild(head).withChild(body);
+        Template template = html.compile();
+        return new ShellTemplate(template, contentSlot);
+    }
+
+    private HtmlTag buildShellContent(SlotKey<Component> contentSlot) {
         HtmlTag body = new HtmlTag("body");
 
         if (topBanner != null || topNav != null) {
@@ -311,8 +365,12 @@ public class ShellBuilder {
             body.withChild(buildMobileSidebarToggle(true));
         }
 
-        body.withChild(buildMainContainer(true));
+        body.withChild(buildMainContainer(true, contentSlot));
         return body;
+    }
+
+    private HtmlTag buildShellContent() {
+        return buildShellContent(null);
     }
 
     private String getHeaderClass() {
@@ -326,7 +384,7 @@ public class ShellBuilder {
         return classes.toString();
     }
 
-    private HtmlTag buildMainContainer(boolean includeAriaLabel) {
+    private HtmlTag buildMainContainer(boolean includeAriaLabel, SlotKey<Component> contentSlot) {
         HtmlTag mainContainer = new HtmlTag("div").withAttribute("class", getContainerClass());
 
         if (sideNav != null) {
@@ -353,7 +411,9 @@ public class ShellBuilder {
         if (contentTargetClass != null) {
             contentArea.withAttribute("class", contentTargetClass);
         }
-        if (content != null) {
+        if (contentSlot != null) {
+            contentArea.withChild(Slot.of(contentSlot));
+        } else if (content != null) {
             contentArea.withChild(content);
         } else if (includeHtmx) {
             contentArea.withAttribute("hx-get", "/home")
