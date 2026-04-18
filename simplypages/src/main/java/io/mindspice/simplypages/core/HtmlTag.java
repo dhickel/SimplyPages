@@ -5,6 +5,7 @@ import org.owasp.encoder.Encode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -23,6 +24,10 @@ import java.util.stream.Collectors;
  * via {@link Template}) with per-request {@link RenderContext} values.</p>
  */
 public class HtmlTag implements Component {
+    private static final Pattern CSS_PROPERTY_NAME_PATTERN =
+            Pattern.compile("^(--[a-zA-Z0-9_-]+|[a-zA-Z][a-zA-Z0-9-]*)$");
+    private static final Pattern CSS_DECLARATION_BREAKOUT_PATTERN = Pattern.compile("[;{}]");
+
     /** HTML tag name rendered in opening/closing tags. */
     protected final String tagName;
 
@@ -266,8 +271,45 @@ public class HtmlTag implements Component {
 
     /**
      * Adds or replaces one inline style property on the {@code style} attribute.
+     *
+     * <p>Security contract: this method is the hardened path and rejects declaration breakout
+     * characters in values. For trusted advanced values that must include declaration separators
+     * (for example some data URLs), use {@link #addTrustedStyle(String, String)}.</p>
      */
     public HtmlTag addStyle(String property, String value) {
+        validateCssPropertyName(property);
+        validateSafeCssValue(value);
+        return addOrReplaceStyle(property, value);
+    }
+
+    /**
+     * Adds or replaces one inline style property on the {@code style} attribute using a trusted
+     * value path.
+     *
+     * <p>Call this only with trusted style values. This bypasses breakout checks used by
+     * {@link #addStyle(String, String)}.</p>
+     */
+    public HtmlTag addTrustedStyle(String property, String value) {
+        validateCssPropertyName(property);
+        if (value == null) {
+            throw new IllegalArgumentException("CSS value cannot be null");
+        }
+        return addOrReplaceStyle(property, value);
+    }
+
+    private void validateCssPropertyName(String property) {
+        if (property == null || property.isBlank() || !CSS_PROPERTY_NAME_PATTERN.matcher(property).matches()) {
+            throw new IllegalArgumentException("Invalid CSS property name: " + property);
+        }
+    }
+
+    private void validateSafeCssValue(String value) {
+        if (value == null || CSS_DECLARATION_BREAKOUT_PATTERN.matcher(value).find()) {
+            throw new IllegalArgumentException("Invalid CSS value: declaration breakout is not allowed");
+        }
+    }
+
+    private HtmlTag addOrReplaceStyle(String property, String value) {
         Optional<String> existingStyle = attributes.stream()
                 .filter(attr -> "style".equals(attr.name()))
                 .map(Attribute::value)
@@ -276,7 +318,7 @@ public class HtmlTag implements Component {
         String newStyle;
         if (existingStyle.isPresent()) {
             String styles = existingStyle.get().trim().replaceAll(";+$", "");
-            String propertyPattern = property + "\\s*:[^;]*;?";
+            String propertyPattern = Pattern.quote(property) + "\\s*:[^;]*;?";
             styles = styles.replaceAll(propertyPattern, "").trim();
             styles = styles.replaceAll(";+$", "");
             newStyle = styles.isEmpty() ?

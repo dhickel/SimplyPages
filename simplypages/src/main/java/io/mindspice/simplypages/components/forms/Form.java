@@ -12,6 +12,7 @@ import io.mindspice.simplypages.core.HtmlTag;
  * Token issuance/validation remains an application responsibility.</p>
  */
 public class Form extends HtmlTag {
+    private String csrfHeaderName = "X-CSRF-TOKEN";
 
     /**
      * Supported logical HTTP methods for form submission.
@@ -203,6 +204,17 @@ public class Form extends HtmlTag {
     }
 
     /**
+     * Sets the CSRF header name used by {@link #withHxPostCsrf(String, String)}.
+     *
+     * @param name header name
+     * @return this form
+     */
+    public Form withCsrfHeaderName(String name) {
+        this.csrfHeaderName = name;
+        return this;
+    }
+
+    /**
      * Appends hidden {@code _csrf} input.
      *
      * @param token CSRF token value
@@ -228,7 +240,7 @@ public class Form extends HtmlTag {
     public Form withHxPostCsrf(String url, String csrfToken) {
         withHxPost(url);
         // Add CSRF token as request header for HTMX
-        String headers = String.format("{\"X-CSRF-TOKEN\": \"%s\"}", csrfToken);
+        String headers = String.format("{\"%s\": \"%s\"}", csrfHeaderName, csrfToken);
         withAttribute("hx-headers", headers);
         return this;
     }
