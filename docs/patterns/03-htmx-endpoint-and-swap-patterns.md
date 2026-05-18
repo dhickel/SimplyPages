@@ -58,6 +58,37 @@ Notes:
 2. Keep in-document anchors (`#section-id`) as normal links for same-page jumps.
 3. If no scroll tag is present, SimplyPages keeps push-url window scroll fallback behavior for history-style navigation.
 
+## Pattern 5: Search/Autocomplete Selector
+
+Use this for HTMX-driven typed search where selecting an option should replace the full selector region.
+
+```java
+Autocomplete selector = Autocomplete.create("projectId")
+    .withLabel("Project")
+    .withPlaceholder("Search projects")
+    .withOptionsEndpoint("/selectors/projects/options?name=projectId")
+    .withValidationEndpoint("/selectors/projects/validate?name=projectId")
+    .withContextParam("workspaceId", workspaceId)
+    .required();
+```
+
+Options endpoint response:
+
+```java
+return Autocomplete.options(
+    new Autocomplete.OptionsConfig("#sp-autocomplete-projectId", "outerHTML", "No matches"),
+    rows
+).render();
+```
+
+Validation endpoint response:
+
+```java
+return Autocomplete.status(
+    new Autocomplete.StatusMessage("Selected: " + label, Autocomplete.State.SELECTED)
+).render();
+```
+
 ## Endpoint Contracts
 
 1. Each endpoint owns one primary target contract.

@@ -8,6 +8,7 @@ This is a practical catalog, not exhaustive class-level Javadoc.
 
 - Text/content: `Header`, `Paragraph`, `Markdown`, `Div`, `Code`, `Blockquote`
 - Forms: `Form`, `TextInput`, `TextArea`, `Select`, `Checkbox`, `RadioGroup`, `Button`
+- Search/select forms: `Autocomplete` (field + HTMX option/status fragment helpers)
 - Display: `Card`, `CardGrid`, `DataTable`, `Table`, `Alert`, `Badge`, `Tag`, `InfoBox`, `Spinner`
 - Media: `Image`, `Gallery`, `Video`, `Audio`
 - Navigation: `Link`, `NavBar`, `SideNav`, `Breadcrumb`
