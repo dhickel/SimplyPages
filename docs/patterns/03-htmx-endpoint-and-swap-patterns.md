@@ -4,6 +4,45 @@
 
 This guide defines stable endpoint patterns for predictable updates.
 
+## Framework Helpers
+
+### Polling fragments
+
+Use `PollingPanel` for app-owned fragments that should refresh on load and interval:
+
+```java
+PollingPanel.create("job-status", "/jobs/123/status")
+    .everySeconds(3)
+    .withLoadingText("Loading status");
+```
+
+The endpoint should return the replacement panel or compatible fragment selected by the configured
+`hx-target`/`hx-swap` values.
+
+### Tab and master-detail fragment loading
+
+Use `HtmxTabNav` or `MasterDetailBrowserModule` when server routes own the detail fragment:
+
+```java
+HtmxTabNav.create("project-tabs", "#project-panel")
+    .addTab("overview", "Overview", "/projects/123/overview")
+    .addTab("runs", "Runs", "/projects/123/runs");
+```
+
+### Out-of-band responses
+
+Use `OobFragments` when one request should update a primary fragment and one or more secondary
+targets:
+
+```java
+OobFragments.response(
+    projectPanel,
+    OobFragments.swap("project-status", StatusBadge.success("Saved"))
+);
+```
+
+Applications still own the endpoint contract, authorization, validation, and returned domain data.
+
 ## Pattern 1: Replace One Module (`outerHTML`)
 
 ```java

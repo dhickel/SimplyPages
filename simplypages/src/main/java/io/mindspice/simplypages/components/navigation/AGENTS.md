@@ -4,7 +4,7 @@
 Owns navigation primitives and reusable nav structures.
 
 ## Owns
-- `Link`, `NavBar`, `SideNav`, `Breadcrumb`
+- `Link`, `NavBar`, `SideNav`, `Breadcrumb`, `HtmxTabNav`
 
 ## Invariants
 - Navigation components remain semantic and link-safe.
