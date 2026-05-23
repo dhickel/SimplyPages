@@ -78,6 +78,22 @@ For custom component/module libraries outside core packages, mirror the same str
 3. Add snapshots for any complex or highly nested output.
 4. Keep negative tests for escaping and invalid-state handling.
 
+## Shared Request Object Concurrency Pattern
+
+Objects documented as reusable across requests need race-condition coverage when their contracts
+change. Use a fixed thread pool, a start latch, and per-task request data to prove the shared object
+does not leak state across renders.
+
+Cover these cases when touched:
+
+- shared `Template` with a fresh `RenderContext` per request
+- shared `Template` with per-request `COMPILE_ON_FIRST_HIT` contexts
+- `TemplateComponent` only when the bound context is stable and not mutated during render
+- generated static content route indexes and immutable generated bundles
+
+Do not write tests that mutate documented request-scoped components/modules from multiple threads;
+those are intentionally not a supported sharing pattern.
+
 ## Snapshot Workflow
 
 - Run tests normally for compare mode:
@@ -108,3 +124,5 @@ Snapshot review rules:
   - `simplypages/src/test/java/io/mindspice/simplypages/modules/RichContentModuleTest.java`
 - Integration placement checks from:
   - `simplypages/src/test/java/io/mindspice/simplypages/integration/HtmxIntegrationTest.java`
+- Shared request-object concurrency checks from:
+  - `simplypages/src/test/java/io/mindspice/simplypages/integration/SharedRenderingConcurrencyTest.java`
