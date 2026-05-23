@@ -26,13 +26,13 @@ It is built for practical web apps: admin portals, internal tools, content-heavy
 
 ## Install
 
-Current release: `1.0.0`.
+Current release: `1.0.1`.
 
 ```xml
 <dependency>
   <groupId>io.mindspice</groupId>
   <artifactId>simplypages</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 ```
 
@@ -245,6 +245,7 @@ Recommended sequence:
   - `docs/operations/01-performance-threading-and-cache-lifecycles.md`
   - `docs/operations/02-testing-and-troubleshooting-playbook.md`
   - `docs/operations/03-writing-tests-for-components-and-modules.md`
+  - `docs/operations/04-migrating-to-1.0.1.md`
 - Reference:
   - `docs/reference/components-and-modules-catalog.md`
   - `docs/reference/builders-shell-nav-banner-accountbar.md`

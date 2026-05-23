@@ -6,13 +6,13 @@
 
 Add SimplyPages to your `pom.xml`:
 
-Current release: `1.0.0`.
+Current release: `1.0.1`.
 
 ```xml
 <dependency>
   <groupId>io.mindspice</groupId>
   <artifactId>simplypages</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 ```
 

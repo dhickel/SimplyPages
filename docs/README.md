@@ -48,6 +48,7 @@ This page is the table of contents for all framework documentation.
 - [Performance, Threading, and Cache Lifecycles](operations/01-performance-threading-and-cache-lifecycles.md)
 - [Testing and Troubleshooting Playbook](operations/02-testing-and-troubleshooting-playbook.md)
 - [Writing Tests for Components and Modules](operations/03-writing-tests-for-components-and-modules.md)
+- [Migrating to SimplyPages 1.0.1](operations/04-migrating-to-1.0.1.md)
 
 ## Reference
 
