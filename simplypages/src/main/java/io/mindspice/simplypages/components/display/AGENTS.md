@@ -11,6 +11,7 @@ Owns display-oriented UI components and visual containers.
 - Display components remain composable and class-driven.
 - `DataTable` and `Table` rendering contracts remain stable.
 - Modal behavior and IDs remain predictable/safe.
+- Modal body/footer and spinner messages must render consistently across direct, nested, context, and template paths.
 
 ## Do
 - Keep display APIs concise with sensible presets.
@@ -24,6 +25,7 @@ Owns display-oriented UI components and visual containers.
 ## Common Pitfalls
 - Breaking CSS contract class names used by framework styles.
 - Changing modal container behavior without integration tests.
+- Dropping `RenderContext` when rendering modal body/footer or other child content.
 - Regressing table/list rendering order.
 
 ## Required Tests

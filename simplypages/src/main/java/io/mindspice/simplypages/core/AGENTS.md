@@ -12,6 +12,7 @@ Owns rendering primitives and contracts used by the whole framework.
 ## Invariants
 - Rendering must be safe by default for untrusted text/attributes.
 - Shared URL allowlist behavior belongs in `SafeUrl` so link-like packages do not drift.
+- `Template` must not bypass custom `HtmlTag` subclass rendering; custom renderers belong in opaque component segments.
 - `Component` implementations must provide `render(RenderContext)`.
 - `render()` remains the empty-context convenience path.
 - `Module.build()` is idempotent and drives build-once lifecycle semantics.
@@ -20,6 +21,7 @@ Owns rendering primitives and contracts used by the whole framework.
 ## Do
 - Add core API only when needed by multiple packages.
 - Keep low-level logic deterministic and side-effect minimal.
+- Treat `render(RenderContext)` as the canonical render path for custom components.
 - Document behavior changes in Javadocs and tests.
 
 ## Do Not

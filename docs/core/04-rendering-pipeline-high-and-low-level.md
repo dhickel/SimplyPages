@@ -39,9 +39,26 @@ sequenceDiagram
 - Opaque component segments (fallback component rendering)
 
 Modules are built before compilation (`module.build()`).
+`HtmlTag` subclasses that declare custom `render()` or `render(RenderContext)` methods are emitted
+as opaque component segments so template rendering does not bypass custom markup behavior.
 
 This means `Template` wraps the compiled component/module tree; callers typically interact with the
 template for repeated renders rather than mutating the original tree per request.
+
+## Custom Renderer Contract
+
+Components with custom markup behavior must implement `render(RenderContext)` as the primary render
+path. Zero-argument `render()` should delegate to `render(RenderContext.empty())`.
+
+This keeps behavior consistent when the component is:
+
+- rendered directly
+- nested inside a parent component
+- rendered with a populated `RenderContext`
+- compiled into a reusable `Template`
+
+For custom renderers that contain child components, pass the supplied context to child renders
+instead of calling zero-argument `render()`.
 
 ## Low-Level: Slot Resolution
 
@@ -105,3 +122,4 @@ sequenceDiagram
 2. Stale value: check context reuse and compile policy.
 3. Escaping surprises: confirm `withInnerText` vs `withUnsafeHtml` usage.
 4. Missing module content: verify lifecycle assumptions around `buildContent()`.
+5. Missing wrapper/custom markup in templates: verify the component declares context-aware custom rendering.

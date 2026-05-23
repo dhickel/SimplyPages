@@ -133,6 +133,11 @@ public class Modal extends HtmlTag {
      */
     @Override
     public String render() {
+        return render(RenderContext.empty());
+    }
+
+    @Override
+    public String render(RenderContext context) {
         StringBuilder html = new StringBuilder();
 
         // Backdrop wrapper
@@ -185,14 +190,14 @@ public class Modal extends HtmlTag {
         // Body
         if (body != null) {
             html.append("<div class=\"modal-body\">");
-            html.append(body.render());
+            html.append(body.render(context));
             html.append("</div>");
         }
 
         // Footer
         if (footer != null) {
             html.append("<div class=\"modal-footer\">");
-            html.append(footer.render());
+            html.append(footer.render(context));
             html.append("</div>");
         }
 
@@ -201,17 +206,6 @@ public class Modal extends HtmlTag {
         html.append("</div>"); // modal-backdrop
 
         return html.toString();
-    }
-
-    /**
-     * Ensures modal markup rendering is identical for context-aware parent render paths.
-     *
-     * @param context render context (unused; modal currently renders static content tree)
-     * @return modal HTML
-     */
-    @Override
-    public String render(RenderContext context) {
-        return render();
     }
 
     /**

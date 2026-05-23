@@ -14,6 +14,7 @@ Owns shared low-level UI components and base component conventions.
 - `create()` factory methods and fluent return types stay consistent.
 - Attribute and text rendering remains safely escaped by default.
 - Shared components that create anchors must validate href-like values with `SafeUrl`.
+- Components with custom markup must implement `render(RenderContext)` and delegate `render()` to an empty context.
 
 ## Do
 - Keep component APIs minimal and composable.
@@ -27,6 +28,7 @@ Owns shared low-level UI components and base component conventions.
 ## Common Pitfalls
 - Returning wrong fluent type and breaking method chaining.
 - Overriding `render()` without preserving core safety semantics.
+- Calling child `render()` without passing the current `RenderContext` from custom renderers.
 - Inconsistent class naming versus framework CSS.
 
 ## Required Tests

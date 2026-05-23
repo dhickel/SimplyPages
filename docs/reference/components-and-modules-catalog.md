@@ -50,3 +50,11 @@ This is a practical catalog, not exhaustive class-level Javadoc.
   could break out of the generated `url(...)` value.
 - `HeroModule.withBackgroundColor(...)` uses the hardened inline style path and rejects
   declaration-breakout characters.
+
+## Rendering Notes
+
+- `Code.block(...)`, `Spinner.withMessage(...)`, `Paragraph` alignment helpers, `Modal`
+  body/footer content, and `Column` class normalization render consistently in direct, nested,
+  context-aware, and template render paths.
+- Custom renderers should treat `render(RenderContext)` as canonical and delegate zero-argument
+  `render()` to an empty context.
