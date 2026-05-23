@@ -5,8 +5,8 @@ import io.mindspice.simplypages.components.forms.Button;
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.components.Header;
 import io.mindspice.simplypages.core.Component;
-import java.util.regex.Pattern;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Builds standardized edit modals for module property and child-edit flows.
@@ -53,7 +53,7 @@ public class EditModalBuilder {
 
     /** Sets the module identifier used by callers for endpoint construction. */
     public EditModalBuilder withModuleId(String moduleId) {
-        this.moduleId = moduleId;
+        this.moduleId = moduleId == null ? null : EditingIds.requireSafeSegment(moduleId, "moduleId");
         return this;
     }
 
@@ -179,7 +179,7 @@ public class EditModalBuilder {
              Div actions = new Div().withClass("btn-group btn-group-sm");
 
              if (childEditUrl != null) {
-                 String url = childEditUrl.replace("{id}", child.getId());
+                 String url = childEditUrl.replace("{id}", EditingIds.encodePathSegment(child.getId()));
                  Component editBtn = Button.create("Edit")
                          .withStyle(Button.ButtonStyle.SECONDARY)
                          .withAttribute("hx-get", url)
@@ -189,7 +189,7 @@ public class EditModalBuilder {
              }
 
              if (childDeleteUrl != null) {
-                 String url = childDeleteUrl.replace("{id}", child.getId());
+                 String url = childDeleteUrl.replace("{id}", EditingIds.encodePathSegment(child.getId()));
                   Component deleteBtn = Button.create("Delete")
                          .withStyle(Button.ButtonStyle.DANGER)
                          .withAttribute("hx-delete", url)

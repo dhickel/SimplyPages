@@ -120,7 +120,7 @@ public class AccountBarBuilder {
         accountBar.withAttribute("class", "account-bar" + (customClass != null ? " " + customClass : ""));
 
         if (backgroundColor != null) {
-            accountBar.withAttribute("style", "background-color: " + backgroundColor);
+            accountBar.addStyle("background-color", backgroundColor);
         }
 
         // Left section

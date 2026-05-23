@@ -9,6 +9,7 @@ import io.mindspice.simplypages.core.HtmlTag;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Module that renders tab navigation and tab panels.
@@ -17,6 +18,7 @@ import java.util.List;
  * are mutable configuration data; mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class TabsModule extends Module {
+    private static final AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
 
     public static class Tab {
         private final String label;
@@ -46,6 +48,7 @@ public class TabsModule extends Module {
     }
 
     private List<Tab> tabs = new ArrayList<>();
+    private final String generatedIdPrefix = "tabs-" + INSTANCE_COUNTER.incrementAndGet();
 
     public TabsModule() {
         super("div");
@@ -130,8 +133,8 @@ public class TabsModule extends Module {
 
         for (int i = 0; i < tabs.size(); i++) {
             Tab tab = tabs.get(i);
-            String tabId = (moduleId != null ? moduleId : "tabs") + "-tab-" + i;
-            String panelId = (moduleId != null ? moduleId : "tabs") + "-panel-" + i;
+            String tabId = idPrefix() + "-tab-" + i;
+            String panelId = idPrefix() + "-panel-" + i;
 
             HtmlTag tabItem = new HtmlTag("li")
                 .withAttribute("role", "presentation")
@@ -156,8 +159,8 @@ public class TabsModule extends Module {
 
         for (int i = 0; i < tabs.size(); i++) {
             Tab tab = tabs.get(i);
-            String tabId = (moduleId != null ? moduleId : "tabs") + "-tab-" + i;
-            String panelId = (moduleId != null ? moduleId : "tabs") + "-panel-" + i;
+            String tabId = idPrefix() + "-tab-" + i;
+            String panelId = idPrefix() + "-panel-" + i;
 
             Div panel = new Div()
                 .withClass("tab-panel" + (tab.isActive() ? " active" : ""))
@@ -179,5 +182,9 @@ public class TabsModule extends Module {
 
         tabsContainer.withChild(tabPanels);
         super.withChild(tabsContainer);
+    }
+
+    private String idPrefix() {
+        return moduleId != null && !moduleId.isBlank() ? moduleId : generatedIdPrefix;
     }
 }

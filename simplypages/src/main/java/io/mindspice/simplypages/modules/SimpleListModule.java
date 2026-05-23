@@ -35,17 +35,19 @@ public class SimpleListModule extends Module implements Editable<SimpleListModul
 
     public SimpleListModule addItem(ListItem item) {
         this.items.add(item);
+        invalidateContent();
         return this;
     }
 
     public SimpleListModule removeItem(String itemId) {
-        items.removeIf(item -> item.getId().equals(itemId));
+        items.removeIf(item -> Objects.equals(item.getId(), itemId));
+        invalidateContent();
         return this;
     }
 
     public ListItem findItem(String itemId) {
         return items.stream()
-                .filter(item -> item.getId().equals(itemId))
+                .filter(item -> Objects.equals(item.getId(), itemId))
                 .findFirst()
                 .orElse(null);
     }

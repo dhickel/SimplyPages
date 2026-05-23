@@ -2,6 +2,9 @@ package io.mindspice.simplypages.components.display;
 
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.components.forms.Button;
+import io.mindspice.simplypages.core.RenderContext;
+import io.mindspice.simplypages.core.SlotKey;
+import io.mindspice.simplypages.core.Template;
 import io.mindspice.simplypages.modules.ContentModule;
 import io.mindspice.simplypages.testutil.HtmlAssert;
 import io.mindspice.simplypages.testutil.SnapshotAssert;
@@ -90,5 +93,36 @@ class ModalTest {
             .hasElement("div.modal-backdrop#nested-modal > div.modal-container")
             .hasElement("div.modal-container > div.modal-body")
             .elementTextEquals("div.modal-body", "Nested body");
+    }
+
+    @Test
+    @DisplayName("Modal body and footer should render slot-backed content with supplied context")
+    void testModalContextAndTemplateRendering() {
+        SlotKey<String> bodyText = SlotKey.of("modalBody");
+        SlotKey<String> footerText = SlotKey.of("modalFooter");
+        Modal modal = Modal.create()
+            .withModalId("slot-modal")
+            .withTitle("Slot Modal")
+            .withBody(new Div().withInnerText(bodyText))
+            .withFooter(new Div().withInnerText(footerText));
+        RenderContext context = RenderContext.empty()
+            .put(bodyText, "Body from context")
+            .put(footerText, "Footer from context");
+
+        String contextHtml = modal.render(context);
+        String nestedHtml = new Div().withChild(modal).render(context);
+        String templateHtml = Template.of(new Div().withChild(modal)).render(context);
+
+        HtmlAssert.assertThat(contextHtml)
+            .elementTextEquals("div.modal-body", "Body from context")
+            .elementTextEquals("div.modal-footer", "Footer from context");
+
+        HtmlAssert.assertThat(nestedHtml)
+            .elementTextEquals("div.modal-body", "Body from context")
+            .elementTextEquals("div.modal-footer", "Footer from context");
+
+        HtmlAssert.assertThat(templateHtml)
+            .elementTextEquals("div.modal-body", "Body from context")
+            .elementTextEquals("div.modal-footer", "Footer from context");
     }
 }

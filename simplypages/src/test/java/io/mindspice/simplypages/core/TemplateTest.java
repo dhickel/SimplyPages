@@ -1,6 +1,8 @@
 package io.mindspice.simplypages.core;
 
 import io.mindspice.simplypages.components.Div;
+import io.mindspice.simplypages.components.Paragraph;
+import io.mindspice.simplypages.components.display.Spinner;
 import io.mindspice.simplypages.testutil.HtmlAssert;
 import io.mindspice.simplypages.testutil.SnapshotAssert;
 import org.junit.jupiter.api.DisplayName;
@@ -40,6 +42,21 @@ class TemplateTest {
         RenderContext context = RenderContext.of(key, "Quarterly Report");
 
         assertEquals(explicit.render(context), shortcut.render(context));
+    }
+
+    @Test
+    @DisplayName("Template should delegate HtmlTag subclasses that declare custom render methods")
+    void testTemplateDelegatesCustomHtmlTagRenderers() {
+        Div root = new Div()
+            .withChild(new Paragraph("Aligned").right())
+            .withChild(Spinner.create().withMessage("Loading"));
+
+        String html = Template.of(root).render(RenderContext.empty());
+
+        HtmlAssert.assertThat(html)
+            .hasElement("p.align-right")
+            .hasElement("div.spinner-wrapper")
+            .elementTextEquals("div.spinner-message", "Loading");
     }
 
     @Test

@@ -6,6 +6,8 @@
 
 Add SimplyPages to your `pom.xml`:
 
+Current release: `1.0.0`.
+
 ```xml
 <dependency>
   <groupId>io.mindspice</groupId>
@@ -13,6 +15,12 @@ Add SimplyPages to your `pom.xml`:
   <version>1.0.0</version>
 </dependency>
 ```
+
+## Toolchain
+
+- Use the repository Maven wrapper (`./mvnw`) for local builds.
+- The framework module compiles with Java 25.
+- The demo module targets Java 21, but full reactor builds should run on JDK 25.
 
 ## First Static Page
 

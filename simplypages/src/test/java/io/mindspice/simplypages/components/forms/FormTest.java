@@ -74,6 +74,19 @@ class FormTest {
     }
 
     @Test
+    @DisplayName("Form should JSON-escape HTMX CSRF header values")
+    void testHxPostCsrfEscapesJson() {
+        Form form = Form.create()
+            .withCsrfHeaderName("X-CSRF-\"TOKEN\"")
+            .withHxPostCsrf("/save", "tok\"en\\next");
+
+        String html = form.render();
+
+        HtmlAssert.assertThat(html)
+            .attributeEquals("form.form", "hx-headers", "{\"X-CSRF-\\\"TOKEN\\\"\": \"tok\\\"en\\\\next\"}");
+    }
+
+    @Test
     @DisplayName("Form should render HTMX and form attributes")
     void testFormAttributes() {
         Form form = Form.create()

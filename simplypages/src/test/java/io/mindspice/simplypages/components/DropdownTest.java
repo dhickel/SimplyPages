@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class DropdownTest {
 
@@ -23,5 +24,11 @@ class DropdownTest {
         assertTrue(html.contains("dropdown-menu dropdown-align-left"));
         assertTrue(html.contains("dropdown-link"));
         assertTrue(html.contains("dropdown-divider"));
+    }
+
+    @Test
+    @DisplayName("Dropdown should reject unsafe href schemes")
+    void testDropdownUnsafeHref() {
+        assertThrows(IllegalArgumentException.class, () -> Dropdown.create("Menu").addLink("Bad", "javascript:alert(1)"));
     }
 }

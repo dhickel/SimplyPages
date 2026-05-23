@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BannerBuilderTest {
@@ -74,5 +75,17 @@ class BannerBuilderTest {
         assertTrue(html.contains("color: #000"));
         assertTrue(html.contains("Custom"));
         assertFalse(html.contains("banner-title"));
+    }
+
+    @Test
+    @DisplayName("BannerBuilder should reject unsafe background image and style values")
+    void testUnsafeStyles() {
+        assertThrows(IllegalArgumentException.class,
+            () -> BannerBuilder.create().withBackgroundImage("/bg.png');color:red"));
+
+        assertThrows(IllegalArgumentException.class,
+            () -> BannerBuilder.create()
+                .withBackgroundColor("#fff;color:red")
+                .build());
     }
 }

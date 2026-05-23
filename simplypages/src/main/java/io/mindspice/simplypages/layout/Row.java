@@ -2,6 +2,7 @@ package io.mindspice.simplypages.layout;
 
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.core.Component;
+import io.mindspice.simplypages.core.CssClassNames;
 import io.mindspice.simplypages.core.HtmlTag;
 
 import java.util.Arrays;
@@ -16,6 +17,9 @@ import java.util.Arrays;
  * default {@code div.col} to preserve row semantics.</p>
  */
 public class Row extends HtmlTag {
+    private static final java.util.Set<String> GAP_TOKENS = java.util.Set.of("sm", "medium", "lg");
+    private static final java.util.Set<String> ALIGN_TOKENS = java.util.Set.of("start", "end", "center", "baseline", "stretch");
+    private static final java.util.Set<String> JUSTIFY_TOKENS = java.util.Set.of("start", "end", "center", "between", "around", "evenly");
 
     /**
      * Creates an empty row with base class {@code row}.
@@ -82,13 +86,34 @@ public class Row extends HtmlTag {
     }
 
     /**
+     * Creates a shallow copy of this row's current attributes, text payload, and children.
+     *
+     * <p>Child components are reused, not cloned. This is intended for wrappers that need to
+     * preserve a configured row while adding request-local structure during render.</p>
+     *
+     * @return copied row
+     */
+    public Row copy() {
+        Row copy = new Row();
+        copy.attributes.clear();
+        copy.attributes.addAll(this.attributes);
+        copy.children.addAll(this.children);
+        copy.innerText = this.innerText;
+        copy.innerTextSlot = this.innerTextSlot;
+        copy.trustedHtml = this.trustedHtml;
+        copy.id = this.id;
+        return copy;
+    }
+
+    /**
      * Replaces class attribute with {@code row gap-<gap>}.
      *
      * @param gap gap token used by CSS
      * @return this row
      */
     public Row withGap(String gap) {
-        this.withAttribute("class", "row gap-" + gap);
+        String normalized = normalizeToken(gap, GAP_TOKENS, "gap");
+        CssClassNames.replacePrefixed(this, "row", "gap-" + normalized, "gap-");
         return this;
     }
 
@@ -99,8 +124,8 @@ public class Row extends HtmlTag {
      * @return this row
      */
     public Row withAlign(String alignment) {
-        String currentClass = "row";
-        this.withAttribute("class", currentClass + " align-" + alignment);
+        String normalized = normalizeToken(alignment, ALIGN_TOKENS, "alignment");
+        CssClassNames.replacePrefixed(this, "row", "items-" + normalized, "items-", "align-");
         return this;
     }
 
@@ -111,8 +136,30 @@ public class Row extends HtmlTag {
      * @return this row
      */
     public Row withJustify(String justify) {
-        String currentClass = "row";
-        this.withAttribute("class", currentClass + " justify-" + justify);
+        String normalized = normalizeToken(justify, JUSTIFY_TOKENS, "justify");
+        CssClassNames.replacePrefixed(this, "row", "justify-" + normalized, "justify-");
         return this;
+    }
+
+    @Override
+    public Row withClass(String className) {
+        CssClassNames.addTokens(this, "row", className);
+        return this;
+    }
+
+    private String normalizeToken(String token, java.util.Set<String> allowed, String label) {
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("Row " + label + " token cannot be blank");
+        }
+        String normalized = token.trim().toLowerCase();
+        if ("small".equals(normalized)) {
+            normalized = "sm";
+        } else if ("large".equals(normalized)) {
+            normalized = "lg";
+        }
+        if (!allowed.contains(normalized)) {
+            throw new IllegalArgumentException("Unsupported row " + label + " token: " + token);
+        }
+        return normalized;
     }
 }

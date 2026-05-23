@@ -4,6 +4,7 @@ import io.mindspice.simplypages.components.navigation.SideNav;
 import io.mindspice.simplypages.components.Paragraph;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.core.RenderContext;
 import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -336,5 +337,53 @@ class ShellBuilderTest {
         assertTrue(html.contains("Initial body"));
         assertFalse(html.contains("hx-get=\"/home\""));
         assertFalse(html.contains("hx-trigger=\"load\""));
+    }
+
+    @Test
+    @DisplayName("ShellBuilder buildTemplate should render explicit content and skip shell auto-load attributes")
+    void testBuildTemplateExplicitContentWithoutAutoLoad() {
+        ShellTemplate template = ShellBuilder.create()
+            .withTopNav(TopNavBuilder.create().addPrimaryLink("Home", "/").build())
+            .buildTemplate();
+
+        String html = template.renderWithContent(new Paragraph("Template body"));
+
+        HtmlAssert.assertThat(html)
+            .hasDoctype("html")
+            .hasElement("main.content-wrapper > div#content-area > p")
+            .elementTextEquals("main.content-wrapper > div#content-area > p", "Template body")
+            .doesNotHaveElement("div#content-area[hx-get]")
+            .doesNotHaveElement("div#content-area[hx-trigger]");
+    }
+
+    @Test
+    @DisplayName("ShellBuilder buildTemplate should use withContent as default slot content")
+    void testBuildTemplateUsesDefaultContentFallback() {
+        ShellTemplate template = ShellBuilder.create()
+            .withContent(new Paragraph("Default slot body"))
+            .buildTemplate();
+
+        String html = template.render();
+
+        HtmlAssert.assertThat(html)
+            .hasElement("main.content-wrapper > div#content-area > p")
+            .elementTextEquals("main.content-wrapper > div#content-area > p", "Default slot body")
+            .doesNotHaveElement("div#content-area[hx-get]")
+            .doesNotHaveElement("div#content-area[hx-trigger]");
+    }
+
+    @Test
+    @DisplayName("ShellTemplate should support context-based content overrides through content slot key")
+    void testShellTemplateContentSlotContextOverride() {
+        ShellTemplate template = ShellBuilder.create()
+            .withContent(new Paragraph("Fallback body"))
+            .buildTemplate();
+
+        RenderContext context = RenderContext.of(template.contentSlot(), new Paragraph("Override body"));
+        String html = template.render(context);
+
+        HtmlAssert.assertThat(html)
+            .hasElement("main.content-wrapper > div#content-area > p")
+            .elementTextEquals("main.content-wrapper > div#content-area > p", "Override body");
     }
 }

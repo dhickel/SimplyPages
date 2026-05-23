@@ -131,8 +131,31 @@ public class Template {
                 compileModuleAsTag(module);
             }
             case Slot<?> slot -> segments.add(new SlotSegment(slot.getKey()));
+            case HtmlTag tag when hasCustomRender(tag) -> segments.add(new ComponentSegment(tag));
             case HtmlTag tag -> compileTag(tag);
             default -> segments.add(new ComponentSegment(component));
+        }
+    }
+
+    /**
+     * Returns true when an HtmlTag subclass declares custom rendering that static tag compilation
+     * would bypass.
+     */
+    private boolean hasCustomRender(HtmlTag tag) {
+        Class<?> type = tag.getClass();
+        if (type == HtmlTag.class) {
+            return false;
+        }
+        return declaresMethod(type, "render")
+            || declaresMethod(type, "render", RenderContext.class);
+    }
+
+    private boolean declaresMethod(Class<?> type, String name, Class<?>... parameterTypes) {
+        try {
+            type.getDeclaredMethod(name, parameterTypes);
+            return true;
+        } catch (NoSuchMethodException ignored) {
+            return false;
         }
     }
 

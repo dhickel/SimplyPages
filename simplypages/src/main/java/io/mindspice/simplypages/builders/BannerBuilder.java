@@ -3,6 +3,7 @@ package io.mindspice.simplypages.builders;
 import io.mindspice.simplypages.components.Image;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.core.SafeUrl;
 
 /**
  * Builds top-banner components across supported layout presets.
@@ -116,6 +117,7 @@ public class BannerBuilder {
      * Set background image URL (used with IMAGE_OVERLAY layout).
      */
     public BannerBuilder withBackgroundImage(String imageUrl) {
+        SafeUrl.validateCssImageUrl(imageUrl);
         this.backgroundImage = imageUrl;
         return this;
     }
@@ -174,24 +176,19 @@ public class BannerBuilder {
         }
         banner.withAttribute("class", classBuilder.toString());
 
-        // Build inline styles
-        StringBuilder style = new StringBuilder();
         if (backgroundColor != null) {
-            style.append("background-color: ").append(backgroundColor).append(";");
+            banner.addStyle("background-color", backgroundColor);
         }
         if (textColor != null) {
-            style.append("color: ").append(textColor).append(";");
+            banner.addStyle("color", textColor);
         }
         if (backgroundImage != null && layout == BannerLayout.IMAGE_OVERLAY) {
-            style.append("background-image: url('").append(backgroundImage).append("');");
-            style.append("background-size: cover;");
-            style.append("background-position: center;");
+            banner.addTrustedStyle("background-image", SafeUrl.cssUrl(backgroundImage));
+            banner.addStyle("background-size", "cover");
+            banner.addStyle("background-position", "center");
         }
         if (minHeight != null) {
-            style.append("min-height: ").append(minHeight).append("px;");
-        }
-        if (style.length() > 0) {
-            banner.withAttribute("style", style.toString());
+            banner.addStyle("min-height", minHeight + "px");
         }
 
         // Create content container

@@ -1,6 +1,7 @@
 package io.mindspice.simplypages.layout;
 
 import io.mindspice.simplypages.core.Component;
+import io.mindspice.simplypages.core.CssClassNames;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
@@ -69,7 +70,15 @@ public class Container extends HtmlTag {
      * @return this container
      */
     public Container withSize(ContainerSize size) {
-        this.withAttribute("class", "container " + size.getCssClass());
+        if (size == null) {
+            throw new IllegalArgumentException("Container size cannot be null");
+        }
+        CssClassNames.replaceMatching(
+            this,
+            "container",
+            size.getCssClass(),
+            token -> token.startsWith("container-") && !"container".equals(token)
+        );
         return this;
     }
 
@@ -92,8 +101,7 @@ public class Container extends HtmlTag {
      * @return this container
      */
     public Container withClass(String className) {
-        String currentClass = "container";
-        this.withAttribute("class", currentClass + " " + className);
+        CssClassNames.addTokens(this, "container", className);
         return this;
     }
 

@@ -3,9 +3,11 @@ package io.mindspice.simplypages.editing;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -32,6 +34,19 @@ class ValidationResultTest {
         ValidationResult result = ValidationResult.invalid(List.of("A", "B"));
         assertFalse(result.isValid());
         assertTrue(result.getErrors().contains("A"));
+    }
+
+    @Test
+    @DisplayName("ValidationResult should make defensive immutable error copies")
+    void testErrorsAreImmutableDefensiveCopies() {
+        List<String> errors = new ArrayList<>();
+        errors.add("A");
+
+        ValidationResult result = ValidationResult.invalid(errors);
+        errors.add("B");
+
+        assertEquals(List.of("A"), result.getErrors());
+        assertThrows(UnsupportedOperationException.class, () -> result.getErrors().add("C"));
     }
 
     @Test

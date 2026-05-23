@@ -42,9 +42,18 @@ public interface ModuleEditHandler<T> {
 - Edit open: `GET /modules/{id}/edit`
 - Save: `POST /modules/{id}/save?editMode=OWNER_EDIT|USER_EDIT`
 - Delete: `DELETE /modules/{id}/delete?editMode=...`
+- Nested child edit: `GET /modules/{moduleId}/children/{childId}/edit`
+- Nested child save/delete: `POST` or `DELETE` to the matching child endpoint
 
 ## Operational Rules
 
 1. Treat every edit endpoint as auth-protected.
 2. Validate server-side before `applyEdits`.
 3. Keep audit trail for staged edits.
+4. Enforce authorization in the controller/service handler, not only by hiding buttons in the UI.
+5. Escape at render time. Store validated plain text from forms unless the application owns a
+   sanitization pipeline for trusted HTML.
+6. Keep path identifiers constrained to safe path segments and URL-encode child identifiers when
+   expanding child endpoint templates.
+7. Return explicit `403`, `404`, or `400` responses for blocked permissions, missing records, and
+   invalid positions or IDs.

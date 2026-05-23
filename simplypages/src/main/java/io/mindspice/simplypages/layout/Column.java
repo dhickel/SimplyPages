@@ -1,8 +1,8 @@
 package io.mindspice.simplypages.layout;
 
-import io.mindspice.simplypages.core.Attribute;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.core.RenderContext;
 
 /**
  * Grid column for use inside {@link Row}.
@@ -125,6 +125,12 @@ public class Column extends HtmlTag {
         return super.render();
     }
 
+    @Override
+    public String render(RenderContext context) {
+        ensureColClass();
+        return super.render(context);
+    }
+
     /**
      * Ensures the {@code col} class token is present on the class attribute.
      */
@@ -140,19 +146,25 @@ public class Column extends HtmlTag {
             // Check if "col" class is already in the class list
             boolean hasColClass = attributes.stream()
                     .filter(attr -> "class".equals(attr.name()))
-                    .anyMatch(attr -> attr.value().contains("col"));
+                    .anyMatch(attr -> {
+                        String value = attr.value();
+                        if (value == null || value.isBlank()) {
+                            return false;
+                        }
+                        for (String token : value.trim().split("\\s+")) {
+                            if ("col".equals(token)) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
 
             if (!hasColClass) {
                 // Find and update the class attribute
-                for (Attribute attr : attributes) {
-                    if ("class".equals(attr.name())) {
-                        // Prepend "col" to existing classes
-                        String newValue = "col " + attr.value();
-                        attributes.remove(attr);
-                        this.withAttribute("class", newValue);
-                        break;
-                    }
-                }
+                attributes.stream()
+                    .filter(attr -> "class".equals(attr.name()))
+                    .findFirst()
+                    .ifPresent(attr -> this.withAttribute("class", "col " + attr.value()));
             }
         }
     }

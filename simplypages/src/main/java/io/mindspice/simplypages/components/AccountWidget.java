@@ -2,6 +2,7 @@ package io.mindspice.simplypages.components;
 
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
+import io.mindspice.simplypages.core.SafeUrl;
 
 /**
  * Account-state widget that renders either guest links or authenticated user actions.
@@ -55,6 +56,7 @@ public class AccountWidget extends HtmlTag {
      * @return placeholder div
      */
     public static HtmlTag createDynamic(String endpoint) {
+        SafeUrl.validateHref(endpoint);
         return new HtmlTag("div")
             .withAttribute("class", "account-widget")
             .withAttribute("hx-get", endpoint)
@@ -69,6 +71,7 @@ public class AccountWidget extends HtmlTag {
      * @return this widget
      */
     public AccountWidget withLoginUrl(String url) {
+        SafeUrl.validateHref(url);
         this.loginUrl = url;
         return this;
     }
@@ -80,6 +83,7 @@ public class AccountWidget extends HtmlTag {
      * @return this widget
      */
     public AccountWidget withSignupUrl(String url) {
+        SafeUrl.validateHref(url);
         this.signupUrl = url;
         return this;
     }
@@ -91,6 +95,7 @@ public class AccountWidget extends HtmlTag {
      * @return this widget
      */
     public AccountWidget withProfileUrl(String url) {
+        SafeUrl.validateHref(url);
         this.profileUrl = url;
         return this;
     }
@@ -102,6 +107,7 @@ public class AccountWidget extends HtmlTag {
      * @return this widget
      */
     public AccountWidget withLogoutUrl(String url) {
+        SafeUrl.validateHref(url);
         this.logoutUrl = url;
         return this;
     }

@@ -3,6 +3,7 @@ package io.mindspice.simplypages.components.navigation;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
+import io.mindspice.simplypages.core.SafeUrl;
 import org.owasp.encoder.Encode;
 
 import java.util.ArrayList;
@@ -58,6 +59,7 @@ public class Breadcrumb extends HtmlTag {
         private final boolean active;
 
         BreadcrumbItem(String text, String href, boolean active) {
+            SafeUrl.validateHref(href);
             this.text = text;
             this.href = href;
             this.active = active;

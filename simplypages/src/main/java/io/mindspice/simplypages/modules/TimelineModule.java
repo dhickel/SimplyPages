@@ -124,7 +124,7 @@ public class TimelineModule extends Module {
         for (int i = 0; i < events.size(); i++) {
             TimelineEvent event = events.get(i);
 
-            Div eventItem = new Div().withClass("timeline-item");
+            Div eventItem = new Div().withClass("timeline-event timeline-item");
 
             // Date marker
             Div dateMarker = new Div().withClass("timeline-date");
@@ -140,7 +140,7 @@ public class TimelineModule extends Module {
             // Event title
             if (event.getEventTitle() != null && !event.getEventTitle().isEmpty()) {
                 eventContent.withChild(
-                    Header.H3(event.getEventTitle()).withClass("event-title")
+                    Header.H3(event.getEventTitle()).withClass("timeline-title event-title")
                 );
             }
 
@@ -149,7 +149,7 @@ public class TimelineModule extends Module {
                 eventContent.withChild(event.getCustomContent());
             } else if (event.getDescription() != null && !event.getDescription().isEmpty()) {
                 HtmlTag description = new HtmlTag("div")
-                    .withAttribute("class", "event-description")
+                    .withAttribute("class", "timeline-description event-description")
                     .withInnerText(event.getDescription());
                 eventContent.withChild(description);
             }

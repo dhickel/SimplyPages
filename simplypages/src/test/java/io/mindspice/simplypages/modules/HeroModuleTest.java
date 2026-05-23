@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class HeroModuleTest {
 
@@ -33,5 +34,22 @@ class HeroModuleTest {
         assertTrue(html.contains("btn btn-secondary"));
         assertTrue(html.contains("href=\"/learn\""));
         assertTrue(html.contains("Custom"));
+    }
+
+    @Test
+    @DisplayName("HeroModule should reject unsafe button and background URLs")
+    void testUnsafeUrls() {
+        assertThrows(IllegalArgumentException.class,
+            () -> HeroModule.create().withPrimaryButton("Bad", "javascript:alert(1)"));
+        assertThrows(IllegalArgumentException.class,
+            () -> HeroModule.create().withBackgroundImage("/bg.png\");color:red"));
+    }
+
+    @Test
+    @DisplayName("HeroModule should reject inline style breakout values")
+    void testUnsafeStyleValues() {
+        HeroModule module = HeroModule.create().withBackgroundColor("#fff;color:red");
+
+        assertThrows(IllegalArgumentException.class, module::render);
     }
 }

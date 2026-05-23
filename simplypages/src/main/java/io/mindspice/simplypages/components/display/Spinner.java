@@ -2,6 +2,7 @@ package io.mindspice.simplypages.components.display;
 
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.core.RenderContext;
 import java.util.stream.Stream;
 
 /**
@@ -80,7 +81,7 @@ public class Spinner extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    public String render(RenderContext context) {
         // If there's a message, wrap in a container
         if (message != null && !message.isEmpty()) {
             HtmlTag wrapper = new HtmlTag("div").withAttribute("class", "spinner-wrapper");
@@ -102,10 +103,15 @@ public class Spinner extends HtmlTag {
 
             wrapper.withChild(spinner);
             wrapper.withChild(messageDiv);
-            return wrapper.render();
+            return wrapper.render(context);
         } else {
             // Just the spinner
-            return super.render();
+            return super.render(context);
         }
+    }
+
+    @Override
+    public String render() {
+        return render(RenderContext.empty());
     }
 }

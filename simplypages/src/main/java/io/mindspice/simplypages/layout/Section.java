@@ -1,6 +1,7 @@
 package io.mindspice.simplypages.layout;
 
 import io.mindspice.simplypages.core.Component;
+import io.mindspice.simplypages.core.CssClassNames;
 import io.mindspice.simplypages.core.HtmlTag;
 
 /**
@@ -45,8 +46,7 @@ public class Section extends HtmlTag {
      * @return this section
      */
     public Section withClass(String className) {
-        String currentClass = "section";
-        this.withAttribute("class", currentClass + " " + className);
+        CssClassNames.addTokens(this, "section", className);
         return this;
     }
 

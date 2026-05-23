@@ -8,6 +8,7 @@ import io.mindspice.simplypages.components.Paragraph;
 import io.mindspice.simplypages.components.forms.Button;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.core.SafeUrl;
 
 /**
  * Module for prominent hero/banner page sections with optional CTA links.
@@ -71,6 +72,7 @@ public class HeroModule extends Module {
      * @param imageUrl URL or path to the background image
      */
     public HeroModule withBackgroundImage(String imageUrl) {
+        SafeUrl.validateCssImageUrl(imageUrl);
         this.backgroundImage = imageUrl;
         return this;
     }
@@ -92,6 +94,7 @@ public class HeroModule extends Module {
      * @param url button link URL
      */
     public HeroModule withPrimaryButton(String text, String url) {
+        SafeUrl.validateHref(url);
         this.primaryButtonText = text;
         this.primaryButtonUrl = url;
         return this;
@@ -104,6 +107,7 @@ public class HeroModule extends Module {
      * @param url button link URL
      */
     public HeroModule withSecondaryButton(String text, String url) {
+        SafeUrl.validateHref(url);
         this.secondaryButtonText = text;
         this.secondaryButtonUrl = url;
         return this;
@@ -129,17 +133,13 @@ public class HeroModule extends Module {
 
     @Override
     protected void buildContent() {
-        // Apply background styling
-        StringBuilder style = new StringBuilder();
         if (backgroundImage != null) {
-            style.append("background-image: url('").append(backgroundImage).append("'); ")
-                .append("background-size: cover; background-position: center;");
+            super.addTrustedStyle("background-image", SafeUrl.cssUrl(backgroundImage));
+            super.addStyle("background-size", "cover");
+            super.addStyle("background-position", "center");
         }
         if (backgroundColor != null) {
-            style.append("background-color: ").append(backgroundColor).append(";");
-        }
-        if (style.length() > 0) {
-            super.withAttribute("style", style.toString());
+            super.addStyle("background-color", backgroundColor);
         }
 
         // Create content wrapper
