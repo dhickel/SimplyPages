@@ -22,11 +22,12 @@ class ContainerTest {
     @DisplayName("Container should render custom class and children")
     void testContainerWithClassAndChild() {
         String html = Container.create()
+            .withSize(Container.ContainerSize.LARGE)
             .withClass("custom")
             .withChild(new Paragraph("Content"))
             .render();
 
-        assertTrue(html.contains("class=\"container custom\""));
+        assertTrue(html.contains("class=\"container container-lg custom\""));
         assertTrue(html.contains("Content"));
     }
 }

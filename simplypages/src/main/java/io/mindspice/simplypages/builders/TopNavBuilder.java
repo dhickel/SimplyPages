@@ -5,6 +5,7 @@ import io.mindspice.simplypages.components.Dropdown;
 import io.mindspice.simplypages.components.navigation.NavBar;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.core.SafeUrl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +75,7 @@ public class TopNavBuilder {
      * Adds a primary link with explicit active state.
      */
     public TopNavBuilder addPrimaryLink(String text, String href, boolean active) {
+        SafeUrl.validateHref(href);
         primaryEntries.add(new PrimaryLink(text, href, active));
         return this;
     }
@@ -238,6 +240,7 @@ public class TopNavBuilder {
     }
 
     private HtmlTag buildHtmxLink(String text, String href, boolean active, String className) {
+        SafeUrl.validateHref(href);
         String classes = active ? className + " active" : className;
         HtmlTag link = new HtmlTag("a")
             .withAttribute("href", href == null ? "" : href)

@@ -49,7 +49,7 @@ public String saveModule(@PathVariable String id, @RequestParam Map<String, Stri
 
     ValidationResult vr = module.validate(formData);
     if (!vr.isValid()) {
-        return Alert.danger(String.join(", ", vr.errors())).render();
+        return Alert.danger(String.join(", ", vr.getErrors())).render();
     }
 
     module.applyEdits(formData);
@@ -67,6 +67,10 @@ public String saveModule(@PathVariable String id, @RequestParam Map<String, Stri
 - User edits fields and submits.
 - `POST /modules/{id}/save` validates and applies edits.
 - Response uses OOB swaps to close modal and update content.
+
+Server-side handlers must enforce authorization even when edit/delete buttons are hidden in the
+rendered UI. Treat `AuthWrapper` and UI controls as helpers, not as a replacement for endpoint
+permission checks.
 
 ## Owner vs User Edit Mode
 

@@ -1,5 +1,7 @@
 package io.mindspice.simplypages.components;
 
+import io.mindspice.simplypages.core.RenderContext;
+import io.mindspice.simplypages.core.Template;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -66,5 +68,19 @@ class BasicComponentsTest {
             .render();
 
         assertTrue(html.contains("id=\"para-1\""));
+    }
+
+    @Test
+    @DisplayName("Paragraph alignment should render in context, nested, and template render paths")
+    void testParagraphAlignmentContextAndTemplateRendering() {
+        Paragraph paragraph = new Paragraph("Text").withClass("lead").right();
+
+        String contextHtml = paragraph.render(RenderContext.empty());
+        String nestedHtml = new Div().withChild(paragraph).render(RenderContext.empty());
+        String templateHtml = Template.of(new Div().withChild(paragraph)).render(RenderContext.empty());
+
+        assertTrue(contextHtml.contains("class=\"lead align-right\""));
+        assertTrue(nestedHtml.contains("class=\"lead align-right\""));
+        assertTrue(templateHtml.contains("class=\"lead align-right\""));
     }
 }

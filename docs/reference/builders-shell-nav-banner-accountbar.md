@@ -19,6 +19,7 @@ Core options:
 - `withContentTargetClass(...)`
 - `withContentWrapper(Function<Component, Component>)`
 - `withContent(...)`
+- `buildTemplate()`
 - `withPageTitle(...)`
 - `withHtmx(boolean)`
 - `withFrameworkCss(boolean)`
@@ -32,6 +33,8 @@ Core options:
 - `buildBody()`
 
 Returns full HTML document string from `build()`.
+
+`buildTemplate()` returns a reusable `ShellTemplate` (compiled template wrapper) with a dedicated content slot for request-time content injection.
 
 When a sidebar is configured, shell output includes a mobile navigation toggle hook compatible with framework CSS/JS defaults.
 
@@ -59,6 +62,25 @@ String shell = ShellBuilder.create()
     .build();
 ```
 
+## Template Shell Reuse
+
+Use `buildTemplate()` when shell chrome is stable and page content changes per request.
+
+```java
+ShellTemplate shellTemplate = ShellBuilder.create()
+    .withPageTitle("Admin Portal")
+    .withTopNav(topNav)
+    .buildTemplate();
+
+String html = shellTemplate.renderWithContent(pageComponent);
+```
+
+Notes:
+
+- `ShellTemplate.renderWithContent(...)` renders full document HTML (with doctype).
+- If `withContent(...)` was configured before `buildTemplate()`, that content becomes default slot content.
+- Template mode does not emit shell content auto-load attributes (`hx-get="/home"`, `hx-trigger="load"`).
+
 ## SideNavBuilder and TopNavBuilder
 
 Use nav builders to produce stable navigation components.
@@ -69,13 +91,24 @@ Guidance:
 2. Keep active-state logic deterministic.
 3. Prefer `TopNavBuilder` for header-level nav composition (primary links, utility links/dropdowns, account widgets).
 
+Generated navigation links validate targets through the shared `SafeUrl` contract. Use
+relative paths, fragments, query-only URLs, protocol-relative URLs, or absolute `http`,
+`https`, `mailto`, and `tel` URLs.
+
 ## BannerBuilder
 
 Use for app or area-level brand/title/banner composition.
 
+`withBackgroundImage(...)` accepts normal web image URLs and relative image paths. The value is
+validated before being embedded in inline CSS. Color helpers use the hardened `addStyle(...)`
+path and reject declaration-breakout characters.
+
 ## AccountBarBuilder
 
 Legacy compatibility builder. Prefer `TopNavBuilder` for new work.
+
+Link helpers use `SafeUrl` validation. `withBackgroundColor(...)` uses the hardened inline style
+path.
 
 ## Minimal Shell Example
 

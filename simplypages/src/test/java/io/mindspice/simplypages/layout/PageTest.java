@@ -41,6 +41,9 @@ class PageTest {
         assertThrows(IllegalArgumentException.class, () -> {
             Page.builder().withStickySidebar(new Div(), 10, 5);
         });
+        assertThrows(IllegalArgumentException.class, () -> {
+            Page.builder().withStickySidebar(null);
+        });
     }
 
     @Test

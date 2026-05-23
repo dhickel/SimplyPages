@@ -2,6 +2,7 @@ package io.mindspice.simplypages.components.navigation;
 
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.core.SafeUrl;
 
 /**
  * Hyperlink component with URL-scheme validation and HTMX helpers.
@@ -27,7 +28,7 @@ public class Link extends HtmlTag {
         super("a");
         this.href = href;
         this.text = text;
-        validateUrl(href);
+        SafeUrl.validateHref(href);
         this.withAttribute("href", href);
         this.withInnerText(text);
     }
@@ -101,7 +102,7 @@ public class Link extends HtmlTag {
      * @throws IllegalArgumentException when href scheme is disallowed
      */
     public Link withHref(String href) {
-        validateUrl(href);
+        SafeUrl.validateHref(href);
         this.href = href;
         this.withAttribute("href", href);
         return this;
@@ -193,53 +194,6 @@ public class Link extends HtmlTag {
     public Link withChild(Component component) {
         super.withChild(component);
         return this;
-    }
-
-    // Allowlist of safe URL schemes for hyperlinks.
-    private static final String[] ALLOWED_SCHEMES = {
-        "http",
-        "https",
-        "mailto",
-        "tel"
-    };
-
-    /**
-     * Validates href against scheme allowlist.
-     *
-     * @param url the URL to validate
-     * @throws IllegalArgumentException if the URL uses a disallowed scheme
-     */
-    private void validateUrl(String url) {
-        if (url == null || url.isEmpty()) {
-            return;  // Allow empty (browser treats as same page)
-        }
-
-        String trimmed = url.trim();
-        String lower = trimmed.toLowerCase();
-
-        if (lower.startsWith("#")
-            || lower.startsWith("/")
-            || lower.startsWith("./")
-            || lower.startsWith("../")
-            || lower.startsWith("?")
-            || lower.startsWith("//")) {
-            return;
-        }
-
-        int colonIndex = lower.indexOf(':');
-        if (colonIndex > 0) {
-            String scheme = lower.substring(0, colonIndex);
-            for (String allowed : ALLOWED_SCHEMES) {
-                if (allowed.equals(scheme)) {
-                    return;
-                }
-            }
-
-            throw new IllegalArgumentException(
-                scheme + " URLs are not allowed for security reasons. " +
-                    "Allowed schemes: http, https, mailto, tel, or relative paths."
-            );
-        }
     }
 
 }

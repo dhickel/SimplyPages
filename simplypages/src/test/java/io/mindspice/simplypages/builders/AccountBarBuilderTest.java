@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class AccountBarBuilderTest {
 
@@ -39,5 +40,17 @@ class AccountBarBuilderTest {
         assertTrue(html.contains("hx-get=\"/api/account-status\""));
         assertTrue(html.contains("hx-trigger=\"load\""));
         assertTrue(html.contains("hx-swap=\"outerHTML\""));
+    }
+
+    @Test
+    @DisplayName("AccountBarBuilder should reject unsafe URL and style values")
+    void testUnsafeValues() {
+        assertThrows(IllegalArgumentException.class,
+            () -> AccountBarBuilder.create().addLeftLink("Bad", "javascript:alert(1)"));
+
+        assertThrows(IllegalArgumentException.class,
+            () -> AccountBarBuilder.create()
+                .withBackgroundColor("#fff;color:red")
+                .build());
     }
 }

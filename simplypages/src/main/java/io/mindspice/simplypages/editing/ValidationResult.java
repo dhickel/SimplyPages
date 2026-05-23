@@ -25,7 +25,7 @@ public class ValidationResult {
      */
     private ValidationResult(boolean valid, List<String> errors) {
         this.valid = valid;
-        this.errors = errors != null ? errors : Collections.emptyList();
+        this.errors = errors != null ? List.copyOf(errors) : Collections.emptyList();
     }
 
     /** Creates a successful validation result. */

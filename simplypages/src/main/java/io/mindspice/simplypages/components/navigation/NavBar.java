@@ -3,6 +3,7 @@ package io.mindspice.simplypages.components.navigation;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
+import io.mindspice.simplypages.core.SafeUrl;
 import org.owasp.encoder.Encode;
 
 /**
@@ -78,6 +79,7 @@ public class NavBar extends HtmlTag {
     }
 
     public NavBar addUtilityLink(String text, String href, boolean active) {
+        SafeUrl.validateHref(href);
         HtmlTag link = new HtmlTag("a")
             .withAttribute("href", href == null ? "" : href)
             .withAttribute("class", active ? "navbar-item navbar-utility-item active" : "navbar-item navbar-utility-item")
@@ -125,6 +127,7 @@ public class NavBar extends HtmlTag {
         }
 
         public NavItem(String text, String href, boolean active) {
+            SafeUrl.validateHref(href);
             this.text = text;
             this.href = href;
             this.active = active;

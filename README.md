@@ -26,13 +26,22 @@ It is built for practical web apps: admin portals, internal tools, content-heavy
 
 ## Install
 
+Current release: `1.0.1`.
+
 ```xml
 <dependency>
   <groupId>io.mindspice</groupId>
   <artifactId>simplypages</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 ```
+
+## Requirements
+
+- Build tool: use the checked-in Maven wrapper (`./mvnw`).
+- Framework module: Java 25 release target.
+- Demo module: Java 21 release target, built in this repo with a Java 25 JDK.
+- Full reactor builds should run on JDK 25 so the framework module can compile.
 
 ## 1) Static Page (Build Once, Serve Fast)
 
@@ -124,7 +133,7 @@ public String saveModule(@PathVariable String id, @RequestParam Map<String, Stri
 
     ValidationResult vr = module.validate(formData);
     if (!vr.isValid()) {
-        return Alert.danger(String.join(", ", vr.errors())).render();
+        return Alert.danger(String.join(", ", vr.getErrors())).render();
     }
 
     module.applyEdits(formData);
@@ -236,6 +245,7 @@ Recommended sequence:
   - `docs/operations/01-performance-threading-and-cache-lifecycles.md`
   - `docs/operations/02-testing-and-troubleshooting-playbook.md`
   - `docs/operations/03-writing-tests-for-components-and-modules.md`
+  - `docs/operations/04-migrating-to-1.0.1.md`
 - Reference:
   - `docs/reference/components-and-modules-catalog.md`
   - `docs/reference/builders-shell-nav-banner-accountbar.md`

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BreadcrumbTest {
@@ -36,5 +37,11 @@ class BreadcrumbTest {
         assertTrue(html.contains("href=\"/?q=&lt;x>\""));
         assertTrue(html.contains("&lt;span&gt;Page&lt;/span&gt;"));
         assertFalse(html.contains("<b>Home</b>"));
+    }
+
+    @Test
+    @DisplayName("Breadcrumb should reject unsafe href schemes")
+    void testBreadcrumbUnsafeHref() {
+        assertThrows(IllegalArgumentException.class, () -> Breadcrumb.create().addItem("Bad", "javascript:alert(1)"));
     }
 }

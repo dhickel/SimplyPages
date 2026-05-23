@@ -1,5 +1,8 @@
 package io.mindspice.simplypages.layout;
 
+import io.mindspice.simplypages.components.Div;
+import io.mindspice.simplypages.core.RenderContext;
+import io.mindspice.simplypages.core.Template;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -46,5 +49,27 @@ class ColumnTest {
     void testColumnDefaultClass() {
         String html = Column.create().render();
         assertTrue(html.contains("class=\"col\""));
+    }
+
+    @Test
+    @DisplayName("Column should ensure col class in context, nested, and template render paths")
+    void testColumnContextAndTemplateRendering() {
+        Column column = Column.create().withClass("custom");
+
+        String contextHtml = column.render(RenderContext.empty());
+        String nestedHtml = new Div().withChild(column).render(RenderContext.empty());
+        String templateHtml = Template.of(new Div().withChild(column)).render(RenderContext.empty());
+
+        assertTrue(contextHtml.contains("class=\"col custom\""));
+        assertTrue(nestedHtml.contains("class=\"col custom\""));
+        assertTrue(templateHtml.contains("class=\"col custom\""));
+    }
+
+    @Test
+    @DisplayName("Column should not treat class names containing col as the col class token")
+    void testColumnClassTokenMatching() {
+        String html = Column.create().withClass("collapse").render();
+
+        assertTrue(html.contains("class=\"col collapse\""));
     }
 }

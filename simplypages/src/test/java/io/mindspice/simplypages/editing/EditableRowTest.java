@@ -2,6 +2,7 @@ package io.mindspice.simplypages.editing;
 
 import io.mindspice.simplypages.layout.Row;
 import io.mindspice.simplypages.modules.ContentModule;
+import io.mindspice.simplypages.components.Paragraph;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +39,37 @@ class EditableRowTest {
 
         assertTrue(html.contains("custom-row"));
         assertTrue(html.contains("data-test=\"row\""));
+    }
+
+    @Test
+    @DisplayName("EditableRow should preserve wrapped row content and configuration")
+    void testEditableRowPreservesWrappedRowContent() {
+        Row wrapped = new Row()
+            .withGap("lg")
+            .withChild(new Paragraph("Existing row content"));
+
+        EditableRow row = EditableRow.wrap(wrapped, "row-1", "page-1")
+            .addEditableModule(ContentModule.create().withTitle("Title").withContent("Body"), "module-1");
+
+        String html = row.render();
+
+        assertTrue(html.contains("gap-lg"));
+        assertTrue(html.contains("Existing row content"));
+        assertTrue(html.contains("/api/pages/page-1/modules/module-1/edit"));
+
+        String secondRender = row.render();
+        assertTrue(secondRender.contains("Existing row content"));
+    }
+
+    @Test
+    @DisplayName("EditableRow should reject unsafe path identifiers")
+    void testEditableRowRejectsUnsafeIds() {
+        assertThrows(IllegalArgumentException.class, () -> EditableRow.wrap(new Row(), "../row", "page-1"));
+        assertThrows(IllegalArgumentException.class, () -> EditableRow.wrap(new Row(), "row-1", "page/1"));
+
+        EditableRow row = EditableRow.wrap(new Row(), "row-1", "page-1");
+        assertThrows(IllegalArgumentException.class, () ->
+            row.addEditableModule(ContentModule.create().withTitle("Title").withContent("Body"), "module/1"));
     }
 
     @Test

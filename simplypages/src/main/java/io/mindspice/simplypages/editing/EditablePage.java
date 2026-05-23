@@ -30,10 +30,10 @@ public class EditablePage extends HtmlTag {
     /** Internal constructor; use {@link #create(String)}. */
     private EditablePage(String pageId) {
         super("div");
-        this.pageId = pageId;
+        this.pageId = EditingIds.requireSafeSegment(pageId, "pageId");
         this.pageContainer = new Div().withClass("editable-page");
         this.withClass("editable-page-wrapper");
-        this.withAttribute("id", "page-" + pageId);
+        this.withAttribute("id", "page-" + this.pageId);
     }
 
     /** Creates an editable page wrapper for the given page id. */

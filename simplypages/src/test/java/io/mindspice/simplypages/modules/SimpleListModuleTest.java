@@ -70,6 +70,29 @@ class SimpleListModuleTest {
     }
 
     @Test
+    @DisplayName("SimpleListModule should handle null item ids and rebuild after item mutations")
+    void testNullIdsAndMutationRebuild() {
+        ListItem first = ListItem.create("First");
+        ListItem second = ListItem.create("Second").withId("item-2");
+
+        SimpleListModule module = SimpleListModule.create()
+            .addItem(first);
+
+        assertTrue(module.findItem(null) == first);
+        assertTrue(module.render().contains("First"));
+
+        module.addItem(second);
+        String updated = module.render();
+        assertTrue(updated.contains("First"));
+        assertTrue(updated.contains("Second"));
+
+        module.removeItem(null);
+        String removed = module.render();
+        assertFalse(removed.contains("First"));
+        assertTrue(removed.contains("Second"));
+    }
+
+    @Test
     @DisplayName("SimpleListModule validation should reject long titles")
     void testListValidation() {
         SimpleListModule module = SimpleListModule.create();

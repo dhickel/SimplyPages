@@ -1,6 +1,8 @@
 package io.mindspice.simplypages.components;
 
 import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.core.RenderContext;
+import org.owasp.encoder.Encode;
 
 /**
  * Inline/code-block renderer with optional language and title metadata.
@@ -73,7 +75,7 @@ public class Code extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    public String render(RenderContext context) {
         if (isBlock) {
             // Build the code element
             HtmlTag codeElement = new HtmlTag("code");
@@ -92,7 +94,7 @@ public class Code extends HtmlTag {
             if (title != null) {
                 StringBuilder containerHtml = new StringBuilder();
                 containerHtml.append("<div class=\"code-container\">");
-                containerHtml.append("<div class=\"code-title\">").append(title).append("</div>");
+                containerHtml.append("<div class=\"code-title\">").append(Encode.forHtml(title)).append("</div>");
                 containerHtml.append(preHtml);
                 containerHtml.append("</div>");
                 return containerHtml.toString();
@@ -102,7 +104,12 @@ public class Code extends HtmlTag {
             }
         } else {
             // Inline code (content already set in constructor)
-            return super.render();
+            return super.render(context);
         }
+    }
+
+    @Override
+    public String render() {
+        return render(RenderContext.empty());
     }
 }

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AdditionalModulesTest {
@@ -108,5 +109,19 @@ class AdditionalModulesTest {
         assertTrue(html.contains("comparison-col-highlighted"));
         assertTrue(html.contains("X"));
         assertTrue(html.contains("Y"));
+    }
+
+    @Test
+    @DisplayName("ComparisonModule should reject row values that do not match column count")
+    void testComparisonModuleRowArityValidation() {
+        assertThrows(IllegalStateException.class,
+            () -> ComparisonModule.create().addRow("Price", "$1"));
+
+        ComparisonModule module = ComparisonModule.create()
+            .addColumn("A")
+            .addColumn("B");
+
+        assertThrows(IllegalArgumentException.class, () -> module.addRow("Price", "$1"));
+        assertThrows(IllegalArgumentException.class, () -> module.addRowWithComponents("Price", new Paragraph("$1")));
     }
 }

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NavBarTest {
@@ -41,5 +42,12 @@ class NavBarTest {
         assertTrue(html.contains("hx-get=\"/load?&lt;y>\""));
         assertFalse(html.contains("<b>Home</b>"));
         assertFalse(html.contains("href=\"/path?x=<x>\""));
+    }
+
+    @Test
+    @DisplayName("NavBar should reject unsafe href schemes")
+    void testNavBarUnsafeHref() {
+        assertThrows(IllegalArgumentException.class, () -> NavBar.create().addItem("Bad", "javascript:alert(1)"));
+        assertThrows(IllegalArgumentException.class, () -> NavBar.create().addUtilityLink("Bad", "data:text/html,<svg>"));
     }
 }

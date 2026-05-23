@@ -1,8 +1,10 @@
 package io.mindspice.simplypages.layout;
 
-import io.mindspice.simplypages.core.Attribute;
 import io.mindspice.simplypages.core.Component;
+import io.mindspice.simplypages.core.CssClassNames;
 import io.mindspice.simplypages.core.HtmlTag;
+
+import java.util.Set;
 
 /**
  * Generic CSS-class driven grid container.
@@ -16,6 +18,7 @@ public class Grid extends HtmlTag {
     protected int columns = 3;
     protected String gap = "medium";
     protected final String baseClass;
+    private static final Set<String> GAP_TOKENS = Set.of("sm", "medium", "lg");
 
     /**
      * Creates a grid with base class {@code grid}, 3 columns, and {@code medium} gap.
@@ -52,6 +55,9 @@ public class Grid extends HtmlTag {
      * @return this grid
      */
     public Grid withColumns(int columns) {
+        if (columns < 1 || columns > 6) {
+            throw new IllegalArgumentException("Grid columns must be between 1 and 6");
+        }
         this.columns = columns;
         updateClasses();
         return this;
@@ -64,7 +70,7 @@ public class Grid extends HtmlTag {
      * @return this grid
      */
     public Grid withGap(String gap) {
-        this.gap = gap;
+        this.gap = normalizeGap(gap);
         updateClasses();
         return this;
     }
@@ -101,27 +107,27 @@ public class Grid extends HtmlTag {
         // Logic to update grid classes based on state
         // We need to remove old grid-cols/gap classes to prevent accumulation.
 
-        String currentClass = attributes.stream()
-                .filter(attr -> "class".equals(attr.name()))
-                .map(Attribute::value)
-                .findFirst()
-                .orElse("");
+        CssClassNames.replaceMatching(
+            this,
+            baseClass,
+            "grid-cols-" + columns + " gap-" + gap,
+            token -> token.matches("grid-cols-\\d+") || token.startsWith("gap-")
+        );
+    }
 
-        // Clean up old grid layout classes
-        currentClass = currentClass.replaceAll("grid-cols-\\d+", "").replaceAll("gap-\\w+", "").trim();
-
-        // Remove extra spaces potentially created by replaceAll
-        currentClass = currentClass.replaceAll("\\s+", " ");
-
-        // Rebuild class string
-        // Ensure base class is present if not
-        if (!currentClass.contains(baseClass)) {
-            currentClass = (baseClass + " " + currentClass).trim();
+    private String normalizeGap(String token) {
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("Grid gap token cannot be blank");
         }
-
-        String newClass = (currentClass + " grid-cols-" + columns + " gap-" + gap).trim();
-
-        // Update the attribute directly
-        this.withAttribute("class", newClass);
+        String normalized = token.trim().toLowerCase();
+        if ("small".equals(normalized)) {
+            normalized = "sm";
+        } else if ("large".equals(normalized)) {
+            normalized = "lg";
+        }
+        if (!GAP_TOKENS.contains(normalized)) {
+            throw new IllegalArgumentException("Unsupported grid gap token: " + token);
+        }
+        return normalized;
     }
 }

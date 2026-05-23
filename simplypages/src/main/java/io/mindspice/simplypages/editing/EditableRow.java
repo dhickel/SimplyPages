@@ -50,10 +50,10 @@ public class EditableRow extends HtmlTag {
     /** Internal constructor; use {@link #wrap(Row, String, String)}. */
     private EditableRow(Row row, String rowId, String pageId) {
         super("div");
-        this.wrappedRow = row;
-        this.rowId = rowId;
-        this.pageId = pageId;
-        this.withAttribute("id", "row-" + rowId);
+        this.wrappedRow = row == null ? new Row() : row;
+        this.rowId = EditingIds.requireSafeSegment(rowId, "rowId");
+        this.pageId = EditingIds.requireSafeSegment(pageId, "pageId");
+        this.withAttribute("id", "row-" + this.rowId);
         this.withClass("editable-row-wrapper");
     }
 
@@ -93,6 +93,7 @@ public class EditableRow extends HtmlTag {
      * @throws IllegalStateException when module limit is reached
      */
     public EditableRow addEditableModule(Module module, String moduleId) {
+        EditingIds.requireSafeSegment(moduleId, "moduleId");
         if (modules.size() >= maxModulesPerRow) {
             throw new IllegalStateException("Maximum modules per row (" + maxModulesPerRow + ") reached");
         }
@@ -111,8 +112,8 @@ public class EditableRow extends HtmlTag {
     public String render(RenderContext context) {
         children.clear();
 
-        // Build a fresh row with all modules at proper column widths
-        Row row = new Row();
+        // Build from a shallow row copy so render-time module columns do not mutate wrappedRow.
+        Row row = wrappedRow.copy();
 
         if (!modules.isEmpty()) {
             // Calculate equal column width for all modules

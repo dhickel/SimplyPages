@@ -12,6 +12,7 @@ import io.mindspice.simplypages.core.HtmlTag;
  * Token issuance/validation remains an application responsibility.</p>
  */
 public class Form extends HtmlTag {
+    private String csrfHeaderName = "X-CSRF-TOKEN";
 
     /**
      * Supported logical HTTP methods for form submission.
@@ -203,6 +204,17 @@ public class Form extends HtmlTag {
     }
 
     /**
+     * Sets the CSRF header name used by {@link #withHxPostCsrf(String, String)}.
+     *
+     * @param name header name
+     * @return this form
+     */
+    public Form withCsrfHeaderName(String name) {
+        this.csrfHeaderName = name;
+        return this;
+    }
+
+    /**
      * Appends hidden {@code _csrf} input.
      *
      * @param token CSRF token value
@@ -228,9 +240,41 @@ public class Form extends HtmlTag {
     public Form withHxPostCsrf(String url, String csrfToken) {
         withHxPost(url);
         // Add CSRF token as request header for HTMX
-        String headers = String.format("{\"X-CSRF-TOKEN\": \"%s\"}", csrfToken);
+        String headers = "{"
+            + jsonString(String.valueOf(csrfHeaderName))
+            + ": "
+            + jsonString(String.valueOf(csrfToken))
+            + "}";
         withAttribute("hx-headers", headers);
         return this;
+    }
+
+    private String jsonString(String value) {
+        if (value == null) {
+            return "null";
+        }
+        StringBuilder escaped = new StringBuilder("\"");
+        for (int i = 0; i < value.length(); i++) {
+            char ch = value.charAt(i);
+            switch (ch) {
+                case '"' -> escaped.append("\\\"");
+                case '\\' -> escaped.append("\\\\");
+                case '\b' -> escaped.append("\\b");
+                case '\f' -> escaped.append("\\f");
+                case '\n' -> escaped.append("\\n");
+                case '\r' -> escaped.append("\\r");
+                case '\t' -> escaped.append("\\t");
+                default -> {
+                    if (ch < 0x20) {
+                        escaped.append(String.format("\\u%04x", (int) ch));
+                    } else {
+                        escaped.append(ch);
+                    }
+                }
+            }
+        }
+        escaped.append('"');
+        return escaped.toString();
     }
 
     /**

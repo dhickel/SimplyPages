@@ -90,7 +90,10 @@ public class StatsModule extends Module {
      * @param columns number of columns (1-6)
      */
     public StatsModule withColumns(int columns) {
-        this.columns = Math.min(Math.max(columns, 1), 6);
+        if (columns < 1 || columns > 6) {
+            throw new IllegalArgumentException("Stats columns must be between 1 and 6");
+        }
+        this.columns = columns;
         return this;
     }
 
@@ -102,8 +105,7 @@ public class StatsModule extends Module {
 
         // Create stats grid
         Div statsGrid = new Div()
-            .withClass("stats-grid")
-            .withAttribute("style", "display: grid; grid-template-columns: repeat(" + columns + ", 1fr); gap: 2rem;");
+            .withClass("stats-grid stats-cols-" + columns);
 
         for (Stat stat : stats) {
             Div statItem = new Div().withClass("stat-item");

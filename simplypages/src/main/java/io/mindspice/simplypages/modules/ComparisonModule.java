@@ -107,6 +107,7 @@ public class ComparisonModule extends Module {
      * @param values values for each column (must match column count)
      */
     public ComparisonModule addRow(String label, String... values) {
+        validateRowArity(values == null ? 0 : values.length);
         this.rows.add(new ComparisonRow(label, List.of(values)));
         return this;
     }
@@ -118,8 +119,20 @@ public class ComparisonModule extends Module {
      * @param values custom components for each column
      */
     public ComparisonModule addRowWithComponents(String label, Component... values) {
+        validateRowArity(values == null ? 0 : values.length);
         this.rows.add(new ComparisonRow(label, List.of(values), true));
         return this;
+    }
+
+    private void validateRowArity(int valueCount) {
+        if (columns.isEmpty()) {
+            throw new IllegalStateException("Add comparison columns before rows");
+        }
+        if (valueCount != columns.size()) {
+            throw new IllegalArgumentException(
+                "Comparison row value count must match column count. Expected " + columns.size() + " but got " + valueCount
+            );
+        }
     }
 
     @Override

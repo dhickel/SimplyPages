@@ -119,6 +119,9 @@ public class Page extends HtmlTag {
          * @throws IllegalArgumentException when widths are out of range or sum above 12
          */
         public PageBuilder withStickySidebar(Component stickyComponent, int mainWidth, int sidebarWidth) {
+            if (stickyComponent == null) {
+                throw new IllegalArgumentException("Sticky sidebar component cannot be null");
+            }
             if (mainWidth < 1 || mainWidth > 12 || sidebarWidth < 1 || sidebarWidth > 12) {
                 throw new IllegalArgumentException("Column widths must be between 1 and 12");
             }

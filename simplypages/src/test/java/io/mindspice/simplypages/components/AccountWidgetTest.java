@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class AccountWidgetTest {
 
@@ -31,5 +32,12 @@ class AccountWidgetTest {
         assertTrue(html.contains("Hello, alice"));
         assertTrue(html.contains("href=\"/profile\""));
         assertTrue(html.contains("href=\"/logout\""));
+    }
+
+    @Test
+    @DisplayName("AccountWidget should reject unsafe URLs")
+    void testUnsafeUrls() {
+        assertThrows(IllegalArgumentException.class, () -> AccountWidget.createGuest().withLoginUrl("javascript:alert(1)"));
+        assertThrows(IllegalArgumentException.class, () -> AccountWidget.createDynamic("data:text/html,<svg>"));
     }
 }

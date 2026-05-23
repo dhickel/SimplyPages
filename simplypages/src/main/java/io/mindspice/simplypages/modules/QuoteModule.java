@@ -86,6 +86,7 @@ public class QuoteModule extends Module {
      */
     public QuoteModule large() {
         this.large = true;
+        super.addClass("quote-large");
         return this;
     }
 
@@ -94,6 +95,7 @@ public class QuoteModule extends Module {
      */
     public QuoteModule centered() {
         this.centered = true;
+        super.addClass("quote-centered");
         return this;
     }
 
@@ -104,9 +106,7 @@ public class QuoteModule extends Module {
         }
 
         HtmlTag blockquote = new HtmlTag("blockquote")
-            .withAttribute("class", "quote-content" +
-                (large ? " quote-large" : "") +
-                (centered ? " quote-centered" : ""));
+            .withAttribute("class", "quote-content");
 
         // Quote text
         if (quote != null && !quote.isEmpty()) {
