@@ -86,6 +86,26 @@ public class Row extends HtmlTag {
     }
 
     /**
+     * Creates a shallow copy of this row's current attributes, text payload, and children.
+     *
+     * <p>Child components are reused, not cloned. This is intended for wrappers that need to
+     * preserve a configured row while adding request-local structure during render.</p>
+     *
+     * @return copied row
+     */
+    public Row copy() {
+        Row copy = new Row();
+        copy.attributes.clear();
+        copy.attributes.addAll(this.attributes);
+        copy.children.addAll(this.children);
+        copy.innerText = this.innerText;
+        copy.innerTextSlot = this.innerTextSlot;
+        copy.trustedHtml = this.trustedHtml;
+        copy.id = this.id;
+        return copy;
+    }
+
+    /**
      * Replaces class attribute with {@code row gap-<gap>}.
      *
      * @param gap gap token used by CSS

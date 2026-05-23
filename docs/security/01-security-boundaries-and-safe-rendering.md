@@ -23,6 +23,10 @@ Your application must enforce:
 - Input validation
 - Business authorization checks
 
+For editing flows, UI-level affordances are not an authorization boundary. Controllers or service
+handlers must re-check edit/delete/create permissions on every HTMX endpoint, including nested child
+edit endpoints.
+
 ## Unsafe HTML
 
 `withUnsafeHtml(...)` is intentionally dangerous.
@@ -55,6 +59,9 @@ Use normal web image URLs or relative image paths for `HeroModule.withBackground
 1. Apply the same auth checks on HTMX endpoints as full-page endpoints.
 2. Include CSRF token handling on state-changing requests.
 3. Return controlled HTML fragments on auth failures.
+4. Validate path variables and reject invalid row positions or child identifiers before mutation.
+5. Do not pre-escape persisted form text; rely on SimplyPages render paths to escape plain text
+   once at output time.
 
 ## Quick Checklist
 

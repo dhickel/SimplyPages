@@ -26,9 +26,9 @@ import io.mindspice.simplypages.modules.SimpleListModule;
 import io.mindspice.simplypages.components.ListItem;
 import io.mindspice.simplypages.modules.EditableModule;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.HtmlUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -318,12 +318,20 @@ public class EditingDemoController {
     @ResponseBody
     public String editModule(
             @PathVariable String moduleId,
-            @RequestParam(required = false) String editMode
+            @RequestParam(required = false) String editMode,
+            HttpServletResponse response
     ) {
         DemoModule module = findModule(moduleId);
         if (module == null) {
+            response.setStatus(HttpStatus.NOT_FOUND.value());
             return Modal.create().withTitle("Error")
                     .withBody(Alert.danger("Module not found"))
+                    .render();
+        }
+        if (!module.canEdit) {
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            return Modal.create().withTitle("Forbidden")
+                    .withBody(Alert.warning("This module cannot be edited."))
                     .render();
         }
 
@@ -336,12 +344,20 @@ public class EditingDemoController {
     public String saveModule(
             @PathVariable String moduleId,
             @RequestParam Map<String, String> formData,
-            @RequestParam(required = false) String editMode
+            @RequestParam(required = false) String editMode,
+            HttpServletResponse response
     ) {
         DemoModule module = findModule(moduleId);
         if (module == null) {
+            response.setStatus(HttpStatus.NOT_FOUND.value());
             return Modal.create().withTitle("Error")
                     .withBody(Alert.danger("Module not found"))
+                    .render();
+        }
+        if (!module.canEdit) {
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            return Modal.create().withTitle("Forbidden")
+                    .withBody(Alert.warning("This module cannot be edited."))
                     .render();
         }
 
@@ -359,10 +375,20 @@ public class EditingDemoController {
 
     @DeleteMapping("/delete/{moduleId}")
     @ResponseBody
-    public String deleteModule(@PathVariable String moduleId) {
+    public String deleteModule(@PathVariable String moduleId, HttpServletResponse response) {
         PageData pageData = pages.get(PAGE_ID);
         if (pageData == null) {
+            response.setStatus(HttpStatus.NOT_FOUND.value());
             return Alert.danger("Page not found").render();
+        }
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            response.setStatus(HttpStatus.NOT_FOUND.value());
+            return Alert.danger("Module not found").render();
+        }
+        if (!module.canDelete) {
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            return Alert.warning("This module cannot be deleted.").render();
         }
 
         DemoRow containingRow = null;
@@ -385,10 +411,15 @@ public class EditingDemoController {
 
     @PostMapping("/insert-row/{position}")
     @ResponseBody
-    public String insertRow(@PathVariable int position) {
+    public String insertRow(@PathVariable int position, HttpServletResponse response) {
         PageData pageData = pages.get(PAGE_ID);
         if (pageData == null) {
+            response.setStatus(HttpStatus.NOT_FOUND.value());
             return Alert.danger("Page not found").render();
+        }
+        if (position < -1 || position >= pageData.rows.size()) {
+            response.setStatus(HttpStatus.BAD_REQUEST.value());
+            return Alert.danger("Invalid row insert position").render();
         }
 
         String rowId = "row-" + idCounter.incrementAndGet();
@@ -584,6 +615,113 @@ public class EditingDemoController {
         return buildOobResponse();
     }
 
+    @GetMapping("/edit-child/{moduleId}/{childId}")
+    @ResponseBody
+    public String editChild(
+            @PathVariable String moduleId,
+            @PathVariable String childId,
+            HttpServletResponse response
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            response.setStatus(HttpStatus.NOT_FOUND.value());
+            return Modal.create().withTitle("Error")
+                    .withBody(Alert.danger("Module not found"))
+                    .render();
+        }
+        if (!module.canEdit || !module.title.equals("Nested Editing Demo")) {
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            return Modal.create().withTitle("Forbidden")
+                    .withBody(Alert.warning("This child item cannot be edited."))
+                    .render();
+        }
+
+        int index = childIndex(childId);
+        List<String> items = listItems(module);
+        if (index < 0 || index >= items.size()) {
+            response.setStatus(HttpStatus.NOT_FOUND.value());
+            return Modal.create().withTitle("Error")
+                    .withBody(Alert.warning("List item not found"))
+                    .render();
+        }
+
+        Div body = new Div().withClass("form-field");
+        body.withChild(new Paragraph("Item text:").withClass("form-label"));
+        body.withChild(TextInput.create("text").withValue(items.get(index)));
+
+        Div footer = new Div().withClass("d-flex justify-content-end gap-2");
+        Button save = Button.create("Save Item").withStyle(Button.ButtonStyle.PRIMARY);
+        save.withAttribute("hx-post", "/editing-demo/save-child/" + moduleId + "/" + childId);
+        save.withAttribute("hx-swap", "none");
+        save.withAttribute("hx-include", ".modal-body input");
+        footer.withChild(save);
+
+        return Modal.create()
+                .withTitle("Edit List Item")
+                .withBody(body)
+                .withFooter(footer)
+                .render();
+    }
+
+    @PostMapping("/save-child/{moduleId}/{childId}")
+    @ResponseBody
+    public String saveChild(
+            @PathVariable String moduleId,
+            @PathVariable String childId,
+            @RequestParam Map<String, String> formData,
+            HttpServletResponse response
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            response.setStatus(HttpStatus.NOT_FOUND.value());
+            return Alert.danger("Module not found").render();
+        }
+        if (!module.canEdit || !module.title.equals("Nested Editing Demo")) {
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            return Alert.warning("This child item cannot be edited.").render();
+        }
+
+        int index = childIndex(childId);
+        List<String> items = listItems(module);
+        if (index < 0 || index >= items.size()) {
+            response.setStatus(HttpStatus.NOT_FOUND.value());
+            return Alert.warning("List item not found").render();
+        }
+
+        items.set(index, safeText(formData.getOrDefault("text", "")));
+        module.content = String.join(",", items);
+        return buildOobResponse();
+    }
+
+    @DeleteMapping("/delete-child/{moduleId}/{childId}")
+    @ResponseBody
+    public String deleteChild(
+            @PathVariable String moduleId,
+            @PathVariable String childId,
+            HttpServletResponse response
+    ) {
+        DemoModule module = findModule(moduleId);
+        if (module == null) {
+            response.setStatus(HttpStatus.NOT_FOUND.value());
+            return Alert.danger("Module not found").render();
+        }
+        if (!module.canDelete || !module.title.equals("Nested Editing Demo")) {
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            return Alert.warning("This child item cannot be deleted.").render();
+        }
+
+        int index = childIndex(childId);
+        List<String> items = listItems(module);
+        if (index < 0 || index >= items.size()) {
+            response.setStatus(HttpStatus.NOT_FOUND.value());
+            return Alert.warning("List item not found").render();
+        }
+
+        items.remove(index);
+        module.content = String.join(",", items);
+        return buildOobResponse();
+    }
+
     private String buildEditModal(DemoModule module, EditMode mode) {
         Editable<?> editable;
 
@@ -733,7 +871,8 @@ public class EditingDemoController {
     }
 
     private String safeText(String value) {
-        return HtmlUtils.htmlEscape(value == null ? "" : value);
+        String text = value == null ? "" : value;
+        return text.length() > 5000 ? text.substring(0, 5000) : text;
     }
 
     private int parseWidth(String width, int fallback) {
@@ -749,6 +888,27 @@ public class EditingDemoController {
             // Keep fallback
         }
         return fallback;
+    }
+
+    private List<String> listItems(DemoModule module) {
+        List<String> items = new ArrayList<>();
+        if (module.content != null && !module.content.isEmpty()) {
+            for (String item : module.content.split(",")) {
+                items.add(item.trim());
+            }
+        }
+        return items;
+    }
+
+    private int childIndex(String childId) {
+        if (childId == null || !childId.startsWith("item-")) {
+            return -1;
+        }
+        try {
+            return Integer.parseInt(childId.substring("item-".length()));
+        } catch (NumberFormatException ignored) {
+            return -1;
+        }
     }
 
     private EditMode resolveEditMode(String editMode, DemoModule module) {

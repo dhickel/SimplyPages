@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EditablePageTest {
@@ -64,5 +65,12 @@ class EditablePageTest {
             .addEditableRow(row2);
 
         assertEquals(2, page.getRowCount());
+    }
+
+    @Test
+    @DisplayName("EditablePage should reject unsafe page identifiers")
+    void testEditablePageRejectsUnsafeIds() {
+        assertThrows(IllegalArgumentException.class, () -> EditablePage.create("page/1"));
+        assertThrows(IllegalArgumentException.class, () -> EditablePage.create("../page"));
     }
 }

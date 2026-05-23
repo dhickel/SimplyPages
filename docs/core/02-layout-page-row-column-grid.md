@@ -25,6 +25,10 @@ Page page = Page.builder()
 
 Use `addColumn(...)` when you need explicit column widths.
 
+`Row.copy()` creates a shallow copy of row attributes, text payload, and current child component
+references. Use it when a wrapper needs to preserve a configured row while adding render-time
+structure without mutating the original row on repeated renders.
+
 Row modifier helpers preserve existing custom classes and replace only their own class family:
 
 - `withGap("sm" | "medium" | "lg")`

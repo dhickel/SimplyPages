@@ -11,6 +11,7 @@ Owns Spring Boot demo app wiring and integration examples for SimplyPages.
 - Demo remains illustrative and runnable.
 - Demo code should reflect real framework usage patterns.
 - Demo must not redefine framework internals.
+- Demo editing endpoints must enforce the same permissions shown in the UI controls.
 
 ## Do
 - Keep demo endpoints focused on examples and docs support.
@@ -29,6 +30,7 @@ Owns Spring Boot demo app wiring and integration examples for SimplyPages.
 
 ## Required Tests
 - Demo integration tests covering major editing/HTMX flows
+- Permission, bounds, nested-edit, and OOB response regressions for editing demos
 - Sanity checks for any new major demo route
 
 ## Dependencies

@@ -12,7 +12,9 @@ Owns editing contracts and reusable helpers for inline/module editing flows.
 ## Invariants
 - `Editable` is the primary contract; `Editable` remains deprecated compatibility.
 - Validation must be explicit and non-throwing for normal user errors.
+- `ValidationResult` error collections are immutable defensive copies.
 - Helper outputs must be HTMX-friendly for modal/OOB workflows.
+- Generated edit path identifiers must be safe path segments; child URL template identifiers must be URL-encoded.
 
 ## Do
 - Keep editing abstractions framework-generic (not app-domain specific).
@@ -27,6 +29,7 @@ Owns editing contracts and reusable helpers for inline/module editing flows.
 - Breaking expected field names between form builders and apply/validate paths.
 - Treating edit flows as trusted input.
 - Forgetting compatibility with existing edit interfaces.
+- Hiding edit/delete buttons without enforcing the same permission rule in the endpoint handler.
 
 ## Required Tests
 - `EditableTest`, `EditFormBuilderTest`, `EditModalBuilderTest`
