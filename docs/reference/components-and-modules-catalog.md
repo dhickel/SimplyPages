@@ -4,7 +4,7 @@
 
 This is a practical catalog, not exhaustive class-level Javadoc.
 
-## Primitive Components (examples)
+## Primitive Components
 
 - Text/content: `Header`, `Paragraph`, `Markdown`, `Div`, `Code`, `Blockquote`
 - Forms: `Form`, `TextInput`, `TextArea`, `Select`, `Checkbox`, `RadioGroup`, `Button`
@@ -15,6 +15,28 @@ This is a practical catalog, not exhaustive class-level Javadoc.
 - Chat: `ChatTranscriptRenderer`, `ChatMessageData`, `ChatMessageComponent`, `DefaultChatMessageComponent`, `ChatUiConfig`, `ChatTransportMode`
 - Static content helper: `StaticContentSiteBuilder`, `StaticContentSite`, `ContentSectionConfig`, `ContentRouteIndex`, `ContentListItemComponent`, `DefaultContentListItemComponent`
 
+Common primitive contract:
+
+- Prefer `create(...)` factories where available.
+- Use fluent mutators for static structure during page composition.
+- Use `render(RenderContext)` for context-aware output and `render()` only for empty-context output.
+- Text setters escape plain text by default; `RawHtml` and `withUnsafeHtml(...)` are trusted-input
+  paths.
+
+Form primitives:
+
+- `Form` owns method/action/HTMX post wiring and CSRF helper output.
+- `TextInput`, `TextArea`, `Select`, `Checkbox`, and `RadioGroup` render name/value controls for
+  normal `@RequestParam` form handling.
+- `Button` is a command primitive; attach HTMX attributes explicitly or through module/builders.
+
+Navigation primitives:
+
+- `Link`, `NavBar`, `SideNav`, `Breadcrumb`, `Dropdown`, and `AccountWidget` validate public link
+  targets with `SafeUrl`.
+- Use root-relative URLs for application routes and `http`, `https`, `mailto`, or `tel` for
+  external links.
+
 ## Layout Components
 
 - `Page`
@@ -24,7 +46,16 @@ This is a practical catalog, not exhaustive class-level Javadoc.
 - `Container`
 - `Section`
 
-## Module Components (examples)
+Layout contract:
+
+- `Row.withChild(...)` wraps non-column content in a default `.col`.
+- `Row.addColumn(...)` appends a preconfigured `Column`.
+- `Row.copy()` shallow-copies row attributes/text/children for wrappers that add render-time
+  structure.
+- `Column.withWidth(1..12)`, `auto()`, and `fill()` own grid sizing.
+- `Grid.withColumns(1..6)` and `Grid.withGap(...)` emit constrained CSS tokens.
+
+## Module Components
 
 - `ContentModule`
 - `FormModule`
@@ -34,6 +65,15 @@ This is a practical catalog, not exhaustive class-level Javadoc.
 - `SimpleListModule`
 - `ChatModule`
 - `EditableModule` (wrapper/decorator)
+
+Module contract:
+
+- Modules build lazily and cache structure until invalidated by their own mutation methods.
+- Consumers should not call module width helpers; use `Row`/`Column` layout controls instead.
+- `ContentModule`, `RichContentModule`, and `SimpleListModule` implement editing contracts for
+  common content-editing flows.
+- `EditableModule` decorates another module with edit/delete controls; endpoint authorization
+  remains the application controller's responsibility.
 
 ## Selection Guidance
 
