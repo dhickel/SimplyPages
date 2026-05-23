@@ -14,12 +14,13 @@ class SectionTest {
         String html = Section.create()
             .withId("intro")
             .withClass("hero")
+            .withClass("featured")
             .withChild(new Paragraph("Welcome"))
             .render();
 
         assertTrue(html.contains("<section"));
         assertTrue(html.contains("id=\"intro\""));
-        assertTrue(html.contains("class=\"section hero\""));
+        assertTrue(html.contains("class=\"section hero featured\""));
         assertTrue(html.contains("Welcome"));
     }
 }

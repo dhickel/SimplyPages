@@ -133,6 +133,18 @@ public abstract class Module extends HtmlTag {
     }
 
     /**
+     * Clears built child structure so the next render rebuilds from current mutable fields.
+     *
+     * <p>Use from mutators that remain supported after a module has already been rendered.</p>
+     */
+    protected void invalidateContent() {
+        synchronized (buildLock) {
+            children.clear();
+            built = false;
+        }
+    }
+
+    /**
      * Ensures module structure is built once.
      */
     public Module build() {

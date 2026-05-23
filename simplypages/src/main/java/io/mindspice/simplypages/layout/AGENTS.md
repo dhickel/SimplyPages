@@ -12,6 +12,8 @@ Owns page composition and responsive layout primitives.
 - `Column.withWidth(int)` accepts only 1..12.
 - `Column.auto()` and `Column.fill()` semantics remain stable.
 - `Column` must normalize the exact `col` class token in direct, nested, context, and template render paths.
+- Row/Grid layout token helpers must emit classes backed by `framework.css`.
+- Layout mutators must preserve base/custom class tokens and replace only their own token family.
 - `Page.withStickySidebar(...)` keeps stable markup hooks used by responsive CSS.
 - `PageBuilder.build()` remains idempotent for unchanged builder state.
 
@@ -19,6 +21,7 @@ Owns page composition and responsive layout primitives.
 - Keep layout APIs fluent and simple.
 - Validate width/shape constraints at API boundaries.
 - Preserve backward-compatible CSS class semantics where possible.
+- Prefer `CssClassNames` when adding layout class mutators.
 
 ## Do Not
 - Move module-specific logic into layout classes.

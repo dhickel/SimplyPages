@@ -58,3 +58,13 @@ This is a practical catalog, not exhaustive class-level Javadoc.
   context-aware, and template render paths.
 - Custom renderers should treat `render(RenderContext)` as canonical and delegate zero-argument
   `render()` to an empty context.
+
+## Layout And Module Contract Notes
+
+- `Row`, `Grid`, `Container`, and `Section` preserve base/custom classes when applying layout
+  modifiers.
+- `StatsModule.withColumns(...)` accepts `1..6` and emits CSS-backed `stats-cols-*` classes.
+- `TabsModule` generates per-instance fallback tab/panel IDs when no module id is supplied.
+- `ComparisonModule` requires each row to provide exactly one value per configured column.
+- `SimpleListModule` handles null item ids and rebuilds rendered content after item add/remove
+  mutations.

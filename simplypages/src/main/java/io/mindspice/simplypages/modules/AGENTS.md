@@ -15,6 +15,8 @@ Owns high-level composed modules built from components/layout primitives.
 - Module direct width APIs are blocked; layout should size modules.
 - Public fluent APIs remain chainable and readable.
 - Module URL and inline-style configuration must use shared core validation paths.
+- Module-emitted classes must match `framework.css` hooks or preserve documented aliases.
+- Mutators that remain valid after first render must invalidate/rebuild module content deliberately.
 
 ## Do
 - Keep each module focused on one UI concern.
@@ -27,6 +29,7 @@ Owns high-level composed modules built from components/layout primitives.
 
 ## Common Pitfalls
 - Mutating children post-build without rebuild semantics.
+- Emitting module-specific class names that are not styled by the framework CSS.
 - Assuming width methods on modules are supported.
 - Creating tight coupling to demo controllers/routes.
 

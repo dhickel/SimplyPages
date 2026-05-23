@@ -4,6 +4,8 @@ import io.mindspice.simplypages.components.Paragraph;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -20,9 +22,9 @@ class MoreModulesTest {
         String html = module.render();
 
         assertTrue(html.contains("stats-grid"));
+        assertTrue(html.contains("stats-cols-2"));
         assertTrue(html.contains("Users"));
         assertTrue(html.contains("Active"));
-        assertTrue(html.contains("grid-template-columns: repeat(2"));
     }
 
     @Test
@@ -36,6 +38,9 @@ class MoreModulesTest {
         String html = module.render();
 
         assertTrue(html.contains("timeline-module"));
+        assertTrue(html.contains("timeline-event"));
+        assertTrue(html.contains("timeline-title"));
+        assertTrue(html.contains("timeline-description"));
         assertTrue(html.contains("Day 1"));
         assertTrue(html.contains("Start"));
         assertTrue(html.contains("Custom"));
@@ -55,6 +60,21 @@ class MoreModulesTest {
         assertTrue(html.contains("Tab2"));
         assertTrue(html.contains("tab-button active"));
         assertTrue(html.contains("tab-panel active"));
+    }
+
+    @Test
+    @DisplayName("TabsModule should generate unique fallback IDs per module instance")
+    void testTabsModuleUniqueFallbackIds() {
+        String first = TabsModule.create()
+            .addTab("Tab1", "One")
+            .render();
+        String second = TabsModule.create()
+            .addTab("Tab1", "One")
+            .render();
+
+        assertTrue(first.contains("-tab-0"));
+        assertTrue(second.contains("-tab-0"));
+        assertNotEquals(first, second);
     }
 
     @Test
@@ -79,25 +99,21 @@ class MoreModulesTest {
     }
 
     @Test
-    @DisplayName("StatsModule should clamp column counts and omit empty descriptions")
-    void testStatsModuleColumnClamping() {
-        StatsModule minColumns = StatsModule.create()
-            .withColumns(0)
-            .addStat("1", "Label");
+    @DisplayName("StatsModule should reject invalid column counts and omit empty descriptions")
+    void testStatsModuleColumnValidation() {
+        assertThrows(IllegalArgumentException.class, () -> StatsModule.create().withColumns(0));
+        assertThrows(IllegalArgumentException.class, () -> StatsModule.create().withColumns(7));
 
-        String minHtml = minColumns.render();
+        StatsModule module = StatsModule.create()
+            .withColumns(6)
+            .addStat("1", "Label", "Desc")
+            .addStat("2", "Empty");
 
-        assertTrue(minHtml.contains("repeat(1, 1fr)"));
-        assertFalse(minHtml.contains("stat-description"));
+        String html = module.render();
 
-        StatsModule maxColumns = StatsModule.create()
-            .withColumns(10)
-            .addStat("1", "Label", "Desc");
-
-        String maxHtml = maxColumns.render();
-
-        assertTrue(maxHtml.contains("repeat(6, 1fr)"));
-        assertTrue(maxHtml.contains("stat-description"));
+        assertTrue(html.contains("stats-cols-6"));
+        assertTrue(html.contains("stat-description"));
+        assertFalse(html.contains("grid-template-columns"));
     }
 
     @Test
@@ -111,6 +127,7 @@ class MoreModulesTest {
 
         assertTrue(html.contains("timeline-horizontal"));
         assertTrue(html.contains("Started"));
+        assertFalse(html.contains("timeline-title"));
         assertFalse(html.contains("event-title"));
     }
 

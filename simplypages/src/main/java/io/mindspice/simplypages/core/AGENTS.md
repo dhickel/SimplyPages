@@ -7,7 +7,7 @@ Owns rendering primitives and contracts used by the whole framework.
 - `Component`, `HtmlTag`, `Module`
 - `RenderContext`, `SlotKey`, `Slot`, `SlotKeyMap`
 - `Template`, `TemplateComponent`
-- `Attribute`, `Style`, `SafeUrl`
+- `Attribute`, `Style`, `SafeUrl`, `CssClassNames`
 
 ## Invariants
 - Rendering must be safe by default for untrusted text/attributes.
@@ -22,6 +22,7 @@ Owns rendering primitives and contracts used by the whole framework.
 - Add core API only when needed by multiple packages.
 - Keep low-level logic deterministic and side-effect minimal.
 - Treat `render(RenderContext)` as the canonical render path for custom components.
+- Use `CssClassNames` for token-aware class replacement when multiple packages need the behavior.
 - Document behavior changes in Javadocs and tests.
 
 ## Do Not
