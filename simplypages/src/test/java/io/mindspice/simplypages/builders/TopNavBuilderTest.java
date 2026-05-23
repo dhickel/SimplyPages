@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TopNavBuilderTest {
@@ -68,5 +69,14 @@ class TopNavBuilderTest {
         assertFalse(html.contains("hx-get="));
         assertFalse(html.contains("hx-target="));
         assertFalse(html.contains("hx-push-url="));
+    }
+
+    @Test
+    @DisplayName("TopNavBuilder should reject unsafe href schemes")
+    void testUnsafeHref() {
+        assertThrows(IllegalArgumentException.class,
+            () -> TopNavBuilder.create().addPrimaryLink("Bad", "javascript:alert(1)"));
+        assertThrows(IllegalArgumentException.class,
+            () -> TopNavBuilder.create().addUtilityLink("Bad", "data:text/html,<svg>"));
     }
 }

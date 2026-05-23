@@ -7,10 +7,11 @@ Owns rendering primitives and contracts used by the whole framework.
 - `Component`, `HtmlTag`, `Module`
 - `RenderContext`, `SlotKey`, `Slot`, `SlotKeyMap`
 - `Template`, `TemplateComponent`
-- `Attribute`, `Style`
+- `Attribute`, `Style`, `SafeUrl`
 
 ## Invariants
 - Rendering must be safe by default for untrusted text/attributes.
+- Shared URL allowlist behavior belongs in `SafeUrl` so link-like packages do not drift.
 - `Component` implementations must provide `render(RenderContext)`.
 - `render()` remains the empty-context convenience path.
 - `Module.build()` is idempotent and drives build-once lifecycle semantics.
@@ -33,6 +34,7 @@ Owns rendering primitives and contracts used by the whole framework.
 
 ## Required Tests
 - `HtmlTagTest`, `ModuleTest`, `RenderContextTest`, `TemplateTest`, `SlotKeyTest`
+- `SafeUrlTest`
 - Escaping/attribute safety regressions
 - Slot/default value semantics
 

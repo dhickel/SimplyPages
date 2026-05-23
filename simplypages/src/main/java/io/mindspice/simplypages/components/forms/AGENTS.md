@@ -9,6 +9,7 @@ Owns form input and form container components.
 ## Invariants
 - Form element APIs remain fluent and typed.
 - Name/value/attribute rendering stays HTML-safe.
+- Structured attribute payloads such as `hx-headers` must be encoded as their target format before attribute escaping.
 - Width helper methods on form components remain valid and validated by core style rules.
 - Input type helpers map to correct HTML input types.
 

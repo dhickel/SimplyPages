@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LinkTest {
@@ -53,5 +54,12 @@ class LinkTest {
 
         assertTrue(html.contains("href=\"https://example.com\""));
         assertFalse(html.contains("href=\"/path\""));
+    }
+
+    @Test
+    @DisplayName("Link should reject unsafe href schemes")
+    void testUnsafeHrefScheme() {
+        assertThrows(IllegalArgumentException.class, () -> Link.create("javascript:alert(1)", "Bad"));
+        assertThrows(IllegalArgumentException.class, () -> Link.create("/safe", "Go").withHref("data:text/html,<svg>"));
     }
 }

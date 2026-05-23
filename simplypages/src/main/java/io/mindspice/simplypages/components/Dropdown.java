@@ -2,6 +2,7 @@ package io.mindspice.simplypages.components;
 
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.core.SafeUrl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +47,7 @@ public class Dropdown {
      * @return this dropdown builder
      */
     public Dropdown addLink(String text, String href) {
+        SafeUrl.validateHref(href);
         HtmlTag link = new HtmlTag("a")
             .withAttribute("href", href)
             .withAttribute("class", "dropdown-link")

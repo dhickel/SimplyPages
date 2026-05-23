@@ -14,6 +14,7 @@ Owns high-level composed modules built from components/layout primitives.
 - Module lifecycle uses `build()` idempotently.
 - Module direct width APIs are blocked; layout should size modules.
 - Public fluent APIs remain chainable and readable.
+- Module URL and inline-style configuration must use shared core validation paths.
 
 ## Do
 - Keep each module focused on one UI concern.

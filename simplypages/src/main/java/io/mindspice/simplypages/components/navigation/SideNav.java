@@ -3,6 +3,7 @@ package io.mindspice.simplypages.components.navigation;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
+import io.mindspice.simplypages.core.SafeUrl;
 import org.owasp.encoder.Encode;
 
 /**
@@ -59,6 +60,7 @@ public class SideNav extends HtmlTag {
         private boolean hxPushUrl;
 
         public NavItem(String text, String href, boolean active) {
+            SafeUrl.validateHref(href);
             this.text = text;
             this.href = href;
             this.active = active;

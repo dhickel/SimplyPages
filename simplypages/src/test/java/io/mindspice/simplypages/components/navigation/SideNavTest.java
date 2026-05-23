@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SideNavTest {
@@ -43,5 +44,11 @@ class SideNavTest {
         assertTrue(html.contains("&lt;i&gt;icon&lt;/i&gt;"));
         assertTrue(html.contains("hx-get=\"/load?&lt;y>\""));
         assertFalse(html.contains("<b>Item</b>"));
+    }
+
+    @Test
+    @DisplayName("SideNav should reject unsafe href schemes")
+    void testSideNavUnsafeHref() {
+        assertThrows(IllegalArgumentException.class, () -> SideNav.create().addItem("Bad", "javascript:alert(1)"));
     }
 }

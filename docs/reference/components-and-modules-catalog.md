@@ -41,3 +41,12 @@ This is a practical catalog, not exhaustive class-level Javadoc.
 2. Use modules for reusable business sections.
 3. Wrap modules with `EditableModule` when edit controls are needed.
 4. Keep layout responsibilities in `Row`/`Column`, not in module width settings.
+
+## Safety Notes
+
+- `Link`, `NavBar`, `SideNav`, `Breadcrumb`, `Dropdown`, `AccountWidget`, `HeroModule`
+  button URLs, and related builders validate link targets through `SafeUrl`.
+- `HeroModule.withBackgroundImage(...)` validates CSS-embedded image URLs and rejects values that
+  could break out of the generated `url(...)` value.
+- `HeroModule.withBackgroundColor(...)` uses the hardened inline style path and rejects
+  declaration-breakout characters.

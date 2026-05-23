@@ -13,6 +13,7 @@ Owns shared low-level UI components and base component conventions.
 - Components follow `HtmlTag` extension patterns consistently.
 - `create()` factory methods and fluent return types stay consistent.
 - Attribute and text rendering remains safely escaped by default.
+- Shared components that create anchors must validate href-like values with `SafeUrl`.
 
 ## Do
 - Keep component APIs minimal and composable.
@@ -31,6 +32,7 @@ Owns shared low-level UI components and base component conventions.
 ## Required Tests
 - Component tests under `simplypages/src/test/java/.../components`
 - Security-related markdown/raw HTML tests where applicable
+- URL and inline-style safety regressions where components expose those values
 
 ## Dependencies
 - Depend on `core`; avoid dependencies on `modules`.

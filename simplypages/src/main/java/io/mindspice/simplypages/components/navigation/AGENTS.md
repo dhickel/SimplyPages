@@ -8,6 +8,7 @@ Owns navigation primitives and reusable nav structures.
 
 ## Invariants
 - Navigation components remain semantic and link-safe.
+- Anchor href values must use the shared `SafeUrl` validation contract.
 - Active/selected state APIs produce stable class and attribute output.
 - Side navigation structure remains builder-friendly.
 - `NavBar` supports primary item and utility item regions without breaking legacy item rendering.
@@ -16,6 +17,7 @@ Owns navigation primitives and reusable nav structures.
 - Keep navigation APIs concise and predictable.
 - Preserve compatibility with builders relying on nav components.
 - Add tests for active state rendering and link attributes.
+- Add unsafe-scheme regression tests whenever adding a new URL-bearing nav API.
 
 ## Do Not
 - Embed app route policies in component layer.

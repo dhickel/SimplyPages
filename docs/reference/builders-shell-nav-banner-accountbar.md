@@ -91,13 +91,24 @@ Guidance:
 2. Keep active-state logic deterministic.
 3. Prefer `TopNavBuilder` for header-level nav composition (primary links, utility links/dropdowns, account widgets).
 
+Generated navigation links validate targets through the shared `SafeUrl` contract. Use
+relative paths, fragments, query-only URLs, protocol-relative URLs, or absolute `http`,
+`https`, `mailto`, and `tel` URLs.
+
 ## BannerBuilder
 
 Use for app or area-level brand/title/banner composition.
 
+`withBackgroundImage(...)` accepts normal web image URLs and relative image paths. The value is
+validated before being embedded in inline CSS. Color helpers use the hardened `addStyle(...)`
+path and reject declaration-breakout characters.
+
 ## AccountBarBuilder
 
 Legacy compatibility builder. Prefer `TopNavBuilder` for new work.
+
+Link helpers use `SafeUrl` validation. `withBackgroundColor(...)` uses the hardened inline style
+path.
 
 ## Minimal Shell Example
 
