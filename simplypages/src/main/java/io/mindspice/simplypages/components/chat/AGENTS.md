@@ -7,6 +7,7 @@ Owns chat-focused rendering contracts and default helper components.
 - Chat data contracts (`ChatMessageData`)
 - Chat transport/config contracts (`ChatTransportMode`, `ChatUiConfig`)
 - Transcript renderer (`ChatTranscriptRenderer`)
+- Timeline transcript renderer (`TimelineTranscriptRenderer`) and generic embedded disclosure contracts
 - Message component contracts/defaults (`ChatMessageComponent`, `DefaultChatMessageComponent`)
 
 ## Invariants
@@ -17,6 +18,7 @@ Owns chat-focused rendering contracts and default helper components.
 ## Do
 - Keep APIs fluent and lightweight.
 - Keep rendering boundaries clear from transport or persistence concerns.
+- Keep embedded transcript blocks generic; do not encode tool-call, model, or persistence semantics in the component layer.
 - Add tests for any output-shape or contract change.
 
 ## Do Not

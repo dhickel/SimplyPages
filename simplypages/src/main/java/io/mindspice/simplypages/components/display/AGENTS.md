@@ -4,7 +4,7 @@
 Owns display-oriented UI components and visual containers.
 
 ## Owns
-- `Alert`, `Badge`, `Card`, `CardGrid`, `DataTable`, `InfoBox`, `Label`, `Modal`
+- `Alert`, `Badge`, `StatusBadge`, `PollingPanel`, `OobFragments`, `Card`, `CardGrid`, `DataTable`, `InfoBox`, `Label`, `Modal`
 - `OrderedList`, `UnorderedList`, `ProgressBar`, `Spinner`, `Table`, `Tag`
 
 ## Invariants

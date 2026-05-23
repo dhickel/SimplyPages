@@ -10,9 +10,13 @@ This page summarizes chat helper and module APIs.
 - `ChatMessageComponent`
 - `DefaultChatMessageComponent`
 - `ChatTranscriptRenderer<MESSAGE extends ChatMessageData, CTX>`
+- `TimelineTranscriptRenderer<ENTRY extends TranscriptEntryData, CTX>`
 - `ChatUiConfig`
 - `ChatTransportMode`
 - `ChatModule`
+- `TimelineTranscriptModule`
+- `ChatRoomListModule`
+- `AssistantChatModule`
 
 ## `ChatMessageData`
 
@@ -55,6 +59,34 @@ Builder hooks:
 - `withTimestampResolver(BiFunction<MESSAGE, CTX, String>)`
 - `withEmptyStateText(String)`
 
+## Timeline Transcript Helpers
+
+These APIs render chronological assistant/workspace events without assuming a tool-call model.
+Applications can use embedded blocks for thinking text, tool output, source links, linked
+modules/pages, or any other disclosure content.
+
+Data contracts:
+
+- `TranscriptEntryData`
+- `EmbeddedBlockData`
+
+Renderer:
+
+- `TimelineTranscriptRenderer.builder()`
+- `render(Collection<ENTRY> entries, CTX context)`
+
+Builder hooks:
+
+- `withEmbeddedBlockSupplier(Supplier<? extends EmbeddedBlockComponent>)`
+- `withBodyTextResolver(BiFunction<ENTRY, CTX, String>)`
+- `withEmptyStateText(String)`
+
+Default embedded block:
+
+- `DefaultEmbeddedBlockComponent.create()`
+- renders a generic `<details class="embedded-block">`
+- uses `data-embedded-block-kind` as a neutral app-defined grouping hook
+
 ## `ChatUiConfig`
 
 Fields:
@@ -95,3 +127,16 @@ Behavior:
 - Builds chat shell structure with `data-sp-chat-*` hook attributes.
 - Throws if `withUiConfig(...)` was not supplied.
 - Does not load history or open transport connections.
+
+## Assistant/Room Modules
+
+`ChatRoomListModule` renders app-owned room buttons with `hx-get`, `hx-target`, and `hx-swap`
+attributes. Room keys are opaque application routing keys.
+
+`AssistantChatModule` composes optional room list, toolbar, existing `ChatModule`, and side panel
+content. It does not replace `ChatModule`; it provides a richer shell around it.
+
+`TimelineTranscriptModule` wraps transcript components with a module title/description shell.
+
+Transport, persistence, authorization, message history, and model selection remain application
+responsibilities for all chat helper APIs.

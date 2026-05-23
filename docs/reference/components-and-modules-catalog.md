@@ -8,11 +8,11 @@ This is a practical catalog, not exhaustive class-level Javadoc.
 
 - Text/content: `Header`, `Paragraph`, `Markdown`, `Div`, `Code`, `Blockquote`
 - Forms: `Form`, `TextInput`, `TextArea`, `Select`, `Checkbox`, `RadioGroup`, `Button`
-- Display: `Card`, `CardGrid`, `DataTable`, `Table`, `Alert`, `Badge`, `Tag`, `InfoBox`, `Spinner`
+- Display: `Card`, `CardGrid`, `DataTable`, `Table`, `Alert`, `Badge`, `StatusBadge`, `PollingPanel`, `OobFragments`, `Tag`, `InfoBox`, `Spinner`
 - Media: `Image`, `Gallery`, `Video`, `Audio`
-- Navigation: `Link`, `NavBar`, `SideNav`, `Breadcrumb`
+- Navigation: `Link`, `NavBar`, `SideNav`, `Breadcrumb`, `HtmxTabNav`
 - Forum: `ForumCategoryRenderer`, `ForumTopicRenderer`, `ForumCommentRenderer`, `ForumCategoryData`, `ForumTopicData`, `ForumCommentData`, `ForumTopicTitleLink`, `ForumTagParser`, `ForumTagResolverRegistry`
-- Chat: `ChatTranscriptRenderer`, `ChatMessageData`, `ChatMessageComponent`, `DefaultChatMessageComponent`, `ChatUiConfig`, `ChatTransportMode`
+- Chat: `ChatTranscriptRenderer`, `TimelineTranscriptRenderer`, `ChatMessageData`, `TranscriptEntryData`, `EmbeddedBlockData`, `ChatMessageComponent`, `EmbeddedBlockComponent`, `DefaultChatMessageComponent`, `DefaultEmbeddedBlockComponent`, `ChatUiConfig`, `ChatTransportMode`
 - Static content helper: `StaticContentSiteBuilder`, `StaticContentSite`, `ContentSectionConfig`, `ContentRouteIndex`, `ContentListItemComponent`, `DefaultContentListItemComponent`
 
 ## Layout Components
@@ -33,6 +33,10 @@ This is a practical catalog, not exhaustive class-level Javadoc.
 - `HeroModule`
 - `SimpleListModule`
 - `ChatModule`
+- `TimelineTranscriptModule`
+- `ChatRoomListModule`
+- `AssistantChatModule`
+- `MasterDetailBrowserModule`
 - `EditableModule` (wrapper/decorator)
 
 ## Selection Guidance
@@ -41,3 +45,4 @@ This is a practical catalog, not exhaustive class-level Javadoc.
 2. Use modules for reusable business sections.
 3. Wrap modules with `EditableModule` when edit controls are needed.
 4. Keep layout responsibilities in `Row`/`Column`, not in module width settings.
+5. Use assistant/workspace modules for shell structure only; applications still own endpoints, persistence, auth, and transport behavior.
