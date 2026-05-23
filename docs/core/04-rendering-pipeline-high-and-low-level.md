@@ -82,6 +82,8 @@ sequenceDiagram
 - `withInnerText(...)` escapes text.
 - `Slot` text values are escaped.
 - `withUnsafeHtml(...)` bypasses escaping and must only receive trusted content.
+- Tag names and attribute names are validated before rendering; attribute values are HTML-attribute encoded.
+- `addStyle(...)` is the hardened inline-style path. It rejects declaration breakout and replaces exact style properties without matching substrings such as `width` inside `max-width`.
 
 ## HTMX Edit OOB Flow
 

@@ -7,8 +7,10 @@
 SimplyPages provides safe defaults in core rendering paths.
 
 - Text output is escaped by default.
-- Attribute rendering is encoded.
+- Attribute names and tag names are validated before rendering.
+- Attribute values are encoded before rendering.
 - Slot text output is escaped.
+- Inline styles added through `addStyle(...)` reject declaration-breakout characters and replace only exact property names.
 
 ## Application Responsibilities
 
@@ -25,6 +27,8 @@ Your application must enforce:
 `withUnsafeHtml(...)` is intentionally dangerous.
 Use only with trusted, sanitized sources.
 Never pass raw user input.
+
+`addTrustedStyle(...)` is also a trusted-input path. Use it only when a known-safe value needs CSS syntax that the hardened `addStyle(...)` path rejects, such as a trusted data URL.
 
 ## HTMX-Specific Security
 

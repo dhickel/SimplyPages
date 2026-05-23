@@ -24,6 +24,8 @@ import java.util.stream.Collectors;
  * via {@link Template}) with per-request {@link RenderContext} values.</p>
  */
 public class HtmlTag implements Component {
+    private static final Pattern HTML_TAG_NAME_PATTERN =
+            Pattern.compile("^[A-Za-z][A-Za-z0-9:-]*$");
     private static final Pattern CSS_PROPERTY_NAME_PATTERN =
             Pattern.compile("^(--[a-zA-Z0-9_-]+|[a-zA-Z][a-zA-Z0-9-]*)$");
     private static final Pattern CSS_DECLARATION_BREAKOUT_PATTERN = Pattern.compile("[;{}]");
@@ -59,6 +61,7 @@ public class HtmlTag implements Component {
      * @param selfClosing whether output uses {@code <tag />} form
      */
     public HtmlTag(String tagName, boolean selfClosing) {
+        validateTagName(tagName);
         this.tagName = tagName;
         this.selfClosing = selfClosing;
     }
@@ -95,8 +98,9 @@ public class HtmlTag implements Component {
      * duplicate names.</p>
      */
     public HtmlTag withAttribute(String name, String value) {
-        attributes.removeIf(attr -> attr.name().equals(name));
-        attributes.add(new Attribute(name, value));
+        Attribute attribute = new Attribute(name, value);
+        attributes.removeIf(attr -> attr.name().equals(attribute.name()));
+        attributes.add(attribute);
         return this;
     }
 
@@ -219,6 +223,7 @@ public class HtmlTag implements Component {
      */
     public HtmlTag withUnsafeHtml(String html) {
         this.innerText = html;
+        this.innerTextSlot = null;
         this.trustedHtml = true;
         return this;
     }
@@ -309,6 +314,12 @@ public class HtmlTag implements Component {
         }
     }
 
+    private void validateTagName(String tagName) {
+        if (tagName == null || tagName.isBlank() || !HTML_TAG_NAME_PATTERN.matcher(tagName).matches()) {
+            throw new IllegalArgumentException("Invalid HTML tag name: " + tagName);
+        }
+    }
+
     private HtmlTag addOrReplaceStyle(String property, String value) {
         Optional<String> existingStyle = attributes.stream()
                 .filter(attr -> "style".equals(attr.name()))
@@ -317,13 +328,32 @@ public class HtmlTag implements Component {
 
         String newStyle;
         if (existingStyle.isPresent()) {
-            String styles = existingStyle.get().trim().replaceAll(";+$", "");
-            String propertyPattern = Pattern.quote(property) + "\\s*:[^;]*;?";
-            styles = styles.replaceAll(propertyPattern, "").trim();
-            styles = styles.replaceAll(";+$", "");
-            newStyle = styles.isEmpty() ?
-                    property + ": " + value + ";" :
-                    styles + "; " + property + ": " + value + ";";
+            List<String> declarations = new ArrayList<>();
+            boolean replaced = false;
+            for (String declaration : existingStyle.get().split(";")) {
+                String trimmed = declaration.trim();
+                if (trimmed.isEmpty()) {
+                    continue;
+                }
+                String[] keyValue = trimmed.split(":", 2);
+                if (keyValue.length != 2) {
+                    declarations.add(trimmed);
+                    continue;
+                }
+                String existingProperty = keyValue[0].trim();
+                if (existingProperty.equalsIgnoreCase(property)) {
+                    if (!replaced) {
+                        declarations.add(property + ": " + value);
+                        replaced = true;
+                    }
+                } else {
+                    declarations.add(existingProperty + ": " + keyValue[1].trim());
+                }
+            }
+            if (!replaced) {
+                declarations.add(property + ": " + value);
+            }
+            newStyle = String.join("; ", declarations) + ";";
         } else {
             newStyle = property + ": " + value + ";";
         }
