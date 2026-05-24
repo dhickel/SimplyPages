@@ -5,6 +5,7 @@ Owns form input and form container components.
 
 ## Owns
 - `Form`, `TextInput`, `TextArea`, `Select`, `Checkbox`, `RadioGroup`, `Button`
+- `Autocomplete` (HTMX-first search/autocomplete field and option/status fragments)
 
 ## Invariants
 - Form element APIs remain fluent and typed.
