@@ -65,6 +65,8 @@ Layout contract:
 - `SimpleListModule`
 - `ChatModule`
 - `EditableModule` (wrapper/decorator)
+- `FileExplorerModule`
+- `FilePickerModule`
 
 Module contract:
 

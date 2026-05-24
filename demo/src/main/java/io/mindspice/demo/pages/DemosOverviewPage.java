@@ -26,6 +26,8 @@ public class DemosOverviewPage implements DemoPage {
                 .withChild(navCard("Display & Data", "/demos/display-data", "Status UI, data views, media, and navigation surfaces.", "Tables", "Media"))
                 .withChild(navCard("Modules", "/demos/modules", "Module library examples from static blocks to dynamic render paths.", "Modules", "Patterns"))
                 .withChild(navCard("HTMX & Editing", "/demos/htmx-editing", "Template + SlotKey rendering and editing integration endpoints.", "HTMX", "Editing"))
+                .withChild(navCard("File Explorer", "/demos/file-explorer", "Reusable SSR/HTMX explorer shell with neutral view-model inputs.", "Explorer", "HTMX"))
+                .withChild(navCard("File Picker", "/demos/file-picker", "Picker mode for path selection with stable callback targets.", "Picker", "Selection"))
                 .withChild(navCard("Chat Demo", "/chat", "Conversation timeline rendering with practical realtime update hooks.", "Chat", "Realtime"))
                 .withChild(navCard("Forum Demo", "/forum", "Category, topic, and comment rendering using forum helper composition.", "Forum", "Threads")));
 

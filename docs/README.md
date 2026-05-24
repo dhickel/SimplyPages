@@ -58,3 +58,4 @@ This page is the table of contents for all framework documentation.
 - [Chat Helper API Reference](reference/chat-helper-api-reference.md)
 - [Static Content Helper API Reference](reference/content-helper-api-reference.md)
 - [Editing API Reference](reference/editing-api-reference.md)
+- [File Explorer Module Reference](reference/file-explorer-module-reference.md)

@@ -26,6 +26,7 @@ public class DemoController {
     private final DisplayDataDemoPage displayDataDemoPage;
     private final ModulesDemoPage modulesDemoPage;
     private final HtmxEditingDemoPage htmxEditingDemoPage;
+    private final FileExplorerDemoPage fileExplorerDemoPage;
     private final JavadocsPage javadocsPage;
     private final DocumentationService documentationService;
 
@@ -36,6 +37,7 @@ public class DemoController {
         DisplayDataDemoPage displayDataDemoPage,
         ModulesDemoPage modulesDemoPage,
         HtmxEditingDemoPage htmxEditingDemoPage,
+        FileExplorerDemoPage fileExplorerDemoPage,
         JavadocsPage javadocsPage,
         DocumentationService documentationService
     ) {
@@ -45,6 +47,7 @@ public class DemoController {
         this.displayDataDemoPage = displayDataDemoPage;
         this.modulesDemoPage = modulesDemoPage;
         this.htmxEditingDemoPage = htmxEditingDemoPage;
+        this.fileExplorerDemoPage = fileExplorerDemoPage;
         this.javadocsPage = javadocsPage;
         this.documentationService = documentationService;
     }
@@ -101,6 +104,70 @@ public class DemoController {
         HttpServletResponse response
     ) {
         return renderInDemoShell(htmxEditingDemoPage, hxRequest, response);
+    }
+
+    @GetMapping("/demos/file-explorer")
+    @ResponseBody
+    public String fileExplorer(
+        @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+        HttpServletResponse response
+    ) {
+        return renderInDemoShell(fileExplorerDemoPage, hxRequest, response);
+    }
+
+    @GetMapping("/demos/file-picker")
+    @ResponseBody
+    public String filePicker(
+        @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+        HttpServletResponse response
+    ) {
+        response.setHeader("Vary", "HX-Request");
+        if (hxRequest != null) {
+            return fileExplorerDemoPage.renderPicker();
+        }
+        return renderInDemoShell(() -> fileExplorerDemoPage.renderPicker(), null, response);
+    }
+
+    @GetMapping("/demos/file-explorer/list")
+    @ResponseBody
+    public String fileExplorerList() {
+        return fileExplorerDemoPage.renderExplorer();
+    }
+
+    @GetMapping("/demos/file-explorer/view")
+    @ResponseBody
+    public String fileExplorerView(@RequestParam(value = "path", required = false) String path) {
+        return new io.mindspice.simplypages.components.Div()
+            .withId("demo-file-explorer-viewer")
+            .withClass("file-explorer-viewer-pane")
+            .withChild(io.mindspice.simplypages.components.Header.H4("Viewer"))
+            .withChild(new io.mindspice.simplypages.components.Paragraph("Preview for: " + (path == null ? "" : path)))
+            .render();
+    }
+
+    @GetMapping("/demos/file-explorer/modal/{type}")
+    @ResponseBody
+    public String fileExplorerModal(@org.springframework.web.bind.annotation.PathVariable("type") String type,
+                                    @RequestParam(value = "path", required = false) String path) {
+        return new io.mindspice.simplypages.components.Div()
+            .withId("demo-file-explorer-modal")
+            .withAttribute("hx-swap-oob", "true")
+            .withClass("file-explorer-modal-container")
+            .withChild(io.mindspice.simplypages.components.display.Modal.create()
+                .withModalId("demo_file_modal")
+                .withTitle("Demo " + type)
+                .withBody(new io.mindspice.simplypages.components.Paragraph("Path: " + (path == null ? "" : path))))
+            .render();
+    }
+
+    @PostMapping("/demos/file-picker/select")
+    @ResponseBody
+    public String filePickerSelect(@RequestParam("path") String path) {
+        return new io.mindspice.simplypages.components.Div()
+            .withId("demo-file-picker-value")
+            .withClass("file-picker-value")
+            .withInnerText(path)
+            .render();
     }
 
     @GetMapping(value = {"/docs/**", "/docs"})
@@ -206,6 +273,8 @@ public class DemoController {
                 .addLink("Display & Data", "/demos/display-data")
                 .addLink("Modules", "/demos/modules")
                 .addLink("HTMX & Editing", "/demos/htmx-editing")
+                .addLink("File Explorer", "/demos/file-explorer")
+                .addLink("File Picker", "/demos/file-picker")
                 .addLink("Chat", "/chat")
                 .build())
             .withContent(new RawHtml(page.render()))
