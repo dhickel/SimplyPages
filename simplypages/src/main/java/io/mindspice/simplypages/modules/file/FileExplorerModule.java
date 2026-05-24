@@ -45,6 +45,23 @@ public class FileExplorerModule extends Module {
         if (state.currentPath() != null) {
             toolbar.withChild(new Paragraph(state.currentPath()).withClass("file-explorer-current-path"));
         }
+        String currentPath = state.currentPath() == null || state.currentPath().isBlank() ? "." : state.currentPath();
+        String listEndpoint = config.endpoints().list(currentPath);
+        if (listEndpoint != null && !listEndpoint.isBlank()) {
+            toolbar.withChild(Button.create("Refresh").withStyle(Button.ButtonStyle.SECONDARY).small()
+                .withAttribute("hx-get", listEndpoint)
+                .withAttribute("hx-target", "#" + config.listTargetId())
+                .withAttribute("hx-swap", "outerHTML"));
+        }
+        if (config.allowCreateFolder()) {
+            toolbar.withChild(modalButton("New Folder", "create-folder", currentPath));
+        }
+        if (config.allowCreateText()) {
+            toolbar.withChild(modalButton("New Text", "create-text", currentPath));
+        }
+        if (config.allowCreateMarkdown()) {
+            toolbar.withChild(modalButton("New Markdown", "create-markdown", currentPath));
+        }
         if (state.toolbarActions() != null) {
             for (FileExplorerAction action : state.toolbarActions()) {
                 toolbar.withChild(actionButton(action));
@@ -88,16 +105,24 @@ public class FileExplorerModule extends Module {
             if (config.allowTags() && entry.tags() != null) { for (String tag : entry.tags()) { tags.withChild(new Div().withClass("tag").withInnerText(tag)); } }
             Div actions = new Div().withClass("file-entry-actions").withChild(open).withChild(inspect);
             if (config.allowDelete() && config.endpoints().modal(entry.path()) != null) {
-                actions.withChild(Button.create("Delete").small()
-                    .withAttribute("hx-get", config.endpoints().modal(entry.path()))
-                    .withAttribute("hx-target", "#" + config.modalContainerId())
-                    .withAttribute("hx-swap", "innerHTML"));
+                actions.withChild(modalButton("Delete", "delete", entry.path()));
             }
-            if (config.allowCopyMove() && config.endpoints().action(entry.path()) != null) {
-                actions.withChild(Button.create("Action").small()
-                    .withAttribute("hx-get", config.endpoints().action(entry.path()))
-                    .withAttribute("hx-target", "#" + config.modalContainerId())
-                    .withAttribute("hx-swap", "innerHTML"));
+            if (config.allowRename() && config.endpoints().modal("rename", entry.path()) != null) {
+                actions.withChild(modalButton("Rename", "rename", entry.path()));
+            }
+            if (config.allowCopyMove()) {
+                if (config.endpoints().action("copy", entry.path()) != null) {
+                    actions.withChild(Button.create("Copy").small()
+                        .withAttribute("hx-get", config.endpoints().action("copy", entry.path()))
+                        .withAttribute("hx-target", "#" + config.modalContainerId())
+                        .withAttribute("hx-swap", "innerHTML"));
+                }
+                if (config.endpoints().action("move", entry.path()) != null) {
+                    actions.withChild(Button.create("Move").small()
+                        .withAttribute("hx-get", config.endpoints().action("move", entry.path()))
+                        .withAttribute("hx-target", "#" + config.modalContainerId())
+                        .withAttribute("hx-swap", "innerHTML"));
+                }
             }
             if (entry.actions() != null) { for (FileExplorerAction action : entry.actions()) { actions.withChild(actionButton(action)); } }
             row.withChild(text).withChild(tags).withChild(actions);
@@ -125,6 +150,17 @@ public class FileExplorerModule extends Module {
         if (action.hxTarget() != null && !action.hxTarget().isBlank()) { button.withAttribute("hx-target", action.hxTarget()); }
         if (action.hxSwap() != null && !action.hxSwap().isBlank()) { button.withAttribute("hx-swap", action.hxSwap()); }
         if (action.hxConfirm() != null && !action.hxConfirm().isBlank()) { button.withAttribute("hx-confirm", action.hxConfirm()); }
+        return button;
+    }
+
+    protected Button modalButton(String label, String action, String path) {
+        Button button = Button.create(label).small();
+        String endpoint = config.endpoints().modal(action, path);
+        if (endpoint != null && !endpoint.isBlank()) {
+            button.withAttribute("hx-get", endpoint)
+                .withAttribute("hx-target", "#" + config.modalContainerId())
+                .withAttribute("hx-swap", "innerHTML");
+        }
         return button;
     }
 

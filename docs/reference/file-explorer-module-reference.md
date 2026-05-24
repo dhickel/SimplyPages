@@ -56,8 +56,9 @@ Use `FileExplorerConfig` as the stable API contract:
 
 - query mode (`/route` -> `/route?path=<encoded>`)
 - placeholder mode (`/route/{path}` -> `/route/<encoded>`)
+- action placeholder mode (`/modal/{action}` or `/action/{action}/{path}`)
 
-Path values are URL encoded by the module contract.
+Query values use normal query encoding. `{path}` placeholder values use URI path-component percent encoding, so spaces render as `%20` instead of form-style `+`.
 
 ## Slots and Panes
 
@@ -75,10 +76,15 @@ Path values are URL encoded by the module contract.
 
 ## HTMX Behavior
 
+- Toolbar refresh calls `listEndpoint` and targets `listTargetId`.
+- Toolbar create buttons call `modalEndpointTemplate` with actions `create-folder`, `create-text`, and `create-markdown` when their allow flags are enabled.
 - Entry open buttons call navigate/viewer templates by entry type.
 - Inspector buttons call inspector endpoint template.
-- Delete buttons call modal endpoint template when `allowDelete` is enabled.
+- Rename and delete buttons call `modalEndpointTemplate` with actions `rename` and `delete` when their allow flags are enabled.
+- Copy and move buttons call `actionEndpointTemplate` with actions `copy` and `move` when `allowCopyMove` is enabled.
 - Consumer-defined entry actions can provide custom `hx-*` attributes using `FileExplorerAction`.
+
+The module only renders the controls and HTMX attributes. Apps decide whether a modal is one-step, two-step, read-only, or rejected based on the selected entry and server-side policy.
 
 ## Security Notes
 
