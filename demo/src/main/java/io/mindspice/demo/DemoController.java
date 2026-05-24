@@ -130,8 +130,23 @@ public class DemoController {
 
     @GetMapping("/demos/file-explorer/list")
     @ResponseBody
-    public String fileExplorerList() {
-        return fileExplorerDemoPage.renderExplorer();
+    public String fileExplorerList(@RequestParam(value = "path", required = false) String path) {
+        return new io.mindspice.simplypages.components.Div()
+            .withId("demo-file-explorer-list")
+            .withClass("file-explorer-list-pane")
+            .withChild(new io.mindspice.simplypages.components.Paragraph("Explorer list for: " + (path == null ? "/workspace/docs" : path)))
+            .render();
+    }
+
+    @GetMapping("/demos/file-explorer/inspect")
+    @ResponseBody
+    public String fileExplorerInspect(@RequestParam(value = "path", required = false) String path) {
+        return new io.mindspice.simplypages.components.Div()
+            .withId("demo-file-explorer-inspector")
+            .withClass("file-explorer-inspector-pane")
+            .withChild(io.mindspice.simplypages.components.Header.H4("Inspector"))
+            .withChild(new io.mindspice.simplypages.components.Paragraph("Inspecting: " + (path == null ? "" : path)))
+            .render();
     }
 
     @GetMapping("/demos/file-explorer/view")
@@ -142,6 +157,38 @@ public class DemoController {
             .withClass("file-explorer-viewer-pane")
             .withChild(io.mindspice.simplypages.components.Header.H4("Viewer"))
             .withChild(new io.mindspice.simplypages.components.Paragraph("Preview for: " + (path == null ? "" : path)))
+            .render();
+    }
+
+    @GetMapping("/demos/file-picker/list")
+    @ResponseBody
+    public String filePickerList(@RequestParam(value = "path", required = false) String path) {
+        return new io.mindspice.simplypages.components.Div()
+            .withId("demo-file-picker-list")
+            .withClass("file-explorer-list-pane")
+            .withChild(new io.mindspice.simplypages.components.Paragraph("Picker list for: " + (path == null ? "/workspace" : path)))
+            .render();
+    }
+
+    @GetMapping("/demos/file-picker/inspect")
+    @ResponseBody
+    public String filePickerInspect(@RequestParam(value = "path", required = false) String path) {
+        return new io.mindspice.simplypages.components.Div()
+            .withId("demo-file-picker-inspector")
+            .withClass("file-explorer-inspector-pane")
+            .withChild(io.mindspice.simplypages.components.Header.H4("Inspector"))
+            .withChild(new io.mindspice.simplypages.components.Paragraph("Inspecting: " + (path == null ? "" : path)))
+            .render();
+    }
+
+    @GetMapping("/demos/file-picker/view")
+    @ResponseBody
+    public String filePickerView(@RequestParam(value = "path", required = false) String path) {
+        return new io.mindspice.simplypages.components.Div()
+            .withId("demo-file-picker-viewer")
+            .withClass("file-explorer-viewer-pane")
+            .withChild(io.mindspice.simplypages.components.Header.H4("Viewer"))
+            .withChild(new io.mindspice.simplypages.components.Paragraph("Picker preview for: " + (path == null ? "" : path)))
             .render();
     }
 
@@ -158,6 +205,32 @@ public class DemoController {
                 .withTitle("Demo " + type)
                 .withBody(new io.mindspice.simplypages.components.Paragraph("Path: " + (path == null ? "" : path))))
             .render();
+    }
+
+    @GetMapping("/demos/file-picker/modal/{type}")
+    @ResponseBody
+    public String filePickerModal(@org.springframework.web.bind.annotation.PathVariable("type") String type,
+                                  @RequestParam(value = "path", required = false) String path) {
+        return new io.mindspice.simplypages.components.Div()
+            .withId("demo-file-picker-modal")
+            .withClass("file-explorer-modal-container")
+            .withChild(io.mindspice.simplypages.components.display.Modal.create()
+                .withModalId("demo_picker_modal")
+                .withTitle("Picker " + type)
+                .withBody(new io.mindspice.simplypages.components.Paragraph("Path: " + (path == null ? "" : path))))
+            .render();
+    }
+
+    @GetMapping("/demos/file-explorer/action/run")
+    @ResponseBody
+    public String fileExplorerAction(@RequestParam(value = "path", required = false) String path) {
+        return new io.mindspice.simplypages.components.Paragraph("Ran action for: " + (path == null ? "" : path)).render();
+    }
+
+    @GetMapping("/demos/file-picker/action/run")
+    @ResponseBody
+    public String filePickerAction(@RequestParam(value = "path", required = false) String path) {
+        return new io.mindspice.simplypages.components.Paragraph("Ran picker action for: " + (path == null ? "" : path)).render();
     }
 
     @PostMapping("/demos/file-picker/select")

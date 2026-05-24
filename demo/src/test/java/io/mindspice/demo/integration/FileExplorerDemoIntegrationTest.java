@@ -34,4 +34,46 @@ class FileExplorerDemoIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(content().string(containsString("id=\"demo-file-picker-value\"")));
     }
+
+    @Test
+    @DisplayName("Explorer fragment endpoints return matching target ids")
+    void explorerFragmentsUseStableIds() throws Exception {
+        mockMvc.perform(get("/demos/file-explorer/list").param("path", "/workspace/docs"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("id=\"demo-file-explorer-list\"")));
+        mockMvc.perform(get("/demos/file-explorer/inspect").param("path", "/workspace/docs/readme.md"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("id=\"demo-file-explorer-inspector\"")));
+        mockMvc.perform(get("/demos/file-explorer/view").param("path", "/workspace/docs/readme.md"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("id=\"demo-file-explorer-viewer\"")));
+    }
+
+    @Test
+    @DisplayName("Picker fragment endpoints return matching target ids")
+    void pickerFragmentsUseStableIds() throws Exception {
+        mockMvc.perform(get("/demos/file-picker/list").param("path", "/workspace"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("id=\"demo-file-picker-list\"")));
+        mockMvc.perform(get("/demos/file-picker/inspect").param("path", "/workspace/images"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("id=\"demo-file-picker-inspector\"")));
+        mockMvc.perform(get("/demos/file-picker/view").param("path", "/workspace/docs/readme.md"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("id=\"demo-file-picker-viewer\"")));
+    }
+
+    @Test
+    @DisplayName("Modal and action endpoints render HTMX fragments")
+    void modalAndActionEndpointsRender() throws Exception {
+        mockMvc.perform(get("/demos/file-explorer/modal/delete").param("path", "/workspace/docs/readme.md"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("id=\"demo-file-explorer-modal\"")));
+        mockMvc.perform(get("/demos/file-picker/modal/delete").param("path", "/workspace/images"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("id=\"demo-file-picker-modal\"")));
+        mockMvc.perform(get("/demos/file-explorer/action/run").param("path", "/workspace/docs/readme.md"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("Ran action for: /workspace/docs/readme.md")));
+    }
 }

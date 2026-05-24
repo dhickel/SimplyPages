@@ -9,44 +9,34 @@ import io.mindspice.simplypages.core.Module;
 
 public class FileExplorerModule extends Module {
     protected final FileExplorerState state;
-    protected final FileExplorerEndpoints endpoints;
+    protected final FileExplorerConfig config;
     protected final FileExplorerInspectorSpec inspectorSpec;
-    protected String rootId = "file-explorer-root";
-    protected String listPaneId = "file-explorer-list";
-    protected String inspectorPaneId = "file-explorer-inspector";
-    protected String viewerPaneId = "file-explorer-viewer";
-    protected String modalContainerId = "file-explorer-modal";
 
-    protected FileExplorerModule(FileExplorerState state, FileExplorerEndpoints endpoints, FileExplorerInspectorSpec inspectorSpec) {
+    protected FileExplorerModule(FileExplorerState state, FileExplorerConfig config, FileExplorerInspectorSpec inspectorSpec) {
         super("section");
         this.state = state;
-        this.endpoints = endpoints;
+        this.config = config;
         this.inspectorSpec = inspectorSpec == null ? FileExplorerInspectorSpec.defaults() : inspectorSpec;
         withClass("file-explorer-module");
     }
 
     public static FileExplorerModule create(FileExplorerState state, FileExplorerEndpoints endpoints) {
-        return new FileExplorerModule(state, endpoints, FileExplorerInspectorSpec.defaults());
+        return new FileExplorerModule(state, FileExplorerConfig.defaults(endpoints), FileExplorerInspectorSpec.defaults());
     }
 
-    public FileExplorerModule withPaneIds(String rootId, String listPaneId, String inspectorPaneId, String viewerPaneId, String modalContainerId) {
-        this.rootId = rootId;
-        this.listPaneId = listPaneId;
-        this.inspectorPaneId = inspectorPaneId;
-        this.viewerPaneId = viewerPaneId;
-        this.modalContainerId = modalContainerId;
-        return this;
+    public static FileExplorerModule create(FileExplorerState state, FileExplorerConfig config) {
+        return new FileExplorerModule(state, config, FileExplorerInspectorSpec.defaults());
     }
 
     @Override
     protected void buildContent() {
-        withId(rootId);
+        withId(config.rootId());
         withChild(buildToolbar());
         withChild(buildBreadcrumb());
         Div body = new Div().withClass("file-explorer-body");
         body.withChild(buildListPane()).withChild(buildInspectorPane()).withChild(buildViewerPane());
         withChild(body);
-        withChild(new Div().withId(modalContainerId).withClass("file-explorer-modal-container"));
+        withChild(new Div().withId(config.modalContainerId()).withClass("file-explorer-modal-container"));
     }
 
     private Div buildToolbar() {
@@ -67,29 +57,48 @@ public class FileExplorerModule extends Module {
         Breadcrumb breadcrumb = Breadcrumb.create().withClass("file-explorer-breadcrumb");
         if (state.breadcrumbs() != null) {
             for (FileBreadcrumbItem item : state.breadcrumbs()) {
-                if (item.active()) { breadcrumb.addActiveItem(item.label()); } else { breadcrumb.addItem(item.label(), withPath(endpoints.navigateEndpoint(), item.path())); }
+                if (item.active()) { breadcrumb.addActiveItem(item.label()); }
+                else { breadcrumb.addItem(item.label(), config.endpoints().navigate(item.path())); }
             }
         }
         return breadcrumb;
     }
 
     private Div buildListPane() {
-        Div list = new Div().withId(listPaneId).withClass("file-explorer-list-pane");
+        Div list = new Div().withId(config.listTargetId()).withClass("file-explorer-list-pane file-explorer-" + config.explorerMode().name().toLowerCase());
         if (state.entries() == null || state.entries().isEmpty()) { return list.withChild(new Paragraph("No entries available.")); }
         for (FileEntryView entry : state.entries()) {
             Div row = new Div().withClass("file-explorer-entry" + (entry.selected() ? " selected" : ""));
-            String openEndpoint = entry.directory() ? endpoints.navigateEndpoint() : endpoints.viewerEndpoint();
+            String openEndpoint = entry.directory() ? config.endpoints().navigate(entry.path()) : config.endpoints().view(entry.path());
             Button open = Button.create(entry.directory() ? "Open Folder" : "Open").withStyle(Button.ButtonStyle.SECONDARY).small();
             if (openEndpoint != null) {
-                open.withAttribute("hx-get", withPath(openEndpoint, entry.path()))
-                    .withAttribute("hx-target", entry.directory() ? "#" + listPaneId : "#" + viewerPaneId)
+                open.withAttribute("hx-get", openEndpoint)
+                    .withAttribute("hx-target", entry.directory() ? "#" + config.listTargetId() : "#" + config.viewerTargetId())
+                    .withAttribute("hx-swap", "outerHTML");
+            }
+            Button inspect = Button.create("Inspect").withStyle(Button.ButtonStyle.SECONDARY).small();
+            if (config.endpoints().inspect(entry.path()) != null) {
+                inspect.withAttribute("hx-get", config.endpoints().inspect(entry.path()))
+                    .withAttribute("hx-target", "#" + config.inspectorTargetId())
                     .withAttribute("hx-swap", "outerHTML");
             }
             Div text = new Div().withClass("file-entry-text").withChild(Header.H4(entry.name())).withChild(new Paragraph(entry.summary() == null ? "" : entry.summary()));
             if (entry.sizeLabel() != null) { text.withChild(new Paragraph(entry.sizeLabel()).withClass("file-entry-size")); }
             Div tags = new Div().withClass("file-entry-tags");
-            if (entry.tags() != null) { for (String tag : entry.tags()) { tags.withChild(new Div().withClass("tag").withInnerText(tag)); } }
-            Div actions = new Div().withClass("file-entry-actions").withChild(open);
+            if (config.allowTags() && entry.tags() != null) { for (String tag : entry.tags()) { tags.withChild(new Div().withClass("tag").withInnerText(tag)); } }
+            Div actions = new Div().withClass("file-entry-actions").withChild(open).withChild(inspect);
+            if (config.allowDelete() && config.endpoints().modal(entry.path()) != null) {
+                actions.withChild(Button.create("Delete").small()
+                    .withAttribute("hx-get", config.endpoints().modal(entry.path()))
+                    .withAttribute("hx-target", "#" + config.modalContainerId())
+                    .withAttribute("hx-swap", "innerHTML"));
+            }
+            if (config.allowCopyMove() && config.endpoints().action(entry.path()) != null) {
+                actions.withChild(Button.create("Action").small()
+                    .withAttribute("hx-get", config.endpoints().action(entry.path()))
+                    .withAttribute("hx-target", "#" + config.modalContainerId())
+                    .withAttribute("hx-swap", "innerHTML"));
+            }
             if (entry.actions() != null) { for (FileExplorerAction action : entry.actions()) { actions.withChild(actionButton(action)); } }
             row.withChild(text).withChild(tags).withChild(actions);
             list.withChild(row);
@@ -98,14 +107,14 @@ public class FileExplorerModule extends Module {
     }
 
     private Div buildInspectorPane() {
-        Div inspector = new Div().withId(inspectorPaneId).withClass("file-explorer-inspector-pane").withChild(Header.H4(inspectorSpec.title()));
+        Div inspector = new Div().withId(config.inspectorTargetId()).withClass("file-explorer-inspector-pane").withChild(Header.H4(inspectorSpec.title()));
         if (state.inspectorContent() != null) { return inspector.withChild(state.inspectorContent()); }
         if (state.selectedEntry() != null) { return inspector.withChild(new Paragraph(state.selectedEntry().path())).withChild(new Paragraph(state.selectedEntry().type())); }
         return inspector.withChild(new Paragraph(inspectorSpec.emptyMessage()));
     }
 
     private Div buildViewerPane() {
-        Div viewer = new Div().withId(viewerPaneId).withClass("file-explorer-viewer-pane").withChild(Header.H4("Viewer"));
+        Div viewer = new Div().withId(config.viewerTargetId()).withClass("file-explorer-viewer-pane").withChild(Header.H4("Viewer"));
         return state.viewerContent() == null ? viewer.withChild(new Paragraph("Select a file to preview.")) : viewer.withChild(state.viewerContent());
     }
 
@@ -119,8 +128,24 @@ public class FileExplorerModule extends Module {
         return button;
     }
 
-    protected String withPath(String endpoint, String path) {
-        if (endpoint == null || path == null) { return endpoint; }
-        return endpoint + (endpoint.contains("?") ? "&" : "?") + "path=" + path;
+    public FileExplorerModule withPaneIds(String rootId, String listPaneId, String inspectorPaneId, String viewerPaneId, String modalContainerId) {
+        return new FileExplorerModule(state, new FileExplorerConfig(
+            config.endpoints(),
+            config.explorerMode(),
+            config.pickerMode(),
+            rootId,
+            listPaneId,
+            inspectorPaneId,
+            viewerPaneId,
+            modalContainerId,
+            config.pickerCallbackTargetId(),
+            config.allowCreateFolder(),
+            config.allowCreateText(),
+            config.allowCreateMarkdown(),
+            config.allowRename(),
+            config.allowDelete(),
+            config.allowCopyMove(),
+            config.allowTags()
+        ), inspectorSpec);
     }
 }
