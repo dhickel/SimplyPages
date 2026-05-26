@@ -67,4 +67,29 @@ class EditingOobIntegrationTest {
             .andExpect(content().string(containsString("Updated")))
             .andExpect(content().string(containsString("Body value")));
     }
+
+    @Test
+    @DisplayName("Forms demo should render autocomplete component and HTMX fragments")
+    void autocompleteDemoRendersFragments() throws Exception {
+        mockMvc.perform(get("/demos/basics-forms"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("sp-autocomplete-topic")))
+            .andExpect(content().string(containsString("/demos/api/autocomplete/topics")))
+            .andExpect(content().string(containsString("Framework topic")));
+
+        mockMvc.perform(get("/demos/api/autocomplete/topics")
+                .param("topic", "mod")
+                .param("scope", "framework"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("sp-autocomplete-options")))
+            .andExpect(content().string(containsString("Modules")))
+            .andExpect(content().string(containsString("/demos/api/autocomplete/select-topic")));
+
+        mockMvc.perform(get("/demos/api/autocomplete/select-topic")
+                .param("topic", "modules")
+                .param("scope", "framework"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("sp-autocomplete-topic")))
+            .andExpect(content().string(containsString("Selected: Modules")));
+    }
 }

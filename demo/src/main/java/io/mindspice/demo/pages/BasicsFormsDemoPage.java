@@ -56,6 +56,7 @@ public class BasicsFormsDemoPage implements DemoPage {
                 ## Sections
                 - [Text & Primitive Components](#text-primitives)
                 - [Form Components](#form-components)
+                - [Autocomplete](#autocomplete)
                 - [Composed Form Flow](#form-flow)
                 """))
 
@@ -109,6 +110,18 @@ public class BasicsFormsDemoPage implements DemoPage {
                 .withChild(new Column().withWidth(6).withChild(section("Typed Inputs", inputTypes)))
                 .withChild(new Column().withWidth(6).withChild(section("Choice Inputs", choiceInputs))))
 
+            .addRow(row -> row.withChild(new Div().withId("autocomplete").withChild(
+                ContentModule.create()
+                    .withTitle("Autocomplete")
+                    .withContent("HTMX-backed autocomplete fields keep the input, option list, and selected status server-rendered."))))
+
+            .addRow(row -> row
+                .withChild(new Column().withWidth(7).withChild(section("Topic Lookup", demoAutocomplete("", ""))))
+                .withChild(new Column().withWidth(5).withChild(section("Endpoint Contract", new Markdown("""
+                    Type a query to request option fragments from `/demos/api/autocomplete/topics`.
+                    Selecting a row swaps the autocomplete root with a selected state rendered by the server.
+                    """)))))
+
             .addRow(row -> row
                 .withChild(new Column().withWidth(4).withChild(section("Buttons", new Div()
                     .withChild(Button.submit("Primary"))
@@ -148,5 +161,23 @@ public class BasicsFormsDemoPage implements DemoPage {
         return ContentModule.create()
             .withTitle(title)
             .withCustomContent(content);
+    }
+
+    public static Autocomplete demoAutocomplete(String value, String label) {
+        String status = label == null || label.isBlank()
+            ? "Search framework topics"
+            : "Selected: " + label;
+
+        return Autocomplete.create("topic")
+            .withLabel("Framework topic")
+            .withPlaceholder("Try modules, forms, or HTMX")
+            .withValue(value == null ? "" : value)
+            .withOptionsEndpoint("/demos/api/autocomplete/topics")
+            .withValidationEndpoint("/demos/api/autocomplete/topic-status")
+            .withContextParam("scope", "framework")
+            .withStatus(new Autocomplete.StatusMessage(
+                status,
+                label == null || label.isBlank() ? Autocomplete.State.DEFAULT : Autocomplete.State.SELECTED
+            ));
     }
 }

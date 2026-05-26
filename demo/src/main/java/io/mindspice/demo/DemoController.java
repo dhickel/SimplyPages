@@ -7,6 +7,7 @@ import io.mindspice.simplypages.builders.SideNavBuilder;
 import io.mindspice.simplypages.builders.TopNavBuilder;
 import io.mindspice.simplypages.components.RawHtml;
 import io.mindspice.simplypages.components.display.Alert;
+import io.mindspice.simplypages.components.forms.Autocomplete;
 import io.mindspice.simplypages.core.Component;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,8 +18,22 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
 @Controller
 public class DemoController {
+
+    private static final List<AutocompleteTopic> AUTOCOMPLETE_TOPICS = List.of(
+        new AutocompleteTopic("components", "Components", "Low-level reusable UI primitives", true),
+        new AutocompleteTopic("forms", "Forms", "Inputs, choices, validation, and actions", true),
+        new AutocompleteTopic("htmx", "HTMX", "Server-rendered fragments and swaps", true),
+        new AutocompleteTopic("modules", "Modules", "Composed feature blocks with lifecycle hooks", true),
+        new AutocompleteTopic("slotkeys", "SlotKeys", "Request-time dynamic rendering values", true),
+        new AutocompleteTopic("legacy-js", "Legacy JavaScript", "Shown as unavailable for contrast", false)
+    );
 
     private final HomePage homePage;
     private final DemosOverviewPage demosOverviewPage;
@@ -167,6 +182,88 @@ public class DemoController {
             .render()).render();
     }
 
+    @GetMapping("/demos/api/autocomplete/topics")
+    @ResponseBody
+    public String autocompleteTopics(
+        @RequestParam(value = "topic", required = false) String query,
+        @RequestParam(value = "scope", required = false) String scope
+    ) {
+        String normalizedQuery = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
+        String normalizedScope = scope == null || scope.isBlank() ? "framework" : scope;
+
+        List<Autocomplete.OptionRow> rows = new ArrayList<>();
+        for (AutocompleteTopic topic : AUTOCOMPLETE_TOPICS) {
+            if (!normalizedQuery.isBlank()
+                && !topic.value().contains(normalizedQuery)
+                && !topic.label().toLowerCase(Locale.ROOT).contains(normalizedQuery)) {
+                continue;
+            }
+
+            String selectUrl = Autocomplete.appendQuery(
+                "/demos/api/autocomplete/select-topic",
+                Map.of(
+                    "topic", topic.value(),
+                    "scope", normalizedScope
+                )
+            );
+
+            rows.add(new Autocomplete.OptionRow(
+                topic.value(),
+                topic.label(),
+                topic.detail(),
+                topic.available() ? "available" : "unavailable",
+                topic.available(),
+                selectUrl
+            ));
+        }
+
+        return Autocomplete.options(
+            new Autocomplete.OptionsConfig(
+                "#sp-autocomplete-topic",
+                "outerHTML",
+                "No framework topics matched"
+            ),
+            rows
+        ).render();
+    }
+
+    @GetMapping("/demos/api/autocomplete/select-topic")
+    @ResponseBody
+    public String selectAutocompleteTopic(
+        @RequestParam("topic") String value,
+        @RequestParam(value = "scope", required = false) String scope
+    ) {
+        AutocompleteTopic selected = findAutocompleteTopic(value);
+        if (selected == null || !selected.available()) {
+            return BasicsFormsDemoPage.demoAutocomplete("", "")
+                .withStatus(new Autocomplete.StatusMessage(
+                    "Select an available " + (scope == null || scope.isBlank() ? "framework" : scope) + " topic",
+                    Autocomplete.State.INVALID
+                ))
+                .render();
+        }
+
+        return BasicsFormsDemoPage.demoAutocomplete(selected.value(), selected.label()).render();
+    }
+
+    @GetMapping("/demos/api/autocomplete/topic-status")
+    @ResponseBody
+    public String autocompleteTopicStatus(@RequestParam(value = "topic", required = false) String value) {
+        AutocompleteTopic selected = findAutocompleteTopic(value);
+        Autocomplete.State state = selected == null
+            ? Autocomplete.State.DEFAULT
+            : selected.available()
+                ? Autocomplete.State.SELECTED
+                : Autocomplete.State.INVALID;
+        String text = selected == null
+            ? "Search framework topics"
+            : selected.available() ? "Selected: " + selected.label() : "Unavailable: " + selected.label();
+
+        return Autocomplete.status(
+            new Autocomplete.StatusMessage(text, state)
+        ).render();
+    }
+
     private String renderInHomeShell(DemoPage page, String hxRequest, HttpServletResponse response) {
         response.setHeader("Vary", "HX-Request");
         if (hxRequest != null) {
@@ -223,5 +320,20 @@ public class DemoController {
             .addPrimaryLink("Blog", "/blog")
             .addPrimaryLink("Docs", "/docs")
             .build();
+    }
+
+    private static AutocompleteTopic findAutocompleteTopic(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        for (AutocompleteTopic topic : AUTOCOMPLETE_TOPICS) {
+            if (topic.value().equals(value)) {
+                return topic;
+            }
+        }
+        return null;
+    }
+
+    private record AutocompleteTopic(String value, String label, String detail, boolean available) {
     }
 }
