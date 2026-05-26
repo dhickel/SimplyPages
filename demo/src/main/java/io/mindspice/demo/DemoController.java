@@ -167,6 +167,30 @@ public class DemoController {
             .render()).render();
     }
 
+    @GetMapping("/demos/api/assistant/room")
+    @ResponseBody
+    public String assistantRoom(@RequestParam(value = "room", required = false) String room) {
+        return ModulesDemoPage.assistantRoomFragment(room).render();
+    }
+
+    @GetMapping("/demos/api/assistant/status")
+    @ResponseBody
+    public String assistantStatus() {
+        return ModulesDemoPage.assistantStatusPanel().render();
+    }
+
+    @GetMapping("/demos/api/assistant/tab")
+    @ResponseBody
+    public String assistantTab(@RequestParam(value = "tab", required = false) String tab) {
+        return ModulesDemoPage.assistantTabPanel(tab).render();
+    }
+
+    @GetMapping("/demos/api/workspace/detail")
+    @ResponseBody
+    public String workspaceDetail(@RequestParam(value = "item", required = false) String item) {
+        return ModulesDemoPage.workspaceDetail(item).render();
+    }
+
     private String renderInHomeShell(DemoPage page, String hxRequest, HttpServletResponse response) {
         response.setHeader("Vary", "HX-Request");
         if (hxRequest != null) {
