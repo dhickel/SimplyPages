@@ -30,6 +30,12 @@ Button.create("Edit")
     .withAttribute("hx-swap", "innerHTML");
 ```
 
+Keep the modal host stable and load the framework CSS/JS once in the shell. `Modal` markup
+inserted here gets focus entry, Tab containment, top-dialog close handling and restoration
+to a connected launcher on close/removal. Replacing the dialog retains its original
+launcher rather than a disappearing child control. See the
+[Modal contract](../reference/components-and-modules-catalog.md#modal).
+
 ## Pattern 3: OOB Multi-Target Update
 
 Use for save flows that must update more than one area.

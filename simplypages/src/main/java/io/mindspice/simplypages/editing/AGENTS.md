@@ -13,6 +13,7 @@ Owns editing contracts and reusable helpers for inline/module editing flows.
 - `Editable<T>` is the primary editing contract.
 - Validation must be explicit and non-throwing for normal user errors.
 - Helper outputs must be HTMX-friendly for modal/OOB workflows.
+- EditModalBuilder disables backdrop closing but retains Modal's default Escape/header close. Its footer clears the configured modal host; framework JS must restore a still-connected launcher after this or HTMX/OOB removal. Include the framework assets once in the page shell.
 
 - FormFieldHelper text inputs and textareas have associated HTML labels.
 - EditableRow capacities above twelve use fill columns rather than invalid zero-width grid columns.

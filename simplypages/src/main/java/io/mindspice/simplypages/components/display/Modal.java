@@ -9,8 +9,12 @@ import io.mindspice.simplypages.core.RenderContext;
  *
  * <p>Mutable and not thread-safe. Configure and render within a request-scoped lifecycle. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
  *
- * <p>Security boundary: {@link #withModalId(String)} validates identifiers used in inline JS.
- * Body/footer components are rendered as provided by caller.</p>
+ * <p>Load the framework JavaScript for focus entry/containment, close actions and focus restoration
+ * on direct or HTMX insertion. The container is a named modal dialog; untitled dialogs use
+ * {@code Dialog} as their accessible name without adding a visible header.</p>
+ *
+ * <p>Security boundary: {@link #withModalId(String)} validates generated identifiers.
+ * Body/footer components are rendered with the supplied context.</p>
  */
 public class Modal extends HtmlTag {
 
@@ -45,7 +49,7 @@ public class Modal extends HtmlTag {
     }
 
     /**
-     * Sets modal id used by generated close handlers.
+     * Sets backdrop id and the prefix used for the dialog title id.
      *
      * @param modalId id matching {@code ^[a-zA-Z][a-zA-Z0-9_-]*$}
      * @return this modal
@@ -127,41 +131,35 @@ public class Modal extends HtmlTag {
     }
 
     /**
-     * Renders complete modal/backdrop markup with configured handlers/content.
+     * Renders complete modal/backdrop markup with configured behavior metadata and content.
      *
      * @return modal HTML
      */
     @Override
     public String render(RenderContext context) {
+        boolean hasTitle = title != null && !title.isBlank();
         StringBuilder html = new StringBuilder();
 
-        // Backdrop wrapper
-        html.append("<div class=\"modal-backdrop\" id=\"").append(modalId).append("\"");
+        html.append("<div class=\"modal-backdrop\" id=\"").append(modalId)
+            .append("\" data-close-on-backdrop=\"").append(closeOnBackdrop)
+            .append("\" data-close-on-escape=\"").append(closeOnEscape).append("\">");
 
-        // Add onclick to close if enabled
-        if (closeOnBackdrop) {
-            html.append(" onclick=\"document.getElementById('")
-                .append(modalId)
-                .append("').remove()\"");
+        html.append("<div class=\"modal-container\" role=\"dialog\" aria-modal=\"true\" tabindex=\"-1\"");
+        if (title != null && !title.isBlank()) {
+            html.append(" aria-labelledby=\"").append(modalId).append("-title\"");
+        } else {
+            html.append(" aria-label=\"Dialog\"");
         }
-
-        // ESC key support
-        if (closeOnEscape) {
-            html.append(" onkeydown=\"if(event.key === 'Escape') this.remove()\"");
-        }
-        html.append(" tabindex=\"0\""); // Make focusable for keyboard events
         html.append(">");
 
-        // Modal container (stops propagation so clicking inside doesn't close)
-        html.append("<div class=\"modal-container\" onclick=\"event.stopPropagation()\">");
-
         // Header
-        if (title != null || showCloseButton) {
+        if (hasTitle || showCloseButton) {
             html.append("<div class=\"modal-header\">");
 
             // Title
-            if (title != null) {
-                html.append("<h3 class=\"modal-title\" style=\"margin: 0; font-size: 1.25rem; font-weight: 600; color: #1a202c;\">")
+            if (hasTitle) {
+                html.append("<h3 class=\"modal-title\" id=\"").append(modalId)
+                    .append("-title\" style=\"margin: 0; font-size: 1.25rem; font-weight: 600; color: #1a202c;\">")
                     .append(escapeHtml(title))
                     .append("</h3>");
             } else {
@@ -171,9 +169,6 @@ public class Modal extends HtmlTag {
             // Close button
             if (showCloseButton) {
                 html.append("<button type=\"button\" class=\"modal-close\" ")
-                    .append("onclick=\"document.getElementById('")
-                    .append(modalId)
-                    .append("').remove()\" ")
                     .append("style=\"background: none; border: none; font-size: 1.5rem; ")
                     .append("color: #718096; cursor: pointer; padding: 0; line-height: 1;\" ")
                     .append("aria-label=\"Close\">&times;</button>");

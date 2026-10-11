@@ -36,6 +36,16 @@ Common methods:
 - `withModalContainerId(...)`
 - `hideDelete()`
 
+The returned `Modal` disables backdrop closing; Escape and the header close button remain
+enabled. The footer Close button clears the configured modal container. Load the framework
+CSS/JS once in the page shell for focus entry, Tab containment and connected-launcher
+restoration, including external HTMX/OOB removal. Save uses `hx-swap="none"`; applications
+must return OOB updates to clear the modal and update content. If an update also replaces
+the launcher, the old disconnected element cannot receive focus.
+
+See the [Modal rendering and interaction contract](components-and-modules-catalog.md#modal)
+and [editing flow guide](../how-to/edit-content.md).
+
 ## ModuleEditHandler<T>
 
 Service-layer contract for edit, update, and delete handlers.

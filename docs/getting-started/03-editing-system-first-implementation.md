@@ -75,6 +75,13 @@ The page must already contain `edit-errors`, `edit-modal-container`, and the dis
 request-owned module instances; error updates use OOB because the modal saves with
 `hx-swap="none"`. `ResponseStatusException` and `HttpStatus` are Spring types.
 
+Load the framework CSS/JS and HTMX once in the shell (the default `ShellBuilder` does so).
+The modal host must match the edit launcher's `hx-target`. Focus enters the dialog on
+insertion, Tab/Shift+Tab remain inside, and Escape/header/footer close restore a usable,
+still-connected launcher. Editing modals do not dismiss on backdrop clicks. OOB removal
+also restores focus, but a response that replaces the launcher disconnects that old element.
+See the [Modal contract](../reference/components-and-modules-catalog.md#modal).
+
 ## Request Mechanics
 
 - `GET /modules/{id}/edit` returns modal HTML.

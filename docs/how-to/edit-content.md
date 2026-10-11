@@ -16,6 +16,19 @@ CSRF handling, validation, storage, and approval state.
    implement approval persistence for you.
 5. Return escaped component output with the HTMX swap shape your client expects.
 
+## Load the modal interaction assets
+
+Include `/css/framework.css`, `/js/framework.js` and HTMX in the page shell once;
+`ShellBuilder` includes them by default. Keep a stable modal host matching the launcher's
+`hx-target`. `EditModalBuilder` focuses a usable form control on insertion and traps Tab
+inside the dialog through framework JS. Escape, the header close button and footer Close
+restore the connected launcher; backdrop dismissal is disabled for editing. External or
+OOB modal removal uses the same focus restoration. If your response also replaces the
+launcher, the old element is disconnected and cannot receive focus.
+
+See the [Modal contract](../reference/components-and-modules-catalog.md#modal) for generic
+modal close flags and nested dialogs.
+
 ## Return out-of-band replacements
 
 `EditModalBuilder` saves with `hx-swap="none"`; successful responses must contain out-of-band

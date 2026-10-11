@@ -22,6 +22,22 @@ The reactor builds the library before the demo, generates Javadocs, and copies d
 into the demo resources. Run a reactor build after changing shared code or docs; a demo-only
 run can otherwise consume an older installed library or older generated documentation.
 
+## Run browser regressions against the packaged demo
+
+```bash
+./mvnw -DskipTests package
+npm --prefix tests/browser ci
+cd tests/browser
+npx playwright install chromium
+npm test
+```
+
+The harness pins Playwright 1.62.0 and uses the real framework assets, including Java modal
+snapshots and actual `/editing-demo` HTMX requests. It starts the executable demo on
+`127.0.0.1:18080` and stops its own process after the suite. That port must be free; it does
+not reuse or stop an existing service. Repackage after changing Java, framework assets or
+docs so the browser cannot validate a stale JAR. No live deployment is needed for this suite.
+
 ## Update documentation
 
 Choose the document type by its purpose:

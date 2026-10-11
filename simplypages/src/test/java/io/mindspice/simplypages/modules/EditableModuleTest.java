@@ -40,6 +40,19 @@ class EditableModuleTest {
     }
 
     @Test
+    void editLauncherPreservesCustomModalTargetAndButtonSemantics() {
+        String html = EditableModule.wrap(new Paragraph("Body"))
+            .withModuleId("custom-launcher").withEditUrl("/edit/custom")
+            .withEditTarget("#custom-modal-host").withEditSwap("beforeend").render();
+        HtmlAssert.assertThat(html)
+            .hasElementCount("button.module-edit-btn", 1)
+            .attributeEquals("button.module-edit-btn", "type", "button")
+            .attributeEquals("button.module-edit-btn", "hx-target", "#custom-modal-host")
+            .attributeEquals("button.module-edit-btn", "hx-swap", "beforeend")
+            .attributeEquals("button.module-edit-btn", "title", "Edit");
+    }
+
+    @Test
     @DisplayName("EditableModule should append editMode and honor custom delete target")
     void testEditModeWithQueryAndCustomTarget() {
         EditableModule editable = EditableModule.wrap(new Paragraph("Body"))

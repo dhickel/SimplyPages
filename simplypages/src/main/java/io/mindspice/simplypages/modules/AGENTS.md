@@ -17,6 +17,7 @@ Owns high-level composed modules built from components/layout primitives.
 
 - Tabs and accordions generate unique per-instance fallback IDs when no module ID is supplied.
 - Tab triggers have type=button so embedding a tab module in a form does not submit it.
+- EditableModule edit buttons remain normal non-submit HTMX launchers with configurable target/swap. Modal focus/close/restoration belongs to framework JS, not per-wrapper scripts; preserve the launcher when focus should return after closing.
 
 ## Do
 - Keep each module focused on one UI concern.

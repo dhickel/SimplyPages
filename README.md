@@ -151,6 +151,11 @@ The page must already contain `edit-errors`, `edit-modal-container`, and the dis
 request-owned module instances; error updates use OOB because the modal saves with
 `hx-swap="none"`. `ResponseStatusException` and `HttpStatus` are Spring types.
 
+The default shell loads the framework modal assets. Focus enters an inserted edit dialog,
+Tab stays contained, and Escape or Close returns to the connected launcher. Editing modals
+disable backdrop dismissal; external/OOB removal also restores focus when the launcher
+survives. See the [Modal contract](docs/reference/components-and-modules-catalog.md#modal).
+
 ## 4) Custom Components and Modules (Scaffolding)
 
 Keep custom primitives small and modules focused.

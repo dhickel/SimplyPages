@@ -13,6 +13,9 @@ Owns display-oriented UI components and visual containers.
 - Modal behavior and IDs remain predictable/safe.
 
 - Modal body and footer receive the parent RenderContext; generated modal IDs are unique.
+- Modal retains backdrop/container hooks and validated IDs. Its container is a named `role=dialog` with `aria-modal` and a title ID relationship (untitled/blank titles fall back to `aria-label=Dialog` without forcing a header).
+- Framework JS owns modal focus entry, Tab containment, top-dialog close flags and connected-launcher restoration on direct/HTMX insertion and external removal. Prefer usable autofocus, then a body control, then any control, then the dialog itself; do not restore inline backdrop/key handlers. Reveal initial/keyboard focus through internal scroll containers up to the dialog only, preserving background scroll.
+- Cover modal behavior with Java semantic assertions plus `tests/browser/modal-focus-lifecycle.spec.js` against the real assets and packaged editing demo.
 - ProgressBar preserves its supplied value until rendering, clamps against a positive maximum, and reports the clamped value.
 
 ## Do
