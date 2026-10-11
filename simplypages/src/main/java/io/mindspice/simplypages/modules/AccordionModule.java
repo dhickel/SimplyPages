@@ -134,6 +134,7 @@ public class AccordionModule extends Module {
             HtmlTag headerBtn = new HtmlTag("button")
                 .withAttribute("class", "accordion-header" + (item.isExpanded() ? " active" : ""))
                 .withAttribute("type", "button")
+                .withAttribute("id", itemId + "-header")
                 .withAttribute("aria-expanded", String.valueOf(item.isExpanded()))
                 .withAttribute("aria-controls", itemId + "-content")
                 .withInnerText(item.getHeader());
@@ -144,7 +145,8 @@ public class AccordionModule extends Module {
             Div contentPanel = new Div()
                 .withClass("accordion-content" + (item.isExpanded() ? " expanded" : ""))
                 .withAttribute("id", itemId + "-content")
-                .withAttribute("role", "region");
+                .withAttribute("role", "region")
+                .withAttribute("aria-labelledby", itemId + "-header");
 
             if (item.getCustomContent() != null) {
                 contentPanel.withChild(item.getCustomContent());

@@ -16,6 +16,8 @@ Owns shared low-level UI components and base component conventions.
 
 - Custom rendering must override render(RenderContext) and forward context to all children.
 - Code titles are escaped; code, spinner, and paragraph presentation must work when nested or compiled.
+- Dropdown and authenticated AccountWidget use native disclosure buttons and hidden ordinary-link/item panels, not partial ARIA menus. Preserve data-sp-disclosure hooks and stable aria-controls/expanded relationships; framework JS handles activation/dismissal including child Escape before modal Escape.
+- AccountWidget generates state-derived child streams without clearing/repopulating stored children. Preserve inherited children, context dispatch, compile-on-first-use and retained custom child delegates; configuration still must finish before sharing.
 
 ## Do
 - Keep component APIs minimal and composable.

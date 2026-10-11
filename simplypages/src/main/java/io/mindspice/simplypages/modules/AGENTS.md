@@ -15,8 +15,12 @@ Owns high-level composed modules built from components/layout primitives.
 - Module direct width APIs are blocked; layout should size modules.
 - Public fluent APIs remain chainable and readable.
 
-- Tabs and accordions generate unique per-instance fallback IDs when no module ID is supplied.
+- Tabs and accordions generate stable, unique per-instance fallback IDs when no module ID is supplied; explicit module IDs retain the existing target ID format.
 - Tab triggers have type=button so embedding a tab module in a form does not submit it.
+- Tabs emit reciprocal tab/panel ARIA relationships and a horizontal SSR orientation fallback (viewport unknown). Initially only the selected tab has tabindex=0; other tabs have tabindex=-1 and their panels have hidden. Keep selected/active/hidden state consistent during build.
+- Framework JS synchronizes tablist orientation to computed `.tab-nav` flex direction on initialization, resize and dynamic insertion, without changing focus/selection/nested state. Horizontal uses Left/Right, vertical uses Up/Down (default through 768px); both wrap and automatically activate, with Home/End. Perpendicular arrows and modified keys retain native behavior. Cover real generated and packaged desktop/mobile output with `tests/browser/responsive-tabs.spec.js` and `default-accessibility.spec.js`.
+- Framework JS owns tab activation, roving focus and keyboard handling after render. Preserve all tab/accordion CSS hooks and nearest `.tabs-container`/`.accordion` ownership; nested widgets must not alter an outer widget's state or target another owner.
+- Accordion region names use aria-labelledby referencing stable generated header button IDs (`<base>-item-<index>-header`); preserve existing content IDs, expanded classes and single-expand configuration. Tall-content sizing and contrast are separate from this semantic markup contract.
 - EditableModule edit buttons remain normal non-submit HTMX launchers with configurable target/swap. Modal focus/close/restoration belongs to framework JS, not per-wrapper scripts; preserve the launcher when focus should return after closing.
 
 ## Do
@@ -36,6 +40,8 @@ Owns high-level composed modules built from components/layout primitives.
 ## Required Tests
 - Module tests in `simplypages/src/test/java/.../modules`
 - Lifecycle regressions (`ModuleLifecycleTest`)
+- Semantic tab/accordion regressions: initial selected/tabindex/hidden state, reciprocal relationships, named regions, stable unique default IDs, explicit IDs, nested ownership and existing expansion modes.
+- Deliberately review affected module snapshots and rerun tests without update mode after accepting them.
 - Editing wrapper regressions when changing `EditableModule`
 
 ## Dependencies

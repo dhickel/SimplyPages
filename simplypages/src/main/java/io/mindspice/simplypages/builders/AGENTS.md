@@ -13,7 +13,8 @@ Owns higher-level shell and navigation builder utilities.
 - Default values keep generated output functional.
 - Shell header supports banner + embedded top-nav composition (`withTopNav(...)`).
 - `withAccountBar(...)` remains a compatibility alias path and should not regress existing integrations.
-- Shell sidebar markup keeps stable class hooks for responsive/mobile behavior.
+- Shell sidebar markup keeps stable class hooks for responsive/mobile behavior. Full/template/body mobile toggles are named non-submit buttons with aria-controls/expanded; framework JS synchronizes off-canvas inert/aria-hidden/focus/resize at 768px while preserving desktop collapse state. Page native details navigation is a separate contract.
+- Framework CSS owns modal base layering, with JS-relative stack offsets. Navigation toggles must not overlap/activate through active dialogs. Body-only desktop-collapse initialization remains a separate lifecycle concern; do not silently merge it into mobile repairs.
 - Shell head script order remains deterministic: HTMX (optional), framework JS, then custom JS.
 - Shell content target/wrapper hooks (`withContentTargetId`, `withContentTargetClass`, `withContentWrapper`) stay consistent across `build()` and `buildBody()`.
 - `buildTemplate()` returns a reusable compiled shell wrapper with a dedicated content slot.

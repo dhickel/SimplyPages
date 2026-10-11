@@ -287,7 +287,7 @@ public class ShellBuilder {
             .withAttribute("class", "shell-body");
 
         if (sideNav != null) {
-            body.withChild(buildMobileSidebarToggle(false));
+            body.withChild(buildMobileSidebarToggle());
         }
 
         body.withChild(buildMainContainer(false, null));
@@ -362,7 +362,7 @@ public class ShellBuilder {
         }
 
         if (sideNav != null) {
-            body.withChild(buildMobileSidebarToggle(true));
+            body.withChild(buildMobileSidebarToggle());
         }
 
         body.withChild(buildMainContainer(true, contentSlot));
@@ -430,7 +430,7 @@ public class ShellBuilder {
         return mainContainer;
     }
 
-    private HtmlTag buildMobileSidebarToggle(boolean includeAriaLabel) {
+    private HtmlTag buildMobileSidebarToggle() {
         HtmlTag mobileToggle = new HtmlTag("button")
             .withAttribute("type", "button")
             .withAttribute("class", "mobile-sidebar-toggle")
@@ -439,9 +439,7 @@ public class ShellBuilder {
             .withAttribute("aria-expanded", "false")
             .withInnerText("☰");
 
-        if (includeAriaLabel) {
-            mobileToggle.withAttribute("aria-label", "Toggle navigation");
-        }
+        mobileToggle.withAttribute("aria-label", "Toggle navigation");
 
         return mobileToggle;
     }

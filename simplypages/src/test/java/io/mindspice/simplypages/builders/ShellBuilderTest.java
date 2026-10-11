@@ -317,6 +317,19 @@ class ShellBuilderTest {
     }
 
     @Test
+    void mobileToggleIsNamedInFullBodyAndTemplateOutput() {
+        var builder = ShellBuilder.create().withSideNav(SideNavBuilder.create().addLink("Home", "/").build());
+        for (String html : java.util.List.of(builder.build(), builder.buildBody().render(),
+                builder.buildTemplate().render(io.mindspice.simplypages.core.RenderContext.empty()))) {
+            HtmlAssert.assertThat(html)
+                .attributeEquals(".mobile-sidebar-toggle", "type", "button")
+                .attributeEquals(".mobile-sidebar-toggle", "aria-label", "Toggle navigation")
+                .attributeEquals(".mobile-sidebar-toggle", "aria-controls", "main-sidebar")
+                .attributeEquals(".mobile-sidebar-toggle", "aria-expanded", "false");
+        }
+    }
+
+    @Test
     @DisplayName("ShellBuilder should not render mobile sidebar toggle without side nav")
     void testNoMobileToggleWhenNoSidebar() {
         String html = ShellBuilder.create().build();

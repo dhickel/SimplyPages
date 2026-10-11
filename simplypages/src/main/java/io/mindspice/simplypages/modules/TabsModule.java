@@ -125,10 +125,11 @@ public class TabsModule extends Module {
 
         Div tabsContainer = new Div().withClass("tabs-container");
 
-        // Tab navigation
+        // SSR has no viewport; framework JS synchronizes orientation to the computed flex axis.
         HtmlTag tabNav = new HtmlTag("ul")
             .withAttribute("class", "tab-nav")
-            .withAttribute("role", "tablist");
+            .withAttribute("role", "tablist")
+            .withAttribute("aria-orientation", "horizontal");
 
         for (int i = 0; i < tabs.size(); i++) {
             Tab tab = tabs.get(i);
@@ -145,6 +146,7 @@ public class TabsModule extends Module {
                 .withAttribute("id", tabId)
                 .withAttribute("role", "tab")
                 .withAttribute("aria-selected", String.valueOf(tab.isActive()))
+                .withAttribute("tabindex", tab.isActive() ? "0" : "-1")
                 .withAttribute("aria-controls", panelId)
                 .withInnerText(tab.getLabel());
 
@@ -167,6 +169,10 @@ public class TabsModule extends Module {
                 .withAttribute("id", panelId)
                 .withAttribute("role", "tabpanel")
                 .withAttribute("aria-labelledby", tabId);
+
+            if (!tab.isActive()) {
+                panel.withAttribute("hidden", "");
+            }
 
             if (tab.getCustomContent() != null) {
                 panel.withChild(tab.getCustomContent());

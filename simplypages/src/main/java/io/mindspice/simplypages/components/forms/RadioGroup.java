@@ -9,7 +9,12 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Radio button group with shared input name.
+ * Radio button group with shared input name and {@code radiogroup} role.
+ *
+ * <p>{@link Form#addField(String, Component)} names the group from its visible caption without
+ * changing option labels. Standalone groups need an application-supplied accessible name through
+ * the existing {@code aria-label} or {@code aria-labelledby} attribute APIs; the submission name
+ * is not used as an accessible name.</p>
  *
  * <p>Mutable and not thread-safe. Options are accumulated in-memory and rendered in insertion order. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
@@ -30,6 +35,7 @@ public class RadioGroup extends Div {
         super();
         this.name = name;
         this.withClass("form-radio-group");
+        this.withAttribute("role", "radiogroup");
     }
 
     /**

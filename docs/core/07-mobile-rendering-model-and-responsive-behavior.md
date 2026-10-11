@@ -20,7 +20,13 @@ When you use `ShellBuilder` with a sidebar:
 
 - Viewport meta is included: `width=device-width, initial-scale=1.0`.
 - Mobile sidebar toggle button is rendered.
-- Sidebar uses off-canvas mobile behavior via `.main-sidebar.mobile-open`.
+- Sidebar uses off-canvas mobile behavior via `.main-sidebar.mobile-open` at widths through 768px.
+- Closed shell navigation is inert and has `aria-hidden="true"`; the named toggle tracks expanded state.
+- Opening focuses a navigation control; Escape returns focus to the toggle, and outside clicks dismiss.
+- Resize restores desktop usability without discarding the desktop collapsed preference. That preference
+  does not narrow or prevent opening the mobile drawer.
+- The floating toggle cannot overlay or activate through an active modal. CSS owns modal base layering
+  (`--sp-modal-layer`, default 1100); JS adds only relative stack offsets.
 
 When you use `Row`/`Column`:
 
@@ -30,7 +36,18 @@ When you use `Row`/`Column`:
 When you use `Page.withStickySidebar(...)`:
 
 - Desktop sticky sidebar behavior remains.
-- Mobile switches to stacked layout with a collapsible sidebar summary.
+- Mobile switches to stacked layout with a native `details`/`summary` sidebar.
+- This Page sidebar is separate from ShellBuilder's off-canvas drawer; drawer JS does not change its
+  native open state. Check both responsive presentations in the application.
+
+When you use `TabsModule`:
+
+- Tab navigation stacks vertically through 768px; desktop navigation stays horizontal.
+- Framework JS matches `aria-orientation` and keyboard arrows to the computed flex axis:
+  Up/Down vertically, Left/Right horizontally, with wrapping/automatic activation and Home/End.
+- Initialization, resize and dynamic insertion synchronize orientation without resetting focus,
+  selection or nested tabs. Perpendicular arrows and modified keys retain native behavior.
+- SSR markup uses a horizontal fallback until the framework assets apply the viewport layout.
 
 ## Breakpoints
 

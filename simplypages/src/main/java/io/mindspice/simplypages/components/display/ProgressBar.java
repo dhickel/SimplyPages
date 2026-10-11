@@ -36,27 +36,35 @@ public class ProgressBar extends HtmlTag {
     private ColorType colorType = ColorType.DEFAULT;
     private boolean striped = false;
     private boolean animated = false;
-    private String height;
 
     public ProgressBar(int value) {
         super("div");
         this.value = Math.max(0, value);
         this.withAttribute("class", "progress");
         this.withAttribute("role", "progressbar");
+        this.withAttribute("aria-valuemin", "0");
+        this.withAttribute("aria-label", "Progress");
+        updateValueAttributes();
     }
 
     public static ProgressBar create(int value) {
         return new ProgressBar(value);
     }
 
+    /**
+     * Sets visible fill text and the accessible name. For an external label or a different name,
+     * set {@code aria-labelledby} or {@code aria-label} with {@code withAttribute}.
+     */
     public ProgressBar withLabel(String label) {
         this.label = label;
+        this.withAttribute("aria-label", label == null || label.isBlank() ? "Progress" : label);
         return this;
     }
 
     public ProgressBar withMax(int max) {
         if (max < 1) throw new IllegalArgumentException("max must be positive");
         this.max = max;
+        updateValueAttributes();
         return this;
     }
 
@@ -97,9 +105,13 @@ public class ProgressBar extends HtmlTag {
     }
 
     public ProgressBar withHeight(String height) {
-        this.height = height;
         this.withAttribute("style", "height: " + height + ";");
         return this;
+    }
+
+    private void updateValueAttributes() {
+        this.withAttribute("aria-valuenow", String.valueOf(Math.min(value, max)));
+        this.withAttribute("aria-valuemax", String.valueOf(max));
     }
 
     @Override
@@ -121,10 +133,7 @@ public class ProgressBar extends HtmlTag {
 
         HtmlTag bar = new HtmlTag("div")
             .withAttribute("class", barClasses)
-            .withAttribute("style", "width: " + percentage + "%;")
-            .withAttribute("aria-valuenow", String.valueOf(renderedValue))
-            .withAttribute("aria-valuemin", "0")
-            .withAttribute("aria-valuemax", String.valueOf(max));
+            .withAttribute("style", "width: " + percentage + "%;");
 
         // Add label if specified
         if (label != null && !label.isEmpty()) {

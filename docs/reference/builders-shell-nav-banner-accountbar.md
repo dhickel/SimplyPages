@@ -36,7 +36,17 @@ Returns full HTML document string from `build()`.
 
 `buildTemplate()` returns a reusable `ShellTemplate` (compiled template wrapper) with a dedicated content slot for request-time content injection.
 
-When a sidebar is configured, shell output includes a mobile navigation toggle hook compatible with framework CSS/JS defaults.
+When a sidebar is configured, full/template/body output includes a named `Toggle navigation`
+button with `aria-controls="main-sidebar"` and synchronized expanded state. At widths through
+768px, closed off-canvas navigation is inert and hidden from assistive technology. Opening focuses
+a usable navigation control; Escape closes and returns to the toggle, and outside clicks dismiss.
+Resize restores desktop usability while preserving desktop collapsed state; mobile opening ignores
+that collapse styling. Framework assets must be loaded once by the host for body-only fragments.
+This does not change the separate body-only desktop-collapse lifecycle contract.
+
+The mobile toggle is unavailable behind a modal. Modal stack offsets are managed by JS, but CSS
+owns the base layer through `--sp-modal-layer` (default 1100); theme overrides should keep dialogs
+above navigation. See [mobile behavior](../core/07-mobile-rendering-model-and-responsive-behavior.md).
 
 Stylesheet load order in `build()`:
 

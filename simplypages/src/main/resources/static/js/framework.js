@@ -28,6 +28,128 @@ document.addEventListener('click', function(event) {
     }
 });
 
+/** Ordinary disclosure navigation: native buttons/links, not an ARIA menu pattern. */
+(function() {
+    function disclosure(toggle) {
+        const owner = toggle.closest('[data-sp-disclosure]');
+        const panel = document.getElementById(toggle.getAttribute('aria-controls'));
+        return owner && panel && panel.closest('[data-sp-disclosure]') === owner
+            ? {owner, toggle, panel} : null;
+    }
+    function close(item, restoreFocus = false) {
+        item.panel.hidden = true;
+        item.toggle.setAttribute('aria-expanded', 'false');
+        if (restoreFocus) item.toggle.focus({preventScroll: true});
+    }
+    document.addEventListener('click', event => {
+        const toggle = event.target.closest('[data-sp-disclosure-toggle]');
+        const current = toggle && disclosure(toggle);
+        document.querySelectorAll('[data-sp-disclosure-toggle][aria-expanded="true"]').forEach(button => {
+            const item = disclosure(button);
+            if (item && !item.owner.contains(event.target)) close(item);
+        });
+        if (!current) return;
+        const open = current.panel.hidden;
+        current.panel.hidden = !open;
+        current.toggle.setAttribute('aria-expanded', String(open));
+    });
+    // Register before the dialog handler so child Escape cancels the outer close action.
+    document.addEventListener('keydown', event => {
+        if (event.key !== 'Escape' || event.defaultPrevented) return;
+        const owner = event.target.closest('[data-sp-disclosure]');
+        if (!owner) return;
+        const toggle = Array.from(owner.querySelectorAll('[data-sp-disclosure-toggle]'))
+            .find(button => button.closest('[data-sp-disclosure]') === owner);
+        const item = toggle && disclosure(toggle);
+        if (item && !item.panel.hidden) {
+            event.preventDefault();
+            close(item, true);
+        }
+    });
+})();
+
+/** Off-canvas ShellBuilder navigation only; Page's native details sidebar is independent. */
+const synchronizeShellNavigation = (function() {
+    const mobile = matchMedia('(max-width: 768px)');
+    const sidebar = () => document.getElementById('main-sidebar');
+    const toggles = () => Array.from(document.querySelectorAll('.mobile-sidebar-toggle[aria-controls="main-sidebar"]'));
+    const modalOpen = () => !!document.querySelector('.modal-backdrop > .modal-container[role="dialog"]');
+    let navigationFocus = null;
+    document.addEventListener('focusin', event => {
+        const nav = sidebar();
+        navigationFocus = (nav && nav.contains(event.target)) || toggles().includes(event.target)
+            ? event.target : null;
+    });
+    const firstControl = element => Array.from(element.querySelectorAll('a[href], button, input, select, textarea, [tabindex]'))
+        .find(control => !control.matches(':disabled') && control.tabIndex >= 0
+            && getComputedStyle(control).visibility === 'visible' && control.getClientRects().length);
+
+    function synchronize() {
+        const nav = sidebar();
+        if (!nav) return;
+        if (!mobile.matches) nav.classList.remove('mobile-open');
+        const open = mobile.matches && nav.classList.contains('mobile-open');
+        const blocked = mobile.matches && !open;
+        const dialog = modalOpen();
+        // A responsive visibility change can blur a control before the media-query event runs.
+        const focused = document.activeElement === document.body && navigationFocus && navigationFocus.isConnected
+            ? navigationFocus : document.activeElement;
+        // Avoid making a dialog hosted inside navigation inert along with its ancestors.
+        nav.inert = blocked || (dialog && !nav.querySelector('.modal-backdrop > .modal-container[role="dialog"]'));
+        if (blocked) nav.setAttribute('aria-hidden', 'true');
+        else nav.removeAttribute('aria-hidden');
+        toggles().forEach(toggle => {
+            toggle.setAttribute('aria-expanded', String(open));
+            toggle.inert = dialog;
+        });
+        if (!dialog && blocked && nav.contains(focused)) {
+            const toggle = toggles()[0];
+            if (toggle) toggle.focus({preventScroll: true});
+        } else if (!dialog && !mobile.matches && toggles().includes(focused)) {
+            const control = firstControl(nav);
+            if (control) control.focus({preventScroll: true});
+        }
+    }
+    function close(restore = false) {
+        const nav = sidebar();
+        if (!nav) return;
+        nav.classList.remove('mobile-open');
+        synchronize();
+        if (restore && !modalOpen() && toggles()[0]) toggles()[0].focus({preventScroll: true});
+    }
+    window.toggleMobileSidebar = function() {
+        const nav = sidebar();
+        if (!nav || !mobile.matches || modalOpen()) return;
+        if (nav.classList.contains('mobile-open')) close(nav.contains(document.activeElement));
+        else {
+            nav.classList.add('mobile-open');
+            synchronize();
+            const control = firstControl(nav);
+            if (control) control.focus({preventScroll: true});
+        }
+    };
+    document.addEventListener('click', event => {
+        const nav = sidebar();
+        if (!nav || !mobile.matches || !nav.classList.contains('mobile-open') || modalOpen()) return;
+        if (nav.contains(event.target)) {
+            if (event.target.closest('a[href]')) close(true);
+        } else if (!event.target.closest('.mobile-sidebar-toggle')) close(nav.contains(document.activeElement));
+    });
+    document.addEventListener('keydown', event => {
+        const nav = sidebar();
+        if (event.key === 'Escape' && !event.defaultPrevented && !modalOpen()
+            && mobile.matches && nav && nav.classList.contains('mobile-open')) {
+            event.preventDefault();
+            close(true);
+        }
+    });
+    mobile.addEventListener('change', synchronize);
+    document.addEventListener('DOMContentLoaded', synchronize);
+    new MutationObserver(synchronize).observe(document.documentElement, {childList: true, subtree: true});
+    synchronize();
+    return synchronize;
+})();
+
 /** Modal-only lifecycle: one stack and delegated handlers for direct and HTMX insertion/removal. */
 (function() {
     const modals = [];
@@ -35,14 +157,27 @@ document.addEventListener('click', function(event) {
     let lastFocused = document.activeElement;
     const topModal = () => modals[modals.length - 1];
     const owned = (element, modal) => element.closest('.modal-backdrop') === modal.backdrop;
-    const usable = element => element instanceof HTMLElement && element.isConnected
-        && !element.matches(':disabled') && !element.closest('[inert]')
-        && getComputedStyle(element).visibility === 'visible' && element.getClientRects().length > 0;
+    function usable(element) {
+        if (!(element instanceof HTMLElement) || !element.isConnected
+            || element.matches(':disabled') || element.closest('[inert], [hidden]')) return false;
+        // Closed details expose only their first direct summary subtree, including when CSS leaves boxes.
+        for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
+            if (ancestor.matches('details:not([open])')) {
+                const summary = Array.from(ancestor.children).find(child => child.matches('summary'));
+                if (!summary || !summary.contains(element)) return false;
+            }
+        }
+        return (!element.checkVisibility || element.checkVisibility({checkVisibilityCSS: true}))
+            && getComputedStyle(element).visibility === 'visible' && element.getClientRects().length > 0;
+    }
 
     function tabStops(modal) {
         const candidates = Array.from(modal.dialog.querySelectorAll(
-            'a[href], area[href], button, input, select, textarea, iframe, [tabindex], [contenteditable="true"]'
-        )).filter(element => owned(element, modal) && usable(element) && element.tabIndex >= 0);
+            'a[href], area[href], button, input, select, textarea, iframe, summary, [tabindex], [contenteditable="true"]'
+        )).filter(element => owned(element, modal) && usable(element) && element.tabIndex >= 0
+            && (!element.matches('summary') || element.hasAttribute('tabindex')
+                || (element.parentElement.matches('details')
+                    && Array.from(element.parentElement.children).find(child => child.matches('summary')) === element)));
         // Native tab order has one stop per named radio group, and positive tabindex first.
         return candidates.filter(element => {
             if (!element.matches('input[type="radio"]') || !element.name) return true;
@@ -129,8 +264,10 @@ document.addEventListener('click', function(event) {
         const top = topModal();
         modals.forEach((modal, index) => {
             modal.dialog.setAttribute('aria-modal', modal === top ? 'true' : 'false');
-            modal.backdrop.style.zIndex = 1000 + index;
+            modal.backdrop.style.setProperty('--sp-modal-stack', index);
         });
+        // Clear navigation's modal-owned inert state before testing/restoring an opener.
+        synchronizeShellNavigation();
         if (added && top) {
             focusInitial(top);
         } else if (previousTop && removed.includes(previousTop)) {
@@ -206,19 +343,6 @@ document.addEventListener('click', function(event) {
     reconcile();
 })();
 
-function toggleMobileSidebar() {
-    const sidebar = document.getElementById('main-sidebar');
-    if (!sidebar) {
-        return;
-    }
-
-    const isOpen = sidebar.classList.toggle('mobile-open');
-    const mobileToggle = document.querySelector('.mobile-sidebar-toggle');
-    if (mobileToggle) {
-        mobileToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-    }
-}
-
 /**
  * Handle Accordion Logic
  * - Toggles active/expanded state
@@ -290,16 +414,20 @@ function handleTabs(button) {
     ownedButtons.forEach(candidate => {
         candidate.classList.remove('active');
         candidate.setAttribute('aria-selected', 'false');
+        candidate.tabIndex = -1;
     });
 
     ownedPanels.forEach(candidate => {
         candidate.classList.remove('active');
+        candidate.hidden = true;
     });
 
     // Activate clicked tab and corresponding panel
     button.classList.add('active');
     button.setAttribute('aria-selected', 'true');
+    button.tabIndex = 0;
     targetPanel.classList.add('active');
+    targetPanel.hidden = false;
 }
 
 /**
@@ -313,12 +441,52 @@ function handleCallout(button) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const mobileToggle = document.querySelector('.mobile-sidebar-toggle');
-    if (mobileToggle) {
-        mobileToggle.setAttribute('aria-expanded', 'false');
+// Tab semantics follow the actual responsive flex axis without resetting selection or focus.
+(function() {
+    function orientation(list) {
+        const direction = getComputedStyle(list).flexDirection;
+        const axis = direction.startsWith('column') ? 'vertical' : 'horizontal';
+        if (list.getAttribute('aria-orientation') !== axis) list.setAttribute('aria-orientation', axis);
+        return axis;
     }
-});
+    function synchronize() {
+        document.querySelectorAll('.tabs-container .tab-nav').forEach(orientation);
+    }
+    document.addEventListener('DOMContentLoaded', synchronize);
+    window.addEventListener('load', synchronize);
+    window.addEventListener('resize', synchronize);
+    new MutationObserver(synchronize).observe(document.documentElement, {childList: true, subtree: true});
+    synchronize();
+
+    // Automatic activation and one native tab stop per owned tablist. Perpendicular and
+    // modified keys keep their native behavior (including scrolling).
+    document.addEventListener('keydown', event => {
+        if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey
+            || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+        const button = event.target.closest('.tab-button');
+        const owner = button && button.closest('.tabs-container');
+        const list = button && button.closest('.tab-nav');
+        if (!owner || !list || list.closest('.tabs-container') !== owner) return;
+        const vertical = orientation(list) === 'vertical';
+        const forward = vertical ? 'ArrowDown' : 'ArrowRight';
+        const backward = vertical ? 'ArrowUp' : 'ArrowLeft';
+        if (![forward, backward, 'Home', 'End'].includes(event.key)) return;
+        const buttons = Array.from(list.querySelectorAll('.tab-button'))
+            .filter(candidate => candidate.closest('.tabs-container') === owner
+                && candidate.closest('.tab-nav') === list && !candidate.disabled
+                && (() => {
+                    const panel = document.getElementById(candidate.getAttribute('aria-controls'));
+                    return panel && panel.classList.contains('tab-panel') && panel.closest('.tabs-container') === owner;
+                })());
+        const index = buttons.indexOf(button);
+        if (index < 0) return;
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1
+            : (index + (event.key === forward ? 1 : -1) + buttons.length) % buttons.length;
+        event.preventDefault();
+        handleTabs(buttons[next]);
+        buttons[next].focus();
+    });
+})();
 
 function parseScrollTopDirective(sourceElement) {
     if (!(sourceElement instanceof Element)) {

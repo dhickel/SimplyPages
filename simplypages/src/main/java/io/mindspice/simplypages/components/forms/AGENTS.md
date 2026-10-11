@@ -12,9 +12,13 @@ Owns form input and form container components.
 - Width helper methods on form components remain valid and validated by core style rules.
 - Input type helpers map to correct HTML input types.
 
-- Checkbox IDs and labels stay associated regardless of setter order.
+- `Form.addField` associates nonempty labels with known single controls (`TextInput`, `TextArea`, `Select`, `Checkbox`, `Button`). Preserve existing control IDs, including raw ID attributes on single-tag controls; assign absent/empty IDs once during field assembly, never during rendering.
+- Configure control IDs before `addField`; changing IDs afterward does not update assembled field labels. Applications own explicit ID uniqueness and configure components before sharing or compiling.
+- Checkbox IDs and labels stay associated regardless of setter order. `Checkbox.getId/withId` target the internal input; inherited `withAttribute("id", ...)` targets the wrapper. A Form label must target the input while preserving an independently configured wrapper ID and the checkbox's own label.
+- RadioGroup has `role="radiogroup"`. A nonempty Form field caption uses `span.form-label` with a stable unique ID referenced by the group's `aria-labelledby`; do not point a native label at the group div or replace individual option labels. Standalone groups use application-supplied `aria-label`/`aria-labelledby` through existing attribute APIs; the submission name is not an accessible name.
 - Radio option IDs are unique and stable per instance; consumers must not derive IDs from field values.
 - RadioGroup.required() applies to subsequently added options as well as existing ones.
+- Arbitrary/custom and multi-control components passed to `addField` receive only a visible `span.form-label` caption. Applications compose their own native labels or accessible names inside/alongside those components. Do not infer a control from rendered HTML, a generic HtmlTag, or a wrapper ID. Null/empty field labels do not generate IDs or change application names.
 
 ## Do
 - Preserve ergonomics for common form tasks.
@@ -33,6 +37,9 @@ Owns form input and form container components.
 ## Required Tests
 - `FormTest`, `TextInputTest`, `TextAreaTest`, `SelectTest`, `CheckboxTest`, `RadioGroupTest`, `ButtonTest`
 - Regression tests for new fluent methods and attribute rendering
+- Semantic field/control linkage for default, explicit and raw IDs, including Checkbox wrapper/input separation and preservation of option labels
+- Unique IDs across repeated names/independent forms, assignment before the first render, repeated-render stability, fresh compiled/direct parity and custom-component labeling boundaries
+- Deliberately review forms snapshot changes and rerun tests without snapshot update mode
 
 ## Dependencies
 - Depends on `core` and shared components.

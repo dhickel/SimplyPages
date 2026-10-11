@@ -272,6 +272,16 @@ public class Form extends HtmlTag {
     /**
      * Appends a field wrapper containing optional label and input component.
      *
+     * <p>For {@link TextInput}, {@link TextArea}, {@link Select}, {@link Checkbox}, and
+     * {@link Button}, a nonempty label targets the control's existing ID, or a unique ID assigned
+     * during this call. Checkbox IDs target its internal input, not its wrapper. Configure control
+     * IDs before adding fields; changing an ID later does not update the assembled field label.</p>
+     *
+     * <p>For {@link RadioGroup}, the caption names the group through {@code aria-labelledby};
+     * individual option labels are unchanged. Other components receive only a visible caption.
+     * Applications must compose their own labels or accessible names for arbitrary/custom and
+     * multi-control components; this method does not inspect their markup or infer a target.</p>
+     *
      * @param label label text; omitted when null/empty
      * @param input input component
      * @return this form
@@ -280,9 +290,26 @@ public class Form extends HtmlTag {
         Div fieldGroup = new Div().withClass("form-field");
 
         if (label != null && !label.isEmpty()) {
-            HtmlTag labelTag = new HtmlTag("label")
+            boolean singleControl = input instanceof TextInput || input instanceof TextArea
+                || input instanceof Select || input instanceof Checkbox || input instanceof Button;
+            HtmlTag labelTag = new HtmlTag(singleControl ? "label" : "span")
                 .withAttribute("class", "form-label")
                 .withInnerText(label);
+
+            if (singleControl) {
+                HtmlTag control = (HtmlTag) input;
+                String controlId = control.getId();
+                if (controlId == null || controlId.isEmpty()) {
+                    controlId = "form-field-" + java.util.UUID.randomUUID();
+                    control.withId(controlId);
+                }
+                labelTag.withAttribute("for", controlId);
+            } else if (input instanceof RadioGroup group) {
+                String labelId = "form-label-" + java.util.UUID.randomUUID();
+                labelTag.withId(labelId);
+                group.withAttribute("aria-labelledby", labelId);
+            }
+
             fieldGroup.withChild(labelTag);
         }
 

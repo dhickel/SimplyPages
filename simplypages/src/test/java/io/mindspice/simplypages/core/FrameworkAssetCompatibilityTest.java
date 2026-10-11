@@ -91,8 +91,11 @@ class FrameworkAssetCompatibilityTest {
         assertTrue(js.contains("pushUrlRequest.trim().toLowerCase() !== 'false'"));
         assertTrue(js.contains("normalizedPushUrlAttr !== 'false'"));
         assertTrue(js.contains("window.scrollTo({top: 0, left: 0, behavior: 'auto'});"));
-        assertTrue(js.contains("function toggleMobileSidebar()"));
-        assertTrue(js.contains("sidebar.classList.toggle('mobile-open')"));
+        assertTrue(js.contains("window.toggleMobileSidebar = function()"));
+        assertTrue(js.contains("matchMedia('(max-width: 768px)')"));
+        assertTrue(js.contains("nav.inert = blocked"));
+        assertTrue(js.contains("--sp-modal-stack"));
+        assertFalse(js.contains("style.zIndex = 1000"));
     }
 
     private String readClasspathResource(String path) throws IOException {
