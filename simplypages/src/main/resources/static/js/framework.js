@@ -47,24 +47,32 @@ function toggleMobileSidebar() {
  * - Respects data-single-expand="true" on parent
  */
 function handleAccordion(header) {
-    const accordionItem = header.closest('.accordion-item');
-    const content = header.nextElementSibling;
     const accordion = header.closest('.accordion');
+    const panelId = header.getAttribute('aria-controls');
 
-    if (!content || !content.classList.contains('accordion-content')) return;
+    if (!accordion || !panelId) return;
+
+    const content = document.getElementById(panelId);
+    if (!content
+        || !content.classList.contains('accordion-content')
+        || content.closest('.accordion') !== accordion) {
+        return;
+    }
 
     // Check for single expansion mode
-    if (accordion && accordion.getAttribute('data-single-expand') === 'true') {
-        // If we are opening a closed item, close all others first
+    if (accordion.getAttribute('data-single-expand') === 'true') {
+        // If we are opening a closed item, close all other items in this accordion.
         if (!header.classList.contains('active')) {
-            const allHeaders = accordion.querySelectorAll('.accordion-header');
-            const allContents = accordion.querySelectorAll('.accordion-content');
+            const allHeaders = Array.from(accordion.querySelectorAll('.accordion-header'))
+                .filter(candidate => candidate.closest('.accordion') === accordion);
+            const allContents = Array.from(accordion.querySelectorAll('.accordion-content'))
+                .filter(candidate => candidate.closest('.accordion') === accordion);
 
-            allHeaders.forEach(h => {
-                h.classList.remove('active');
-                h.setAttribute('aria-expanded', 'false');
+            allHeaders.forEach(candidate => {
+                candidate.classList.remove('active');
+                candidate.setAttribute('aria-expanded', 'false');
             });
-            allContents.forEach(c => c.classList.remove('expanded'));
+            allContents.forEach(candidate => candidate.classList.remove('expanded'));
         }
     }
 
@@ -86,26 +94,34 @@ function handleTabs(button) {
     const panelId = button.getAttribute('aria-controls');
     const tabsContainer = button.closest('.tabs-container');
 
-    if (!tabsContainer) return;
+    if (!tabsContainer || !panelId) return;
 
-    // Deactivate all tabs and panels in this container
-    tabsContainer.querySelectorAll('.tab-button').forEach(btn => {
-        btn.classList.remove('active');
-        btn.setAttribute('aria-selected', 'false');
+    const targetPanel = document.getElementById(panelId);
+    if (!targetPanel
+        || !targetPanel.classList.contains('tab-panel')
+        || targetPanel.closest('.tabs-container') !== tabsContainer) {
+        return;
+    }
+
+    // Deactivate all tabs and panels owned by this container, excluding nested tabs.
+    const ownedButtons = Array.from(tabsContainer.querySelectorAll('.tab-button'))
+        .filter(candidate => candidate.closest('.tabs-container') === tabsContainer);
+    const ownedPanels = Array.from(tabsContainer.querySelectorAll('.tab-panel'))
+        .filter(candidate => candidate.closest('.tabs-container') === tabsContainer);
+
+    ownedButtons.forEach(candidate => {
+        candidate.classList.remove('active');
+        candidate.setAttribute('aria-selected', 'false');
     });
 
-    tabsContainer.querySelectorAll('.tab-panel').forEach(panel => {
-        panel.classList.remove('active');
+    ownedPanels.forEach(candidate => {
+        candidate.classList.remove('active');
     });
 
     // Activate clicked tab and corresponding panel
     button.classList.add('active');
     button.setAttribute('aria-selected', 'true');
-
-    const targetPanel = document.getElementById(panelId);
-    if (targetPanel) {
-        targetPanel.classList.add('active');
-    }
+    targetPanel.classList.add('active');
 }
 
 /**

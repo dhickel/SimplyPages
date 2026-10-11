@@ -34,6 +34,15 @@ package.json
 package-lock.json
 .internal-dev/*
 
+# Portable SimplyPages browser regression harness
+!tests/
+!tests/browser/
+!tests/browser/package.json
+!tests/browser/package-lock.json
+!tests/browser/*.spec.js
+tests/browser/test-results/
+tests/browser/playwright-report/
+
 # Generated demo documentation (copied during Maven build)
 demo/src/main/resources/static/docs/
 demo/src/main/resources/static/javadocs/

@@ -1,0 +1,10 @@
+{
+  "name": "simplypages-browser-tests",
+  "private": true,
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "playwright": "1.62.0"
+  }
+}
