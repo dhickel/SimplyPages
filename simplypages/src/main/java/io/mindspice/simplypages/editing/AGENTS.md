@@ -20,6 +20,10 @@ Owns editing contracts and reusable helpers for inline/module editing flows.
 - Source content and registrations are independent; callers must avoid registering content already present in the supplied Row. Outer wrapper attributes stay distinct. Empty source rows are retained; null omits only the source row.
 - EditableRow preserves registration order, module-ID assignment, equal integer `12 / count` widths, capacity/mode/permission gates and endpoint conventions. Capacities above twelve use fill columns rather than invalid zero-width grid columns.
 - EditableRow remains mutable and not thread-safe, including as a retained template delegate. Source custom renderers/descendants retain their own ownership requirements.
+- Editing endpoint templates have exactly four purpose-specific page/row setters. Page insertion configuration must not overwrite supplied row configuration; row edit/delete/add-form settings remain independent. Keep interpolation in the package-private EditingUrlTemplate helper, not a public routing/resolver framework.
+- Supported tokens occupy only whole path segments or whole query values in both literal and browser-relevant structure (C0/space edge trimming, ignored TAB/LF/CR and path-backslash separators, classification only). In browser-relevant structure, token-bearing absolute URLs require scheme://nonempty-literal-authority; protocol-relative, root-relative, relative-path and query-only references remain supported. Scheme shorthands, empty authorities and opaque templated URLs are unsupported; fixed URLs do not acquire structural validation. Validate templates at setters; reject null new page/row templates, unknown tokens and invalid placements. Existing child URL setters accept null to disable the action but otherwise use the same grammar with {id}. Repeated/omitted tokens and fixed URLs remain valid.
+- Encode raw ids as UTF-8 RFC3986 components (unreserved literal, space %20, literal percent encoded). Never trim, normalize, decode or recursively interpolate. Reject null/empty/whitespace-only/exact dot/dotdot/malformed UTF-16 only when a token actually uses the id. Empty child lists, omitted tokens and gated controls do not add global descriptor validation. DOM ids/selectors remain separate.
+- Modal save/delete and low-level EditableModule edit/delete URLs remain complete caller URLs, not implicit templates. Literal URL portions and server routing/decoding/encoded-slash policy, authorization and CSRF remain application-owned.
 
 ## Do
 - Keep editing abstractions framework-generic (not app-domain specific).
@@ -40,6 +44,7 @@ Owns editing contracts and reusable helpers for inline/module editing flows.
 - `ValidationResultTest`, `AuthWrapperTest`, `EditableRowTest`
 - EditableRow source attributes/columns/text/slots, unchanged configured source structure across renders, independent wrapper content, custom delegate once/same-context direct and compiled paths, null/empty compatibility and generated control/width/gate/order regressions
 - Validation success/failure coverage for new edit flow behavior
+- EditingUrlTemplateTest and page/row/modal parsed-attribute tests cover defaults, custom row-scoped routes, independent settings, repeated/omitted/fixed tokens, grammar, raw reserved/percent/Unicode/supplementary ids and used-versus-unused rejection. EditingUrlBrowserFixtureTest generates fresh actual markup for tests/browser/editing-url-conventions.spec.js; browser normalization checks are not encoded-slash server acceptance tests.
 
 ## Dependencies
 - Depends on `core`, `components`, and module wrappers where needed.

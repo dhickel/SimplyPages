@@ -123,8 +123,9 @@ public class EditableModule extends Div {
     /**
      * Sets the edit mode for this module.
      * <p>
-     * The edit mode is appended as a query parameter to edit/delete URLs
-     * so the server can apply appropriate approval workflows.
+     * The edit mode is appended as a query parameter before any fragment in edit/delete URLs
+     * so the server can apply appropriate approval workflows. Existing parameters (including
+     * editMode) and fragment text are retained; null mode leaves the complete URL unchanged.
      * </p>
      *
      * @param editMode the edit mode (USER_EDIT requires approval, OWNER_EDIT is immediate)
@@ -138,7 +139,9 @@ public class EditableModule extends Div {
     // ===== Edit Configuration =====
 
     /**
-     * Sets the URL for editing this module (HTMX hx-get).
+     * Sets the complete caller URL for editing this module (HTMX hx-get).
+     * No template substitution or identifier encoding is applied; a configured edit mode is
+     * appended to its pre-fragment query.
      *
      * @param editUrl the endpoint to fetch edit modal from
      * @return this EditableModule for method chaining
@@ -195,7 +198,9 @@ public class EditableModule extends Div {
     // ===== Delete Configuration =====
 
     /**
-     * Sets the URL for deleting this module (HTMX hx-delete).
+     * Sets the complete caller URL for deleting this module (HTMX hx-delete).
+     * No template substitution or identifier encoding is applied; a configured edit mode is
+     * appended to its pre-fragment query.
      *
      * @param deleteUrl the endpoint to delete the module
      * @return this EditableModule for method chaining
@@ -268,8 +273,12 @@ public class EditableModule extends Div {
         if (editMode == null || url == null) {
             return url;
         }
-        String separator = url.contains("?") ? "&" : "?";
-        return url + separator + "editMode=" + editMode.name();
+        int fragmentIndex = url.indexOf('#');
+        String base = fragmentIndex < 0 ? url : url.substring(0, fragmentIndex);
+        String fragment = fragmentIndex < 0 ? "" : url.substring(fragmentIndex);
+        String separator = !base.contains("?") ? "?"
+                : base.endsWith("?") || base.endsWith("&") ? "" : "&";
+        return base + separator + "editMode=" + editMode.name() + fragment;
     }
 
     /**

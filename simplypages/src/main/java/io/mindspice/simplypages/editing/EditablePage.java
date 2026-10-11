@@ -24,6 +24,7 @@ import java.util.List;
 public class EditablePage extends HtmlTag {
 
     private final String pageId;
+    private String insertRowUrlTemplate = "/api/pages/{pageId}/rows/insert?position={position}";
     private final List<EditableRow> rows = new ArrayList<>();
     private final Div pageContainer;
 
@@ -39,6 +40,40 @@ public class EditablePage extends HtmlTag {
     /** Creates an editable page wrapper for the given page id. */
     public static EditablePage create(String pageId) {
         return new EditablePage(pageId);
+    }
+
+    /**
+     * Sets the insert-control URL template (default
+     * {@code /api/pages/{pageId}/rows/insert?position={position}}).
+     *
+     * <p>Only {@code {pageId}} and {@code {position}} are supported, as whole path segments or
+     * whole query values. Repeated/omitted tokens and fixed URLs are allowed. Literal URL text is
+     * preserved. In browser-relevant structure, token-bearing absolute URLs require
+     * {@code scheme://nonempty-literal-authority};
+     * protocol-relative, root-relative, relative-path and query-only references are supported.
+     * Placement is also checked after browser-style control/space and path-backslash handling,
+     * without rewriting the output. Scheme shorthands, empty authorities and opaque templated
+     * URLs are unsupported; fixed URLs do not acquire structural validation.
+     * This configures only this page's insert controls, not supplied rows.</p>
+     *
+     * <p>The raw page id is UTF-8 percent-encoded when interpolated during render, not at creation.
+     * It must be non-null, nonempty, nonblank, not exactly {@code .} or {@code ..}, and valid UTF-16.
+     * It is not trimmed, normalized or decoded; a literal percent is encoded too. Omitted tokens
+     * do not validate their ids. DOM ids are unchanged. Applications own routes, server decoding,
+     * authorization and CSRF enforcement.</p>
+     *
+     * @param template caller-owned URL template
+     * @return this page
+     * @throws IllegalArgumentException for null templates, unsupported tokens or token placements
+     */
+    public EditablePage withInsertRowUrlTemplate(String template) {
+        this.insertRowUrlTemplate = EditingUrlTemplate.validate(template, "pageId", "position");
+        return this;
+    }
+
+    private String insertRowUrl(int position) {
+        return EditingUrlTemplate.expand(insertRowUrlTemplate,
+                token -> token.equals("pageId") ? pageId : Integer.toString(position));
     }
 
     /** Appends an editable row to this page. */
@@ -65,7 +100,7 @@ public class EditablePage extends HtmlTag {
                     .withStyle(Button.ButtonStyle.SECONDARY);
 
             // Position 0 means insert at the beginning (first row)
-            insertBtn.withAttribute("hx-post", "/api/pages/" + pageId + "/rows/insert?position=0");
+            insertBtn.withAttribute("hx-post", insertRowUrl(0));
             insertBtn.withAttribute("hx-target", "closest .insert-row-section");
             insertBtn.withAttribute("hx-swap", "beforebegin");
 
@@ -89,7 +124,7 @@ public class EditablePage extends HtmlTag {
 
                 // Position is the index after which to insert (i+1 means insert after row i)
                 int insertPosition = i + 1;
-                insertBtn.withAttribute("hx-post", "/api/pages/" + pageId + "/rows/insert?position=" + insertPosition);
+                insertBtn.withAttribute("hx-post", insertRowUrl(insertPosition));
                 insertBtn.withAttribute("hx-target", "closest .insert-row-section");
                 insertBtn.withAttribute("hx-swap", "beforebegin");
 

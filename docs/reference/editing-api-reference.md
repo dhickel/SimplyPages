@@ -32,6 +32,8 @@ Common methods:
 - `withEditable(...)` or `withEditView(...)`
 - `withSaveUrl(...)`
 - `withDeleteUrl(...)`
+- `withChildEditUrl(...)`
+- `withChildDeleteUrl(...)`
 - `withPageContainerId(...)`
 - `withModalContainerId(...)`
 - `hideDelete()`
@@ -45,6 +47,37 @@ the launcher, the old disconnected element cannot receive focus.
 
 See the [Modal rendering and interaction contract](components-and-modules-catalog.md#modal)
 and [editing flow guide](../how-to/edit-content.md).
+
+`withSaveUrl` and `withDeleteUrl` accept **complete caller URLs**. They do not substitute
+braced tokens or encode identifiers. `withModuleId` does not construct these URLs.
+
+Child edit/delete URLs are templates with only `{id}`. Tokens must occupy a whole path
+segment or a whole query parameter value, for example `/children/{id}/edit` or
+`/children/edit?id={id}`. Repeated tokens, omitted tokens and fixed URLs are allowed.
+`null` disables the corresponding child action. Non-null templates are validated by the
+setter; raw child ids are validated and encoded only when an action actually substitutes
+`{id}` during `build()`. Empty child lists and templates without `{id}` do not validate ids.
+`EditableChild` stores its id without global validation.
+
+**Migration:** legacy child templates such as `/child-{id}`, `/{id}.json`, `?{id}=value`,
+`https://{id}/edit` or `#child-{id}` now throw `IllegalArgumentException`. Move the token into
+a full segment or query value. Pass raw ids, not pre-encoded strings. See
+[URL template and identifier rules](#url-template-and-identifier-rules).
+
+## EditablePage
+
+`EditablePage.create(pageId)` emits a page wrapper and row-insert controls. It renders one
+control with position `0` for an empty page, or one after each supplied row with positions
+`1`, `2`, and so on. Insert controls retain `hx-target="closest .insert-row-section"` and
+`hx-swap="beforebegin"`.
+
+`withInsertRowUrlTemplate(template)` sets only these insert URLs. Its default is
+`/api/pages/{pageId}/rows/insert?position={position}`; supported tokens are `{pageId}` and
+`{position}`. Position is the framework's decimal insertion index. The page does **not**
+change endpoint configuration on rows supplied through `addEditableRow`.
+
+Templates are checked at the setter; a used page id is checked and encoded at render time.
+The wrapper remains mutable and not thread-safe. Creation does not validate the page id.
 
 ## EditableRow
 
@@ -79,16 +112,106 @@ Configuration methods:
   gate the registered modules' edit/delete controls or enforce server authorization.
 
 Generated columns use integer width `12 / registeredModuleCount`; counts above twelve use
-fill columns. Source columns retain their configured widths. Generated endpoint conventions are:
+fill columns. Source columns retain their configured widths. Three independent setters
+configure generated endpoint conventions:
 
-- Edit: `/api/pages/{pageId}/modules/{moduleId}/edit`
-- Delete: `/api/pages/{pageId}/modules/{moduleId}/delete`
-- Add form: `/api/pages/{pageId}/rows/{rowId}/add-module-form`
+| Setter | Default | Supported tokens |
+|---|---|---|
+| `withModuleEditUrlTemplate(template)` | `/api/pages/{pageId}/modules/{moduleId}/edit` | `{pageId}`, `{rowId}`, `{moduleId}` |
+| `withModuleDeleteUrlTemplate(template)` | `/api/pages/{pageId}/modules/{moduleId}/delete` | `{pageId}`, `{rowId}`, `{moduleId}` |
+| `withAddModuleFormUrlTemplate(template)` | `/api/pages/{pageId}/rows/{rowId}/add-module-form` | `{pageId}`, `{rowId}` |
 
-The edit mode is appended to edit/delete URLs as `editMode`. Edit and add controls target
-`#edit-modal-container` with `innerHTML`; delete targets its generated module wrapper with
-`outerHTML`. Applications supply these endpoints and enforce authorization, CSRF and business
-validation. Wrapper controls alone do not grant permission.
+Setters check the template immediately. Render validates and encodes only ids actually used
+by generated URLs. No registered modules means no module URLs; a hidden or capacity-blocked
+add control does not expand its template. Default module URLs do not use `rowId`.
+
+The edit mode is appended to edit/delete URLs as `editMode`, **before** any fragment. Edit
+and add controls target `#edit-modal-container` with `innerHTML`; delete targets its generated
+module wrapper with `outerHTML`. Applications supply these endpoints and enforce authorization,
+CSRF and business validation. Wrapper controls alone do not grant permission.
+
+A row-scoped route configuration, independent of page insertion:
+
+```java
+package example;
+
+import io.mindspice.simplypages.editing.EditablePage;
+import io.mindspice.simplypages.editing.EditableRow;
+import io.mindspice.simplypages.layout.Row;
+import io.mindspice.simplypages.modules.ContentModule;
+
+public final class EditingRoutes {
+    public static EditablePage page() {
+        String pageId = "tenant/a"; // raw business id, not "tenant%2Fa"
+        EditableRow row = EditableRow.wrap(new Row(), "row-1", pageId)
+                .withModuleEditUrlTemplate("/editor/{pageId}/{rowId}/{moduleId}/edit")
+                .withModuleDeleteUrlTemplate("/editor/{pageId}/{rowId}/{moduleId}/delete")
+                .withAddModuleFormUrlTemplate("/editor/add?page={pageId}&row={rowId}")
+                .addEditableModule(ContentModule.create().withContent("Body"), "module-1");
+        return EditablePage.create(pageId)
+                .withInsertRowUrlTemplate("/editor/insert?page={pageId}&position={position}")
+                .addEditableRow(row);
+    }
+}
+```
+
+This emits `tenant%2Fa` wherever the page token occurs. It does not register server routes
+or establish that a server accepts encoded slashes.
+
+## URL template and identifier rules
+
+These rules apply to the four page/row template setters and modal child templates:
+
+- Tokens occupy **whole path segments or whole query parameter values**. Scheme, authority,
+  query-key, fragment and partial-segment/value placements are rejected. Unknown tokens or
+  unmatched braces are rejected. New page/row template setters also reject `null`.
+- In the browser-relevant structure, token-bearing absolute URLs use
+  `scheme://nonempty-literal-authority`; protocol-relative URLs use
+  `//nonempty-literal-authority`. Root-relative paths, relative paths and query-only
+  references are supported. Scheme shorthands (`https:{id}`, `https:/{id}`), empty-authority
+  forms (`https:///{id}`, `///{id}`), and opaque schemes such as templated `mailto:` are not
+  supported. This is a template grammar, not a scheme or destination allowlist.
+- Placement is checked against both the literal template and browser-relevant structure:
+  leading/trailing ASCII C0 controls/spaces are trimmed, TAB/LF/CR are ignored, and path
+  backslashes are treated as separators **for classification only**. For example,
+  ` https://{id}/edit`, `h<TAB>ttps://{id}/edit` and `\\/{id}/edit` are rejected because browsers
+  would put the id in the authority. Harmless literal variants remain byte-for-byte unchanged.
+- Repeated or omitted tokens and fixed URLs are supported. An empty fixed URL contains no
+  tokens; it does not validate ids. Fixed URLs do not acquire this structural validation,
+  including non-hierarchical URLs. Literal URL portions remain exactly as configured.
+- Expansion makes one pass over the original template. Braces inside an id are data, not
+  additional tokens. The framework does not normalize literal URL text or encode the whole URL.
+- Ids are raw opaque values. UTF-8 bytes other than RFC 3986 unreserved characters
+  (`A-Z a-z 0-9 - . _ ~`) are percent-encoded. Spaces become `%20`, not `+`. Slash, backslash,
+  `?`, `#`, quotes and braces are encoded. `a%2Fb` becomes `a%252Fb`, not `a%2Fb`.
+- Used ids must be non-null, nonempty, not whitespace/space-character-only, not exactly `.`
+  or `..`, and well-formed UTF-16. Supplementary Unicode is supported. Mixed nonblank values
+  retain surrounding spaces; no trimming, case folding, Unicode normalization or decoding occurs.
+- Invalid ids throw `IllegalArgumentException` only at actual interpolation (page/row render,
+  or modal child-action build). Omitted tokens and disabled/absent actions do not introduce
+  descriptor-wide validation. DOM ids and CSS selectors are not changed by this URL policy.
+
+**Migration:** framework-generated page/row and child URLs now encode raw ids. Do not pass
+pre-encoded ids; literal percent signs are deliberately encoded again. Exact dot ids are rejected
+because browsers normalize dot path segments even when their dots are percent-encoded. Partial
+legacy child-token placements must move to full segments or query values.
+
+Literal URL configuration is trusted application input. Applications own route mappings,
+encoded-slash acceptance, the number of decoding steps, business-id lookup, authorization,
+CSRF and endpoint policy. Component encoding does not supply URI allowlisting or certify
+server-side request handling. Broad URL/style validation is not part of this contract.
+
+## EditableModule complete URLs
+
+`EditableModule.withEditUrl(url)` and `withDeleteUrl(url)` accept complete caller URLs, not
+implicit templates. Braces and existing percent sequences remain untouched. Null/empty URLs
+or disabled permission flags hide the respective control.
+
+With a non-null edit mode, the wrapper appends `editMode=OWNER_EDIT` or `editMode=USER_EDIT`
+to the pre-fragment query. It retains all existing parameters, including an existing `editMode`,
+and preserves the fragment exactly. Empty queries and trailing `?`/`&` receive no extra separator.
+For example, `/edit?tab=details#section?note` becomes
+`/edit?tab=details&editMode=OWNER_EDIT#section?note`. A null mode leaves the complete URL unchanged.
 
 ## ModuleEditHandler<T>
 

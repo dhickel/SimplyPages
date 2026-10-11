@@ -15,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
@@ -24,6 +25,115 @@ import java.util.function.Function;
 import static org.junit.jupiter.api.Assertions.*;
 
 class EditableRowTest {
+
+    @ParameterizedTest
+    @MethodSource("io.mindspice.simplypages.editing.EditingUrlTemplateTest#encodedIds")
+    void encodesAllOperationIdsInDefaultsAndRowScopedTemplates(String raw, String encoded) {
+        var row = EditableRow.wrap(null, raw, raw)
+                .addEditableModule(ContentModule.create().withContent("Body"), raw);
+        var document = Jsoup.parse(row.render());
+        assertEquals("/api/pages/" + encoded + "/modules/" + encoded + "/edit?editMode=OWNER_EDIT",
+                document.selectFirst(".module-edit-btn").attr("hx-get"));
+        assertEquals("/api/pages/" + encoded + "/modules/" + encoded + "/delete?editMode=OWNER_EDIT",
+                document.selectFirst(".module-delete-btn").attr("hx-delete"));
+        assertEquals("/api/pages/" + encoded + "/rows/" + encoded + "/add-module-form",
+                document.selectFirst(".add-module-section button").attr("hx-get"));
+        row.withModuleEditUrlTemplate("/edit/{pageId}/{rowId}/{moduleId}?again={moduleId}#F?")
+                .withModuleDeleteUrlTemplate("/delete?row={rowId}&page={pageId}&module={moduleId}#F?")
+                .withAddModuleFormUrlTemplate("/add/{rowId}?page={pageId}&row={rowId}")
+                .withEditMode(EditMode.USER_EDIT);
+        document = Jsoup.parse(row.compile().render(RenderContext.empty()));
+        assertEquals("/edit/" + encoded + "/" + encoded + "/" + encoded + "?again=" + encoded
+                + "&editMode=USER_EDIT#F?", document.selectFirst(".module-edit-btn").attr("hx-get"));
+        assertEquals("/delete?row=" + encoded + "&page=" + encoded + "&module=" + encoded
+                + "&editMode=USER_EDIT#F?", document.selectFirst(".module-delete-btn").attr("hx-delete"));
+        assertEquals("/add/" + encoded + "?page=" + encoded + "&row=" + encoded,
+                document.selectFirst(".add-module-section button").attr("hx-get"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("io.mindspice.simplypages.editing.EditingUrlTemplateTest#invalidIds")
+    void validatesOnlyIdsUsedByEligibleControls(String raw) {
+        var absent = EditableRow.wrap(null, raw, raw).withCanAddModule(false);
+        assertDoesNotThrow(() -> absent.render(), "No modules or eligible add action uses either id");
+        absent.withCanAddModule(true);
+        assertThrows(IllegalArgumentException.class, absent::render);
+        absent.withAddModuleFormUrlTemplate("/fixed-add");
+        assertDoesNotThrow(() -> absent.render());
+
+        var full = EditableRow.wrap(null, raw, "p").withMaxModules(1)
+                .addEditableModule(ContentModule.create(), "m");
+        assertDoesNotThrow(() -> full.render(), "Default module templates omit rowId and capacity hides add");
+        full.withModuleEditUrlTemplate("/rows/{rowId}/edit");
+        assertThrows(IllegalArgumentException.class, full::render);
+
+        for (boolean edit : List.of(false, true)) {
+            var row = EditableRow.wrap(null, raw, raw).withCanAddModule(false)
+                    .withModuleEditUrlTemplate("/fixed-edit").withModuleDeleteUrlTemplate("/fixed-delete")
+                    .addEditableModule(ContentModule.create(), raw);
+            assertDoesNotThrow(() -> row.render(), "Omitted page/row/module tokens do not validate ids");
+            if (edit) row.withModuleEditUrlTemplate("/edit/{moduleId}");
+            else row.withModuleDeleteUrlTemplate("/delete/{moduleId}");
+            assertThrows(IllegalArgumentException.class, row::render);
+        }
+        var pageId = EditableRow.wrap(null, "r", raw).withCanAddModule(false)
+                .addEditableModule(ContentModule.create(), "m");
+        assertThrows(IllegalArgumentException.class, pageId::render);
+    }
+
+    @Test
+    void operationTemplatesAreIndependentAndCanOmitAllTokens() {
+        var row = EditableRow.wrap(null, "r", "p").addEditableModule(ContentModule.create(), "m");
+        row.withModuleEditUrlTemplate("/edit-fixed%2f?x=1#F");
+        var document = Jsoup.parse(row.render());
+        assertEquals("/edit-fixed%2f?x=1&editMode=OWNER_EDIT#F", document.selectFirst(".module-edit-btn").attr("hx-get"));
+        assertEquals("/api/pages/p/modules/m/delete?editMode=OWNER_EDIT", document.selectFirst(".module-delete-btn").attr("hx-delete"));
+        assertEquals("/api/pages/p/rows/r/add-module-form", document.selectFirst(".add-module-section button").attr("hx-get"));
+        row.withModuleDeleteUrlTemplate("/delete-fixed").withAddModuleFormUrlTemplate("/add-fixed").withEditMode(null);
+        document = Jsoup.parse(row.render());
+        assertEquals("/edit-fixed%2f?x=1#F", document.selectFirst(".module-edit-btn").attr("hx-get"));
+        assertEquals("/delete-fixed", document.selectFirst(".module-delete-btn").attr("hx-delete"));
+        assertEquals("/add-fixed", document.selectFirst(".add-module-section button").attr("hx-get"));
+    }
+
+    @Test
+    void validatesEachOperationTemplateAtConfiguration() {
+        var row = EditableRow.wrap(null, "r", "p");
+        List<Function<String, EditableRow>> setters = List.of(row::withModuleEditUrlTemplate,
+                row::withModuleDeleteUrlTemplate, row::withAddModuleFormUrlTemplate);
+        for (var setter : setters) {
+            for (String template : java.util.Arrays.asList(null, "/{position}", "/{id}", "/p{pageId}",
+                    "/x?{rowId}=x", "https://{pageId}/x", "/x#{rowId}")) {
+                assertThrows(IllegalArgumentException.class, () -> setter.apply(template));
+            }
+        }
+        assertThrows(IllegalArgumentException.class, () -> row.withAddModuleFormUrlTemplate("/{moduleId}"));
+        assertDoesNotThrow(() -> row.withModuleEditUrlTemplate("/{moduleId}/{moduleId}"));
+        assertDoesNotThrow(() -> row.withModuleDeleteUrlTemplate("/{rowId}/{rowId}"));
+        assertDoesNotThrow(() -> row.withAddModuleFormUrlTemplate("/{pageId}/{rowId}/{rowId}"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("io.mindspice.simplypages.editing.EditingUrlTemplateTest#authorityCounterexamples")
+    void rejectsBrowserAuthorityPlacementsAtEverySetterWithoutReplacingRoutes(String template) {
+        var row = EditableRow.wrap(null, "destination.example", "destination.example")
+                .addEditableModule(ContentModule.create(), "destination.example");
+        for (var setter : List.<Function<String, EditableRow>>of(row::withModuleEditUrlTemplate,
+                row::withModuleDeleteUrlTemplate, row::withAddModuleFormUrlTemplate)) {
+            assertThrows(IllegalArgumentException.class, () -> setter.apply(template.replace("{id}", "{pageId}")));
+        }
+        assertThrows(IllegalArgumentException.class,
+                () -> row.withModuleEditUrlTemplate(template.replace("{id}", "{moduleId}")));
+        assertThrows(IllegalArgumentException.class,
+                () -> row.withModuleDeleteUrlTemplate(template.replace("{id}", "{moduleId}")));
+        var document = Jsoup.parse(row.render());
+        assertEquals("/api/pages/destination.example/modules/destination.example/edit?editMode=OWNER_EDIT",
+                document.selectFirst(".module-edit-btn").attr("hx-get"));
+        assertEquals("/api/pages/destination.example/modules/destination.example/delete?editMode=OWNER_EDIT",
+                document.selectFirst(".module-delete-btn").attr("hx-delete"));
+        assertEquals("/api/pages/destination.example/rows/destination.example/add-module-form",
+                document.selectFirst(".add-module-section button").attr("hx-get"));
+    }
 
     @Test
     @DisplayName("EditableRow should render modules and add button")

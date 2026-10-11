@@ -31,6 +31,9 @@ public class EditableRow extends HtmlTag {
     private final Row wrappedRow;
     private final String rowId;
     private final String pageId;
+    private String moduleEditUrlTemplate = "/api/pages/{pageId}/modules/{moduleId}/edit";
+    private String moduleDeleteUrlTemplate = "/api/pages/{pageId}/modules/{moduleId}/delete";
+    private String addModuleFormUrlTemplate = "/api/pages/{pageId}/rows/{rowId}/add-module-form";
     private int maxModulesPerRow = 3;
     private final List<ModuleInfo> modules = new ArrayList<>();
     private EditMode editMode = EditMode.OWNER_EDIT;  // Default for page builder
@@ -94,6 +97,72 @@ public class EditableRow extends HtmlTag {
         return this;
     }
 
+    /**
+     * Sets the module-edit URL template (default {@code /api/pages/{pageId}/modules/{moduleId}/edit}).
+     * Supports {@code {pageId}}, {@code {rowId}} and {@code {moduleId}} only as whole path segments
+     * or whole query values; repeated/omitted tokens and fixed URLs are allowed.
+     * In browser-relevant structure, token-bearing absolute URLs require
+     * {@code scheme://nonempty-literal-authority};
+     * protocol-relative, root-relative, relative-path and query-only references are supported.
+     * Placement is also checked after browser-style control/space and path-backslash handling,
+     * without rewriting the output. Scheme shorthands, empty authorities and opaque templated
+     * URLs are unsupported; fixed URLs do not acquire structural validation.
+     *
+     * <p>Templates are validated here; raw ids are validated and UTF-8 percent-encoded only when
+     * interpolated during render. Used ids must be non-null, nonempty, nonblank, not exactly
+     * {@code .} or {@code ..}, and valid UTF-16. No trimming, normalization or decoding occurs;
+     * literal percent signs are encoded. Unused ids and DOM ids are unaffected. Literal URL text
+     * is preserved. Applications own routing, server decoding, authorization and CSRF.</p>
+     *
+     * @param template caller-owned module-edit URL template
+     * @return this row
+     * @throws IllegalArgumentException for null templates, unsupported tokens or token placements
+     */
+    public EditableRow withModuleEditUrlTemplate(String template) {
+        this.moduleEditUrlTemplate = EditingUrlTemplate.validate(template, "pageId", "rowId", "moduleId");
+        return this;
+    }
+
+    /**
+     * Sets the module-delete URL template (default
+     * {@code /api/pages/{pageId}/modules/{moduleId}/delete}).
+     * Supports {@code {pageId}}, {@code {rowId}} and {@code {moduleId}} with the placement,
+     * encoding and render-time id validation described in {@link #withModuleEditUrlTemplate(String)}.
+     * Configuring this operation does not change the edit or add-form template.
+     *
+     * @param template caller-owned module-delete URL template
+     * @return this row
+     * @throws IllegalArgumentException for null templates, unsupported tokens or token placements
+     */
+    public EditableRow withModuleDeleteUrlTemplate(String template) {
+        this.moduleDeleteUrlTemplate = EditingUrlTemplate.validate(template, "pageId", "rowId", "moduleId");
+        return this;
+    }
+
+    /**
+     * Sets the add-module-form URL template (default
+     * {@code /api/pages/{pageId}/rows/{rowId}/add-module-form}).
+     * Supports only {@code {pageId}} and {@code {rowId}}, using the placement, encoding and
+     * render-time id validation described in {@link #withModuleEditUrlTemplate(String)}.
+     * This template is expanded only when the add control is eligible to render.
+     *
+     * @param template caller-owned add-form URL template
+     * @return this row
+     * @throws IllegalArgumentException for null templates, unsupported tokens or token placements
+     */
+    public EditableRow withAddModuleFormUrlTemplate(String template) {
+        this.addModuleFormUrlTemplate = EditingUrlTemplate.validate(template, "pageId", "rowId");
+        return this;
+    }
+
+    private String editingUrl(String template, String moduleId) {
+        return EditingUrlTemplate.expand(template, token -> switch (token) {
+            case "pageId" -> pageId;
+            case "rowId" -> rowId;
+            default -> moduleId;
+        });
+    }
+
     /** Sets edit mode applied to generated {@link EditableModule} wrappers. */
     public EditableRow withEditMode(EditMode mode) {
         this.editMode = mode;
@@ -145,8 +214,8 @@ public class EditableRow extends HtmlTag {
             for (ModuleInfo info : modules) {
                 // Wrap module in EditableModule
                 EditableModule editableModule = EditableModule.wrap(info.module)
-                        .withEditUrl("/api/pages/" + pageId + "/modules/" + info.moduleId + "/edit")
-                        .withDeleteUrl("/api/pages/" + pageId + "/modules/" + info.moduleId + "/delete")
+                        .withEditUrl(editingUrl(moduleEditUrlTemplate, info.moduleId))
+                        .withDeleteUrl(editingUrl(moduleDeleteUrlTemplate, info.moduleId))
                         .withEditMode(editMode);
 
                 // Create column with calculated width
@@ -167,7 +236,7 @@ public class EditableRow extends HtmlTag {
             Button addBtn = Button.create("+ Add Module")
                     .withStyle(Button.ButtonStyle.SECONDARY);
 
-            addBtn.withAttribute("hx-get", "/api/pages/" + pageId + "/rows/" + rowId + "/add-module-form");
+            addBtn.withAttribute("hx-get", editingUrl(addModuleFormUrlTemplate, null));
             addBtn.withAttribute("hx-target", "#edit-modal-container");
             addBtn.withAttribute("hx-swap", "innerHTML");
 
