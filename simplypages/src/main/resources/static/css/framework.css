@@ -4509,12 +4509,12 @@ blockquote.blockquote p:last-child {
     border: 1px solid var(--sp-theme-border-default);
     border-radius: 6px;
     margin-bottom: 10px;
-    overflow: hidden;
 }
 
 .accordion-header {
     width: 100%;
     padding: 15px 20px;
+    border-radius: 5px;
     background: var(--sp-gradient-surface-panel-muted);
     border: none;
     text-align: left;
@@ -4524,16 +4524,18 @@ blockquote.blockquote p:last-child {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: background-color 0.3s ease;
+    transition: background 0.3s ease;
 }
 
 .accordion-header:hover {
-    background-color: var(--sp-theme-surface-muted);
+    background: var(--sp-theme-surface-muted);
+    color: var(--sp-theme-text-strong);
 }
 
 .accordion-header.active {
-    background-color: var(--sp-theme-accent);
-    color: white;
+    border-radius: 5px 5px 0 0;
+    background: var(--sp-theme-accent);
+    color: var(--sp-theme-text-inverse);
 }
 
 .accordion-icon {
@@ -4545,13 +4547,7 @@ blockquote.blockquote p:last-child {
 }
 
 .accordion-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-}
-
-.accordion-content.expanded {
-    max-height: 1000px;
+    overflow: visible;
 }
 
 .accordion-body {
@@ -4559,6 +4555,14 @@ blockquote.blockquote p:last-child {
     background: var(--sp-gradient-surface-panel);
     line-height: 1.6;
     color: var(--sp-theme-text-muted);
+    border-radius: 0 0 6px 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .accordion-header,
+    .accordion-icon {
+        transition: none;
+    }
 }
 
 /* ----- Tabs Module ----- */

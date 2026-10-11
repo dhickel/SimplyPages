@@ -150,8 +150,8 @@ const synchronizeShellNavigation = (function() {
     return synchronize;
 })();
 
-/** Modal-only lifecycle: one stack and delegated handlers for direct and HTMX insertion/removal. */
-(function() {
+/** Modal lifecycle; accordion restoration reuses its internal-only focus boundary. */
+const revealAccordionHeader = (function() {
     const modals = [];
     const swapOpeners = new WeakMap();
     let lastFocused = document.activeElement;
@@ -341,50 +341,80 @@ const synchronizeShellNavigation = (function() {
     });
     new MutationObserver(reconcile).observe(document.documentElement, {childList: true, subtree: true});
     reconcile();
+    return header => {
+        const modal = modals.find(candidate => owned(header, candidate));
+        if (modal) focusInDialog(modal, header);
+        else header.scrollIntoView({block: 'nearest', inline: 'nearest', behavior: 'instant'});
+    };
 })();
+
+/**
+ * Synchronize one accordion item's visual, ARIA and interaction state.
+ * Focus must leave a closing panel before inert/hidden are applied so a nested
+ * control is not stranded in a subtree that has just become unavailable.
+ */
+function setAccordionState(header, content, expanded) {
+    const restoreFocus = !expanded && content.contains(document.activeElement);
+    if (restoreFocus) header.focus({preventScroll: true});
+
+    header.classList.toggle('active', expanded);
+    header.setAttribute('aria-expanded', String(expanded));
+    content.classList.toggle('expanded', expanded);
+    content.setAttribute('aria-hidden', String(!expanded));
+    content.hidden = !expanded;
+    content.inert = !expanded;
+    return restoreFocus ? header : null;
+}
+
+/** Find an item's first header or panel without assuming direct child wrappers. */
+function ownedAccordionPart(item, selector, accordion) {
+    return Array.from(item.querySelectorAll(selector)).find(candidate =>
+        candidate.closest('.accordion') === accordion
+        && candidate.closest('.accordion-item') === item);
+}
 
 /**
  * Handle Accordion Logic
  * - Toggles active/expanded state
- * - Respects data-single-expand="true" on parent
+ * - Respects data-single-expand="true" on the nearest owner
+ * - Leaves nested accordion state untouched
  */
 function handleAccordion(header) {
     const accordion = header.closest('.accordion');
     const panelId = header.getAttribute('aria-controls');
+    const item = header.closest('.accordion-item');
 
-    if (!accordion || !panelId) return;
+    if (!accordion || !panelId || !item || item.closest('.accordion') !== accordion) return;
 
     const content = document.getElementById(panelId);
     if (!content
-        || !content.classList.contains('accordion-content')
-        || content.closest('.accordion') !== accordion) {
+        || content.closest('.accordion') !== accordion
+        || content.closest('.accordion-item') !== item
+        || ownedAccordionPart(item, '.accordion-header', accordion) !== header
+        || ownedAccordionPart(item, '.accordion-content', accordion) !== content) {
         return;
     }
 
-    // Check for single expansion mode
-    if (accordion.getAttribute('data-single-expand') === 'true') {
-        // If we are opening a closed item, close all other items in this accordion.
-        if (!header.classList.contains('active')) {
-            const allHeaders = Array.from(accordion.querySelectorAll('.accordion-header'))
-                .filter(candidate => candidate.closest('.accordion') === accordion);
-            const allContents = Array.from(accordion.querySelectorAll('.accordion-content'))
-                .filter(candidate => candidate.closest('.accordion') === accordion);
+    const isExpanded = content.classList.contains('expanded');
+    const ownedItems = Array.from(accordion.querySelectorAll('.accordion-item'))
+        .filter(candidate => candidate.closest('.accordion') === accordion);
+    let restoredHeader = null;
 
-            allHeaders.forEach(candidate => {
-                candidate.classList.remove('active');
-                candidate.setAttribute('aria-expanded', 'false');
-            });
-            allContents.forEach(candidate => candidate.classList.remove('expanded'));
-        }
+    if (accordion.getAttribute('data-single-expand') === 'true' && !isExpanded) {
+        // Close only items owned by this accordion. Nested panels keep their own
+        // classes and are restored when an outer panel is reopened.
+        ownedItems.forEach(candidateItem => {
+            const candidateHeader = ownedAccordionPart(candidateItem, '.accordion-header', accordion);
+            const candidateContent = ownedAccordionPart(candidateItem, '.accordion-content', accordion);
+            if (candidateHeader && candidateContent && candidateContent !== content) {
+                restoredHeader = setAccordionState(candidateHeader, candidateContent, false) || restoredHeader;
+            }
+        });
     }
 
-    // Toggle current state
-    header.classList.toggle('active');
-    content.classList.toggle('expanded');
-
-    // Update ARIA
-    const isExpanded = content.classList.contains('expanded');
-    header.setAttribute('aria-expanded', isExpanded);
+    restoredHeader = setAccordionState(header, content, !isExpanded) || restoredHeader;
+    // Opening another panel can move the restored header; reveal after the whole transition.
+    if (restoredHeader && document.activeElement === restoredHeader) revealAccordionHeader(restoredHeader);
 }
 
 /**

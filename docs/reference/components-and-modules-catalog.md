@@ -107,8 +107,24 @@ Home/End select the first/last. Perpendicular arrows and modified keys retain na
 Enter/Space use native button activation. Orientation synchronization preserves selection,
 focus and nested state; activation keeps roving tabindex and panel `hidden` state consistent.
 Server markup starts with horizontal orientation because the viewport is unknown during SSR.
-Accordion regions are named by their own header buttons. These semantics do not promise unlimited
-accordion content height or whole-application accessibility conformance.
+Accordion regions are named by their own header buttons. Each `.accordion-content` panel
+contains an `.accordion-body` wrapper for text or custom components. Default framework CSS
+uses intrinsic expanded height without a fixed content cap, accommodates later content growth,
+and does not clip child disclosures at the accordion's own item or panel boundaries.
+
+Closed panels start with `hidden`, `inert` and `aria-hidden="true"`. With framework assets loaded,
+native header button activation (including Enter/Space) synchronizes these attributes with
+`aria-expanded` and the active/expanded classes. If focus is inside a panel being closed,
+it returns to that panel's header before descendants become unavailable. After the complete
+transition, the framework reveals that header with nearest scrolling. Inside a Modal, reveal
+is limited to dialog-internal scroll/clipping boundaries without scrolling the page or backdrop;
+oversized headers use nearest alignment rather than guaranteed full visibility. Single-expand behavior
+is scoped to the nearest owning `.accordion`; `allowMultiple()` permits multiple open items
+within that owner. Closing an outer panel preserves nested expansion state for reopening.
+
+Application styles or surrounding containers can still constrain height, clip disclosures or
+change contrast; applications must validate those custom layouts and palettes. These defaults
+are not a claim of whole-application accessibility conformance.
 
 ### Dropdown and account disclosure navigation
 

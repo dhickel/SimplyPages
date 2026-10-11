@@ -38,6 +38,10 @@ class AccordionModuleTest {
             assertEquals("false", header.attr("aria-expanded"));
             assertFalse(header.hasClass("active"));
             assertFalse(region.hasClass("expanded"));
+            assertEquals("true", region.attr("aria-hidden"));
+            assertTrue(region.hasAttr("hidden"));
+            assertTrue(region.hasAttr("inert"));
+            assertEquals("accordion-body", region.children().first().className());
         }
         assertEquals("Answer one", regions.get(0).selectFirst(".accordion-text").text());
         assertEquals("Answer two", regions.get(1).selectFirst("p").text());
@@ -60,9 +64,15 @@ class AccordionModuleTest {
         assertEquals("true", headers.get(0).attr("aria-expanded"));
         assertTrue(headers.get(0).hasClass("active"));
         assertTrue(regions.get(0).hasClass("expanded"));
+        assertEquals("false", regions.get(0).attr("aria-hidden"));
+        assertFalse(regions.get(0).hasAttr("hidden"));
+        assertFalse(regions.get(0).hasAttr("inert"));
         assertEquals("false", headers.get(1).attr("aria-expanded"));
         assertFalse(headers.get(1).hasClass("active"));
         assertFalse(regions.get(1).hasClass("expanded"));
+        assertEquals("true", regions.get(1).attr("aria-hidden"));
+        assertTrue(regions.get(1).hasAttr("hidden"));
+        assertTrue(regions.get(1).hasAttr("inert"));
         for (int i = 0; i < headers.size(); i++) {
             assertEquals(headers.get(i).id(), regions.get(i).attr("aria-labelledby"));
             assertEquals(regions.get(i).id(), headers.get(i).attr("aria-controls"));

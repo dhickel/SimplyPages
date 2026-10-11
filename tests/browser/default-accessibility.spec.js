@@ -4,6 +4,7 @@ const {test, expect} = require('playwright/test');
 test.use({hasTouch: true});
 const snapshots = path.resolve(__dirname, '../../simplypages/src/test/resources/snapshots');
 const generated = fs.readFileSync(path.join(snapshots, 'integration/accessibility/default-components.snap.html'), 'utf8');
+const accordionGenerated = fs.readFileSync(path.join(snapshots, 'integration/accessibility/accordion-components.snap.html'), 'utf8');
 const modal = fs.readFileSync(path.join(snapshots, 'display/modal/default.snap.html'), 'utf8');
 
 async function fixture(page) {
@@ -11,6 +12,13 @@ async function fixture(page) {
         `<!doctype html><html><head><meta charset="UTF-8"><link rel="stylesheet" href="/css/framework.css">
         <script defer src="/js/framework.js"></script></head><body>${generated}<div id="modal-host"></div></body></html>`}));
     await page.goto('/accessibility-fixture');
+}
+
+async function accordionFixture(page) {
+    await page.route('**/accordion-accessibility-fixture', route => route.fulfill({contentType: 'text/html', body:
+        `<!doctype html><html><head><meta charset="UTF-8"><link rel="stylesheet" href="/css/framework.css">
+        <script defer src="/js/framework.js"></script></head><body>${accordionGenerated}</body></html>`}));
+    await page.goto('/accordion-accessibility-fixture');
 }
 
 async function evidence(page, testInfo, name) {
@@ -27,6 +35,22 @@ async function jsonEvidence(testInfo, name, value) {
     const output = testInfo.outputPath(`${name}.json`);
     fs.writeFileSync(output, JSON.stringify(value, null, 2));
     await testInfo.attach(name, {path: output, contentType: 'application/json'});
+}
+
+function luminance(rgb) {
+    return rgb.slice(0, 3).map(value => value / 255)
+        .map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4)
+        .reduce((sum, value, i) => sum + value * [.2126, .7152, .0722][i], 0);
+}
+
+function contrast(foreground, background) {
+    return (Math.max(luminance(foreground), luminance(background)) + .05)
+        / (Math.min(luminance(foreground), luminance(background)) + .05);
+}
+
+function parsePaints(style) {
+    const source = style.backgroundImage === 'none' ? style.backgroundColor : style.backgroundImage;
+    return [...source.matchAll(/rgba?\(([^)]+)\)/g)].map(match => match[1].split(',').map(Number));
 }
 
 for (const viewport of [{width: 1440, height: 900}, {width: 390, height: 844}]) {
@@ -151,6 +175,208 @@ for (const viewport of [{width: 1440, height: 900}, {width: 390, height: 844}]) 
         await expect(child).toBeFocused();
         await page.keyboard.press('Escape');
         await expect(dialog).toHaveCount(0);
+    });
+}
+
+for (const viewport of [{width: 1440, height: 900}, {width: 390, height: 844}]) {
+    test(`generated accordion content, states and paints at ${viewport.width}px`, async ({page}, testInfo) => {
+        await page.setViewportSize(viewport);
+        await accordionFixture(page);
+
+        const single = page.locator('#accordion-single');
+        const firstHeader = single.locator('.accordion-header').first();
+        const firstPanel = single.locator('.accordion-content').first();
+        const closedHeader = single.locator('.accordion-header').nth(1);
+        const closedPanel = single.locator('.accordion-content').nth(1);
+        const closedControl = closedPanel.locator('button').filter({hasText: 'Closed section control'});
+
+        await expect(closedPanel).toHaveAttribute('hidden', 'true');
+        await expect(closedPanel).toHaveAttribute('inert');
+        await expect(closedPanel).toHaveAttribute('aria-hidden', 'true');
+        await closedControl.focus();
+        await expect(closedControl).not.toBeFocused();
+        await expect(closedHeader).not.toBeFocused();
+        expect(await page.evaluate(() => document.activeElement?.id)).not.toBe('accordion-single-item-1-content');
+
+        const normalPaint = await closedHeader.evaluate(element => {
+            const style = getComputedStyle(element);
+            return {foreground: style.color, backgroundImage: style.backgroundImage, backgroundColor: style.backgroundColor};
+        });
+        const normalForeground = parsePaints({backgroundImage: 'none', backgroundColor: normalPaint.foreground})[0];
+        const normalBackgrounds = parsePaints(normalPaint);
+        expect(normalBackgrounds.length).toBeGreaterThanOrEqual(2);
+        expect(Math.min(...normalBackgrounds.map(background => contrast(normalForeground, background)))).toBeGreaterThanOrEqual(4.5);
+
+        await closedHeader.hover();
+        await page.waitForTimeout(350);
+        const hoverPaint = await closedHeader.evaluate(element => {
+            const style = getComputedStyle(element);
+            return {color: style.color, backgroundImage: style.backgroundImage, backgroundColor: style.backgroundColor};
+        });
+        const hoverForeground = parsePaints({backgroundImage: 'none', backgroundColor: hoverPaint.color})[0];
+        const hoverBackgrounds = parsePaints(hoverPaint);
+        expect(hoverBackgrounds.length).toBeGreaterThanOrEqual(1);
+        expect(Math.min(...hoverBackgrounds.map(background => contrast(hoverForeground, background)))).toBeGreaterThanOrEqual(4.5);
+
+        const activePaint = await firstHeader.evaluate(element => {
+            const style = getComputedStyle(element);
+            return {color: style.color, backgroundImage: style.backgroundImage, backgroundColor: style.backgroundColor};
+        });
+        const activeForeground = parsePaints({backgroundImage: 'none', backgroundColor: activePaint.color})[0];
+        const activeBackgrounds = parsePaints(activePaint);
+        expect(activePaint.backgroundImage).toBe('none');
+        expect(Math.min(...activeBackgrounds.map(background => contrast(activeForeground, background)))).toBeGreaterThanOrEqual(4.5);
+
+        await firstHeader.focus();
+        await page.keyboard.press('Enter');
+        await expect(firstPanel).toBeHidden();
+        await expect(firstPanel).toHaveAttribute('inert');
+        await expect(firstHeader).toBeFocused();
+        await closedHeader.focus();
+        await page.keyboard.press('Space');
+        await expect(closedPanel).not.toBeHidden();
+        await expect(closedPanel).toHaveAttribute('aria-hidden', 'false');
+        await expect(closedPanel).not.toHaveAttribute('inert');
+        await expect(firstPanel).toBeHidden();
+        await firstHeader.focus();
+        await page.keyboard.press('Enter');
+        await expect(firstPanel).not.toBeHidden();
+        await expect(closedPanel).toBeHidden();
+
+        const finalControl = firstPanel.getByRole('button', {name: 'Final accordion control'});
+        await finalControl.focus();
+        await firstHeader.evaluate(element => element.dispatchEvent(new MouseEvent('click', {bubbles: true})));
+        await expect(firstHeader).toBeFocused();
+        await expect(firstPanel).toBeHidden();
+        await firstHeader.press('Enter');
+        await expect(firstPanel).not.toBeHidden();
+
+        const corners = await firstPanel.evaluate(panel => {
+            const item = panel.closest('.accordion-item');
+            const header = item.querySelector(':scope > .accordion-header');
+            const body = panel.querySelector(':scope > .accordion-body');
+            const radius = element => {
+                const style = getComputedStyle(element);
+                return {topLeft: style.borderTopLeftRadius, topRight: style.borderTopRightRadius,
+                    bottomRight: style.borderBottomRightRadius, bottomLeft: style.borderBottomLeftRadius};
+            };
+            const itemStyle = getComputedStyle(item);
+            return {itemOverflow: itemStyle.overflow, panelOverflow: getComputedStyle(panel).overflow,
+                bodyOverflow: getComputedStyle(body).overflow, borderLeft: parseFloat(itemStyle.borderLeftWidth),
+                borderRight: parseFloat(itemStyle.borderRightWidth), borderBottom: parseFloat(itemStyle.borderBottomWidth),
+                itemRect: item.getBoundingClientRect().toJSON(), headerRect: header.getBoundingClientRect().toJSON(),
+                panelRect: panel.getBoundingClientRect().toJSON(), bodyRect: body.getBoundingClientRect().toJSON(),
+                headerRadius: radius(header), bodyRadius: radius(body)};
+        });
+        const closedRadius = await closedHeader.evaluate(header => {
+            const style = getComputedStyle(header);
+            return {topLeft: style.borderTopLeftRadius, topRight: style.borderTopRightRadius,
+                bottomRight: style.borderBottomRightRadius, bottomLeft: style.borderBottomLeftRadius};
+        });
+        expect(corners.itemOverflow).toBe('visible');
+        expect(corners.panelOverflow).toBe('visible');
+        expect(corners.bodyOverflow).toBe('visible');
+        expect(corners.headerRadius).toEqual({topLeft: '5px', topRight: '5px', bottomRight: '0px', bottomLeft: '0px'});
+        expect(corners.bodyRadius).toEqual({topLeft: '0px', topRight: '0px', bottomRight: '6px', bottomLeft: '6px'});
+        expect(closedRadius).toEqual({topLeft: '5px', topRight: '5px', bottomRight: '5px', bottomLeft: '5px'});
+        expect(corners.headerRect.left).toBeGreaterThanOrEqual(corners.itemRect.left + corners.borderLeft - 0.01);
+        expect(corners.headerRect.right).toBeLessThanOrEqual(corners.itemRect.right - corners.borderRight + 0.01);
+        expect(corners.panelRect.bottom).toBeCloseTo(corners.itemRect.bottom - corners.borderBottom, 1);
+        expect(corners.bodyRect.top).toBeCloseTo(corners.panelRect.top, 1);
+        expect(corners.bodyRect.bottom).toBeCloseTo(corners.panelRect.bottom, 1);
+
+        const metrics = await firstPanel.evaluate(panel => {
+            const body = panel.querySelector('.accordion-body');
+            const control = panel.querySelector('button:last-of-type');
+            const panelRect = panel.getBoundingClientRect();
+            const bodyRect = body.getBoundingClientRect();
+            const controlRect = control.getBoundingClientRect();
+            return {clientHeight: panel.clientHeight, scrollHeight: panel.scrollHeight,
+                bodyHeight: bodyRect.height, panelBottom: panelRect.bottom, controlBottom: controlRect.bottom,
+                controlId: control.id};
+        });
+        expect(metrics.clientHeight).toBeGreaterThan(3000);
+        expect(metrics.scrollHeight).toBe(metrics.clientHeight);
+        expect(metrics.bodyHeight).toBeGreaterThan(3000);
+        expect(metrics.controlBottom).toBeLessThanOrEqual(metrics.panelBottom + 1);
+
+        await firstPanel.locator('.accordion-body').evaluate(body => body.insertAdjacentHTML('beforeend',
+            `<p id="late-accordion-content">${'Late accordion content '.repeat(300)}</p>
+             <button id="late-accordion-control" type="button">Late accordion control</button>`));
+        await expect.poll(() => firstPanel.evaluate(panel => panel.clientHeight)).toBeGreaterThan(metrics.clientHeight);
+        const lateMetrics = await firstPanel.evaluate(panel => {
+            const late = panel.querySelector('#late-accordion-control');
+            const panelRect = panel.getBoundingClientRect();
+            const lateRect = late.getBoundingClientRect();
+            return {panelHeight: panel.clientHeight, scrollHeight: panel.scrollHeight,
+                lateBottom: lateRect.bottom, panelBottom: panelRect.bottom};
+        });
+        expect(lateMetrics.panelHeight).toBe(lateMetrics.scrollHeight);
+        expect(lateMetrics.lateBottom).toBeLessThanOrEqual(lateMetrics.panelBottom + 1);
+
+        await finalControl.scrollIntoViewIfNeeded();
+        const finalBox = await finalControl.boundingBox();
+        const hit = await page.evaluate(({x, y}) => document.elementFromPoint(x, y)?.closest('#accordion-single-item-0-content')?.id,
+            {x: finalBox.x + finalBox.width / 2, y: finalBox.y + finalBox.height / 2});
+        expect(hit).toBe('accordion-single-item-0-content');
+        await finalControl.evaluate(element => element.addEventListener('click', () => element.dataset.clicked = 'true', {once: true}));
+        await finalControl.click();
+        await expect(finalControl).toHaveAttribute('data-clicked', 'true');
+
+        const actions = firstPanel.getByRole('button', {name: 'Accordion actions'});
+        await actions.click();
+        const actionLink = firstPanel.getByRole('link', {name: 'Accordion action'});
+        await expect(actionLink).toBeVisible();
+        const menuBox = await firstPanel.locator('.dropdown-menu').boundingBox();
+        const linkBox = await actionLink.boundingBox();
+        expect(linkBox.y + linkBox.height).toBeLessThanOrEqual(menuBox.y + menuBox.height + 1);
+        const menuHit = await page.evaluate(({x, y}) => document.elementFromPoint(x, y)?.closest('.dropdown-link')?.textContent,
+            {x: linkBox.x + linkBox.width / 2, y: linkBox.y + linkBox.height / 2});
+        expect(menuHit).toBe('Accordion action');
+
+        const multiple = page.locator('#accordion-multiple');
+        await multiple.locator('.accordion-header').nth(0).click();
+        await multiple.locator('.accordion-header').nth(1).click();
+        await expect(multiple.locator('.accordion-content.expanded')).toHaveCount(2);
+
+        const nestedOuter = page.locator('#accordion-nested .accordion-header').first();
+        const nested = page.locator('#nested-accordion');
+        await nested.locator('.accordion-header').nth(1).click();
+        await expect(nested.locator('.accordion-content.expanded')).toHaveCount(2);
+        await nestedOuter.click();
+        await expect(nested.locator('.accordion-content.expanded')).toHaveCount(2);
+        await nestedOuter.click();
+        await expect(nested.locator('.accordion-content.expanded')).toHaveCount(2);
+
+        await page.locator('body').evaluate(body => body.insertAdjacentHTML('beforeend', `
+            <div class="accordion" id="dynamic-accordion" data-single-expand="true">
+                <div class="accordion-item">
+                    <button class="accordion-header" type="button" id="dynamic-header"
+                        aria-expanded="false" aria-controls="dynamic-content">Dynamic accordion</button>
+                    <div class="accordion-content" id="dynamic-content" role="region"
+                        aria-labelledby="dynamic-header" aria-hidden="true" hidden="true" inert="true">
+                        <div class="accordion-body"><button type="button">Dynamic control</button></div>
+                    </div>
+                </div>
+            </div>`));
+        const dynamicHeader = page.locator('#dynamic-header');
+        const dynamicPanel = page.locator('#dynamic-content');
+        await dynamicHeader.focus();
+        await page.keyboard.press('Enter');
+        await expect(dynamicPanel).not.toBeHidden();
+        await expect(dynamicPanel).not.toHaveAttribute('inert');
+        await page.keyboard.press('Enter');
+        await expect(dynamicPanel).toBeHidden();
+        await expect(dynamicHeader).toBeFocused();
+
+        await page.emulateMedia({reducedMotion: 'reduce'});
+        const reduced = await firstHeader.evaluate(element => ({
+            headerTransition: getComputedStyle(element).transitionDuration,
+            iconTransition: getComputedStyle(element.querySelector('.accordion-icon') || element).transitionDuration
+        }));
+        expect(reduced.headerTransition).toBe('0s');
+        expect(reduced.iconTransition).toBe('0s');
+        await evidence(page, testInfo, `accordion-${viewport.width}`);
     });
 }
 
@@ -346,8 +572,8 @@ test('generated tabs rove with owned automatic activation, wrapping, hidden pane
     await page.keyboard.press('Space');
     await expect(third).toHaveAttribute('aria-selected', 'true');
     await expect(page.locator('#outer-tabs-panel-2')).toBeVisible();
-    await expect(page.getByRole('region', {name: 'Section one', exact: true})).toHaveCount(1);
-    await expect(page.getByRole('region', {name: 'Section two', exact: true})).toHaveCount(1);
+    await expect(page.locator('.accordion-content[aria-labelledby="named-accordion-item-0-header"]')).toHaveCount(1);
+    await expect(page.locator('.accordion-content[aria-labelledby="named-accordion-item-1-header"]')).toHaveCount(1);
 });
 
 test('invalid keyboard tab targets do not change owned state', async ({page}) => {
