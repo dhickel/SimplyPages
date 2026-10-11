@@ -16,7 +16,10 @@ Owns editing contracts and reusable helpers for inline/module editing flows.
 - EditModalBuilder disables backdrop closing but retains Modal's default Escape/header close. Its footer clears the configured modal host; framework JS must restore a still-connected launcher after this or HTMX/OOB removal. Include the framework assets once in the page shell.
 
 - FormFieldHelper text inputs and textareas have associated HTML labels.
-- EditableRow capacities above twelve use fill columns rather than invalid zero-width grid columns.
+- EditableRow renders the supplied non-null Row unchanged, then a separate row of registered editable modules and an eligible add control. Preserve source attributes, content and custom `render(RenderContext)` dispatch exactly once with the same context, including template rendering; do not copy, merge or mutate source structure.
+- Source content and registrations are independent; callers must avoid registering content already present in the supplied Row. Outer wrapper attributes stay distinct. Empty source rows are retained; null omits only the source row.
+- EditableRow preserves registration order, module-ID assignment, equal integer `12 / count` widths, capacity/mode/permission gates and endpoint conventions. Capacities above twelve use fill columns rather than invalid zero-width grid columns.
+- EditableRow remains mutable and not thread-safe, including as a retained template delegate. Source custom renderers/descendants retain their own ownership requirements.
 
 ## Do
 - Keep editing abstractions framework-generic (not app-domain specific).
@@ -34,7 +37,8 @@ Owns editing contracts and reusable helpers for inline/module editing flows.
 
 ## Required Tests
 - `EditableTest`, `EditFormBuilderTest`, `EditModalBuilderTest`
-- `ValidationResultTest`, `AuthWrapperTest`
+- `ValidationResultTest`, `AuthWrapperTest`, `EditableRowTest`
+- EditableRow source attributes/columns/text/slots, unchanged configured source structure across renders, independent wrapper content, custom delegate once/same-context direct and compiled paths, null/empty compatibility and generated control/width/gate/order regressions
 - Validation success/failure coverage for new edit flow behavior
 
 ## Dependencies
