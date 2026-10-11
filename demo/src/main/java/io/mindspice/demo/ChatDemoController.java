@@ -51,6 +51,12 @@ public class ChatDemoController {
         HttpSession session,
         HttpServletResponse response
     ) {
+        response.setHeader("Vary", "HX-Request");
+        if ("true".equalsIgnoreCase(hxRequest)) {
+            response.setHeader("HX-Redirect", "/chat");
+            return "";
+        }
+
         String conversationId = resolveConversationId(session);
         String main = chatDemoPage.renderMain(
             conversationId,
@@ -58,11 +64,6 @@ public class ChatDemoController {
             null,
             false
         );
-
-        response.setHeader("Vary", "HX-Request");
-        if (hxRequest != null) {
-            return main;
-        }
 
         return ShellBuilder.create()
             .withPageTitle("SimplyPages Chat Demo")
