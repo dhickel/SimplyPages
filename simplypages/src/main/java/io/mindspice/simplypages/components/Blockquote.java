@@ -66,7 +66,7 @@ public class Blockquote extends HtmlTag {
 
             if (source != null) {
                 if (citation != null) {
-                    footer.withInnerText(", ");
+                    footer.withChild(new TextNode(", "));
                 }
                 HtmlTag sourceSpan = new HtmlTag("span")
                     .withAttribute("class", "blockquote-source")

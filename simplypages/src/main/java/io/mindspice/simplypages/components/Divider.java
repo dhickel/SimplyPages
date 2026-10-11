@@ -88,6 +88,7 @@ public class Divider extends HtmlTag {
     }
 
     public Divider withColor(String color) {
+        if (color != null) new HtmlTag("span").addStyle("color", color);
         this.color = color;
         return this;
     }
@@ -128,7 +129,12 @@ public class Divider extends HtmlTag {
     @Override
     public String render(RenderContext context) {
         // Apply styles and classes based on current state
-        this.withAttribute("style", buildStyle());
+        for (String declaration : buildStyle().split(";")) {
+            int colon = declaration.indexOf(':');
+            if (colon >= 0) {
+                addStyle(declaration.substring(0, colon).trim(), declaration.substring(colon + 1).trim());
+            }
+        }
 
         if (text != null && orientation == DividerOrientation.HORIZONTAL) {
             // We need to ensure the class includes 'divider-with-text'

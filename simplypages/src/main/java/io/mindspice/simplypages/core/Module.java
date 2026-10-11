@@ -133,7 +133,8 @@ public abstract class Module extends HtmlTag {
     }
 
     /**
-     * Ensures module structure is built once.
+     * Ensures module structure is built once. Failed builds restore child and attribute
+     * collections so a later call can retry; subclasses own rollback of other side effects.
      */
     public Module build() {
         if (!built) {
@@ -174,9 +175,21 @@ public abstract class Module extends HtmlTag {
      * Build implementation that must run while holding {@link #buildLock}.
      */
     private void doBuildLocked() {
-        ensureModuleClass();
-        buildContent();
-        built = true;
+        var originalChildren = new java.util.ArrayList<>(children);
+        var originalAttributes = new java.util.ArrayList<>(attributes);
+        String originalId = id;
+        try {
+            ensureModuleClass();
+            buildContent();
+            built = true;
+        } catch (RuntimeException | Error failure) {
+            children.clear();
+            children.addAll(originalChildren);
+            attributes.clear();
+            attributes.addAll(originalAttributes);
+            id = originalId;
+            throw failure;
+        }
     }
 
     /**

@@ -4,6 +4,34 @@
 
 This page is the table of contents for all framework documentation.
 
+## Tutorials
+
+- [Tutorial overview](tutorials/README.md)
+- [Render your first page](tutorials/first-page.md)
+- [Render request data with slots](tutorials/dynamic-page.md)
+
+## How-to guides
+
+- [Task overview](how-to/README.md)
+- [Serve full pages and HTMX fragments](how-to/serve-pages-and-fragments.md)
+- [Implement an authorized editing flow](how-to/edit-content.md)
+- [Publish a Markdown directory](how-to/publish-markdown.md)
+- [Build, test, and browse the documentation](how-to/build-test-and-document.md)
+
+## Explanation
+
+- [Explanation overview](explanation/README.md)
+- [Rendering, lifecycle, and reuse](explanation/rendering-and-lifecycle.md)
+- [Security and integration boundaries](explanation/security-and-integration.md)
+
+## Core reference
+
+- [Reference overview](reference/README.md)
+- [Rendering API and contracts](reference/rendering.md)
+- [Build requirements and assets](reference/build-and-assets.md)
+
+The original topic-based guides follow. Their URLs remain stable.
+
 ## Fundamentals
 
 - [Web and HTMX Primer](fundamentals/01-web-and-htmx-primer.md)

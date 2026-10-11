@@ -34,4 +34,12 @@ class ListItemTest {
         assertTrue(html.contains("&lt;script&gt;alert(1)&lt;/script&gt;"));
         assertFalse(html.contains("<script>"));
     }
+
+    @Test void textSlotRemainsAvailableWhenNested() {
+        var key = io.mindspice.simplypages.core.SlotKey.<String>of("item.text");
+        var item = ListItem.create("old").withInnerText(key);
+        var context = io.mindspice.simplypages.core.RenderContext.of(key, "new");
+        org.junit.jupiter.api.Assertions.assertEquals("new", org.jsoup.Jsoup.parse(item.render(context)).select("li").text());
+    }
+
 }

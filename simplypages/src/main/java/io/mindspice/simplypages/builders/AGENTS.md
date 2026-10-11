@@ -19,6 +19,8 @@ Owns higher-level shell and navigation builder utilities.
 - `buildTemplate()` returns a reusable compiled shell wrapper with a dedicated content slot.
 - Template shell mode does not emit shell content auto-load attributes (`hx-get="/home"`, `hx-trigger="load"`).
 
+- Compiled shells can retain custom component delegates; sharing requires those delegates to be safe for concurrent rendering.
+
 ## Do
 - Keep generated markup predictable and integration-friendly.
 - Validate required fields where absence would break output.

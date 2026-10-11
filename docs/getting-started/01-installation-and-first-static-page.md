@@ -4,13 +4,17 @@
 
 ## Dependency
 
+Use JDK 25 to build and run SimplyPages. From the repository root, first run
+`./mvnw -pl simplypages install` to install this beta version locally. For a complete
+runnable example, see [your first page](../tutorials/first-page.md).
+
 Add SimplyPages to your `pom.xml`:
 
 ```xml
 <dependency>
   <groupId>io.mindspice</groupId>
   <artifactId>simplypages</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0a</version>
 </dependency>
 ```
 

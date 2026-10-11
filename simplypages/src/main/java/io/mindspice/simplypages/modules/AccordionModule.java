@@ -19,6 +19,8 @@ import java.util.List;
  */
 public class AccordionModule extends Module {
 
+    private final String defaultId = "accordion-" + java.util.UUID.randomUUID();
+
     public static class AccordionItem {
         private final String header;
         private final String content;
@@ -124,7 +126,7 @@ public class AccordionModule extends Module {
 
         for (int i = 0; i < items.size(); i++) {
             AccordionItem item = items.get(i);
-            String itemId = (moduleId != null ? moduleId : "accordion") + "-item-" + i;
+            String itemId = (moduleId != null ? moduleId : defaultId) + "-item-" + i;
 
             Div accordionItem = new Div().withClass("accordion-item");
 

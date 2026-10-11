@@ -2,6 +2,7 @@ package io.mindspice.simplypages.components.display;
 
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.core.RenderContext;
 import java.util.stream.Stream;
 
 /**
@@ -35,6 +36,7 @@ public class Spinner extends HtmlTag {
         super("div");
         this.withAttribute("class", "spinner");
         this.withAttribute("role", "status");
+        this.withAttribute("aria-label", "Loading");
         updateClasses();
     }
 
@@ -80,32 +82,13 @@ public class Spinner extends HtmlTag {
     }
 
     @Override
-    public String render() {
-        // If there's a message, wrap in a container
-        if (message != null && !message.isEmpty()) {
-            HtmlTag wrapper = new HtmlTag("div").withAttribute("class", "spinner-wrapper");
-
-            // The spinner itself
-            HtmlTag spinner = new HtmlTag("div");
-            String classes = "spinner " + size.getCssClass();
-            if (color != null) {
-                classes += " spinner-" + color;
-            }
-            spinner.withAttribute("class", classes);
-            spinner.withAttribute("role", "status");
-            spinner.withAttribute("aria-label", "Loading");
-
-            // Message
-            HtmlTag messageDiv = new HtmlTag("div")
-                .withAttribute("class", "spinner-message")
-                .withInnerText(message);
-
-            wrapper.withChild(spinner);
-            wrapper.withChild(messageDiv);
-            return wrapper.render();
-        } else {
-            // Just the spinner
-            return super.render();
+    public String render(RenderContext context) {
+        if (message == null || message.isEmpty()) {
+            return super.render(context);
         }
+        return new HtmlTag("div").withClass("spinner-wrapper")
+            .withChild(ctx -> Spinner.super.render(ctx))
+            .withChild(new HtmlTag("div").withClass("spinner-message").withInnerText(message))
+            .render(context);
     }
 }

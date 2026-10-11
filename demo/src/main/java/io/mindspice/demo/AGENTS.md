@@ -12,6 +12,10 @@ Owns Spring Boot demo app wiring and integration examples for SimplyPages.
 - Demo code should reflect real framework usage patterns.
 - Demo must not redefine framework internals.
 
+- Docs use canonical paths, safe Markdown with heading anchors, and exact resource lookup.
+- Documentation HTMX links replace the content wrapper with outerHTML; keep one docs-content ID.
+- The docs page uses framework module-content styling and descriptive navigation labels.
+
 ## Do
 - Keep demo endpoints focused on examples and docs support.
 - Update demo flows when framework APIs change.

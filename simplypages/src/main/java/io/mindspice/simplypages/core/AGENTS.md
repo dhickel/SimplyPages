@@ -16,6 +16,11 @@ Owns rendering primitives and contracts used by the whole framework.
 - `Module.build()` is idempotent and drives build-once lifecycle semantics.
 - Slot/template rendering must preserve type-safe key usage.
 
+- Template compilation traverses getChildrenStream() and preserves custom render(RenderContext) overrides as live delegates.
+- Direct slots and text slots honor explicit compiled entries and COMPILE_ON_FIRST_HIT; contexts remain request-owned.
+- Tag/attribute names reject markup delimiters; attribute replacement is case-insensitive.
+- Failed module builds restore children and attributes before retry; subclasses own rollback of external effects.
+
 ## Do
 - Add core API only when needed by multiple packages.
 - Keep low-level logic deterministic and side-effect minimal.

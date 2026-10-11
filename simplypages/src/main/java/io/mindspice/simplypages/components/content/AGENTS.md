@@ -13,6 +13,10 @@ Owns opinionated static markdown content helper contracts and rendering pipeline
 - User applications own cache/refresh lifecycle and endpoint wiring.
 - Frontmatter parsing is best-effort; invalid values emit warnings instead of failing generation.
 
+- Built StaticContentSite instances snapshot section configuration.
+- Slug and heading-ID collision handling must include already suffixed source values.
+- Root-mounted sections must emit local /slug routes, never protocol-relative //slug links.
+
 ## Do
 - Keep section/list/detail contracts composable and framework-safe by default.
 - Preserve markdown HTML escaping defaults unless explicitly configured unsafe.

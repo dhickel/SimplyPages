@@ -14,6 +14,9 @@ Owns shared low-level UI components and base component conventions.
 - `create()` factory methods and fluent return types stay consistent.
 - Attribute and text rendering remains safely escaped by default.
 
+- Custom rendering must override render(RenderContext) and forward context to all children.
+- Code titles are escaped; code, spinner, and paragraph presentation must work when nested or compiled.
+
 ## Do
 - Keep component APIs minimal and composable.
 - Reuse `HtmlTag` capabilities before introducing custom render logic.

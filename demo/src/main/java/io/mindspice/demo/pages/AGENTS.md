@@ -12,6 +12,10 @@ Owns page composition classes used by demo controllers.
 - Page classes should stay readable and educational.
 - Compositions should reflect current recommended APIs.
 
+- Docs use canonical paths, safe Markdown with heading anchors, and exact resource lookup.
+- Documentation HTMX links replace the content wrapper with outerHTML; keep one docs-content ID.
+- The docs page uses framework module-content styling and descriptive navigation labels.
+
 ## Do
 - Keep page classes focused on rendering/composition.
 - Prefer reusable helper patterns when examples repeat.

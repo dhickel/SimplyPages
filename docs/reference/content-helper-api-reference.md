@@ -103,3 +103,12 @@ Renderer-populated fluent methods:
 - `withAuthor(String)`
 - `withPublishedAt(String)`
 - `withTags(List<String>)`
+
+## Edge-case contracts
+
+A built `StaticContentSite` snapshots its section settings. Duplicate slugs and heading IDs
+remain unique even when source values already contain numeric suffixes. A section mounted at
+`/` produces local detail routes such as `/entry`. Malformed frontmatter is handled best-effort;
+it is not a complete YAML parser.
+
+Draft entries do not reserve slugs or change the URLs assigned to published entries.

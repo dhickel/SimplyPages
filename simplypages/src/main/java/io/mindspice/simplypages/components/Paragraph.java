@@ -2,6 +2,7 @@ package io.mindspice.simplypages.components;
 
 import io.mindspice.simplypages.core.Attribute;
 import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.core.RenderContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -121,11 +122,11 @@ public class Paragraph extends HtmlTag {
     }
 
     @Override
-    public String render() {
+    public String render(RenderContext context) {
         if (alignment != null) {
             updateAlignmentClass();
         }
-        return super.render();
+        return super.render(context);
     }
 
     private void updateAlignmentClass() {

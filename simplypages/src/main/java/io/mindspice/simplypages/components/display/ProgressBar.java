@@ -40,7 +40,7 @@ public class ProgressBar extends HtmlTag {
 
     public ProgressBar(int value) {
         super("div");
-        this.value = Math.max(0, Math.min(100, value));
+        this.value = Math.max(0, value);
         this.withAttribute("class", "progress");
         this.withAttribute("role", "progressbar");
     }
@@ -55,6 +55,7 @@ public class ProgressBar extends HtmlTag {
     }
 
     public ProgressBar withMax(int max) {
+        if (max < 1) throw new IllegalArgumentException("max must be positive");
         this.max = max;
         return this;
     }
@@ -115,12 +116,13 @@ public class ProgressBar extends HtmlTag {
             barClasses += " progress-bar-animated";
         }
 
-        int percentage = (max > 0) ? (int) ((double) value / max * 100) : 0;
+        int renderedValue = Math.min(value, max);
+        int percentage = (int) ((double) renderedValue / max * 100);
 
         HtmlTag bar = new HtmlTag("div")
             .withAttribute("class", barClasses)
             .withAttribute("style", "width: " + percentage + "%;")
-            .withAttribute("aria-valuenow", String.valueOf(value))
+            .withAttribute("aria-valuenow", String.valueOf(renderedValue))
             .withAttribute("aria-valuemin", "0")
             .withAttribute("aria-valuemax", String.valueOf(max));
 

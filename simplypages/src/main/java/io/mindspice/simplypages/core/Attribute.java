@@ -12,6 +12,14 @@ import org.owasp.encoder.Encode;
  * <p>Mutability/thread-safety: immutable and thread-safe.</p>
  */
 public record Attribute(String name, String value) {
+    public Attribute {
+        if (name == null || name.isEmpty() || name.chars().anyMatch(c ->
+                Character.isWhitespace(c) || Character.isISOControl(c)
+                    || "\"'<>/=".indexOf(c) >= 0)) {
+            throw new IllegalArgumentException("Invalid HTML attribute name: " + name);
+        }
+    }
+
 
     /**
      * Renders this attribute for insertion into an opening tag.

@@ -26,13 +26,12 @@ public class Video extends HtmlTag {
 
     // Add method accepting boolean to match demo usage if needed, though boolean attr usually don't take value.
     // Demo says: .withControls(true).
+    /** Sets or removes the native playback controls. */
     public Video withControls(boolean controls) {
         if (controls) {
             this.withAttribute("controls", "");
         } else {
-            // Remove attribute? HtmlTag doesn't support removal easily by public API except via withAttribute replacement?
-            // Actually withAttribute replaces.
-            // We can't remove easily. But typically you just don't call it.
+            attributes.removeIf(attribute -> "controls".equalsIgnoreCase(attribute.name()));
         }
         return this;
     }

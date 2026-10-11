@@ -4,9 +4,9 @@ import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
 
 /**
- * Mutable list item wrapper that stores text then writes it during render.
+ * Mutable list item wrapper with escaped text content.
  *
- * <p>Not thread-safe. Reusing across concurrent renders can race on internal text state.</p>
+ * <p>Configure before sharing; rendering does not mutate the text payload.</p>
  */
 public class ListItem extends HtmlTag {
 
@@ -40,6 +40,7 @@ public class ListItem extends HtmlTag {
 
     public ListItem withText(String text) {
         this.text = text;
+        super.withInnerText(text);
         return this;
     }
 
@@ -49,8 +50,6 @@ public class ListItem extends HtmlTag {
 
     @Override
     public String render(RenderContext context) {
-        // Build content inline for HtmlTag
-        this.withInnerText(text);
         return super.render(context);
     }
 

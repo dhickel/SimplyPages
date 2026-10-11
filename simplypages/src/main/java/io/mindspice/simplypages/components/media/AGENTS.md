@@ -11,6 +11,8 @@ Owns media rendering components for images, audio, video, and galleries.
 - Gallery composition and child ordering behavior stays stable.
 - Attribute rendering remains escaped/safe by core rules.
 
+- withControls(false) removes a previously enabled controls attribute for audio and video.
+
 ## Do
 - Keep APIs focused on media configuration and layout hints.
 - Preserve fluent chain consistency with other components.

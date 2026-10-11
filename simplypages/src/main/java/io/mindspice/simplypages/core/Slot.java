@@ -11,6 +11,7 @@ import java.util.Optional;
  * <p>- missing value: renders empty string</p>
  * <p>- value is {@link Component}: delegates to that component's render path</p>
  * <p>- all other values: HTML-escapes {@code toString()}</p>
+ * <p>- compiled entries are trusted HTML; explicit live values may be cached by context policy</p>
  * <p>- applies equally for direct component rendering and {@link Template} rendering</p>
  *
  * <p>Mutability/thread-safety: immutable after construction and thread-safe.</p>
@@ -46,19 +47,21 @@ public class Slot<T> implements Component {
      */
     @Override
     public String render(RenderContext context) {
+        Optional<String> compiled = context.getCompiled(key);
+        if (compiled.isPresent()) {
+            return compiled.get();
+        }
         Optional<T> valueOpt = context.get(key);
         if (valueOpt.isEmpty()) {
             return "";
         }
-
         Object value = valueOpt.get();
-        if (value instanceof Component) {
-            return ((Component) value).render(context);
-        } else if (value != null) {
-            // For strings/other types, we assume they need escaping unless specific slot types dictate otherwise.
-            // But since Slot<T> is generic, we default to toString() + escape.
-            return Encode.forHtml(value.toString());
+        String rendered = value instanceof Component component
+            ? component.render(context) : Encode.forHtml(value.toString());
+        if (context.getPolicy() == RenderContext.RenderPolicy.COMPILE_ON_FIRST_HIT
+                && context.getEntry(key).isPresent()) {
+            context.putCompiled(key, rendered);
         }
-        return "";
+        return rendered;
     }
 }

@@ -41,3 +41,16 @@ This is a practical catalog, not exhaustive class-level Javadoc.
 2. Use modules for reusable business sections.
 3. Wrap modules with `EditableModule` when edit controls are needed.
 4. Keep layout responsibilities in `Row`/`Column`, not in module width settings.
+
+## Rendering and control details
+
+Generated children (including card sections, table rows, select options, and radio controls)
+are included in compiled templates. Custom renderers retain their `render(RenderContext)`
+behavior. Code blocks escape both code and title text; modal body/footer content receives
+the render context.
+
+Checkbox labels preserve explicit IDs and follow later ID changes. Radio IDs are generated
+per instance and should not be reconstructed from values; `required()` also applies to later
+options. Tabs and accordions generate unique fallback IDs. Supply module IDs when consumers
+need predictable selectors. Audio/video `withControls(false)` removes controls. Progress bars
+require a positive maximum and clamp their rendered value to that maximum.

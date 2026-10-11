@@ -38,7 +38,8 @@ sequenceDiagram
 - Dynamic slot segments (`SlotKey` lookups)
 - Opaque component segments (fallback component rendering)
 
-Modules are built before compilation (`module.build()`).
+Modules are built before compilation (`module.build()`). Generated child streams are traversed.
+Custom `render(RenderContext)` overrides remain live delegates so their behavior is preserved.
 
 This means `Template` wraps the compiled component/module tree; callers typically interact with the
 template for repeated renders rather than mutating the original tree per request.

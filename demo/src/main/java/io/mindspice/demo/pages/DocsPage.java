@@ -1,22 +1,18 @@
 package io.mindspice.demo.pages;
 
 import io.mindspice.simplypages.core.Component;
-import io.mindspice.simplypages.components.Header;
 import io.mindspice.simplypages.layout.Page;
-import io.mindspice.simplypages.modules.ContentModule;
 
 /**
- * Page for rendering documentation from markdown files.
+ * Page for HTML produced by the documentation service's safe Markdown renderer.
  */
 public class DocsPage implements DemoPage {
 
-    private final String markdownContent;
-    private final String title;
+    private final String htmlContent;
     private final Component sidebar;
 
-    public DocsPage(String title, String markdownContent, Component sidebar) {
-        this.title = title;
-        this.markdownContent = markdownContent;
+    public DocsPage(String htmlContent, Component sidebar) {
+        this.htmlContent = htmlContent;
         this.sidebar = sidebar;
     }
 
@@ -26,10 +22,8 @@ public class DocsPage implements DemoPage {
                 .withStickySidebar(sidebar, 9, 3)
                 .addComponents(
                     new io.mindspice.simplypages.components.Div()
-                        .withAttribute("id", "docs-content")
-                        .withChild(Header.H1(title))
-                        .withChild(ContentModule.create()
-                            .withContent(markdownContent))
+                        .withAttribute("id", "docs-content").withClass("module-content")
+                        .withChild(new io.mindspice.simplypages.components.RawHtml(htmlContent))
                 )
                 .build()
                 .render();
@@ -41,10 +35,8 @@ public class DocsPage implements DemoPage {
      */
     public String renderContent() {
         return new io.mindspice.simplypages.components.Div()
-            .withAttribute("id", "docs-content")
-            .withChild(Header.H1(title))
-            .withChild(ContentModule.create()
-                .withContent(markdownContent))
+            .withAttribute("id", "docs-content").withClass("module-content")
+            .withChild(new io.mindspice.simplypages.components.RawHtml(htmlContent))
             .render();
     }
 }

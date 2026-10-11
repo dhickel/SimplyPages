@@ -24,9 +24,12 @@ public class Audio extends HtmlTag {
         return this;
     }
 
+    /** Sets or removes the native playback controls. */
     public Audio withControls(boolean controls) {
         if (controls) {
             this.withAttribute("controls", "");
+        } else {
+            attributes.removeIf(attribute -> "controls".equalsIgnoreCase(attribute.name()));
         }
         return this;
     }

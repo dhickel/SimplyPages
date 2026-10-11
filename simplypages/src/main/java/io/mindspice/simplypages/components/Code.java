@@ -1,6 +1,7 @@
 package io.mindspice.simplypages.components;
 
 import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.core.RenderContext;
 
 /**
  * Inline/code-block renderer with optional language and title metadata.
@@ -13,7 +14,6 @@ public class Code extends HtmlTag {
     private String language;
     private String title;
     private boolean isBlock;
-    private boolean contentBuilt = false;
 
     private Code(String code, boolean isBlock) {
         super(isBlock ? "pre" : "code");
@@ -73,36 +73,23 @@ public class Code extends HtmlTag {
     }
 
     @Override
-    public String render() {
-        if (isBlock) {
-            // Build the code element
-            HtmlTag codeElement = new HtmlTag("code");
-            if (language != null) {
-                codeElement.withAttribute("class", "language-" + language);
-            }
-            codeElement.withInnerText(code);
-
-            // Build the pre element manually
-            StringBuilder preHtml = new StringBuilder();
-            preHtml.append("<pre class=\"code-block\">");
-            preHtml.append(codeElement.render());
-            preHtml.append("</pre>");
-
-            // Wrap in container if title is present
-            if (title != null) {
-                StringBuilder containerHtml = new StringBuilder();
-                containerHtml.append("<div class=\"code-container\">");
-                containerHtml.append("<div class=\"code-title\">").append(title).append("</div>");
-                containerHtml.append(preHtml);
-                containerHtml.append("</div>");
-                return containerHtml.toString();
-            } else {
-                // No title, just return the pre element
-                return preHtml.toString();
-            }
-        } else {
-            // Inline code (content already set in constructor)
-            return super.render();
+    public String render(RenderContext context) {
+        if (!isBlock) {
+            return super.render(context);
         }
+        HtmlTag pre = new HtmlTag("pre");
+        attributes.forEach(attribute -> pre.withAttribute(attribute.name(), attribute.value()));
+        HtmlTag codeElement = new HtmlTag("code").withInnerText(code);
+        if (language != null) {
+            codeElement.withAttribute("class", "language-" + language);
+        }
+        pre.withChild(codeElement);
+        children.forEach(pre::withChild);
+        if (title == null) {
+            return pre.render(context);
+        }
+        return new HtmlTag("div").withClass("code-container")
+            .withChild(new HtmlTag("div").withClass("code-title").withInnerText(title))
+            .withChild(pre).render(context);
     }
 }

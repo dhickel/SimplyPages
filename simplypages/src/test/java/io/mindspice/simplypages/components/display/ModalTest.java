@@ -91,4 +91,12 @@ class ModalTest {
             .hasElement("div.modal-container > div.modal-body")
             .elementTextEquals("div.modal-body", "Nested body");
     }
+
+    @Test void generatedModalIdsAreUniqueAcrossRapidCreation() {
+        var ids = new java.util.HashSet<String>();
+        for (int i = 0; i < 100; i++) {
+            String id = org.jsoup.Jsoup.parse(Modal.create().render()).selectFirst(".modal-backdrop").id();
+            org.junit.jupiter.api.Assertions.assertTrue(ids.add(id));
+        }
+    }
 }

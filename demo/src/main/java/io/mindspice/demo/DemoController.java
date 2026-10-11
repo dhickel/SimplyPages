@@ -115,14 +115,10 @@ public class DemoController {
 
         if (markdown == null) {
             response.setStatus(404);
-            return "Documentation not found: " + path;
+            return "Documentation not found: " + org.owasp.encoder.Encode.forHtml(path);
         }
 
-        String title = path.contains("/") ? path.substring(path.lastIndexOf('/') + 1) : path;
-        title = title.replace("-", " ").replace(".md", "");
-        title = title.substring(0, 1).toUpperCase() + title.substring(1);
-
-        DocsPage docsPage = new DocsPage(title, markdown, documentationService.getDocsNavigation());
+        DocsPage docsPage = new DocsPage(documentationService.renderMarkdown(path, markdown), documentationService.getDocsNavigation());
         response.setHeader("Vary", "HX-Request");
 
         if (hxRequest != null) {

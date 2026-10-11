@@ -18,6 +18,8 @@ import java.util.List;
  */
 public class TabsModule extends Module {
 
+    private final String defaultId = "tabs-" + java.util.UUID.randomUUID();
+
     public static class Tab {
         private final String label;
         private final String content;
@@ -130,14 +132,15 @@ public class TabsModule extends Module {
 
         for (int i = 0; i < tabs.size(); i++) {
             Tab tab = tabs.get(i);
-            String tabId = (moduleId != null ? moduleId : "tabs") + "-tab-" + i;
-            String panelId = (moduleId != null ? moduleId : "tabs") + "-panel-" + i;
+            String tabId = (moduleId != null ? moduleId : defaultId) + "-tab-" + i;
+            String panelId = (moduleId != null ? moduleId : defaultId) + "-panel-" + i;
 
             HtmlTag tabItem = new HtmlTag("li")
                 .withAttribute("role", "presentation")
                 .withAttribute("class", "tab-item");
 
             HtmlTag tabButton = new HtmlTag("button")
+                .withAttribute("type", "button")
                 .withAttribute("class", "tab-button" + (tab.isActive() ? " active" : ""))
                 .withAttribute("id", tabId)
                 .withAttribute("role", "tab")
@@ -156,8 +159,8 @@ public class TabsModule extends Module {
 
         for (int i = 0; i < tabs.size(); i++) {
             Tab tab = tabs.get(i);
-            String tabId = (moduleId != null ? moduleId : "tabs") + "-tab-" + i;
-            String panelId = (moduleId != null ? moduleId : "tabs") + "-panel-" + i;
+            String tabId = (moduleId != null ? moduleId : defaultId) + "-tab-" + i;
+            String panelId = (moduleId != null ? moduleId : defaultId) + "-panel-" + i;
 
             Div panel = new Div()
                 .withClass("tab-panel" + (tab.isActive() ? " active" : ""))

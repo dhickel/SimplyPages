@@ -55,6 +55,8 @@ SimplyPages is an active internal Java-first SSR framework for building data-hea
 ### Template and Slot System (First-Class)
 - Dynamic data injection is modeled via `SlotKey<T>`, `Slot`, and `RenderContext`
 - `Template` compiles static component structure for repeated rendering with context values
+- Compilation preserves generated child streams; custom `render(RenderContext)` overrides remain live delegates
+- Template sharing requires retained custom delegates to be safe to share
 - Prefer slot-driven rendering for request-time dynamic content over mutating built module structure
 
 ### Module Lifecycle Contract
@@ -132,6 +134,14 @@ cd demo && ../mvnw spring-boot:run
 - Canonical live URL: `http://192.168.1.113:8080` (assume this is the primary deployment target unless explicitly told otherwise).
 - After a feature improvement or bug fix is finalized, always deploy to the live host and verify behavior.
 - After deployment, verify behavior on the live site before finalizing fixes.
+
+## Documentation Structure
+- `docs/README.md` is the Diátaxis landing page and the default `/docs` entry point.
+- `docs/tutorials/`: runnable learning exercises; `docs/how-to/`: task-oriented instructions.
+- `docs/reference/`: API/build contracts; `docs/explanation/`: design and integration reasoning.
+- Keep existing topic-based URLs stable and link new pages from their section and `docs/INDEX.md`.
+- Documentation tests validate local links/anchors, guide discoverability, and complete Java examples.
+- JDK 25 is required; the demo retains Java 21 bytecode for its current Spring class scanner.
 
 ## Documentation TOC (Terse)
 - Full index: `docs/INDEX.md`

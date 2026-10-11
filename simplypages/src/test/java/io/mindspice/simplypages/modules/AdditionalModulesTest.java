@@ -109,4 +109,18 @@ class AdditionalModulesTest {
         assertTrue(html.contains("X"));
         assertTrue(html.contains("Y"));
     }
+
+    @Test void independentInteractiveModulesHaveUniqueTargets() {
+        String html = TabsModule.create().addTab("One", "Body").render()
+            + TabsModule.create().addTab("Two", "Body").render()
+            + AccordionModule.create().addItem("One", "Body").render()
+            + AccordionModule.create().addItem("Two", "Body").render();
+        var doc = org.jsoup.Jsoup.parse(html);
+        var ids = doc.select("[id]").eachAttr("id");
+        org.junit.jupiter.api.Assertions.assertEquals(ids.size(), new java.util.HashSet<>(ids).size());
+        for (var button : doc.select(".tab-button")) {
+            org.junit.jupiter.api.Assertions.assertEquals("button", button.attr("type"));
+        }
+    }
+
 }

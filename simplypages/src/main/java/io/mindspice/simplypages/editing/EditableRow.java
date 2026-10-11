@@ -126,9 +126,8 @@ public class EditableRow extends HtmlTag {
                         .withEditMode(editMode);
 
                 // Create column with calculated width
-                Column col = Column.create()
-                        .withWidth(colWidth)
-                        .withChild(editableModule);
+                Column col = colWidth > 0 ? Column.create().withWidth(colWidth) : Column.create().fill();
+                col.withChild(editableModule);
 
                 row.addColumn(col);
             }

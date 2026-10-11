@@ -12,6 +12,10 @@ Owns form input and form container components.
 - Width helper methods on form components remain valid and validated by core style rules.
 - Input type helpers map to correct HTML input types.
 
+- Checkbox IDs and labels stay associated regardless of setter order.
+- Radio option IDs are unique and stable per instance; consumers must not derive IDs from field values.
+- RadioGroup.required() applies to subsequently added options as well as existing ones.
+
 ## Do
 - Preserve ergonomics for common form tasks.
 - Keep generated markup semantically correct for HTML forms.

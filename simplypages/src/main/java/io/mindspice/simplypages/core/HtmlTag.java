@@ -59,6 +59,9 @@ public class HtmlTag implements Component {
      * @param selfClosing whether output uses {@code <tag />} form
      */
     public HtmlTag(String tagName, boolean selfClosing) {
+        if (tagName == null || !tagName.matches("[A-Za-z][A-Za-z0-9:_-]*")) {
+            throw new IllegalArgumentException("Invalid HTML tag name: " + tagName);
+        }
         this.tagName = tagName;
         this.selfClosing = selfClosing;
     }
@@ -78,10 +81,11 @@ public class HtmlTag implements Component {
     }
 
     /**
-     * Sets element id and synchronizes an {@code id} attribute when non-null.
+     * Sets element id, or removes it when null.
      */
     public HtmlTag withId(String id) {
         this.id = id;
+        attributes.removeIf(attr -> "id".equalsIgnoreCase(attr.name()));
         if (id != null) {
             this.withAttribute("id", id);
         }
@@ -89,14 +93,18 @@ public class HtmlTag implements Component {
     }
 
     /**
-     * Adds or replaces an attribute by name.
+     * Adds or replaces an attribute by case-insensitive name. Invalid names are rejected.
      *
      * <p>Side effect: existing attribute with the same name is removed before insert, preventing
      * duplicate names.</p>
      */
     public HtmlTag withAttribute(String name, String value) {
-        attributes.removeIf(attr -> attr.name().equals(name));
-        attributes.add(new Attribute(name, value));
+        Attribute attribute = new Attribute(name, value);
+        attributes.removeIf(attr -> attr.name().equalsIgnoreCase(name));
+        attributes.add(attribute);
+        if ("id".equalsIgnoreCase(name)) {
+            this.id = value;
+        }
         return this;
     }
 
@@ -194,7 +202,7 @@ public class HtmlTag implements Component {
      * <p>Side effect: clears any dynamic text slot and marks content untrusted.</p>
      */
     public HtmlTag withInnerText(String text) {
-        this.innerText = text;
+        this.innerText = text == null ? "" : text;
         this.innerTextSlot = null;
         this.trustedHtml = false;
         return this;
@@ -218,7 +226,8 @@ public class HtmlTag implements Component {
      * <p>Security contract: call only with trusted, already-sanitized HTML.</p>
      */
     public HtmlTag withUnsafeHtml(String html) {
-        this.innerText = html;
+        this.innerText = html == null ? "" : html;
+        this.innerTextSlot = null;
         this.trustedHtml = true;
         return this;
     }
@@ -243,7 +252,7 @@ public class HtmlTag implements Component {
 
         if (classAttr.isPresent()) {
             Attribute attr = classAttr.get();
-            String current = attr.value();
+            String current = attr.value() == null ? "" : attr.value();
             boolean exists = false;
             for (String c : current.split("\\s+")) {
                 if (c.equals(className)) {
@@ -318,8 +327,9 @@ public class HtmlTag implements Component {
         String newStyle;
         if (existingStyle.isPresent()) {
             String styles = existingStyle.get().trim().replaceAll(";+$", "");
-            String propertyPattern = Pattern.quote(property) + "\\s*:[^;]*;?";
-            styles = styles.replaceAll(propertyPattern, "").trim();
+            String propertyPattern = "(^|;)\\s*" + Pattern.quote(property) + "\\s*:[^;]*";
+            styles = styles.replaceAll(propertyPattern, "$1").trim();
+            styles = styles.replaceAll("^;\\s*", "").replaceAll(";\\s*;", ";");
             styles = styles.replaceAll(";+$", "");
             newStyle = styles.isEmpty() ?
                     property + ": " + value + ";" :
@@ -395,7 +405,7 @@ public class HtmlTag implements Component {
     public String render(RenderContext context) {
         StringBuilder sb = new StringBuilder("<").append(tagName);
 
-        if (id != null && attributes.stream().noneMatch(attr -> "id".equals(attr.name()))) {
+        if (id != null && attributes.stream().noneMatch(attr -> "id".equalsIgnoreCase(attr.name()))) {
             sb.append(new Attribute("id", id).render());
         }
 
@@ -408,8 +418,7 @@ public class HtmlTag implements Component {
         }
 
         if (innerTextSlot != null) {
-            String val = context.get(innerTextSlot).orElse("");
-            sb.append(Encode.forHtml(val));
+            sb.append(Slot.of(innerTextSlot).render(context));
         } else if (!innerText.isEmpty()) {
             if (trustedHtml) {
                 sb.append(innerText);

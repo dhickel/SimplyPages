@@ -12,6 +12,9 @@ Owns display-oriented UI components and visual containers.
 - `DataTable` and `Table` rendering contracts remain stable.
 - Modal behavior and IDs remain predictable/safe.
 
+- Modal body and footer receive the parent RenderContext; generated modal IDs are unique.
+- ProgressBar preserves its supplied value until rendering, clamps against a positive maximum, and reports the clamped value.
+
 ## Do
 - Keep display APIs concise with sensible presets.
 - Preserve semantic HTML output and class naming stability.

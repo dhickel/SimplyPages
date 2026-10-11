@@ -17,7 +17,8 @@ import java.util.Optional;
  * treated as trusted HTML and inserted as-is.</p>
  *
  * <p>Mutability/thread-safety: a template is effectively immutable after construction and can be
- * reused across requests. Thread-safety depends on render contexts passed at call sites.</p>
+ * reused across requests. Custom render overrides remain live delegates; their instances must also be safe to share.
+ * Thread-safety depends on these delegates and render contexts passed at call sites.</p>
  */
 public class Template {
 
@@ -125,6 +126,15 @@ public class Template {
      * Compiles a component subtree into render segments.
      */
     private void compile(Component component) {
+        // Flatten only the standard tag render contract. A subclass override may wrap the
+        // tag, authorize output, or use request context in ways its fields cannot describe.
+        if (component instanceof HtmlTag tag && hasCustomRenderer(tag)) {
+            if (tag instanceof Module module) {
+                module.build();
+            }
+            segments.add(new ComponentSegment(tag));
+            return;
+        }
         switch (component) {
             case Module module -> {
                 module.build();
@@ -133,6 +143,15 @@ public class Template {
             case Slot<?> slot -> segments.add(new SlotSegment(slot.getKey()));
             case HtmlTag tag -> compileTag(tag);
             default -> segments.add(new ComponentSegment(component));
+        }
+    }
+
+    private static boolean hasCustomRenderer(HtmlTag tag) {
+        try {
+            Class<?> owner = tag.getClass().getMethod("render", RenderContext.class).getDeclaringClass();
+            return owner != HtmlTag.class && owner != Module.class;
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException("Component render contract missing", e);
         }
     }
 
@@ -149,6 +168,9 @@ public class Template {
     private void compileTag(HtmlTag tag) {
         StringBuilder sb = new StringBuilder();
         sb.append("<").append(tag.tagName);
+        if (tag.id != null && tag.attributes.stream().noneMatch(attr -> "id".equalsIgnoreCase(attr.name()))) {
+            sb.append(new Attribute("id", tag.id).render());
+        }
         for (Attribute attr : tag.attributes) {
             sb.append(attr.render());
         }
@@ -167,8 +189,8 @@ public class Template {
             segments.add(new StringSegment(text));
         }
 
-        for (Component child : tag.children) {
-            compile(child);
+        try (var children = tag.getChildrenStream()) {
+            children.forEachOrdered(this::compile);
         }
 
         segments.add(new StringSegment("</" + tag.tagName + ">"));

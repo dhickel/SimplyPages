@@ -95,3 +95,13 @@ Reuse guidance:
 - `COMPILE_ON_FIRST_HIT`: live slot values can be memoized into compiled entries for reused contexts.
 
 Defaults provided in `SlotKey` are rendered live and are not persisted as compiled entries.
+
+## Direct and compiled rendering parity
+
+Both paths render explicit compiled entries as trusted HTML. `NEVER_COMPILE` prevents new
+cache entries; it does not ignore an existing compiled entry. `get(key)` returns live typed
+values or defaults, while `getCompiled(key)` retrieves cached HTML.
+
+Compilation preserves generated child streams and delegates custom `render(RenderContext)`
+overrides. Templates can therefore retain mutable components; share only when those delegates
+are safe to share. See the [rendering reference](../reference/rendering.md).

@@ -7,7 +7,9 @@
 SimplyPages provides safe defaults in core rendering paths.
 
 - Text output is escaped by default.
-- Attribute rendering is encoded.
+- Attribute values are encoded; malformed tag/attribute names are rejected.
+- Encoding does not validate URL schemes, event-handler code, or raw style attributes.
+  Generic attribute values remain application-controlled.
 - Slot text output is escaped.
 
 ## Application Responsibilities

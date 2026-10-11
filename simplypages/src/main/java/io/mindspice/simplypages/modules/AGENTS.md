@@ -15,6 +15,9 @@ Owns high-level composed modules built from components/layout primitives.
 - Module direct width APIs are blocked; layout should size modules.
 - Public fluent APIs remain chainable and readable.
 
+- Tabs and accordions generate unique per-instance fallback IDs when no module ID is supplied.
+- Tab triggers have type=button so embedding a tab module in a form does not submit it.
+
 ## Do
 - Keep each module focused on one UI concern.
 - Compose existing components instead of custom HTML assembly where possible.

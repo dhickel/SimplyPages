@@ -56,4 +56,15 @@ class FormFieldHelperTest {
         assertTrue(checkedHtml.contains("checked"));
         assertFalse(uncheckedHtml.contains("checked"));
     }
+
+    @Test void textControlsHaveAssociatedLabels() {
+        String html = FormFieldHelper.textField("Name", "name", "A").render()
+            + FormFieldHelper.textAreaField("Notes", "notes", "B", 3).render();
+        var doc = org.jsoup.Jsoup.parse(html);
+        for (var control : doc.select("input, textarea")) {
+            org.junit.jupiter.api.Assertions.assertFalse(control.id().isBlank());
+            org.junit.jupiter.api.Assertions.assertEquals(1, doc.select("label[for=" + control.id() + "]").size());
+        }
+    }
+
 }

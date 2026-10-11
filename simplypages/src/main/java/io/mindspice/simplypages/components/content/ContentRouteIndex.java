@@ -74,7 +74,7 @@ public final class ContentRouteIndex {
         if (slug == null || slug.isBlank()) {
             throw new IllegalArgumentException("slug cannot be null or blank");
         }
-        return basePath + "/" + slug;
+        return ("/".equals(basePath) ? "" : basePath) + "/" + slug;
     }
 
     public Optional<Component> resolveIndex(String sectionKey, int page) {

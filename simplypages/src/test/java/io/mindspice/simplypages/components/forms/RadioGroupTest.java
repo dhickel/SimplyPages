@@ -41,11 +41,22 @@ class RadioGroupTest {
 
         String html = group.render();
 
-        HtmlAssert.assertThat(html)
-            .attributeEquals("div.radio-option:nth-child(1) > input.radio-input", "id", "choice-A-B-C")
-            .attributeEquals("div.radio-option:nth-child(1) > label.radio-label", "for", "choice-A-B-C")
-            .attributeEquals("div.radio-option:nth-child(2) > input.radio-input", "id", "choice-X")
-            .attributeEquals("div.radio-option:nth-child(2) > label.radio-label", "for", "choice-X")
-            .doesNotHaveElement("input.radio-input[checked]");
+        var doc = org.jsoup.Jsoup.parse(html);
+        for (var option : doc.select(".radio-option")) {
+            String id = option.selectFirst("input").id();
+            org.junit.jupiter.api.Assertions.assertTrue(id.matches("radio-[a-zA-Z0-9-]+"));
+            org.junit.jupiter.api.Assertions.assertEquals(id, option.selectFirst("label").attr("for"));
+        }
+        HtmlAssert.assertThat(html).doesNotHaveElement("input.radio-input[checked]");
+    }
+
+    @Test void collidingValuesAndIndependentGroupsHaveUniqueIds() {
+        RadioGroup first = RadioGroup.create("choice").required().addOption("a-b", "A").addOption("a b", "B");
+        RadioGroup second = RadioGroup.create("choice").addOption("a-b", "C");
+        var doc = org.jsoup.Jsoup.parse(first.render() + second.render());
+        var ids = doc.select("input").eachAttr("id");
+        org.junit.jupiter.api.Assertions.assertEquals(3, new java.util.HashSet<>(ids).size());
+        org.junit.jupiter.api.Assertions.assertEquals(2, doc.select("input[required]").size());
+        org.junit.jupiter.api.Assertions.assertEquals(first.render(), first.render());
     }
 }

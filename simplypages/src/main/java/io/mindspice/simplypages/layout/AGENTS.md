@@ -14,6 +14,8 @@ Owns page composition and responsive layout primitives.
 - `Page.withStickySidebar(...)` keeps stable markup hooks used by responsive CSS.
 - `PageBuilder.build()` remains idempotent for unchanged builder state.
 
+- Default Column styling must be present in nested context-aware rendering.
+
 ## Do
 - Keep layout APIs fluent and simple.
 - Validate width/shape constraints at API boundaries.

@@ -24,4 +24,14 @@ class ProgressBarTest {
             .attributeEquals("div.progress > div.progress-bar", "aria-valuemax", "100")
             .elementTextEquals("div.progress > div.progress-bar", "Half");
     }
+
+    @Test void maximumControlsClampingAndPercentage() {
+        var doc = org.jsoup.Jsoup.parse(ProgressBar.create(150).withMax(200).render());
+        org.junit.jupiter.api.Assertions.assertEquals("150", doc.selectFirst(".progress-bar").attr("aria-valuenow"));
+        org.junit.jupiter.api.Assertions.assertEquals("width: 75%;", doc.selectFirst(".progress-bar").attr("style"));
+        doc = org.jsoup.Jsoup.parse(ProgressBar.create(90).withMax(50).render());
+        org.junit.jupiter.api.Assertions.assertEquals("50", doc.selectFirst(".progress-bar").attr("aria-valuenow"));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> ProgressBar.create(1).withMax(0));
+    }
+
 }

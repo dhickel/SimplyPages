@@ -4,19 +4,22 @@
 Owns editing contracts and reusable helpers for inline/module editing flows.
 
 ## Owns
-- Editing interfaces (`Editable`, deprecated `Editable`)
+- Editing contract (`Editable<T>`)
 - Edit helpers/builders (`EditFormBuilder`, `EditModalBuilder`)
 - Validation/auth wrappers (`ValidationResult`, `AuthWrapper`, `AuthorizationChecker`)
 - Edit mode and editable-child primitives
 
 ## Invariants
-- `Editable` is the primary contract; `Editable` remains deprecated compatibility.
+- `Editable<T>` is the primary editing contract.
 - Validation must be explicit and non-throwing for normal user errors.
 - Helper outputs must be HTMX-friendly for modal/OOB workflows.
 
+- FormFieldHelper text inputs and textareas have associated HTML labels.
+- EditableRow capacities above twelve use fill columns rather than invalid zero-width grid columns.
+
 ## Do
 - Keep editing abstractions framework-generic (not app-domain specific).
-- Preserve compatibility where deprecated interfaces still exist.
+- Preserve existing field names and edit-view contracts.
 - Keep auth wrapper behavior explicit and testable.
 
 ## Do Not

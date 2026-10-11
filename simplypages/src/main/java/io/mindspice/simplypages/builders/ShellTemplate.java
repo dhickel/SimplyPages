@@ -11,7 +11,8 @@ import java.util.Objects;
  * Wrapper around a compiled shell template with a dedicated content slot.
  *
  * <p>Renders full document HTML including doctype. Thread-safe as long as callers use
- * request-scoped {@link RenderContext} instances and do not mutate shared context concurrently.</p>
+ * request-scoped {@link RenderContext} instances, do not mutate shared context concurrently,
+ * and ensure retained custom component delegates are safe to share.</p>
  */
 public final class ShellTemplate implements Component {
     private static final String DOCTYPE = "<!DOCTYPE html>\n";

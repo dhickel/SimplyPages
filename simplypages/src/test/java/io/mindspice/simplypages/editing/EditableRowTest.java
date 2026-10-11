@@ -102,4 +102,13 @@ class EditableRowTest {
         assertTrue(html.contains("editMode=USER_EDIT"));
         assertFalse(html.contains("editMode=OWNER_EDIT"));
     }
+
+    @Test void configuredCapacityAboveTwelveStillRenders() {
+        var row = EditableRow.wrap(new io.mindspice.simplypages.layout.Row(), "row", "page")
+            .withMaxModules(13);
+        for (int i = 0; i < 13; i++) {
+            row.addEditableModule(io.mindspice.simplypages.modules.ContentModule.create().withContent("Item"), "module-" + i);
+        }
+        org.junit.jupiter.api.Assertions.assertEquals(13, org.jsoup.Jsoup.parse(row.render()).select(".col-fill").size());
+    }
 }

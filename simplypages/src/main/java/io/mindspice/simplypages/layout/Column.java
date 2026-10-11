@@ -3,6 +3,7 @@ package io.mindspice.simplypages.layout;
 import io.mindspice.simplypages.core.Attribute;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.core.RenderContext;
 
 /**
  * Grid column for use inside {@link Row}.
@@ -119,41 +120,16 @@ public class Column extends HtmlTag {
      * @return rendered HTML
      */
     @Override
-    public String render() {
+    public String render(RenderContext context) {
         // Ensure "col" class is present before rendering
         ensureColClass();
-        return super.render();
+        return super.render(context);
     }
 
     /**
      * Ensures the {@code col} class token is present on the class attribute.
      */
     private void ensureColClass() {
-        // Check if any class attribute exists
-        boolean hasClassAttr = attributes.stream()
-                .anyMatch(attr -> "class".equals(attr.name()));
-
-        if (!hasClassAttr) {
-            // No class attribute - add "col"
-            this.withAttribute("class", "col");
-        } else {
-            // Check if "col" class is already in the class list
-            boolean hasColClass = attributes.stream()
-                    .filter(attr -> "class".equals(attr.name()))
-                    .anyMatch(attr -> attr.value().contains("col"));
-
-            if (!hasColClass) {
-                // Find and update the class attribute
-                for (Attribute attr : attributes) {
-                    if ("class".equals(attr.name())) {
-                        // Prepend "col" to existing classes
-                        String newValue = "col " + attr.value();
-                        attributes.remove(attr);
-                        this.withAttribute("class", newValue);
-                        break;
-                    }
-                }
-            }
-        }
+        addClass("col");
     }
 }
