@@ -1,24 +1,25 @@
 package io.mindspice.simplypages.layout;
 
-import io.mindspice.simplypages.core.Attribute;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
-import io.mindspice.simplypages.core.RenderContext;
+
+import java.util.Arrays;
 
 /**
  * Grid column for use inside {@link Row}.
  *
- * <p>Mutable and not thread-safe. Width/class mutators rewrite the same instance and should be
- * used in a request-scoped build/render flow.</p>
+ * <p>Mutable and not thread-safe while being configured. Once configuration is complete,
+ * standard rendering reads the structure without changing it. Shared children and custom
+ * render overrides must also be safe to share.</p>
  */
 public class Column extends HtmlTag {
 
     /**
-     * Creates a column element. Base class is added lazily before render if missing.
+     * Creates a column element with its base layout class already present.
      */
     public Column() {
         super("div");
-        // Don't set class here - let withWidth/withClass handle it
+        super.withAttribute("class", "col");
     }
 
     /**
@@ -115,21 +116,21 @@ public class Column extends HtmlTag {
     }
 
     /**
-     * Ensures a {@code col} class exists before rendering.
+     * Adds or replaces an attribute, preserving the base {@code col} token when setting classes.
      *
-     * @return rendered HTML
+     * @param name attribute name
+     * @param value attribute value
+     * @return this column
      */
     @Override
-    public String render(RenderContext context) {
-        // Ensure "col" class is present before rendering
-        ensureColClass();
-        return super.render(context);
-    }
-
-    /**
-     * Ensures the {@code col} class token is present on the class attribute.
-     */
-    private void ensureColClass() {
-        addClass("col");
+    public HtmlTag withAttribute(String name, String value) {
+        if ("class".equalsIgnoreCase(name)) {
+            if (value == null || value.isBlank()) {
+                value = "col";
+            } else if (Arrays.stream(value.split("\\s+")).noneMatch("col"::equals)) {
+                value += " col";
+            }
+        }
+        return super.withAttribute(name, value);
     }
 }

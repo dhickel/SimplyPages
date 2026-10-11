@@ -31,6 +31,16 @@ Use `addColumn(...)` when you need explicit column widths.
 - `auto()` for content-sized columns.
 - `fill()` for remaining space.
 
+Columns establish the base `col` class during construction/configuration, not rendering.
+`withWidth(int)`, `auto()`, `fill()`, and `withClass(...)` replace the class attribute;
+`withClass("custom")` produces `col custom`, replacing any previous width class.
+Use `addClass(...)` to append instead. Generic `withAttribute("class", ...)` replacement
+also preserves the `col` token.
+
+Finish mutable configuration before sharing a column. Standard rendering does not change
+its attributes; a standard column is compiled as ordinary tag structure by `Template`.
+Custom subclass render overrides remain live delegates and must be safe to share.
+
 ## Practical Guidance
 
 1. Keep column math simple and explicit.

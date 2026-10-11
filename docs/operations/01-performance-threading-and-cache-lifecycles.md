@@ -6,6 +6,11 @@
 
 Framework components and modules are mutable objects.
 Treat them as request-scoped unless you explicitly freeze output into cached HTML or stable templates.
+Finish configuration before compiling or sharing structure; configuration is not thread-safe.
+Standard `Column` rendering does not mutate its attributes and needs no warm-up before
+concurrent template rendering. This is not a blanket sharing guarantee: retained custom
+renderers (including framework overrides) and slot-provided components must be safe to share,
+and each request should use its own `RenderContext`.
 
 ## Safe Reuse Matrix
 

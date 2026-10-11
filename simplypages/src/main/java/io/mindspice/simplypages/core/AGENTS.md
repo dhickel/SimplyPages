@@ -17,6 +17,7 @@ Owns rendering primitives and contracts used by the whole framework.
 - Slot/template rendering must preserve type-safe key usage.
 
 - Template compilation traverses getChildrenStream() and preserves custom render(RenderContext) overrides as live delegates.
+- Stable standard tag rendering must not mutate configured structure. Configuration is not thread-safe; retained custom delegates (including framework overrides) must be safe to share, and contexts remain request-owned.
 - Direct slots and text slots honor explicit compiled entries and COMPILE_ON_FIRST_HIT; contexts remain request-owned.
 - Tag/attribute names reject markup delimiters; attribute replacement is case-insensitive.
 - Failed module builds restore children and attributes before retry; subclasses own rollback of external effects.

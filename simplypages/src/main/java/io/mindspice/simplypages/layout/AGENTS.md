@@ -14,7 +14,10 @@ Owns page composition and responsive layout primitives.
 - `Page.withStickySidebar(...)` keeps stable markup hooks used by responsive CSS.
 - `PageBuilder.build()` remains idempotent for unchanged builder state.
 
+- Column establishes its base `col` token during configuration, including generic class attributes; standard rendering must not mutate attributes.
+- `Column.withClass`, `withWidth(int)`, `auto`, and `fill` replace classes; `addClass` appends.
 - Default Column styling must be present in nested context-aware rendering.
+- Finish mutable configuration before sharing; standard Column compiles as tag structure, while custom subclass render overrides remain caller-owned live delegates.
 
 ## Do
 - Keep layout APIs fluent and simple.
@@ -33,6 +36,7 @@ Owns page composition and responsive layout primitives.
 ## Required Tests
 - `RowTest`, `ColumnTest`, `PageTest`, `GridTest`, `ContainerTest`, `SectionTest`
 - Regression coverage for width validation and class generation
+- Fresh Column/template concurrent first rendering without warm-up, independent contexts, unchanged attributes, direct/compiled parity, and custom subclass delegation
 
 ## Dependencies
 - Depend on `core` and generic components only.

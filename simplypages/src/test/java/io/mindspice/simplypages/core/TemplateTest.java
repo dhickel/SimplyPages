@@ -1,13 +1,21 @@
 package io.mindspice.simplypages.core;
 
 import io.mindspice.simplypages.components.Div;
+import io.mindspice.simplypages.components.Paragraph;
+import io.mindspice.simplypages.layout.Column;
 import io.mindspice.simplypages.testutil.HtmlAssert;
 import io.mindspice.simplypages.testutil.SnapshotAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntFunction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -27,6 +35,93 @@ class TemplateTest {
             count.incrementAndGet();
             return "<span class=\"counted\">counted</span>";
         }
+    }
+
+    @Test
+    void testStandardColumnIsCompiledAsStaticStructure() {
+        Column column = new Column().withChild(new Paragraph("x"));
+        Template template = Template.of(column);
+        column.withClass("changed").withChild(new Paragraph("later"));
+        assertEquals("<div class=\"col\"><p>x</p></div>", template.render(RenderContext.empty()));
+        assertEquals("<div class=\"col changed\"><p>x</p><p>later</p></div>", column.render());
+    }
+
+    @Test
+    void testCustomColumnRendererRemainsLiveAndContextAware() {
+        SlotKey<String> key = SlotKey.of("custom-column");
+        AtomicInteger calls = new AtomicInteger();
+        Column column = new Column() {
+            @Override
+            public String render(RenderContext context) {
+                calls.incrementAndGet();
+                return "<section>" + super.render(context) + "</section>";
+            }
+        }.withChild(Slot.of(key));
+        Template template = Template.of(column);
+        assertEquals(0, calls.get());
+        for (String value : new String[] {"first", "<&"}) {
+            RenderContext context = RenderContext.of(key, value);
+            assertEquals(column.render(context), template.render(context));
+        }
+        column.withClass("live");
+        assertEquals("<section><div class=\"col live\">next</div></section>",
+                template.render(RenderContext.of(key, "next")));
+        assertEquals(5, calls.get());
+    }
+
+    @Test
+    void testConcurrentFreshDefaultColumnRenderingWithoutWarmup() throws Exception {
+        for (int round = 0; round < 24; round++) {
+            for (boolean compiled : new boolean[] {false, true}) {
+                Column column = new Column().withChild(new Paragraph("x"));
+                assertConcurrentFirstRenders(column, compiled, i -> RenderContext.empty(),
+                        i -> "<div class=\"col\"><p>x</p></div>");
+                assertEquals(column.render(), Template.of(column).render(RenderContext.empty()));
+            }
+        }
+    }
+
+    @Test
+    void testConcurrentFreshNestedColumnsUseIndependentContexts() throws Exception {
+        SlotKey<String> text = SlotKey.of("column-text");
+        SlotKey<Component> child = SlotKey.of("column-child");
+        for (int round = 0; round < 12; round++) {
+            for (boolean compiled : new boolean[] {false, true}) {
+                Column column = new Column().withChild(new Column().withChild(Slot.of(child)));
+                assertConcurrentFirstRenders(column, compiled, i -> RenderContext.of(text, "value-" + i + "<&")
+                                .put(child, new HtmlTag("span").withInnerText(text))
+                                .withPolicy(i % 2 == 0 ? RenderContext.RenderPolicy.NEVER_COMPILE
+                                        : RenderContext.RenderPolicy.COMPILE_ON_FIRST_HIT),
+                        i -> "<div class=\"col\"><div class=\"col\"><span>value-" + i
+                                + "&lt;&amp;</span></div></div>");
+            }
+        }
+    }
+
+    private void assertConcurrentFirstRenders(Column column, boolean compiled,
+            IntFunction<RenderContext> contexts, IntFunction<String> expected) throws Exception {
+        Template template = compiled ? Template.of(column) : null;
+        int workers = 16;
+        CyclicBarrier start = new CyclicBarrier(workers);
+        try (var executor = Executors.newFixedThreadPool(workers)) {
+            var futures = new ArrayList<Future<String>>();
+            for (int i = 0; i < workers; i++) {
+                int index = i;
+                futures.add(executor.submit(() -> {
+                    RenderContext context = contexts.apply(index);
+                    start.await(10, TimeUnit.SECONDS);
+                    String html = compiled ? template.render(context) : column.render(context);
+                    assertEquals(html, compiled ? template.render(context) : column.render(context));
+                    return html;
+                }));
+            }
+            for (int i = 0; i < workers; i++) {
+                assertEquals(expected.apply(i), futures.get(i).get(20, TimeUnit.SECONDS));
+            }
+        }
+        RenderContext directContext = contexts.apply(0);
+        RenderContext compiledContext = contexts.apply(0);
+        assertEquals(column.render(directContext), Template.of(column).render(compiledContext));
     }
 
     @Test

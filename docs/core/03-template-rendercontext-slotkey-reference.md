@@ -103,5 +103,10 @@ cache entries; it does not ignore an existing compiled entry. `get(key)` returns
 values or defaults, while `getCompiled(key)` retrieves cached HTML.
 
 Compilation preserves generated child streams and delegates custom `render(RenderContext)`
-overrides. Templates can therefore retain mutable components; share only when those delegates
-are safe to share. See the [rendering reference](../reference/rendering.md).
+overrides. Standard `Column` structure is compiled as ordinary tag structure, with its base
+class already established during configuration; no warm-up render is required. A custom
+`Column` subclass render override still remains a live delegate.
+
+Templates can therefore retain mutable components, including framework components with
+custom renderers; share only when those delegates are safe to share. Contexts and slot-provided
+components remain request-owned. See the [rendering reference](../reference/rendering.md).
