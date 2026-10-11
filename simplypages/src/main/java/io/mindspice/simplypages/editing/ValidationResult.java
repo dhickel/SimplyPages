@@ -1,5 +1,6 @@
 package io.mindspice.simplypages.editing;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -25,7 +26,9 @@ public class ValidationResult {
      */
     private ValidationResult(boolean valid, List<String> errors) {
         this.valid = valid;
-        this.errors = errors != null ? errors : Collections.emptyList();
+        this.errors = errors == null
+                ? Collections.emptyList()
+                : Collections.unmodifiableList(new ArrayList<>(errors));
     }
 
     /** Creates a successful validation result. */
