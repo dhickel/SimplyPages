@@ -61,6 +61,15 @@ public final class StaticContentSite {
             .map(ContentSectionConfig::snapshot).toList();
     }
 
+    /**
+     * Generates pages and nonfatal diagnostics from the configured directories.
+     * Published detail routes that match another section's index path produce a warning
+     * naming both source owners. Detail-first request resolution, including page queries,
+     * is unchanged; all generated pages remain available through direct section lookups.
+     * Inspect {@link ContentSiteBundle#warnings()} after each generation.
+     *
+     * @return the generated pages, route index and immutable warning list
+     */
     public ContentSiteBundle generate() {
         List<ContentWarning> warnings = new ArrayList<>();
 
@@ -77,8 +86,38 @@ public final class StaticContentSite {
             detailBySectionSlug.put(config.sectionKey(), generated.site().detailPagesBySlug());
         }
 
+        warnOnDetailIndexCollisions(sectionSites, warnings);
         ContentRouteIndex routeIndex = new ContentRouteIndex(sectionBasePaths, indexBySectionPage, detailBySectionSlug);
         return new ContentSiteBundle(sectionSites, routeIndex, warnings);
+    }
+
+    private void warnOnDetailIndexCollisions(
+        Map<String, ContentSectionSite> sectionSites,
+        List<ContentWarning> warnings
+    ) {
+        Map<String, ContentSectionConfig> indexOwners = new LinkedHashMap<>();
+        for (ContentSectionConfig config : sectionConfigs) {
+            indexOwners.put(config.basePath(), config);
+        }
+
+        for (ContentSectionConfig config : sectionConfigs) {
+            for (ContentEntryRecord entry : sectionSites.get(config.sectionKey()).entries()) {
+                ContentSectionConfig indexOwner = indexOwners.get(entry.route());
+                if (indexOwner == null || indexOwner.sectionKey().equals(entry.sectionKey())) {
+                    continue;
+                }
+                warnings.add(new ContentWarning(
+                    entry.sectionKey(),
+                    entry.sourcePath(),
+                    "Route collision at '" + entry.route() + "': detail in section '" + entry.sectionKey()
+                        + "' from file '" + entry.sourcePath() + "' shadows index in section '"
+                        + indexOwner.sectionKey() + "' from directory '" + indexOwner.directoryPath()
+                        + "'. Detail routes take precedence, including page queries; index pagination is masked"
+                        + " through request resolution. Direct resolveIndex lookup remains available."
+                        + " Choose non-overlapping section base paths or published slugs."
+                ));
+            }
+        }
     }
 
     private GeneratedSection generateSection(ContentSectionConfig config, List<ContentWarning> warnings) {

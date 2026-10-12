@@ -99,6 +99,10 @@ public final class ContentRouteIndex {
 
     /**
      * Resolves a request using path + page query value, where detail routes take precedence.
+     * A matching detail also wins when a page query is supplied, masking an index at that
+     * path and its pagination. {@link StaticContentSite#generate()} reports generated
+     * detail/index collisions as nonfatal {@link ContentSiteBundle#warnings() warnings};
+     * {@link #resolveIndex(String, int)} still retrieves the index directly.
      */
     public Optional<Component> resolveRequest(String requestPath, String pageParamValue) {
         String normalizedPath = normalizePath(requestPath);
