@@ -13,8 +13,11 @@ public static final SlotKey<String> SUBTITLE = SlotKey.of("subtitle", "Default s
 
 Notes:
 
-- Equality is based on key name.
-- Keep keys centralized to avoid accidental mismatches.
+- The canonical constructor and all `SlotKey.of` factories throw `NullPointerException` for a null name at construction, rather than during later hash or map use.
+- Every non-null name is preserved literally, including empty and blank strings. Names are not trimmed, case-folded, or Unicode-normalized.
+- Default providers may be null and are not evaluated during construction.
+- Equality and hash code use only the name, not the generic type or default provider.
+- Keep keys centralized with a consistent type for each name to avoid accidental mismatches.
 
 ## Slot
 

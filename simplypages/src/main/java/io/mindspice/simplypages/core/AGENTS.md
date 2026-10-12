@@ -15,6 +15,7 @@ Owns rendering primitives and contracts used by the whole framework.
 - `render()` remains the empty-context convenience path.
 - `Module.build()` is idempotent and drives build-once lifecycle semantics.
 - Slot/template rendering must preserve type-safe key usage.
+- `SlotKey` rejects null names with `NullPointerException` in its canonical constructor and all factories. Every non-null name remains literal, including empty/blank strings; no trimming, case folding, or Unicode normalization. Providers remain nullable and unevaluated during construction; key identity remains name-only.
 
 - Template compilation traverses getChildrenStream() and preserves custom render(RenderContext) overrides as live delegates.
 - Stable standard tag rendering must not mutate configured structure. Configuration is not thread-safe; retained custom delegates (including framework overrides) must be safe to share, and contexts remain request-owned.

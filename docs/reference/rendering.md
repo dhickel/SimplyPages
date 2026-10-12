@@ -24,9 +24,14 @@ schemes, or business policy; attribute escaping does not make those contexts saf
 
 ## Keys and values
 
-`SlotKey<T>` equality uses the name, not the generic type. Keep a single declared type for
-each name; generic typing does not validate differently typed keys that reuse a name.
-Keys may have fixed defaults or defaults computed from a context.
+The `SlotKey<T>` canonical constructor and all `SlotKey.of` factories throw
+`NullPointerException` immediately for a null name. Every non-null name is preserved literally,
+including empty and blank strings, without trimming, case folding, or Unicode normalization.
+
+Equality and hash code use the name, not the generic type or default provider. Keep a single
+declared type for each name; generic typing does not validate differently typed keys that reuse
+a name. Keys may have fixed defaults or defaults computed from a context. Default providers
+may be null and are not evaluated during construction.
 
 `Slot.of(key)` renders components by calling `render(context)` and escapes other values as
 text. Missing values render empty unless a default exists. Explicit compiled values are
