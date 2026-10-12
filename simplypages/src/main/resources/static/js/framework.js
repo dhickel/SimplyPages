@@ -150,9 +150,15 @@ const synchronizeShellNavigation = (function() {
     return synchronize;
 })();
 
-/** Modal lifecycle; accordion restoration reuses its internal-only focus boundary. */
+/** Modal lifecycle; accordion and alert focus reuse its internal-only boundaries. */
 const revealAccordionHeader = (function() {
     const modals = [];
+    // Alert-only provenance lets a containing element remain a restorable modal opener
+    // after its borrowed tabindex is released when focus enters the dialog.
+    const alertFocusOpeners = new WeakSet();
+    const alertOpenerChanges = new WeakSet();
+    const alertOpenerObservers = new WeakMap();
+    let borrowedAlertFocus = null;
     const swapOpeners = new WeakMap();
     let lastFocused = document.activeElement;
     const topModal = () => modals[modals.length - 1];
@@ -170,6 +176,119 @@ const revealAccordionHeader = (function() {
         return (!element.checkVisibility || element.checkVisibility({checkVisibilityCSS: true}))
             && getComputedStyle(element).visibility === 'visible' && element.getClientRects().length > 0;
     }
+
+    function watchAlertOpener(target) {
+        if (!(target instanceof HTMLElement) || alertOpenerObservers.has(target)) return;
+        const observer = new MutationObserver(records => {
+            if (records.length) alertOpenerChanges.add(target);
+        });
+        observer.observe(target, {attributes: true, attributeFilter: ['tabindex']});
+        alertOpenerObservers.set(target, observer);
+    }
+
+    function unwatchAlertOpener(target) {
+        if (!(target instanceof HTMLElement)) return false;
+        const observer = alertOpenerObservers.get(target);
+        const pendingChange = !!observer?.takeRecords().length;
+        observer?.disconnect();
+        alertOpenerObservers.delete(target);
+        const changed = pendingChange || alertOpenerChanges.has(target);
+        alertOpenerChanges.delete(target);
+        return changed;
+    }
+
+    function releaseAlertFocus(record = borrowedAlertFocus, callerChanged = false) {
+        if (!record || record.done) return;
+        record.done = true;
+        // Drain synchronous caller writes before blur cleanup, including same-value writes.
+        callerChanged ||= record.observer.takeRecords().length > 0;
+        record.observer.disconnect();
+        record.target.removeEventListener('blur', record.release);
+        if (borrowedAlertFocus === record) borrowedAlertFocus = null;
+        const isModalOpener = modals.some(modal => modal.opener === record.target);
+        if (!callerChanged && record.owns && record.target.getAttribute('tabindex') === '-1') {
+            record.target.removeAttribute('tabindex');
+        }
+        if (isModalOpener && !callerChanged) {
+            // The library-owned value is gone, but keep a weak, target-only watcher so
+            // caller writes while the modal is open are not mistaken for a reason to
+            // borrow tabindex again during opener restoration.
+            watchAlertOpener(record.target);
+            alertFocusOpeners.add(record.target);
+        } else {
+            alertFocusOpeners.delete(record.target);
+            unwatchAlertOpener(record.target);
+        }
+    }
+
+    function alertFocusTaken(owner, original) {
+        const active = document.activeElement;
+        // Hiding can leave body's default activeElement without actually focusing it.
+        return active !== original && (!owner || !owner.contains(active))
+            && (active !== document.body || active.matches(':focus'));
+    }
+
+    function focusAlertContainer(target, owner, original) {
+        // Summary/contenteditable and other native targets need no attribute. tabIndex
+        // alone does not tell whether focus() will work, especially for malformed values.
+        target.focus({preventScroll: true});
+        if (document.activeElement === target && target.matches(':focus') && usable(target)) return true;
+        if (alertFocusTaken(owner, original) || !usable(target) || target.hasAttribute('tabindex')) return false;
+
+        releaseAlertFocus();
+        const record = {target, done: false, owns: false, observer: null, release: null};
+        record.release = () => releaseAlertFocus(record);
+        record.observer = new MutationObserver(records => {
+            if (records.length) releaseAlertFocus(record, true);
+        });
+        // Target-only observation lasts just as long as this borrowed focus. Even a
+        // same-value application write transfers ownership; never infer it from value alone.
+        record.observer.observe(target, {attributes: true, attributeFilter: ['tabindex'], attributeOldValue: true});
+        target.setAttribute('tabindex', '-1');
+        const initial = record.observer.takeRecords();
+        record.owns = initial.length === 1 && initial[0].oldValue === null
+            && target.getAttribute('tabindex') === '-1';
+        target.addEventListener('blur', record.release);
+        borrowedAlertFocus = record;
+        if (record.owns) alertFocusOpeners.add(target);
+        target.focus({preventScroll: true});
+        const focused = document.activeElement === target && target.matches(':focus') && usable(target);
+        if (!focused || !record.owns) releaseAlertFocus(record, !record.owns);
+        return focused;
+    }
+
+    document.addEventListener('click', event => {
+        if (event.defaultPrevented || !(event.target instanceof Element)) return;
+        const button = event.target.closest('.alert-close');
+        if (!(button instanceof HTMLButtonElement) || button.type !== 'button' || !usable(button)) return;
+        const owner = button.closest('.alert');
+        // An invalid intervening alert blocks ownership instead of falling through outward.
+        if (!owner || !owner.classList.contains('alert-dismissible') || !usable(owner)) return;
+        const top = topModal();
+        if (top && (!top.backdrop.isConnected || !top.dialog.contains(button)
+            || !top.dialog.contains(owner) || !owned(button, top) || !owned(owner, top))) return;
+
+        const original = document.activeElement;
+        const containedFocus = owner.contains(original);
+        const containers = [];
+        for (let target = owner.parentElement; target && target !== document.documentElement; target = target.parentElement) {
+            containers.push(target);
+        }
+        // Capture the chain and hide before any focus callback can remove/reparent it
+        // or activate this alert again. Dismissal retains the DOM and application semantics.
+        owner.hidden = true;
+        if (!containedFocus || alertFocusTaken(owner, original)) return;
+        if (top) {
+            if (top === topModal() && top.backdrop.isConnected) focusInDialog(top, top.dialog);
+            return;
+        }
+        for (const target of containers) {
+            if (alertFocusTaken(owner, original)) return;
+            if (!usable(target)) continue;
+            if (alertFocusTaken(owner, original)) return;
+            if (focusAlertContainer(target, owner, original)) return;
+        }
+    });
 
     function tabStops(modal) {
         const candidates = Array.from(modal.dialog.querySelectorAll(
@@ -230,9 +349,12 @@ const revealAccordionHeader = (function() {
     }
 
     function reconcile(event) {
+        if (borrowedAlertFocus && (!borrowedAlertFocus.target.isConnected
+            || document.activeElement !== borrowedAlertFocus.target)) releaseAlertFocus();
         const swapOpener = event && event.detail && swapOpeners.get(event.detail.target);
         const previousTop = topModal();
         const removed = modals.filter(modal => !modal.backdrop.isConnected);
+        const removedOpeners = new Set(removed.map(modal => modal.opener));
         function connectedOpener(opener) {
             const seen = new Set();
             while (opener && !opener.isConnected && !seen.has(opener)) {
@@ -273,15 +395,33 @@ const revealAccordionHeader = (function() {
         } else if (previousTop && removed.includes(previousTop)) {
             const opener = connectedOpener(previousTop.opener);
             if (usable(opener) && (!top || owned(opener, top))) {
-                if (top) focusInDialog(top, opener);
-                else opener.focus({preventScroll: true});
+                if (top) {
+                    focusInDialog(top, opener);
+                } else if (alertFocusOpeners.has(opener)) {
+                    const callerChanged = alertOpenerChanges.has(opener);
+                    // Stop observing before a fresh borrowed lifetime can write -1.
+                    const pendingChange = unwatchAlertOpener(opener);
+                    alertFocusOpeners.delete(opener);
+                    if (callerChanged || pendingChange) opener.focus({preventScroll: true});
+                    else focusAlertContainer(opener, null, document.activeElement);
+                } else {
+                    opener.focus({preventScroll: true});
+                }
             } else if (top) focusInitial(top);
         } else if (top && !owned(document.activeElement, top)) {
             focusInitial(top);
         }
+        for (const opener of removedOpeners) {
+            if ((!borrowedAlertFocus || borrowedAlertFocus.target !== opener)
+                && !modals.some(current => current.opener === opener)) {
+                alertFocusOpeners.delete(opener);
+                unwatchAlertOpener(opener);
+            }
+        }
     }
 
     document.addEventListener('focusin', event => {
+        if (borrowedAlertFocus && borrowedAlertFocus.target !== event.target) releaseAlertFocus();
         const top = topModal();
         if (top && top.backdrop.isConnected && !owned(event.target, top)) {
             focusInitial(top);

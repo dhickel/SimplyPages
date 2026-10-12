@@ -79,6 +79,39 @@ or completion path if they disable all dismissal options, and should supply a de
 title rather than relying on the generic fallback. These behaviors are not a claim of
 complete application accessibility or application-owned authorization.
 
+### Alert dismissal
+
+`Alert.info(...)`, `success(...)`, `warning(...)` and `danger(...)` select styling, not
+an announcement policy. Alerts do not automatically receive a role or live-region attributes;
+use existing attribute APIs when the application needs those semantics.
+
+`dismissible()` configures one native `type="button"` close control, visibly marked × and
+named `Dismiss alert`. Repeated calls do not duplicate it. Finish configuration before
+compiling a template or sharing the component. Non-dismissible Alerts retain their output.
+
+Load `/css/framework.css` and `/js/framework.js` once in the page shell (ShellBuilder does
+this by default). Click/touch and native Enter/Space hide only the nearest usable dismissible
+Alert with `hidden`. The Alert remains in the DOM; dismissal is not persisted across rendering
+or navigation. Cancelled events, disabled/wrong-type controls, unavailable Alerts and controls
+behind the top Modal do not dismiss an outer Alert. Direct and HTMX-inserted Alerts work without
+reinitialization. The close control does not submit a containing form.
+
+When the hidden Alert contained focus, an application-selected replacement is preserved.
+Inside the top Modal, focus moves only to that dialog's container, without closing the dialog,
+restoring its launcher or scrolling the page/backdrop. On ordinary pages, the framework tries
+native focus on surviving, usable containing elements captured before focus callbacks. Only
+when native focus fails may an absent `tabindex` be borrowed as `-1`. Existing caller values,
+including empty or malformed ones, are never changed. Borrowed state remains while focus
+needs it and is released on blur, failed focus or disconnection; later caller mutations,
+including same-value writes, take ownership and are preserved. If that borrowed container
+then opens a Modal, it can receive focus again when the dialog closes or is removed.
+Unrelated focus is not redirected, and the framework does not choose an application next action.
+
+Default dismissal layout reserves space for the control, wraps long messages and provides
+readable control/hover paint and a visible keyboard focus ring on all four severity backgrounds.
+Host theme/layout overrides, application focus flows and role/live-region semantics remain
+application responsibilities. These defaults are not whole-application accessibility certification.
+
 ### Form labels and radio groups
 
 `Form.addField(label, control)` associates a nonempty label with `TextInput`, `TextArea`,

@@ -955,6 +955,43 @@ pre::-webkit-scrollbar-thumb:hover {
     color: #7f1d1d;
 }
 
+.alert[hidden] {
+    display: none !important;
+}
+
+.alert-dismissible {
+    position: relative;
+    min-height: 54px;
+    padding-right: 64px;
+    overflow-wrap: anywhere;
+}
+
+.alert-dismissible > .alert-close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid currentColor;
+    border-radius: 6px;
+    background: #fff;
+    color: inherit;
+    font: inherit;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.alert-dismissible > .alert-close:hover {
+    background: #f1f5f9;
+}
+
+.alert-dismissible > .alert-close:focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: 2px;
+}
+
 /* ===== Badges & Tags ===== */
 .badge {
     display: inline-block;
