@@ -2,6 +2,7 @@ package io.mindspice.simplypages.components.forms;
 
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.components.forms.Form.Method;
+import io.mindspice.simplypages.core.Attribute;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
@@ -17,6 +18,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -86,6 +88,177 @@ class FormTest {
         HtmlAssert.assertThat(html)
             .attributeEquals("form.form", "hx-post", "/save")
             .attributeEquals("form.form", "hx-headers", "{\"X-CSRF-TOKEN\": \"token123\"}");
+    }
+
+    @Test
+    void csrfHeaderOrdinaryOutputAndFluentReturnsRemainCompatible() {
+        Form form = Form.create();
+        assertSame(form, form.withHxPostCsrf("/save?x=1&y=2", "token123"));
+        assertEquals("<form class=\"form\" hx-post=\"/save?x=1&amp;y=2\" "
+            + "hx-headers=\"{&#34;X-CSRF-TOKEN&#34;: &#34;token123&#34;}\"></form>", form.render());
+        assertSame(form, form.withCsrfHeaderName("X-Custom"));
+        assertSame(form, form.withHxPostCsrf("/custom", "custom-token"));
+        assertEquals("{\"X-Custom\": \"custom-token\"}", Jsoup.parseBodyFragment(form.render())
+            .selectFirst("form").attr("hx-headers"));
+        assertSame(form, form.withCsrfToken("hidden"));
+    }
+
+    @Test
+    void csrfHeaderNullAndEmptyNamesTokensAndUrlsKeepExistingStringSemantics() {
+        for (String name : new String[] {null, "", "X-Custom"}) {
+            for (String token : new String[] {null, "", "token"}) {
+                for (String url : new String[] {null, "", "/save?x=1&y=%25"}) {
+                    Form form = Form.create().withCsrfHeaderName(name).withHxPostCsrf(url, token);
+                    var template = form.compile(); // Compile before any direct render.
+                    String html = form.render();
+                    assertEquals(html, template.render(RenderContext.empty()));
+                    var element = Jsoup.parseBodyFragment(html).selectFirst("form");
+                    assertEquals("{\"" + String.valueOf(name) + "\": \"" + String.valueOf(token) + "\"}",
+                        element.attr("hx-headers"));
+                    assertTrue(element.hasAttr("hx-post"));
+                    assertEquals(url == null ? "" : url, element.attr("hx-post"));
+                }
+            }
+        }
+    }
+
+    @Test
+    void csrfHeaderJsonEscapesQuotesBackslashesAndInjectionShapesWithoutAddingMarkup() {
+        String name = "X-\"\\-Header";
+        String token = "token\", \"X-Injected\": \"yes\\tail\" onload=\"bad <script>bad</script>";
+        Form form = Form.create().withCsrfHeaderName(name).withHxPostCsrf("/save", token)
+            .withCsrfToken(token).withChild(Button.submit("Save"));
+        var template = form.compile();
+        String html = form.render();
+        assertEquals(html, template.render(RenderContext.empty()));
+        var document = Jsoup.parseBodyFragment(html);
+        var element = document.selectFirst("form");
+        assertEquals("{\"X-\\\"\\\\-Header\": \"token\\\", \\\"X-Injected\\\": \\\"yes\\\\tail"
+            + "\\\" onload=\\\"bad <script>bad</script>\"}", element.attr("hx-headers"));
+        assertEquals(List.of("class", "hx-post", "hx-headers"), element.attributes().asList().stream()
+            .map(attribute -> attribute.getKey()).toList());
+        assertEquals(List.of("form", "input", "button"), document.body().getAllElements().stream()
+            .skip(1).map(org.jsoup.nodes.Element::tagName).toList());
+        assertEquals(token, element.selectFirst("input[name=_csrf]").attr("value"));
+        assertEquals(1, Pattern.compile(" hx-headers=\"").matcher(html).results().count());
+        assertEquals(1, Pattern.compile("<form\\b").matcher(html).results().count());
+        assertEquals(0, Pattern.compile("<script\\b| onload=\"").matcher(html).results().count());
+    }
+
+    @Test
+    void csrfHeaderJsonLeavesPrintableAsciiEntityLooksAndPercentSequencesLiteral() {
+        String name = "&quot;&#34;&amp;%22%5C'<>/ :";
+        String token = "~ &quot; &#x0; &amp; %00 %22 %5C <tag> / '";
+        Form form = Form.create().withCsrfHeaderName(name).withHxPostCsrf("/save", token);
+        String html = form.render();
+        assertEquals("{\"" + name + "\": \"" + token + "\"}", Jsoup.parseBodyFragment(html)
+            .selectFirst("form").attr("hx-headers"));
+        assertEquals(html, form.compile().render(RenderContext.empty()));
+        assertEquals(0, Jsoup.parseBodyFragment(html).select("tag").size());
+    }
+
+    @Test
+    void csrfHeaderJsonEncodesControlBoundariesBmpPairsAndIsolatedSurrogatesAsAscii() {
+        String name = "A\u0000\b\t\n\f\r\u001f\u007f\u0080\u009f\u00ff\u20ac\uD83D\uDE00\uD800";
+        String token = "B\u0001\u001e\u007e\u0100\u2028\u2029\uFFFF\uD83D\uDE00\uDC00";
+        Form form = Form.create().withCsrfHeaderName(name).withHxPostCsrf("/unicode", token);
+        var template = form.compile();
+        String html = form.render();
+        assertEquals(html, template.render(RenderContext.empty()));
+        assertTrue(html.chars().allMatch(unit -> unit >= 0x20 && unit < 0x7f));
+        assertEquals("{\"A\\u0000\\u0008\\u0009\\u000a\\u000c\\u000d\\u001f\\u007f\\u0080"
+                + "\\u009f\\u00ff\\u20ac\\ud83d\\ude00\\ud800\": "
+                + "\"B\\u0001\\u001e~\\u0100\\u2028\\u2029\\uffff\\ud83d\\ude00\\udc00\"}",
+            Jsoup.parseBodyFragment(html).selectFirst("form").attr("hx-headers"));
+    }
+
+    @Test
+    void csrfHeaderConfigurationIsCapturedPerCallAndRepeatedCallsReplaceAliasesInOrder() {
+        Form form = Form.create();
+        form.withAttribute("data-before", "one");
+        form.withAttribute("HX-POST", "/old");
+        form.withAttribute("HX-HEADERS", "old");
+        form.withCsrfHeaderName("first").withHxPostCsrf("/first", "token-one");
+        form.withAttribute("data-after", "two");
+        var template = form.compile();
+        String first = form.render();
+        form.withCsrfHeaderName("second");
+        assertEquals(first, form.render(), "Changing configuration must not rewrite an existing pair");
+        assertEquals(first, template.render(RenderContext.empty()));
+
+        form.withHxPostCsrf("/second", "token-two");
+        String html = form.render();
+        var element = Jsoup.parseBodyFragment(html).selectFirst("form");
+        assertEquals("/second", element.attr("hx-post"));
+        assertEquals("{\"second\": \"token-two\"}", element.attr("hx-headers"));
+        assertEquals("one", element.attr("data-before"));
+        assertEquals("two", element.attr("data-after"));
+        assertEquals(List.of("class", "data-before", "data-after", "hx-post", "hx-headers"),
+            element.attributes().asList().stream().map(attribute -> attribute.getKey()).toList());
+        assertEquals(1, Pattern.compile("(?i) hx-headers=\"").matcher(html).results().count());
+        assertEquals(1, Pattern.compile("(?i) hx-post=\"").matcher(html).results().count());
+        assertEquals(first, template.render(RenderContext.empty()), "Static templates retain the old pair");
+        assertEquals(html, form.compile().render(RenderContext.empty()), "Fresh templates see new configuration");
+    }
+
+    @Test
+    void csrfHeaderOutputKeepsContextDispatchHiddenTokenAndRenderingPurity() {
+        SlotKey<String> content = SlotKey.of("form-content");
+        InspectableForm form = new InspectableForm();
+        form.withHxPostCsrf("/save", "token\"\\&").withCsrfToken("token\"\\&")
+            .withChild(new HtmlTag("span").withInnerText(content))
+            .withChild(context -> new HtmlTag("em").withInnerText(content).render(context));
+        List<Attribute> attributes = form.attributeSnapshot();
+        List<Component> children = form.childSnapshot();
+        var template = form.compile(); // No warm-up render.
+        for (String text : List.of("request <one>&", "request two")) {
+            RenderContext context = RenderContext.builder().with(content, text).build();
+            String direct = form.render(context);
+            for (int repeat = 0; repeat < 3; repeat++) {
+                assertEquals(direct, template.render(context));
+                assertEquals(direct, form.render(context));
+                assertEquals(attributes, form.attributeSnapshot());
+                assertEquals(children, form.childSnapshot());
+            }
+            var document = Jsoup.parseBodyFragment(direct);
+            assertEquals(text, document.selectFirst("span").text());
+            assertEquals(text, document.selectFirst("em").text());
+            assertEquals("token\"\\&", document.selectFirst("input[name=_csrf]").attr("value"));
+            assertEquals(1, document.select("form").size());
+            assertEquals(1, document.select("input[name=_csrf]").size());
+        }
+    }
+
+    @Test
+    void csrfJsonHelperDoesNotChangeLogicalMethodActionOrExistingHiddenInputs() {
+        InspectableForm form = new InspectableForm();
+        form.withMethod(Method.PUT).withAction("/native?x=1&y=2")
+            .withCsrfToken(null).withCsrfToken("").withCsrfToken("token\"\\&");
+        List<Component> children = form.childSnapshot();
+        form.withHxPostCsrf("/htmx?x=1&y=%25", null);
+        assertEquals(children, form.childSnapshot());
+        var template = form.compile();
+        String html = form.render();
+        assertEquals(html, template.render(RenderContext.empty()));
+        var element = Jsoup.parseBodyFragment(html).selectFirst("form");
+        assertEquals("POST", element.attr("method"));
+        assertEquals("/native?x=1&y=2", element.attr("action"));
+        assertEquals("/htmx?x=1&y=%25", element.attr("hx-post"));
+        assertEquals("{\"X-CSRF-TOKEN\": \"null\"}", element.attr("hx-headers"));
+        assertEquals("PUT", element.selectFirst("input[name=_method]").attr("value"));
+        var csrf = element.select("input[name=_csrf]");
+        assertEquals(3, csrf.size());
+        assertTrue(csrf.get(0).hasAttr("value"));
+        assertTrue(csrf.get(1).hasAttr("value"));
+        assertEquals("", csrf.get(0).attr("value"));
+        assertEquals("", csrf.get(1).attr("value"));
+        assertEquals("token\"\\&", csrf.get(2).attr("value"));
+        assertEquals(2, Pattern.compile(" value />").matcher(html).results().count());
+    }
+
+    private static class InspectableForm extends Form {
+        List<Attribute> attributeSnapshot() { return List.copyOf(attributes); }
+        List<Component> childSnapshot() { return List.copyOf(children); }
     }
 
     @Test

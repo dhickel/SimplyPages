@@ -240,9 +240,31 @@ public class Form extends HtmlTag {
     public Form withHxPostCsrf(String url, String csrfToken) {
         withHxPost(url);
         // Add CSRF token as request header for HTMX
-        String headers = String.format("{\"%s\": \"%s\"}", csrfHeaderName, csrfToken);
+        String headers = String.format("{%s: %s}", quotedJsonString(String.valueOf(csrfHeaderName)),
+            quotedJsonString(String.valueOf(csrfToken)));
         withAttribute("hx-headers", headers);
         return this;
+    }
+
+    private static String quotedJsonString(String value) {
+        StringBuilder result = new StringBuilder(value.length() + 2).append('"');
+        for (int index = 0; index < value.length(); index++) {
+            char character = value.charAt(index);
+            if (character == '"') {
+                result.append("\\\"");
+            } else if (character == '\\') {
+                result.append("\\\\");
+            } else if (character < 0x20 || character >= 0x7f) {
+                result.append('\\').append('u');
+                result.append(Character.forDigit(character >>> 12, 16));
+                result.append(Character.forDigit((character >>> 8) & 0xf, 16));
+                result.append(Character.forDigit((character >>> 4) & 0xf, 16));
+                result.append(Character.forDigit(character & 0xf, 16));
+            } else {
+                result.append(character);
+            }
+        }
+        return result.append('"').toString();
     }
 
     /**
