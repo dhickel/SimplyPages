@@ -131,7 +131,7 @@ public class Paragraph extends HtmlTag {
 
     private void updateAlignmentClass() {
         Optional<Attribute> classAttr = attributes.stream()
-            .filter(attr -> "class".equals(attr.name()))
+            .filter(attr -> "class".equalsIgnoreCase(attr.name()))
             .findFirst();
 
         List<String> classes = new ArrayList<>();

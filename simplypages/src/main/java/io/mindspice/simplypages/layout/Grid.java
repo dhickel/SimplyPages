@@ -4,6 +4,9 @@ import io.mindspice.simplypages.core.Attribute;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Generic CSS-class driven grid container.
  *
@@ -102,26 +105,29 @@ public class Grid extends HtmlTag {
         // We need to remove old grid-cols/gap classes to prevent accumulation.
 
         String currentClass = attributes.stream()
-                .filter(attr -> "class".equals(attr.name()))
+                .filter(attr -> "class".equalsIgnoreCase(attr.name()))
                 .map(Attribute::value)
+                .filter(value -> value != null)
                 .findFirst()
                 .orElse("");
 
-        // Clean up old grid layout classes
-        currentClass = currentClass.replaceAll("grid-cols-\\d+", "").replaceAll("gap-\\w+", "").trim();
+        // Keep only complete custom tokens and remove the owned layout tokens.
+        List<String> classTokens = new ArrayList<>();
+        String normalizedClass = currentClass.trim();
+        if (!normalizedClass.isEmpty()) {
+            for (String token : normalizedClass.split("\\s+")) {
+                classTokens.add(token);
+            }
+        }
+        classTokens.removeIf(token -> token.matches("grid-cols-\\d+") || token.matches("gap-\\w+"));
 
-        // Remove extra spaces potentially created by replaceAll
-        currentClass = currentClass.replaceAll("\\s+", " ");
-
-        // Rebuild class string
-        // Ensure base class is present if not
-        if (!currentClass.contains(baseClass)) {
-            currentClass = (baseClass + " " + currentClass).trim();
+        // Ensure the exact base token is present without treating it as a substring.
+        if (!classTokens.contains(baseClass)) {
+            classTokens.add(0, baseClass);
         }
 
-        String newClass = (currentClass + " grid-cols-" + columns + " gap-" + gap).trim();
-
-        // Update the attribute directly
-        this.withAttribute("class", newClass);
+        classTokens.add("grid-cols-" + columns);
+        classTokens.add("gap-" + gap);
+        this.withAttribute("class", String.join(" ", classTokens));
     }
 }

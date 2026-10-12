@@ -247,7 +247,7 @@ public class HtmlTag implements Component {
      */
     public HtmlTag addClass(String className) {
         Optional<Attribute> classAttr = attributes.stream()
-                .filter(attr -> "class".equals(attr.name()))
+                .filter(attr -> "class".equalsIgnoreCase(attr.name()))
                 .findFirst();
 
         if (classAttr.isPresent()) {
@@ -319,14 +319,15 @@ public class HtmlTag implements Component {
     }
 
     private HtmlTag addOrReplaceStyle(String property, String value) {
-        Optional<String> existingStyle = attributes.stream()
-                .filter(attr -> "style".equals(attr.name()))
-                .map(Attribute::value)
+        Optional<Attribute> existingStyle = attributes.stream()
+                .filter(attr -> "style".equalsIgnoreCase(attr.name()))
                 .findFirst();
 
         String newStyle;
         if (existingStyle.isPresent()) {
-            String styles = existingStyle.get().trim().replaceAll(";+$", "");
+            String styles = existingStyle.get().value() == null
+                    ? ""
+                    : existingStyle.get().value().trim().replaceAll(";+$", "");
             String propertyPattern = "(^|;)\\s*" + Pattern.quote(property) + "\\s*:[^;]*";
             styles = styles.replaceAll(propertyPattern, "$1").trim();
             styles = styles.replaceAll("^;\\s*", "").replaceAll(";\\s*;", ";");

@@ -75,6 +75,18 @@ class ModuleTest {
     }
 
     @Test
+    @DisplayName("Module build should use case-insensitive class helper lookup")
+    void testModuleBuildClassAlias() {
+        TestModule module = new TestModule();
+        module.withAttribute("CLASS", "custom");
+
+        Template template = module.compile();
+        String direct = module.render();
+        assertTrue(direct.contains("class=\"custom module\""));
+        assertEquals(direct, template.render(RenderContext.empty()));
+    }
+
+    @Test
     @DisplayName("Module should rebuild content when requested")
     void testModuleRebuild() {
         TestModule module = new TestModule();
