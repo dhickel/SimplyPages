@@ -68,13 +68,44 @@ document.addEventListener('click', function(event) {
     });
 })();
 
-/** Off-canvas ShellBuilder navigation only; Page's native details sidebar is independent. */
+/** Shared ShellBuilder desktop collapse and off-canvas navigation; Page details stay independent. */
 const synchronizeShellNavigation = (function() {
     const mobile = matchMedia('(max-width: 768px)');
     const sidebar = () => document.getElementById('main-sidebar');
     const toggles = () => Array.from(document.querySelectorAll('.mobile-sidebar-toggle[aria-controls="main-sidebar"]'));
     const modalOpen = () => !!document.querySelector('.modal-backdrop > .modal-container[role="dialog"]');
+    const initialized = new WeakMap();
+    const settlingSidebars = new WeakSet();
+    let desktopPreference;
     let navigationFocus = null;
+    function collapseOwner(nav) {
+        const container = nav?.closest('.main-container');
+        return nav?.classList.contains('collapsible') && container?.classList.contains('collapsible-sidebar')
+            ? container : null;
+    }
+    function initializeCollapse(nav) {
+        const container = collapseOwner(nav);
+        const previousOwner = initialized.get(nav);
+        if (!container || previousOwner === container) return;
+        if (desktopPreference === undefined) {
+            desktopPreference = false;
+            try { desktopPreference = localStorage.getItem('sidebarCollapsed') === 'true'; } catch (_) { /* Best effort. */ }
+        }
+        const collapsed = previousOwner ? nav.classList.contains('collapsed') : desktopPreference;
+        nav.classList.toggle('collapsed', collapsed);
+        container.classList.toggle('sidebar-collapsed', collapsed);
+        initialized.set(nav, container);
+    }
+    window.toggleSidebar = function() {
+        const nav = sidebar();
+        const container = collapseOwner(nav);
+        if (!container || mobile.matches || modalOpen()) return;
+        initializeCollapse(nav);
+        desktopPreference = !nav.classList.contains('collapsed');
+        nav.classList.toggle('collapsed', desktopPreference);
+        container.classList.toggle('sidebar-collapsed', desktopPreference);
+        try { localStorage.setItem('sidebarCollapsed', String(desktopPreference)); } catch (_) { /* Document-local state survives. */ }
+    };
     document.addEventListener('focusin', event => {
         const nav = sidebar();
         navigationFocus = (nav && nav.contains(event.target)) || toggles().includes(event.target)
@@ -87,6 +118,7 @@ const synchronizeShellNavigation = (function() {
     function synchronize() {
         const nav = sidebar();
         if (!nav) return;
+        initializeCollapse(nav);
         if (!mobile.matches) nav.classList.remove('mobile-open');
         const open = mobile.matches && nav.classList.contains('mobile-open');
         const blocked = mobile.matches && !open;
@@ -145,6 +177,26 @@ const synchronizeShellNavigation = (function() {
     });
     mobile.addEventListener('change', synchronize);
     document.addEventListener('DOMContentLoaded', synchronize);
+    function insertedShell() {
+        const nav = sidebar();
+        // HTMX temporarily copies the outgoing node's classes and restores incoming attributes
+        // at settle. Complete this new identity's initialization after that one restoration.
+        if (nav && !initialized.has(nav)) settlingSidebars.add(nav);
+        synchronize();
+    }
+    document.addEventListener('htmx:afterSwap', insertedShell);
+    document.addEventListener('htmx:oobAfterSwap', insertedShell);
+    document.addEventListener('htmx:afterSettle', () => {
+        const nav = sidebar();
+        if (nav && settlingSidebars.delete(nav)) {
+            const container = collapseOwner(nav);
+            if (container) {
+                nav.classList.toggle('collapsed', desktopPreference);
+                container.classList.toggle('sidebar-collapsed', desktopPreference);
+            }
+        }
+        synchronize();
+    });
     new MutationObserver(synchronize).observe(document.documentElement, {childList: true, subtree: true});
     synchronize();
     return synchronize;
@@ -176,6 +228,142 @@ const revealAccordionHeader = (function() {
         return (!element.checkVisibility || element.checkVisibility({checkVisibilityCSS: true}))
             && getComputedStyle(element).visibility === 'visible' && element.getClientRects().length > 0;
     }
+
+    // Page-only native state. Each target owns its bounded observer; the weak map
+    // retains identity across reparenting without a strong registry of detached disclosures.
+    const pageSidebars = new WeakMap();
+    const pageMobile = matchMedia('(max-width: 768px)');
+    function pageParts(details) {
+        if (!(details instanceof HTMLDetailsElement)
+            || !details.matches('.sticky-sidebar-mobile-collapse')
+            || !details.parentElement?.matches('.sticky-sidebar-aside')
+            || !details.closest('.page-content.with-sticky-sidebar')) return null;
+        const summary = Array.from(details.children).find(child => child.matches('summary'));
+        const content = Array.from(details.children).find(child => child.matches('.sticky-sidebar-content'));
+        return summary?.matches('.sticky-sidebar-mobile-summary') && content
+            ? {summary, content, aside: details.parentElement, page: details.closest('.page-content.with-sticky-sidebar')} : null;
+    }
+    function samePageParts(details, parts) {
+        const current = pageParts(details);
+        return current && current.summary === parts.summary && current.content === parts.content
+            && current.aside === parts.aside && current.page === parts.page;
+    }
+    function readPageChanges(state, records) {
+        // oldValue of the following record supplies the intermediate native boolean state.
+        // Reading only the final property would lose close/open sequences in one microtask.
+        records.forEach((record, index) => {
+            const open = index + 1 < records.length
+                ? records[index + 1].oldValue !== null : state.details.open;
+            state.nativeChanged ||= (record.oldValue !== null) !== open;
+            state.preference = open;
+        });
+    }
+    function drainPageChanges(state) {
+        readPageChanges(state, state.observer.takeRecords());
+    }
+    function writePageOpen(state, open) {
+        drainPageChanges(state);
+        if (state.details.open === open) return;
+        state.details.open = open;
+        // Isolate this synchronous, owned write instead of guessing which later toggle event
+        // belongs to it. Native toggle delivery can coalesce across several responsive changes.
+        const records = state.observer.takeRecords();
+        readPageChanges(state, records.slice(1));
+    }
+    function pageFocusOwner(details) {
+        // A callback can insert a cover before reconciliation updates an existing stack too.
+        // Until every connected dialog is tracked, initialize native state without focus/reveal.
+        const pending = Array.from(document.querySelectorAll('.modal-backdrop > .modal-container[role="dialog"]'))
+            .some(dialog => !modals.some(modal => modal.dialog === dialog));
+        if (pending) return false;
+        const top = topModal();
+        if (!top) return null;
+        return top.backdrop.isConnected && owned(details, top) && top.dialog.contains(details) ? top : false;
+    }
+    function correctPageFocus(state, parts, original, mobile) {
+        const details = state.details;
+        const owner = pageFocusOwner(details);
+        if (owner === false || !original || !details.contains(original)) return;
+        const untouched = () => {
+            const active = document.activeElement;
+            return active === original || (active === document.body && !active.matches(':focus'));
+        };
+        // Mobile closure leaves only the native summary. Desktop removes summary presentation;
+        // retained summary focus stays visible in CSS until this bounded transfer succeeds.
+        let targets;
+        if (mobile) {
+            if (details.open) {
+                if (document.activeElement !== original || !usable(original)) return;
+                targets = [original]; // Reflow can clip retained focus; reveal inside its existing boundary.
+            } else {
+                if (!parts.content.contains(original)) return;
+                targets = [parts.summary];
+            }
+        } else {
+            if (!details.open) return;
+            if (original !== parts.summary && document.activeElement === original && usable(original)) {
+                targets = [original];
+            } else {
+                const controls = Array.from(parts.content.querySelectorAll(
+                    'a[href], area[href], button, input, select, textarea, iframe, summary, [tabindex], [contenteditable="true"]'
+                )).filter(target => target.tabIndex >= 0 && usable(target));
+                targets = [...(original !== parts.summary && usable(original) ? [original] : []), ...controls, details];
+            }
+        }
+        const expectedOpen = details.open;
+        for (const target of targets) {
+            if (!untouched() || !details.isConnected || pageFocusOwner(details) !== owner
+                || pageMobile.matches !== mobile || details.open !== expectedOpen
+                || !samePageParts(details, parts)) return;
+            if (!usable(target) || (owner && !owned(target, owner))) continue;
+            target.focus({preventScroll: true});
+            // Application focus callbacks may mutate native state, move/remove nodes, open a
+            // covering dialog, or choose a different target. Never reveal a stale transition.
+            if (document.activeElement !== target) return;
+            if (!details.isConnected || !target.isConnected || details.open !== expectedOpen
+                || pageMobile.matches !== mobile || pageFocusOwner(details) !== owner
+                || !samePageParts(details, parts) || !usable(target)) return;
+            if (owner) focusInDialog(owner, target);
+            else target.scrollIntoView({block: 'nearest', inline: 'nearest', behavior: 'instant'});
+            return;
+        }
+    }
+    function synchronizePageSidebar(state) {
+        drainPageChanges(state);
+        const details = state.details;
+        const parts = pageParts(details);
+        if (!details.isConnected || !parts) return;
+        const mobile = pageMobile.matches;
+        // Capture live focus before our presentation write; native changes are processed through
+        // attribute records rather than delayed/coalesced toggle events. CSS retains focused
+        // desktop summaries. Never replay focusout, which also describes deliberate caller blur.
+        const active = document.activeElement;
+        const original = details.contains(active) ? active : null;
+        const desired = mobile ? state.preference : true;
+        const transition = state.mobile !== mobile || details.open !== desired || state.nativeChanged;
+        writePageOpen(state, desired);
+        state.mobile = mobile;
+        state.nativeChanged = false;
+        if (transition) correctPageFocus(state, parts, original, mobile);
+    }
+    function synchronizePageSidebars() {
+        document.querySelectorAll('details.sticky-sidebar-mobile-collapse').forEach(details => {
+            if (!pageParts(details)) return;
+            let state = pageSidebars.get(details);
+            if (!state) {
+                state = {details, preference: details.open, nativeChanged: false,
+                    mobile: pageMobile.matches, observer: null};
+                state.observer = new MutationObserver(records => {
+                    readPageChanges(state, records);
+                    synchronizePageSidebar(state);
+                });
+                state.observer.observe(details, {attributes: true, attributeFilter: ['open'], attributeOldValue: true});
+                pageSidebars.set(details, state);
+            }
+            synchronizePageSidebar(state);
+        });
+    }
+    pageMobile.addEventListener('change', synchronizePageSidebars);
 
     function watchAlertOpener(target) {
         if (!(target instanceof HTMLElement) || alertOpenerObservers.has(target)) return;
@@ -349,6 +537,8 @@ const revealAccordionHeader = (function() {
     }
 
     function reconcile(event) {
+        // Native desktop disclosure state must be established before modal first-focus enumeration.
+        synchronizePageSidebars();
         if (borrowedAlertFocus && (!borrowedAlertFocus.target.isConnected
             || document.activeElement !== borrowedAlertFocus.target)) releaseAlertFocus();
         const swapOpener = event && event.detail && swapOpeners.get(event.detail.target);

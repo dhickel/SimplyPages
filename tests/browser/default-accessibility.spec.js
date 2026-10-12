@@ -505,26 +505,29 @@ for (const visibilityAPI of [true, false]) {
 }
 
 for (const visibilityAPI of [true, false]) {
-    test(`desktop native-hidden Page descendants with positive boxes are not modal targets (visibility API ${visibilityAPI})`, async ({page}, testInfo) => {
+    test(`ordinary nested native-hidden details with positive boxes remain outside modal traversal (visibility API ${visibilityAPI})`, async ({page}, testInfo) => {
         await page.setViewportSize({width: 1440, height: 900});
         if (!visibilityAPI) await page.addInitScript(() => {Element.prototype.checkVisibility = undefined;});
         await fixture(page);
-        // Reproduce F14's native-closed desktop presentation without prescribing its lifecycle.
-        const markup = await page.locator('.page-content').evaluate(element => {
-            element.querySelector('details').open = false;
-            const html = element.outerHTML;
-            element.remove();
-            return html;
-        });
-        await page.locator('#modal-host').evaluate((host, html) => {host.innerHTML = html;},
-            modal.replace('<div>Body content</div>', markup));
+        const pages = fs.readFileSync(path.resolve(__dirname,
+            '../../simplypages/target/phase13-shell-page-fixtures/page-details.html'), 'utf8');
+        await page.locator('#modal-host').evaluate((host, {html, pages}) => {
+            const ordinary = new DOMParser().parseFromString(pages, 'text/html').getElementById('ordinary-outer');
+            ordinary.open = true;
+            ordinary.querySelectorAll('summary').forEach(summary => summary.setAttribute('tabindex', '-1'));
+            host.innerHTML = html.replace('<div>Body content</div>',
+                '<style>#ordinary-hidden-control { display: block !important; height: 32px; }</style>' + ordinary.outerHTML);
+        }, {html: modal, pages});
         const dialog = page.getByRole('dialog');
-        const link = dialog.locator('a[href="#details"]');
+        const link = dialog.locator('#ordinary-hidden-control');
+        await dialog.locator('#ordinary-inner').evaluate(element => { element.open = true; });
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        await dialog.locator('#ordinary-inner').evaluate(element => { element.open = false; });
         const probe = await link.evaluate(element => ({nativeOpen: element.closest('details').open,
             rects: element.getClientRects().length, rect: element.getBoundingClientRect().toJSON(),
             nativeVisible: element.checkVisibility ? element.checkVisibility({checkVisibilityCSS: true}) : null}));
         expect(probe.nativeOpen).toBe(false);
-        expect(probe.rects).toBeGreaterThan(0); // Desktop CSS boxes alone do not imply native visibility.
+        expect(probe.rects).toBeGreaterThan(0);
         expect(probe.rect.height).toBeGreaterThan(0);
         expect(probe.nativeVisible).toBe(visibilityAPI ? false : null);
         await jsonEvidence(testInfo, 'native-hidden-positive-boxes', probe);
@@ -725,34 +728,25 @@ test('dynamic generated disclosure/tab/sidebar insertion stays delegated and ide
     await expect(page.locator('#main-sidebar')).not.toHaveAttribute('inert', '');
 });
 
-test('Page native details sidebar remains separate across desktop/mobile resize', async ({page}, testInfo) => {
+test('generated Page native details reopens on desktop and remembers each mobile preference', async ({page}) => {
     await page.setViewportSize({width: 390, height: 844});
     await fixture(page);
     const details = page.locator('.sticky-sidebar-mobile-collapse');
-    await details.locator('summary').click();
+    const summary = details.locator('summary');
+    await summary.click();
     await expect(details).toHaveJSProperty('open', false);
     await expect(page.getByRole('link', {name: 'Details link'})).toHaveCount(0);
     await page.setViewportSize({width: 1440, height: 900});
-    // F14/phase13 owns desktop restoration. Record its current state, not a passing contract.
-    const desktopProbe = await details.locator('a').evaluate(element => ({
-        nativeOpen: element.closest('details').open,
-        visible: element.checkVisibility({checkVisibilityCSS: true}),
-        rect: element.getBoundingClientRect().toJSON(),
-        contentDisplay: getComputedStyle(element.parentElement).display,
-        inert: !!element.closest('[inert]')
-    }));
-    await jsonEvidence(testInfo, 'native-details-desktop-probe', desktopProbe);
-    console.log('Native details desktop probe:', JSON.stringify(desktopProbe));
-    await expect(page.locator('#main-sidebar')).not.toHaveAttribute('inert', '');
-    await page.setViewportSize({width: 390, height: 844});
-    // Independently exercise native mobile activation regardless of the desktop lifecycle outcome.
-    await expect(page.locator('#main-sidebar')).toHaveAttribute('inert', '');
-    if (await details.evaluate(element => element.open)) await details.locator('summary').click();
-    await expect(details).toHaveJSProperty('open', false);
-    await details.locator('summary').click();
-    await expect(details).toHaveJSProperty('open', true);
+    await expect.poll(() => details.evaluate(element => element.open)).toBe(true);
     await expect(page.getByRole('link', {name: 'Details link'})).toBeVisible();
-    await expect(page.locator('#main-sidebar')).toHaveAttribute('inert', '');
+    await page.setViewportSize({width: 390, height: 844});
+    await expect.poll(() => details.evaluate(element => element.open)).toBe(false);
+    await summary.click();
+    await expect(details).toHaveJSProperty('open', true);
+    await page.setViewportSize({width: 1440, height: 900});
+    await expect.poll(() => details.evaluate(element => element.open)).toBe(true);
+    await page.setViewportSize({width: 390, height: 844});
+    await expect.poll(() => details.evaluate(element => element.open)).toBe(true);
 });
 
 for (const width of [1440, 390]) {

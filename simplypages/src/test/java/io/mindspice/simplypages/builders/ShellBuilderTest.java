@@ -5,6 +5,8 @@ import io.mindspice.simplypages.components.Paragraph;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
+import io.mindspice.simplypages.core.Slot;
+import io.mindspice.simplypages.core.SlotKey;
 import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -330,6 +332,146 @@ class ShellBuilderTest {
     }
 
     @Test
+    @DisplayName("ShellBuilder should keep the desktop toggle contract across full, body and template modes")
+    void desktopToggleContractAcrossModes() {
+        var builder = ShellBuilder.create()
+            .withSideNav(SideNavBuilder.create().addLink("Home", "/").build(), true);
+
+        String full = builder.build();
+        String body = builder.buildBody().render();
+        String template = builder.buildTemplate().render(RenderContext.empty());
+
+        for (String html : List.of(full, body, template)) {
+            HtmlAssert.assertThat(html)
+                .hasElement("aside#main-sidebar > button.sidebar-toggle[type='button'][aria-label='Toggle sidebar'][onclick='toggleSidebar()']")
+                .hasElement(".mobile-sidebar-toggle[type='button'][aria-label='Toggle navigation']");
+            assertFalse(html.contains("function toggleSidebar()"));
+        }
+        assertEquals(1, Jsoup.parse(full).select("body > script:containsData(htmx:afterSettle)").size());
+        assertEquals(0, Jsoup.parse(body).select("script").size());
+        assertEquals(1, Jsoup.parse(template).select("body > script:containsData(htmx:afterSettle)").size());
+    }
+
+    @Test
+    void bodyDirectAndCompiledContextPreserveToggleAndEscaping() {
+        SlotKey<String> key = SlotKey.of("body.content");
+        Component body = ShellBuilder.create()
+            .withSideNav(SideNavBuilder.create().addLink("Home", "/").build(), true)
+            .withContentTarget("target\"&value")
+            .withContent(Slot.of(key)).buildBody();
+        String value = "<request & text>";
+        String direct = body.render(RenderContext.of(key, value));
+        assertEquals(direct, body.compile().render(RenderContext.of(key, value)));
+        assertFalse(direct.contains(value));
+        assertEquals(value, Jsoup.parse(direct).selectFirst(".content-wrapper").text());
+        assertEquals("target\"&value", Jsoup.parse(direct).selectFirst(".content-wrapper > div").id());
+        HtmlAssert.assertThat(direct)
+            .hasElement("button.sidebar-toggle[type=button][aria-label='Toggle sidebar']")
+            .doesNotHaveElement("script");
+    }
+
+    @Test
+    @DisplayName("ShellBuilder should keep body fragments free of document chrome, assets and scripts")
+    void bodyFragmentOmitsDocumentChromeAndAssets() {
+        String body = ShellBuilder.create()
+            .withTopBanner(new Paragraph("omitted-banner"))
+            .withTopNav(new Paragraph("omitted-top-nav"))
+            .withCustomCss("/css/omitted-custom.css")
+            .withCustomJs("/js/omitted-custom.js")
+            .withSideNav(SideNavBuilder.create().addLink("Home", "/").build(), true)
+            .buildBody()
+            .render();
+
+        assertFalse(body.contains("<!DOCTYPE html>"));
+        assertFalse(body.contains("<html"));
+        assertFalse(body.contains("<head"));
+        assertFalse(body.contains("<body"));
+        assertFalse(body.contains("<header"));
+        assertFalse(body.contains("omitted-banner"));
+        assertFalse(body.contains("omitted-top-nav"));
+        assertFalse(body.contains("omitted-custom"));
+        assertFalse(body.contains("<link"));
+        assertFalse(body.contains("<script"));
+        assertFalse(body.contains("/js/framework.js"));
+        assertFalse(body.contains("htmx.min.js"));
+    }
+
+    @Test
+    @DisplayName("ShellBuilder should omit desktop and mobile controls without a sidebar")
+    void noSidebarOmitsAllSidebarControlsInEveryMode() {
+        ShellBuilder builder = ShellBuilder.create();
+        for (String html : List.of(builder.build(), builder.buildBody().render(),
+                builder.buildTemplate().render(RenderContext.empty()))) {
+            HtmlAssert.assertThat(html)
+                .doesNotHaveElement(".mobile-sidebar-toggle")
+                .doesNotHaveElement(".sidebar-toggle")
+                .doesNotHaveElement("aside#main-sidebar");
+        }
+    }
+
+    @Test
+    @DisplayName("ShellBuilder should retain mobile navigation but omit desktop collapse wiring when noncollapsible")
+    void noncollapsibleSidebarOmitsDesktopCollapseControl() {
+        String html = ShellBuilder.create()
+            .withSideNav(SideNavBuilder.create().addLink("Home", "/").build(), false)
+            .build();
+
+        HtmlAssert.assertThat(html)
+            .hasElement(".mobile-sidebar-toggle")
+            .hasElement(".main-container.has-sidebar")
+            .doesNotHaveElement(".main-container.collapsible-sidebar")
+            .doesNotHaveElement(".sidebar-toggle")
+            .doesNotHaveElement("body > script:containsData(toggleSidebar)");
+    }
+
+    @Test
+    @DisplayName("ShellBuilder should escape titles in raw output while preserving parsed text")
+    void shellTitleEscapingIsSafeInRawAndParsedOutput() {
+        String title = "<Portal & \\\"quoted\\\">";
+        String html = ShellBuilder.create().withPageTitle(title).build();
+
+        assertTrue(html.contains("<title>"));
+        assertTrue(html.contains("&lt;Portal"));
+        assertTrue(html.contains("&amp;"));
+        assertFalse(html.contains("<Portal"));
+        assertEquals(title, Jsoup.parse(html).selectFirst("title").text());
+    }
+
+    @Test
+    @DisplayName("ShellBuilder should preserve full and template auto-load boundaries")
+    void shellAutoloadBoundaries() {
+        ShellBuilder builder = ShellBuilder.create();
+        String full = builder.build();
+        String body = builder.buildBody().render();
+        String template = builder.buildTemplate().render(RenderContext.empty());
+        String explicitTemplate = builder.buildTemplate().renderWithContent(new Paragraph("Fragment"));
+
+        for (String html : List.of(full, body)) {
+            HtmlAssert.assertThat(html)
+                .hasElement("#content-area[hx-get='/home'][hx-trigger='load']");
+        }
+        for (String html : List.of(template, explicitTemplate)) {
+            HtmlAssert.assertThat(html)
+                .doesNotHaveElement("#content-area[hx-get]")
+                .doesNotHaveElement("#content-area[hx-trigger]");
+        }
+    }
+
+    @Test
+    @DisplayName("ShellBuilder should retain active-nav script exactly once without desktop duplication")
+    void activeNavigationScriptIsRetainedWithoutInlineDesktopDuplication() {
+        String html = ShellBuilder.create()
+            .withSideNav(SideNavBuilder.create().addLink("Home", "/").build(), true)
+            .build();
+        var scripts = Jsoup.parse(html).select("body > script");
+
+        assertEquals(1, scripts.size());
+        assertTrue(scripts.get(0).data().contains("htmx:afterSettle"));
+        assertFalse(scripts.get(0).data().contains("sidebarCollapsed"));
+        assertFalse(html.contains("function toggleSidebar()"));
+    }
+
+    @Test
     @DisplayName("ShellBuilder should not render mobile sidebar toggle without side nav")
     void testNoMobileToggleWhenNoSidebar() {
         String html = ShellBuilder.create().build();
@@ -395,6 +537,8 @@ class ShellBuilderTest {
         RenderContext context = RenderContext.of(template.contentSlot(), new Paragraph("Override body"));
         String html = template.render(context);
 
+        assertTrue(html.contains("Override body"));
+        assertFalse(html.contains("Fallback body"));
         HtmlAssert.assertThat(html)
             .hasElement("main.content-wrapper > div#content-area > p")
             .elementTextEquals("main.content-wrapper > div#content-area > p", "Override body");

@@ -11,7 +11,10 @@ Owns page composition and responsive layout primitives.
 - `Row.withChild` auto-wrap behavior for non-`Column` components stays predictable.
 - `Column.withWidth(int)` accepts only 1..12.
 - `Column.auto()` and `Column.fill()` semantics remain stable.
-- `Page.withStickySidebar(...)` keeps stable markup hooks used by responsive CSS.
+- `Page.withStickySidebar(...)` keeps one initially open native details/first summary/content stream and stable responsive hooks, separate from ShellBuilder's drawer. Generated details has fixed tabindex -1 programmatic fallback, not a sequential stop; later caller tabindex is never overwritten.
+- Shared framework JS keeps desktop >=769 natively open and restores each element's remembered observable native/application open preference at <=768. Desktop close updates mobile preference before reopening. Ordinary nested details are untouched; new/replacement nodes initialize independently, same-element reinsert/reparent retains preference, detached nodes receive no responsive writes/focus.
+- Page native state uses private target-only open observers with pending drains/isolated owned writes, not coalesced-toggle ignore flags/property interception/general mutation services. Desktop state initializes before modal traversal. Transition-contained focus uses summary/content/root and existing private top-modal/reveal boundaries; preserve deliberate/application focus and caller attrs, never steal covered/background focus or scroll. Reveal retained in-dialog focus after responsive reflow within existing internal clipping/scroll boundaries. Alert loan/opener observers remain separate.
+- CSS follows native open state. Without JS closed desktop summaries remain usable, and open summaries stay displayed while themselves focused for keyboard recovery. Validate native visibility/Tab eligibility, not positive boxes/display alone.
 - `PageBuilder.build()` remains idempotent for unchanged builder state.
 
 - Column establishes its base `col` token during configuration, including generic class attributes; standard rendering must not mutate attributes.

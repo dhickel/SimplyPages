@@ -19,6 +19,31 @@ Page page = Page.builder()
 
 `build()` is idempotent for unchanged builder state and does not duplicate sticky-sidebar wrappers when called repeatedly.
 
+## Native Page Sidebar
+
+Call `withStickySidebar(component)` before adding main content. It enables independent scrolling
+and emits one initially open native `details`, its first `summary` (`Page navigation`), and sidebar
+content. This disclosure is distinct from ShellBuilder's off-canvas navigation; no duplicate
+mobile sidebar is generated.
+
+With framework assets loaded once, widths of 769px and above keep the disclosure natively open,
+not merely styled as visible. Through 768px, each element restores its remembered native/application
+open preference. Observable desktop closes are remembered for the next mobile presentation while
+desktop reopens. Ordinary nested details keep their native state. New/replacement elements initialize
+from their own open state; reparenting or reinserting the same element retains its preference.
+Detached elements receive no responsive writes or focus transfer.
+
+If a responsive transition hides focused content, focus moves to the usable summary; when desktop
+removes a focused summary, focus moves to usable sidebar content or the generated details fallback.
+That root has `tabindex="-1"` for programmatic focus, not a sequential stop. Later caller tabindex
+changes and application-selected replacement focus are preserved. Covered/background Pages do not
+steal modal focus or scroll the background. Retained in-dialog focus is revealed inside the existing
+scroll/clipping boundary after responsive reflow, even when the disclosure stays open.
+
+Without JS, native open state controls visibility. A closed desktop disclosure retains its summary;
+a focused open desktop summary stays visible until focus leaves, allowing native keyboard recovery.
+Custom layout/disclosure policies remain application-owned.
+
 ## Row Behavior
 
 `Row.withChild(component)` wraps non-column children in a default `.col` container.

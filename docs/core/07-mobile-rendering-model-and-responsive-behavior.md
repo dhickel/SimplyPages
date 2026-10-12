@@ -11,14 +11,18 @@ SimplyPages mobile behavior is primarily CSS-driven, with small framework-genera
 - `ShellBuilder` emits shell structure and mobile nav toggle markup when a sidebar exists.
 - Shell layout defaults to full-width content when no sidebar is configured.
 - `framework.css` applies responsive breakpoints and stacking/wrapping behavior.
-- `framework.js` handles interactive shell behavior like mobile sidebar open/close.
+- `framework.js` handles shared shell collapse/drawer behavior and the native Page disclosure lifecycle.
 - Layout primitives (`Page`, `Row`, `Column`) provide stable class/markup contracts that CSS targets.
 
 ## What the Framework Handles Automatically
 
 When you use `ShellBuilder` with a sidebar:
 
-- Viewport meta is included: `width=device-width, initial-scale=1.0`.
+- Full/template documents include viewport meta: `width=device-width, initial-scale=1.0`.
+  Body-only fragments omit document/head/chrome/assets/scripts; their host loads framework assets once.
+- Shared framework JS initializes existing and later direct/HTMX shell fragments idempotently.
+  Collapsible desktop buttons are named native non-submit controls; desktop preference persistence
+  through `sidebarCollapsed` is best effort, with document-local operation when storage is denied.
 - Mobile sidebar toggle button is rendered.
 - Sidebar uses off-canvas mobile behavior via `.main-sidebar.mobile-open` at widths through 768px.
 - Closed shell navigation is inert and has `aria-hidden="true"`; the named toggle tracks expanded state.
@@ -35,10 +39,20 @@ When you use `Row`/`Column`:
 
 When you use `Page.withStickySidebar(...)`:
 
-- Desktop sticky sidebar behavior remains.
-- Mobile switches to stacked layout with a native `details`/`summary` sidebar.
-- This Page sidebar is separate from ShellBuilder's off-canvas drawer; drawer JS does not change its
-  native open state. Check both responsive presentations in the application.
+- One native `details`/first `summary` disclosure starts open; mobile uses stacked layout.
+- Framework JS keeps desktop (769px and above) natively open and restores each element's remembered
+  observable native/application open preference through 768px. Desktop closes update that preference
+  before reopening; ordinary nested details are untouched.
+- New/replacement elements initialize from their own native state. Reinserted/reparented elements
+  retain preference; detached elements receive no responsive writes or focus transfer.
+- A closing disclosure with contained focus transfers to its usable summary. Desktop transfers a
+  focused summary to usable content or the generated `tabindex="-1"` details fallback, without
+  overwriting later caller tabindex or application focus. Covered/background Pages do not take focus
+  or scroll away from the top modal.
+- Without JS, a closed desktop summary remains available, and an open summary remains displayed while
+  itself focused for native keyboard recovery. Visibility follows native open state, not forced boxes.
+- This Page lifecycle is separate from ShellBuilder's off-canvas drawer. Check both presentations in
+  the application; custom policies remain application-owned.
 
 When you use `TabsModule`:
 
@@ -65,7 +79,7 @@ Framework defaults currently use:
 
 - Shell/layout markup: `ShellBuilder` and `Page`
 - Responsive behavior: `static/css/framework.css`
-- Interactive shell behavior: `static/js/framework.js`
+- Interactive shell and native Page lifecycle: `static/js/framework.js`
 
 There is no separate "mobile mode" API flag to enable.
 

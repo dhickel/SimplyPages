@@ -2807,11 +2807,27 @@ img {
 }
 
 .sticky-sidebar-mobile-summary {
-    display: none;
+    display: block;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--sp-color-heading);
+    background-color: var(--sp-theme-surface-raised);
+    border: 1px solid var(--sp-color-border);
+    border-radius: var(--sp-radius-md);
+    padding: var(--sp-space-sm);
 }
 
 .sticky-sidebar-mobile-collapse > .sticky-sidebar-content {
+    display: none;
+}
+
+.sticky-sidebar-mobile-collapse[open] > .sticky-sidebar-content {
     display: block;
+}
+
+.sticky-sidebar-mobile-summary:focus-visible {
+    outline: 2px solid var(--sp-theme-border-emphasis);
+    outline-offset: 2px;
 }
 
 /* Scrollbar styling for sticky sidebar */
@@ -3351,24 +3367,8 @@ img {
         max-width: 100% !important;
     }
 
-    .sticky-sidebar-mobile-summary {
-        display: block;
-        cursor: pointer;
-        font-weight: 600;
-        color: var(--sp-color-heading);
-        background-color: var(--sp-theme-surface-raised);
-        border: 1px solid var(--sp-color-border);
-        border-radius: var(--sp-radius-md);
-        padding: var(--sp-space-sm);
-    }
-
     .sticky-sidebar-mobile-collapse > .sticky-sidebar-content {
-        display: none;
         margin-top: var(--sp-space-sm);
-    }
-
-    .sticky-sidebar-mobile-collapse[open] > .sticky-sidebar-content {
-        display: block;
     }
 
     /* Mobile sidebar toggle button (show in header) */
@@ -3395,8 +3395,9 @@ img {
         display: none;
     }
 
-    .sticky-sidebar-mobile-collapse:not([open]) > .sticky-sidebar-content {
-        display: block;
+    /* A closed disclosure stays recoverable without JS; focused summaries retain native keys. */
+    .sticky-sidebar-mobile-collapse[open] > .sticky-sidebar-mobile-summary:not(:focus) {
+        display: none;
     }
 }
 

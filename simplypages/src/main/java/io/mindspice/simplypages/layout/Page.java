@@ -112,6 +112,15 @@ public class Page extends HtmlTag {
          * <p>Calling this method also enables independent scrolling. Call before
          * {@code addRow}/{@code addComponents} so subsequent content is routed to the sticky main area.</p>
          *
+         * <p>One native details/summary disclosure starts open. Framework JS keeps it natively
+         * open at widths of 769px and above, restoring each element's remembered native/application
+         * open preference through 768px. Replacement elements initialize independently; ordinary
+         * nested details are unchanged. This is separate from the shell's mobile drawer.</p>
+         *
+         * <p>The generated details has tabindex -1 for programmatic focus fallback, not a Tab stop.
+         * Later caller tabindex changes are preserved. Without JS, a closed desktop disclosure
+         * retains its summary; a focused open summary stays visible for native keyboard recovery.</p>
+         *
          * @param stickyComponent component rendered in the sidebar
          * @param mainWidth main-area width in [1,12]
          * @param sidebarWidth sidebar width in [1,12]
@@ -176,6 +185,7 @@ public class Page extends HtmlTag {
                 // Create and add sidebar
                 HtmlTag sidebarDetails = new HtmlTag("details")
                         .withAttribute("class", "sticky-sidebar-mobile-collapse")
+                        .withAttribute("tabindex", "-1")
                         .withAttribute("open", "open")
                         .withChild(new HtmlTag("summary")
                                 .withAttribute("class", "sticky-sidebar-mobile-summary")

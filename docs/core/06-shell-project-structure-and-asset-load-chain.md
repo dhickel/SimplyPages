@@ -37,8 +37,24 @@ Body behavior:
 - top banner and top nav (if configured; `withAccountBar(...)` remains compatibility alias)
 - mobile sidebar toggle (when sidebar is configured)
 - shell layout container and content target
-- optional inline sidebar script (when collapsible sidebar is enabled)
 - optional inline HTMX nav-active script (when HTMX is enabled)
+
+Desktop collapse and mobile drawer initialization live in the shared framework JS, not a generated
+inline collapse script. All head scripts retain `defer`; custom assets keep their configured order.
+
+## Body-Only Fragments
+
+`ShellBuilder.buildBody()` returns a `.shell-body` fragment with the optional sidebar/mobile toggle
+and the main content target. It omits the document (`doctype`, `html`, `head`, `body`), header,
+banner, top navigation, stylesheet/script tags, and inline scripts. Content targeting, wrapping,
+and the default HTMX content-load attributes still apply; template mode instead uses its explicit slot.
+
+The host document loads framework CSS and JS once, plus HTMX when used. Do not reload assets with
+each fragment. Shared framework JS initializes both existing shells and later direct/HTMX-inserted
+fragments idempotently. The collapsible desktop button remains `Toggle sidebar`, with the legacy
+`toggleSidebar()` activation and `sidebarCollapsed` storage key. Persistence is best effort; when
+storage is denied, toggling and later fragment initialization retain document-local preference.
+The mobile drawer remains separate from desktop collapse and from a Page's native disclosure.
 
 ## CSS Loading Modes
 
