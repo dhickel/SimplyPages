@@ -44,14 +44,14 @@ public class ChatDemoController {
         this.chatDemoPage = chatDemoPage;
     }
 
-    @GetMapping
+    @GetMapping(produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String chatPage(
         @RequestHeader(value = "HX-Request", required = false) String hxRequest,
         HttpSession session,
         HttpServletResponse response
     ) {
-        response.setHeader("Vary", "HX-Request");
+        addHxVary(response);
         if ("true".equalsIgnoreCase(hxRequest)) {
             response.setHeader("HX-Redirect", "/chat");
             return "";
@@ -78,17 +78,17 @@ public class ChatDemoController {
             .build();
     }
 
-    @GetMapping("/history")
+    @GetMapping(value = "/history", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String historyFragment(
         @RequestParam("conversationId") String conversationId,
         HttpServletResponse response
     ) {
-        response.setHeader("Vary", "HX-Request");
+        addHxVary(response);
         return chatDemoPage.renderTranscript(conversationId, chatDemoService.history(conversationId));
     }
 
-    @PostMapping("/messages")
+    @PostMapping(value = "/messages", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String postMessage(
         @RequestParam("conversationId") String conversationId,
@@ -96,17 +96,16 @@ public class ChatDemoController {
         HttpSession session,
         HttpServletResponse response
     ) {
+        addHxVary(response);
         String displayName = resolveDisplayName(session);
         Optional<Long> cursor = chatDemoService.appendExchange(conversationId, message, displayName);
 
         if (cursor.isEmpty()) {
             response.setStatus(400);
-            response.setHeader("Vary", "HX-Request");
             return chatDemoPage.renderTranscript(conversationId, chatDemoService.history(conversationId));
         }
 
         publishUpdate(conversationId, cursor.get());
-        response.setHeader("Vary", "HX-Request");
         return chatDemoPage.renderTranscript(conversationId, chatDemoService.history(conversationId));
     }
 
@@ -134,6 +133,17 @@ public class ChatDemoController {
         }
 
         return emitter;
+    }
+
+    private void addHxVary(HttpServletResponse response) {
+        for (String header : response.getHeaders("Vary")) {
+            for (String token : header.split(",")) {
+                if ("HX-Request".equalsIgnoreCase(token.trim())) {
+                    return;
+                }
+            }
+        }
+        response.addHeader("Vary", "HX-Request");
     }
 
     private void publishUpdate(String conversationId, long cursor) {

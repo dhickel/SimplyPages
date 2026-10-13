@@ -31,6 +31,24 @@ Owns Spring Boot demo app wiring and integration examples for SimplyPages.
 - Hardcoding outdated versions/paths.
 - Coupling demo controllers too tightly to transient test data.
 
+## Private HTML and nested-list demo contract
+
+Rendered controller routes produce `text/html`. Only exact case-insensitive `HX-Request: true` selects an alternative representation; whitespace is not trimmed. Preserve existing `Vary` tokens. Fragment-only endpoints stay fragments, Chat retains full-document `HX-Redirect` navigation, and its SSE endpoint stays `text/event-stream`. Incompatible Accept negotiation may return 406, not a rendered HTML error.
+
+Row insertion accepts `-1 <= position < current row count`; `-1` inserts before the first row, including on an empty page. Preserve the original Spring integer conversion (including hexadecimal and whitespace-bearing spellings). Validate before allocating an ID or changing state. Missing page is 404; malformed or out-of-range positions are 400.
+
+The nested-list example still identifies its kind by the exact title `Nested Editing Demo` and stores CSV using split/trim. Child IDs (`item-0`, `item-1`, …) describe current visible positions, not stable identities: a stale request can address a different current item. Child labels are trimmed, nonblank, comma-free plain text, escaped only when rendered. Preserve existing stored strings without decoding. Serialize/reparse must retain every remaining visible item in order; reject changes that would lose retained empty items. Deleting the final item leaves an empty module.
+
+Child URL templates encode raw module IDs once; the framework substitutes its child placeholder, while child forms encode the raw child ID once. Use strict URI encoding, including reserved characters such as `;`, before HTML attribute escaping. Error-form retries retain the original identity and selected mode; malformed IDs do not become different valid targets. Ordinary generated ASCII URLs remain unchanged.
+
+The child text field uses the existing `TextArea`, with soft wrapping and no extra label restrictions. Internal line breaks and tabs remain allowed. A separate initial rendering LF accounts for HTML's textarea parser rule so leading-newline invalid drafts remain visible. Native textarea values normalize CR and CRLF to LF; bundled HTMX submits that LF value. Save still trims only the label's edges. This is native form semantics, not an exact raw-wire or arbitrary UTF-16 preservation guarantee.
+
+`canEdit` controls all child actions and their endpoint enforcement. `canDelete` only controls whole-parent deletion. OWNER changes content alone. USER starts from live content and replaces the entire previous module proposal with a content-only snapshot; the UI explicitly warns that earlier pending child and property changes are discarded. Approval/rejection reuse the existing flow without changing unrelated fields. Mode and flags are illustrative, not authentication or authorization.
+
+The private `/js/editing-demo.js` asset belongs once in the home/demo full shells and direct editing shell, not in fetched fragments. It enables native HTMX swaps only for server-marked child-modal 4xx responses targeting the current modal host from its own generated controls. Errors retain submitted drafts and accessible escaped messages without page/modal OOB clearing. Successful changes clear the modal and replace the page via existing OOB markup; successful generated child DELETE uses `HX-Reswap: none` to avoid a competing in-band swap. Unmarked, foreign and 5xx failures retain HTMX defaults, with no automatic retries. Use existing framework modal focus/lifecycle handling, not a private focus API or generic fragment script executor.
+
+Applications still own CSRF, authentication, authorization, concurrent state, durable identity and production storage. This private demo is not a production security model or a library API extension.
+
 ## Required Tests
 - Demo integration tests covering major editing/HTMX flows
 - Sanity checks for any new major demo route

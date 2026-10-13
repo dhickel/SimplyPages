@@ -12,6 +12,8 @@ import io.mindspice.simplypages.components.display.Alert;
 import io.mindspice.simplypages.components.display.Modal;
 import io.mindspice.simplypages.components.forms.Button;
 import io.mindspice.simplypages.components.forms.Checkbox;
+import io.mindspice.simplypages.components.forms.Form;
+import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.components.forms.Select;
 import io.mindspice.simplypages.components.forms.TextArea;
 import io.mindspice.simplypages.components.forms.TextInput;
@@ -27,9 +29,12 @@ import io.mindspice.simplypages.components.ListItem;
 import io.mindspice.simplypages.modules.EditableModule;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.NumberUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.HtmlUtils;
+import org.springframework.web.util.UriUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +51,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * - Permission flags for modules and rows
  */
 @Controller
-@RequestMapping("/editing-demo")
+@RequestMapping(value = "/editing-demo", produces = "text/html;charset=UTF-8")
 public class EditingDemoController {
 
     private static final String PAGE_ID = "demo-page";
@@ -194,11 +199,14 @@ public class EditingDemoController {
             @RequestHeader(value = "HX-Request", required = false) String hxRequest,
             HttpServletResponse response
     ) {
-        response.setHeader("Vary", "HX-Request");
+        varyHx(response);
 
+        if (!pages.containsKey(PAGE_ID)) {
+            response.setStatus(404);
+        }
         String content = renderPageView();
 
-        if (hxRequest != null) {
+        if ("true".equalsIgnoreCase(hxRequest)) {
             return content;
         }
 
@@ -359,9 +367,10 @@ public class EditingDemoController {
 
     @DeleteMapping("/delete/{moduleId}")
     @ResponseBody
-    public String deleteModule(@PathVariable String moduleId) {
+    public String deleteModule(@PathVariable String moduleId, HttpServletResponse response) {
         PageData pageData = pages.get(PAGE_ID);
         if (pageData == null) {
+            response.setStatus(404);
             return Alert.danger("Page not found").render();
         }
 
@@ -385,15 +394,28 @@ public class EditingDemoController {
 
     @PostMapping("/insert-row/{position}")
     @ResponseBody
-    public String insertRow(@PathVariable int position) {
+    public String insertRow(@PathVariable String position, HttpServletResponse response) {
+        varyHx(response);
         PageData pageData = pages.get(PAGE_ID);
         if (pageData == null) {
+            response.setStatus(404);
             return Alert.danger("Page not found").render();
+        }
+        final int index;
+        try {
+            index = NumberUtils.parseNumber(position, Integer.class);
+        } catch (NumberFormatException invalid) {
+            response.setStatus(400);
+            return Alert.danger("Insertion position must be an integer.").render();
+        }
+        if (index < -1 || index >= pageData.rows.size()) {
+            response.setStatus(400);
+            return Alert.danger("Insertion position is outside the current page.").render();
         }
 
         String rowId = "row-" + idCounter.incrementAndGet();
-        DemoRow newRow = new DemoRow(rowId, position + 1);
-        pageData.rows.add(position + 1, newRow);
+        DemoRow newRow = new DemoRow(rowId, index + 1);
+        pageData.rows.add(index + 1, newRow);
 
         for (int i = 0; i < pageData.rows.size(); i++) {
             pageData.rows.get(i).position = i;
@@ -611,7 +633,7 @@ public class EditingDemoController {
         Div combinedForm = new Div();
 
         if (mode == EditMode.USER_EDIT) {
-            combinedForm.withChild(Alert.info("Edits will be staged for approval.")
+            combinedForm.withChild(Alert.info("Edits will be staged for approval. Child changes start from live content and replace the whole pending proposal; prior pending child and property changes are discarded.")
                     .withClass("mb-3"));
         }
 
@@ -636,8 +658,8 @@ public class EditingDemoController {
                 .withEditable(editable)     // Pass editable to enable child editing if supported
                 .withSaveUrl(buildSaveUrl(module.id, mode))
                 .withDeleteUrl(buildDeleteUrl(module.id, mode))
-                .withChildEditUrl("/editing-demo/edit-child/" + module.id + "/{id}")
-                .withChildDeleteUrl("/editing-demo/delete-child/" + module.id + "/{id}")
+                .withChildEditUrl(module.canEdit ? childUrlTemplate("edit-child", module.id, mode) : null)
+                .withChildDeleteUrl(module.canEdit ? childUrlTemplate("delete-child", module.id, mode) : null)
                 .withPageContainerId(PAGE_CONTAINER_ID)
                 .withModalContainerId(MODAL_CONTAINER_ID);
 
@@ -646,6 +668,187 @@ public class EditingDemoController {
         }
 
         return builder.build().render();
+    }
+
+    @GetMapping("/edit-child/{moduleId}/{childId}")
+    @ResponseBody
+    public String editChild(@PathVariable String moduleId, @PathVariable String childId,
+            @RequestParam(required = false) String editMode, HttpServletResponse response) {
+        EditMode mode = resolveEditMode(editMode, findModule(moduleId));
+        try {
+            ChildTarget child = resolveChild(moduleId, childId);
+            return buildChildModal(moduleId, childId, mode, child.items().get(child.index()), null);
+        } catch (ChildFailure failure) {
+            return childError(moduleId, childId, mode, "", failure, response);
+        }
+    }
+
+    @PostMapping("/save-child/{moduleId}/{childId}")
+    @ResponseBody
+    public String saveChild(@PathVariable String moduleId, @PathVariable String childId,
+            @RequestParam(required = false) String text,
+            @RequestParam(required = false) String editMode, HttpServletResponse response) {
+        EditMode mode = resolveEditMode(editMode, findModule(moduleId));
+        try {
+            ChildTarget child = resolveChild(moduleId, childId);
+            String label = text == null ? "" : text.trim();
+            if (label.isBlank() || label.contains(",")) {
+                throw new ChildFailure(400, "Enter nonblank text without commas (this demo stores a CSV list).");
+            }
+            List<String> candidate = new ArrayList<>(child.items());
+            candidate.set(child.index(), label);
+            storeChildContent(child.module(), candidate, mode);
+            return buildOobResponse();
+        } catch (ChildFailure failure) {
+            return childError(moduleId, childId, mode, text, failure, response);
+        }
+    }
+
+    @DeleteMapping("/delete-child/{moduleId}/{childId}")
+    @ResponseBody
+    public String deleteChild(@PathVariable String moduleId, @PathVariable String childId,
+            @RequestParam(required = false) String editMode, HttpServletResponse response) {
+        EditMode mode = resolveEditMode(editMode, findModule(moduleId));
+        try {
+            ChildTarget child = resolveChild(moduleId, childId);
+            List<String> candidate = new ArrayList<>(child.items());
+            candidate.remove(child.index());
+            storeChildContent(child.module(), candidate, mode);
+            // Generated child DELETE controls otherwise default to an in-band innerHTML swap.
+            response.setHeader("HX-Reswap", "none");
+            return buildOobResponse();
+        } catch (ChildFailure failure) {
+            return childError(moduleId, childId, mode, "", failure, response);
+        }
+    }
+
+    private record ChildTarget(DemoModule module, List<String> items, int index) { }
+
+    private static class ChildFailure extends RuntimeException {
+        final int status;
+
+        ChildFailure(int status, String message) {
+            super(message);
+            this.status = status;
+        }
+    }
+
+    private ChildTarget resolveChild(String moduleId, String childId) {
+        if (!childId.matches("item-(0|[1-9][0-9]*)")) {
+            throw new ChildFailure(400, "Invalid positional child ID.");
+        }
+        final int index;
+        try {
+            index = Integer.parseInt(childId.substring(5));
+        } catch (NumberFormatException invalid) {
+            throw new ChildFailure(400, "Child position is too large.");
+        }
+        DemoModule module = findModule(moduleId);
+        if (module == null || !"Nested Editing Demo".equals(module.title)) {
+            throw new ChildFailure(404, "Current list module not found.");
+        }
+        if (!module.canEdit) {
+            throw new ChildFailure(403, "This module does not allow child editing.");
+        }
+        List<String> items = visibleItems(module.content);
+        if (index >= items.size()) {
+            throw new ChildFailure(404, "Child position is not in the current list.");
+        }
+        return new ChildTarget(module, items, index);
+    }
+
+    private List<String> visibleItems(String content) {
+        if (content == null || content.isEmpty()) {
+            return List.of();
+        }
+        List<String> items = new ArrayList<>();
+        for (String item : content.split(",")) {
+            items.add(item.trim());
+        }
+        return items;
+    }
+
+    private void storeChildContent(DemoModule module, List<String> candidate, EditMode mode) {
+        String content = String.join(",", candidate);
+        if (!visibleItems(content).equals(candidate)) {
+            throw new ChildFailure(400, "This change would lose a retained empty item in CSV storage. Edit that item first.");
+        }
+        if (mode == EditMode.USER_EDIT) {
+            List<PendingEdit> pending = getPendingEdits();
+            pending.removeIf(edit -> edit.moduleId.equals(module.id));
+            pending.add(new PendingEdit(module.id, Map.of("content", content)));
+        } else {
+            module.content = content;
+        }
+    }
+
+    private String childError(String moduleId, String childId, EditMode mode, String text,
+            ChildFailure failure, HttpServletResponse response) {
+        response.setStatus(failure.status);
+        response.setHeader("X-Editing-Demo-Modal", "true");
+        response.setHeader("HX-Reswap", "innerHTML");
+        return buildChildModal(moduleId, childId, mode, text, failure.getMessage());
+    }
+
+    private String buildChildModal(String moduleId, String childId, EditMode mode, String text, String error) {
+        Div body = new Div().withAttribute("style", "overflow-wrap: anywhere");
+        if (error != null) {
+            body.withChild(new Div().withId("editing-child-error").withAttribute("role", "alert")
+                    .withChild(Alert.danger(error)));
+        }
+        body.withChild(new Paragraph("Child IDs describe current list positions, not persistent identities. Labels must be nonblank and comma-free."));
+        if (mode == EditMode.USER_EDIT) {
+            body.withChild(Alert.warning("Submitting starts from live content and replaces the whole pending proposal. Prior pending child and property changes are discarded."));
+        }
+        String url = childUrlTemplate("save-child", moduleId, mode)
+                .replace("{id}", UriUtils.encode(childId, StandardCharsets.UTF_8));
+        Form form = Form.create().withId("editing-child-form").withMethod(Form.Method.POST)
+                .withAction(url).withHxPost(url).withHxTarget("#" + MODAL_CONTAINER_ID).withHxSwap("none");
+        Div field = new Div().withClass("form-field");
+        field.withChild(new HtmlTag("label").withClass("form-label")
+                .withAttribute("for", "editing-child-text").withInnerText("Text"));
+        // HTML consumes one initial textarea LF; supply it separately to retain leading draft LFs.
+        TextArea input = TextArea.create("text").withRows(3).withWrap("soft")
+                .withValue("\n" + (text == null ? "" : text));
+        input.withId("editing-child-text");
+        input.withAttribute("autofocus", "autofocus");
+        if (error != null) {
+            input.withAttribute("aria-invalid", "true");
+            input.withAttribute("aria-describedby", "editing-child-error");
+        }
+        field.withChild(input);
+        form.withChild(field);
+        form.withChild(Button.create("Save Item").withAttribute("type", "submit"));
+        body.withChild(form);
+        Button cancel = Button.create("Cancel").withStyle(Button.ButtonStyle.SECONDARY);
+        cancel.withAttribute("onclick", "document.getElementById('" + MODAL_CONTAINER_ID + "').innerHTML = ''");
+        return Modal.create().withTitle("Edit List Item").withBody(body).withFooter(cancel)
+                .closeOnBackdrop(false).render();
+    }
+
+    private String childUrlTemplate(String action, String moduleId, EditMode mode) {
+        // Encode raw IDs, including reserved characters such as matrix-parameter ';'.
+        // Only the framework-owned child placeholder remains unencoded until substitution.
+        return "/editing-demo/" + action + "/" + UriUtils.encode(moduleId, StandardCharsets.UTF_8)
+                + "/{id}?editMode=" + mode.name();
+    }
+
+    @ModelAttribute
+    private void renderedResponse(HttpServletResponse response) {
+        varyHx(response);
+    }
+
+    private void varyHx(HttpServletResponse response) {
+        List<String> tokens = new ArrayList<>();
+        for (String value : response.getHeaders("Vary")) {
+            for (String token : value.split(",")) {
+                if (!token.isBlank()) tokens.add(token.trim());
+            }
+        }
+        if (tokens.stream().noneMatch(token -> token.equalsIgnoreCase("HX-Request"))) {
+            tokens.add("HX-Request");
+        }
+        response.setHeader("Vary", String.join(", ", tokens));
     }
 
     private String buildSaveUrl(String moduleId, EditMode mode) {
@@ -824,6 +1027,7 @@ public class EditingDemoController {
                                 .build()
                 )
                 .withContent(new RawHtml(content))
+                .addCustomJs("/js/editing-demo.js")
                 .build();
     }
 }
