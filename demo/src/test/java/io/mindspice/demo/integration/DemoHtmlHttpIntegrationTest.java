@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -111,6 +112,8 @@ class DemoHtmlHttpIntegrationTest {
     @Test
     @DisplayName("Fragment, modal, and forum mappings remain HTML for every HX spelling")
     void fragmentHtmlAndHxMatrix() throws Exception {
+        MockHttpSession chatSession = initializedChatSession();
+        String conversationId = ownedConversation(chatSession);
         List<FragmentRoute> routes = List.of(
             new FragmentRoute("editing modal", () -> get("/editing-demo/edit/module-1")),
             new FragmentRoute("pending edits modal", () -> get("/editing-demo/pending-edits")),
@@ -123,7 +126,7 @@ class DemoHtmlHttpIntegrationTest {
                 .param("commentPage", "1")
                 .param("commentSize", "8")),
             new FragmentRoute("forum comments", () -> get("/forum/topics/missing-topic/comments")),
-            new FragmentRoute("chat history", () -> get("/chat/history").param("conversationId", "matrix-conversation"))
+            new FragmentRoute("chat history", () -> get("/chat/history").session(chatSession).param("conversationId", conversationId))
         );
 
         for (FragmentRoute route : routes) {
@@ -146,9 +149,11 @@ class DemoHtmlHttpIntegrationTest {
     @Test
     @DisplayName("Chat message responses remain truthful HTML for every HX spelling")
     void chatMessageHtmlMatrix() throws Exception {
+        MockHttpSession chatSession = initializedChatSession();
         for (HxCase hx : HX_CASES) {
             MockHttpServletRequestBuilder request = post("/chat/messages")
-                .param("conversationId", "matrix-message")
+                .session(chatSession)
+                .param("conversationId", ownedConversation(chatSession))
                 .param("message", "");
             if (hx.value() != null) {
                 request.header(HX_VARY_TOKEN, hx.value());
@@ -214,7 +219,8 @@ class DemoHtmlHttpIntegrationTest {
             }
         }
 
-        mockMvc.perform(get("/chat/stream").param("conversationId", "matrix-sse"))
+        MockHttpSession chatSession = initializedChatSession();
+        mockMvc.perform(get("/chat/stream").session(chatSession).param("conversationId", ownedConversation(chatSession)))
             .andExpect(result -> assertTrue(result.getRequest().isAsyncStarted()))
             .andExpect(result -> assertEquals(MediaType.TEXT_EVENT_STREAM,
                 MediaType.parseMediaType(result.getResponse().getContentType())));
@@ -272,15 +278,18 @@ class DemoHtmlHttpIntegrationTest {
             assertEquals(406, incompatible.getStatus(), "incompatible Accept for HTML route");
         }
 
+        MockHttpSession chatSession = initializedChatSession();
         MockHttpServletResponse fragment = mockMvc.perform(get("/chat/history")
-                .param("conversationId", "accept-matrix")
+                .session(chatSession)
+                .param("conversationId", ownedConversation(chatSession))
                 .header("Accept", MediaType.TEXT_HTML_VALUE))
             .andReturn().getResponse();
         assertEquals(200, fragment.getStatus());
         assertHtml(fragment, "HTML fragment accept");
 
         MockHttpServletResponse incompatibleFragment = mockMvc.perform(get("/chat/history")
-                .param("conversationId", "accept-matrix")
+                .session(chatSession)
+                .param("conversationId", ownedConversation(chatSession))
                 .header("Accept", MediaType.APPLICATION_JSON_VALUE))
             .andReturn().getResponse();
         assertEquals(406, incompatibleFragment.getStatus());
@@ -333,8 +342,9 @@ class DemoHtmlHttpIntegrationTest {
             isolated.perform(post("/editing-demo/save/module-2").param("editMode", "USER_EDIT").param("content", "Pending"));
             var request = route.get();
             if (hx.value() != null) request.header("HX-Request", hx.value());
-            var response = isolated.perform(request).andReturn().getResponse();
-            assertEquals(200, response.getStatus());
+            var result = isolated.perform(request).andReturn();
+            var response = result.getResponse();
+            assertEquals(result.getRequest().getRequestURI().endsWith("/missing") ? 404 : 200, response.getStatus());
             assertHtml(response, "editing rendered mapping");
             assertVary(response, "editing rendered mapping");
             assertFalse(response.getContentAsString().contains("<!DOCTYPE html>"));
@@ -518,6 +528,19 @@ class DemoHtmlHttpIntegrationTest {
             assertEquals(beforeCounter, counter(controller));
             assertTrue(pages(controller).isEmpty());
         }
+    }
+
+    private MockHttpSession initializedChatSession() throws Exception {
+        var result = mockMvc.perform(get("/chat")).andReturn();
+        assertEquals(200, result.getResponse().getStatus());
+        MockHttpSession session = (MockHttpSession) result.getRequest().getSession(false);
+        assertNotNull(session);
+        assertNotNull(session.getAttribute("chat.demo.conversation.id"));
+        return session;
+    }
+
+    private static String ownedConversation(MockHttpSession session) {
+        return (String) session.getAttribute("chat.demo.conversation.id");
     }
 
     private static MockMvc isolatedEditingMvc(EditingDemoController controller) {

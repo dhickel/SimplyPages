@@ -1,50 +1,18 @@
 const fs = require('node:fs');
-const path = require('node:path');
-const crypto = require('node:crypto');
-const {test, expect} = require('playwright/test');
+const {test, expect} = require('./phase17-editing-fixture');
 
-// These cases use the current packaged application, generated controls and bundled HTMX.
-// Setup/cleanup use existing demo endpoints, never corrected fixtures or intercepted responses.
-test.beforeAll(() => {
-    const jar = path.resolve(__dirname, '../../demo/target/simplypages-demo.jar');
-    const inputs = [
-        'demo/src/main/java/io/mindspice/demo/DemoController.java',
-        'demo/src/main/java/io/mindspice/demo/EditingDemoController.java',
-        'demo/src/main/resources/static/js/editing-demo.js'
-    ];
-    for (const input of inputs) expect(fs.statSync(jar).mtimeMs).toBeGreaterThan(fs.statSync(path.resolve(__dirname, '../..', input)).mtimeMs);
-    console.log('phase16 packaged JAR sha256:', crypto.createHash('sha256').update(fs.readFileSync(jar)).digest('hex'));
-});
-
-async function setup(request, options = {}) {
-    const before = await (await request.get('/editing-demo', {headers: {'HX-Request': 'true'}})).text();
-    const insertion = await request.post('/editing-demo/insert-row/-1');
-    expect(insertion.status()).toBe(200);
-    const row = (await insertion.text()).match(/hx-post="\/editing-demo\/add-module\/(row-\d+)/)[1];
-    const added = await request.post(`/editing-demo/add-module/${row}`, {form: {
-        title: 'Nested Editing Demo', content: options.content ?? 'Alpha,Beta,Gamma', width: '12',
-        editMode: options.mode ?? 'OWNER_EDIT', useMarkdown: 'true',
-        ...(options.canEdit === false ? {} : {canEdit: 'true'}),
-        ...(options.canDelete === false ? {} : {canDelete: 'true'})
-    }});
-    expect(added.status()).toBe(200);
-    const html = await added.text();
-    // EditableModule wrappers carry generated IDs; the module's content keeps its own ID.
-    const ids = [...html.matchAll(/id="(module-\d+)"/g)].map(match => match[1]);
-    const beforeContentIds = new Set([...before.matchAll(/id="(module-\d+)"/g)].map(match => match[1]));
-    const module = ids.find(id => !beforeContentIds.has(id));
-    expect(module).toBeTruthy();
-    return module;
+// Each case owns a packaged-production backend. Only the real module-9 seed is arranged,
+// before listener startup; all markup, routes and assets remain production-generated.
+async function setup(editingFixture, options = {}) {
+    return editingFixture(options);
 }
 
-async function cleanup(request, id) {
-    if (!id) return;
-    expect((await request.delete(`/editing-demo/pending-edits/${id}/reject`)).status()).toBe(200);
-    expect((await request.delete(`/editing-demo/delete/${id}`)).status()).toBe(200);
+async function cleanup(fixture) {
+    await fixture.stop(); // Lifecycle cleanup, never privileged deletes or ignored HTTP failures.
 }
 
-async function enter(page, host) {
-    await page.goto(host === 'direct' ? '/editing-demo' : '/demos/htmx-editing');
+async function enter(page, host, baseURL) {
+    await page.goto(baseURL + (host === 'direct' ? '/editing-demo' : '/demos/htmx-editing'));
     if (host === 'fragment') {
         await page.getByRole('button', {name: 'Load editing demo fragment', exact: true}).click();
         await expect(page.locator('#editing-fragment #page-content')).toHaveCount(1);
@@ -74,6 +42,13 @@ async function clickResponse(page, control, suffix, status = 200) {
     const response = page.waitForResponse(response => response.url().includes(suffix));
     await control.click();
     expect((await response).status()).toBe(status);
+}
+
+async function pendingCards(page, request) {
+    const response = await request.get('/editing-demo/pending-edits');
+    expect(response.status()).toBe(200);
+    return page.evaluate(html => [...new DOMParser().parseFromString(html, 'text/html').querySelectorAll('.card')]
+        .map(card => card.innerHTML), await response.text());
 }
 
 async function uniqueHosts(page) {
@@ -118,15 +93,17 @@ async function geometry(page) {
 }
 
 for (const width of [1440, 390]) for (const host of ['direct', 'fragment']) {
-    test(`phase16 native ${host} ${width}: draft errors, keyboard, repeated replacement and owner OOB`, async ({page, request}) => {
+    test(`phase16 native ${host} ${width}: draft errors, keyboard, repeated replacement and owner OOB`, async ({page, editingFixture}) => {
+        test.setTimeout(90000);
         await page.setViewportSize({width, height: width === 1440 ? 900 : 844});
-        const id = await setup(request, {canDelete: false});
+        const fixture = await setup(editingFixture, {canDelete: false});
+        const {id, request, baseURL} = fixture;
         const pageErrors = [];
         const consoleErrors = [];
         page.on('pageerror', error => pageErrors.push(error.message));
         page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
         try {
-            await enter(page, host);
+            await enter(page, host, baseURL);
             if (host === 'fragment') {
                 // Real repeated launcher replacement does not reload the asset or own another listener.
                 await page.getByRole('button', {name: 'Load editing demo fragment', exact: true}).click();
@@ -164,7 +141,7 @@ for (const width of [1440, 390]) for (const host of ['direct', 'fragment']) {
             await page.keyboard.press('Tab');
             await focusedVisible(page.getByLabel('Text', {exact: true}));
             expect(await page.evaluate(() => ({x: scrollX, y: scrollY}))).toEqual(background);
-            await page.screenshot({path: `/tmp/phase16-reviewer105-repair-${host}-${width}-error.png`});
+            await page.screenshot({path: `/tmp/phase17-senior117-${host}-${width}-error-${Date.now()}.png`});
             await page.keyboard.press('Escape');
             await expect(page.getByRole('dialog')).toHaveCount(0);
             await expect(opener(page, id)).toBeFocused();
@@ -186,18 +163,20 @@ for (const width of [1440, 390]) for (const host of ['direct', 'fragment']) {
             await clickResponse(page, childEdit(page, id), `/edit-child/${id}/item-0`);
             await expect(page.getByLabel('Text', {exact: true})).toHaveValue(value.trim());
             await settleDialog(page);
-            await page.screenshot({path: `/tmp/phase16-reviewer105-repair-${host}-${width}-settled.png`});
+            await page.screenshot({path: `/tmp/phase17-senior117-${host}-${width}-settled-${Date.now()}.png`});
             expect(await geometry(page)).toEqual({withinViewport: true, noOverflow: true, inputVisible: true});
             expect(pageErrors).toEqual([]);
             // Chromium logs the deliberate HTTP 400, not an unforced runtime/transport failure.
             expect(consoleErrors).toHaveLength(2);
             expect(consoleErrors.every(text => /^Failed to load resource: the server responded with a status of 400 \((?:Bad Request)?\)$/.test(text)), JSON.stringify(consoleErrors)).toBe(true);
-        } finally { await cleanup(request, id); }
+        } finally { await cleanup(fixture); }
     });
 
-    test(`phase16 native ${host} ${width}: allowed line breaks survive untouched save and invalid draft edges`, async ({page, request}) => {
+    test(`phase16 native ${host} ${width}: allowed line breaks survive untouched save and invalid draft edges`, async ({page, editingFixture}) => {
+        test.setTimeout(90000);
         await page.setViewportSize({width, height: width === 1440 ? 900 : 844});
-        const id = await setup(request, {content: '\t First\nLine \t,Item 2,Item 3', canDelete: false});
+        const fixture = await setup(editingFixture, {content: '\t First\nLine \t,Item 2,Item 3', canDelete: false});
+        const {id, request, baseURL} = fixture;
         const pageErrors = [];
         page.on('pageerror', error => pageErrors.push(error.message));
         // Compare code units too: rendered text matchers can normalize whitespace and hide data loss.
@@ -224,7 +203,7 @@ for (const width of [1440, 390]) for (const host of ['direct', 'fragment']) {
             await focusedVisible(field);
         };
         try {
-            await enter(page, host);
+            await enter(page, host, baseURL);
             await open();
             await assertValue('First\nLine');
             // No fill: the generated GET and untouched native form must retain the existing label.
@@ -285,7 +264,7 @@ for (const width of [1440, 390]) for (const host of ['direct', 'fragment']) {
             }
             await settleDialog(page);
             expect(await geometry(page)).toEqual({withinViewport: true, noOverflow: true, inputVisible: true});
-            await page.screenshot({path: `/tmp/phase16-reviewer105-repair-${host}-${width}-linebreak-error.png`});
+            await page.screenshot({path: `/tmp/phase17-senior117-${host}-${width}-linebreak-error-${Date.now()}.png`});
             await page.keyboard.press('Escape');
             await expect(page.getByRole('dialog')).toHaveCount(0);
             await expect(opener(page, id)).toBeFocused();
@@ -293,21 +272,25 @@ for (const width of [1440, 390]) for (const host of ['direct', 'fragment']) {
             await assertValue(stored);
             await settleDialog(page);
             expect(await geometry(page)).toEqual({withinViewport: true, noOverflow: true, inputVisible: true});
-            await page.screenshot({path: `/tmp/phase16-reviewer105-repair-${host}-${width}-linebreak-settled.png`});
+            await page.screenshot({path: `/tmp/phase17-senior117-${host}-${width}-linebreak-settled-${Date.now()}.png`});
             expect(pageErrors).toEqual([]);
-        } finally { await cleanup(request, id); }
+        } finally { await cleanup(fixture); }
     });
 
-    test(`phase16 native ${host} ${width}: generated DELETE cancel zero accept one, reindex and empty module`, async ({page, request}) => {
+    test(`phase16 native ${host} ${width}: generated DELETE cancel zero accept one, reindex and empty module`, async ({page, editingFixture}) => {
+        test.setTimeout(90000);
         await page.setViewportSize({width, height: width === 1440 ? 900 : 844});
-        const id = await setup(request, {content: 'First,Last'});
+        const fixture = await setup(editingFixture, {content: 'First,Last', canDelete: false});
+        const {id, request, baseURL} = fixture;
         let deletes = 0;
         const errors = [];
         page.on('request', request => { if (request.method() === 'DELETE' && request.url().includes(`/delete-child/${id}/`)) deletes++; });
         page.on('pageerror', error => errors.push(error.message));
         try {
-            await enter(page, host);
+            await enter(page, host, baseURL);
             await clickResponse(page, opener(page, id), `/edit/${id}`);
+            await expect(page.getByRole('button', {name: 'Delete Module', exact: true})).toHaveCount(0);
+            expect((await request.delete(`/editing-demo/delete/${id}`)).status()).toBe(403);
             page.once('dialog', dialog => dialog.dismiss());
             await childDelete(page, id).click();
             await expect(page.getByRole('dialog')).toHaveCount(1);
@@ -330,16 +313,17 @@ for (const width of [1440, 390]) for (const host of ['direct', 'fragment']) {
             await expect(page.locator(`[hx-get^="/editing-demo/edit-child/${id}/"]`)).toHaveCount(0);
             await uniqueHosts(page);
             expect(errors).toEqual([]);
-        } finally { await cleanup(request, id); }
+        } finally { await cleanup(fixture); }
     });
 }
 
 for (const width of [1440, 390]) for (const host of ['direct', 'fragment']) {
-    test(`phase16 native ${host} ${width}: malformed identity error actions preserve components and mode on real retries`, async ({page, request}) => {
-        test.setTimeout(120000);
+    test(`phase16 native ${host} ${width}: malformed identity error actions preserve components and mode on real retries`, async ({page, editingFixture}) => {
+        test.setTimeout(150000);
         await page.setViewportSize({width, height: width === 1440 ? 900 : 844});
         // OWNER default is intentional: losing the explicit USER query used to mutate live content.
-        const id = await setup(request);
+        const fixture = await setup(editingFixture);
+        const {id, request, baseURL} = fixture;
         const pageErrors = [];
         page.on('pageerror', error => pageErrors.push(error.message));
         const field = page.getByLabel('Text', {exact: true});
@@ -349,7 +333,7 @@ for (const width of [1440, 390]) for (const host of ['direct', 'fragment']) {
             return [...new DOMParser().parseFromString(html, 'text/html').querySelectorAll('.card')].map(card => card.textContent);
         });
         try {
-            await enter(page, host);
+            await enter(page, host, baseURL);
             for (const mode of ['USER_EDIT', 'OWNER_EDIT']) {
                 if (mode === 'OWNER_EDIT') expect((await request.post(`/editing-demo/save/${id}?editMode=USER_EDIT`, {form: {width: '4'}})).status()).toBe(200);
                 const pending = await pendingSnapshot();
@@ -433,16 +417,18 @@ for (const width of [1440, 390]) for (const host of ['direct', 'fragment']) {
                 }
             }
             expect(pageErrors).toEqual([]);
-            fs.writeFileSync(`/tmp/phase16-reviewer105-repair-uri-${host}-${width}.json`, JSON.stringify(evidence, null, 2));
-        } finally { await cleanup(request, id); }
+            fs.writeFileSync(`/tmp/phase17-senior117-uri-${host}-${width}-${Date.now()}.json`, JSON.stringify(evidence, null, 2), {flag: 'wx'});
+        } finally { await cleanup(fixture); }
     });
 }
 
-test('phase16 native USER proposal replaces property/child proposals from live, reject and approve retain unrelated fields', async ({page, request}) => {
-    const id = await setup(request, {mode: 'USER_EDIT', canDelete: false});
+test('phase16 native USER proposal replaces property/child proposals from live, reject and approve retain unrelated fields', async ({page, editingFixture}) => {
+    test.setTimeout(90000);
+    const fixture = await setup(editingFixture, {mode: 'USER_EDIT', canDelete: false});
+    const {id, request, baseURL} = fixture;
     try {
         await request.post(`/editing-demo/save/${id}?editMode=USER_EDIT`, {form: {title: 'Discarded', width: '4', content: 'Discarded'}});
-        await enter(page, 'direct');
+        await enter(page, 'direct', baseURL);
         for (const [index, value] of [[0, 'Discarded child'], [1, 'Approved child']]) {
             await clickResponse(page, opener(page, id), `/edit/${id}`);
             await expect(childEdit(page, id, index)).toHaveAttribute('hx-get', new RegExp('editMode=USER_EDIT$'));
@@ -471,14 +457,22 @@ test('phase16 native USER proposal replaces property/child proposals from live, 
         await clickResponse(page, opener(page, id), `/edit/${id}`);
         await expect(page.getByRole('button', {name: 'Delete Module', exact: true})).toHaveCount(0);
         await expect(page.locator('select[name=width]')).toHaveValue('12');
+        await expect(page.locator('input[name=title]')).toHaveValue('Nested Editing Demo');
+        expect((await request.delete(`/editing-demo/delete/${id}`)).status()).toBe(403);
+        await expect(page.locator(`#${id} li`)).toHaveText(['Alpha', 'Approved child', 'Gamma']);
         await uniqueHosts(page);
-    } finally { await cleanup(request, id); }
+        expect(await fixture.stop()).toEqual({present: true, kind: 'LIST', title: 'Nested Editing Demo',
+            content: 'Alpha,Approved child,Gamma', width: 12, useMarkdown: true,
+            canEdit: true, canDelete: false, mode: 'USER_EDIT'});
+    } finally { await cleanup(fixture); }
 });
 
-test('phase16 native error handling requires one owned modal host', async ({page, request}) => {
-    const id = await setup(request);
+test('phase16 native error handling requires one owned modal host', async ({page, editingFixture}) => {
+    test.setTimeout(90000);
+    const fixture = await setup(editingFixture);
+    const {id, request, baseURL} = fixture;
     try {
-        await enter(page, 'direct');
+        await enter(page, 'direct', baseURL);
         await clickResponse(page, opener(page, id), `/edit/${id}`);
         await clickResponse(page, childEdit(page, id), `/edit-child/${id}/item-0`);
         await page.locator('body').evaluate(body => body.insertAdjacentHTML('beforeend', '<div id="edit-modal-container"></div>'));
@@ -490,17 +484,19 @@ test('phase16 native error handling requires one owned modal host', async ({page
         expect((await response).status()).toBe(400);
         await expect(page.locator('.htmx-added, .htmx-settling, .htmx-request')).toHaveCount(0);
         await expect(page.locator('#edit-modal-container').first().getByLabel('Text', {exact: true})).toHaveValue(draft);
-    } finally { await cleanup(request, id); }
+    } finally { await cleanup(fixture); }
 });
 
-test('phase16 native errors remain default for unmarked, foreign-target and server failures, with no retry', async ({page, request}) => {
-    const id = await setup(request);
+test('phase16 native errors remain default for unmarked, foreign-target and server failures, with no retry', async ({page, editingFixture}) => {
+    test.setTimeout(90000);
+    const fixture = await setup(editingFixture);
+    const {id, request, baseURL} = fixture;
     const errors = [];
     const pageErrors = [];
     page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
     page.on('pageerror', error => pageErrors.push(error.message));
     try {
-        await enter(page, 'fragment');
+        await enter(page, 'fragment', baseURL);
         await clickResponse(page, opener(page, id), `/edit/${id}`);
         await clickResponse(page, childEdit(page, id), `/edit-child/${id}/item-0`);
         await page.getByLabel('Text', {exact: true}).fill('Keep draft');
@@ -532,57 +528,103 @@ test('phase16 native errors remain default for unmarked, foreign-target and serv
         await uniqueHosts(page);
         expect(pageErrors).toEqual([]);
         expect(errors.every(text => /404|500/.test(text))).toBe(true);
-    } finally { await cleanup(request, id); }
+    } finally { await cleanup(fixture); }
 });
 
-test('phase16 locked list omits generated actions and denies direct child operations without mutation', async ({page, request}) => {
-    const id = await setup(request, {canEdit: false, canDelete: true});
+test('phase16 locked list omits generated actions and denies direct child operations without mutation', async ({page, editingFixture}) => {
+    test.setTimeout(90000);
+    const fixture = await setup(editingFixture, {canEdit: false, canDelete: true});
+    const {id, request, baseURL} = fixture;
     try {
-        await enter(page, 'direct');
+        await enter(page, 'direct', baseURL);
         await expect(opener(page, id)).toHaveCount(0);
-        const parent = await (await request.get(`/editing-demo/edit/${id}`)).text();
+        await expect(page.locator(`[hx-delete^="/editing-demo/delete/${id}"]`)).toHaveCount(1);
+        await expect(page.locator(`[hx-get^="/editing-demo/edit-child/${id}/"], [hx-delete^="/editing-demo/delete-child/${id}/"]`)).toHaveCount(0);
+        const lockedPage = await page.locator('#page-content').innerHTML();
+        const pendingBefore = await pendingCards(page, request);
+        expect(pendingBefore).toEqual([]);
+        const deniedParent = await request.get(`/editing-demo/edit/${id}`);
+        expect(deniedParent.status()).toBe(403);
+        const parent = await deniedParent.text();
         expect(parent).not.toContain(`/editing-demo/edit-child/${id}`);
         expect(parent).not.toContain(`/editing-demo/delete-child/${id}`);
-        expect(parent).toContain(`/editing-demo/delete/${id}`);
+        expect(parent).not.toContain('hx-swap-oob');
         expect((await request.get(`/editing-demo/edit-child/${id}/item-0`)).status()).toBe(403);
         expect((await request.post(`/editing-demo/save-child/${id}/item-0`, {form: {text: 'Denied'}})).status()).toBe(403);
         expect((await request.delete(`/editing-demo/delete-child/${id}/item-0`)).status()).toBe(403);
+        expect(await pendingCards(page, request)).toEqual(pendingBefore);
+        expect(await page.locator('#page-content').innerHTML()).toBe(lockedPage);
         await page.reload();
         await expect(page.locator(`#${id} li`)).toHaveText(['Alpha', 'Beta', 'Gamma']);
-    } finally { await cleanup(request, id); }
+        await expect(opener(page, id)).toHaveCount(0);
+        await expect(page.locator(`[hx-delete^="/editing-demo/delete/${id}"]`)).toHaveCount(1);
+    } finally { await cleanup(fixture); }
 });
 
 
-test('phase16 generated stale GET shows marked404 and lossy CSV DELETE shows marked400 without page OOB', async ({page, request}) => {
-    const stale = await setup(request);
-    const csv = await setup(request, {content: 'a, ,b'});
+// The original combined case required two LISTs. Each subcase now owns the sole real seed.
+test('phase16 generated stale GET shows marked404 without page OOB', async ({page, editingFixture}) => {
+    test.setTimeout(90000);
+    const fixture = await setup(editingFixture);
+    const {id, request, baseURL} = fixture;
     const pageErrors = [];
     page.on('pageerror', error => pageErrors.push(error.message));
     try {
-        await enter(page, 'fragment');
-        await clickResponse(page, opener(page, stale), `/edit/${stale}`);
+        await enter(page, 'fragment', baseURL);
+        await clickResponse(page, opener(page, id), `/edit/${id}`);
         const unchanged = await page.locator('#page-content').innerHTML();
-        await request.delete(`/editing-demo/delete/${stale}`);
-        await clickResponse(page, childEdit(page, stale), `/edit-child/${stale}/item-0`, 404);
+        expect((await request.delete(`/editing-demo/delete/${id}`)).status()).toBe(200);
+        const response = page.waitForResponse(response => response.url().includes(`/edit-child/${id}/item-0`));
+        await clickResponse(page, childEdit(page, id), `/edit-child/${id}/item-0`, 404);
+        const error = await response;
+        expect(error.headers()['x-editing-demo-modal']).toBe('true');
+        expect(await error.text()).not.toContain('hx-swap-oob');
         await expect(page.locator('#editing-child-error')).toContainText('Current list module not found.');
         expect(await page.locator('#page-content').innerHTML()).toBe(unchanged);
         await focusedVisible(page.getByLabel('Text', {exact: true}));
-        await page.keyboard.press('Escape');
-        await expect(opener(page, stale)).toBeFocused();
-        await clickResponse(page, opener(page, csv), `/edit/${csv}`);
-        page.once('dialog', dialog => dialog.accept());
-        await clickResponse(page, childDelete(page, csv, 2), `/delete-child/${csv}/item-2`, 400);
-        await expect(page.locator('#editing-child-error')).toContainText('would lose a retained empty item');
-        await expect(page.locator(`#${csv} li`)).toHaveText(['a', '', 'b']);
         await uniqueHosts(page);
+        await page.keyboard.press('Escape');
+        await expect(opener(page, id)).toBeFocused();
+        expect((await request.get(`/editing-demo/edit/${id}`)).status()).toBe(404);
+        expect((await request.delete(`/editing-demo/delete/${id}`)).status()).toBe(404);
+        expect((await request.delete(`/editing-demo/pending-edits/${id}/reject`)).status()).toBe(404);
         expect(pageErrors).toEqual([]);
-    } finally { await cleanup(request, stale); await cleanup(request, csv); }
+    } finally { await cleanup(fixture); }
 });
 
-test('phase16 native USER DELETE stages live-based replacement and approval preserves the module', async ({page, request}) => {
-    const id = await setup(request, {content: 'Only', mode: 'USER_EDIT', canDelete: false});
+test('phase16 generated lossy CSV DELETE shows marked400 without page OOB', async ({page, editingFixture}) => {
+    test.setTimeout(90000);
+    const fixture = await setup(editingFixture, {content: 'a, ,b'});
+    const {id, request, baseURL} = fixture;
+    const pageErrors = [];
+    page.on('pageerror', error => pageErrors.push(error.message));
     try {
-        await enter(page, 'direct');
+        await enter(page, 'fragment', baseURL);
+        await clickResponse(page, opener(page, id), `/edit/${id}`);
+        const unchanged = await page.locator('#page-content').innerHTML();
+        const pending = await pendingCards(page, request);
+        expect(pending).toEqual([]);
+        page.once('dialog', dialog => dialog.accept());
+        const response = page.waitForResponse(response => response.url().includes(`/delete-child/${id}/item-2`));
+        await clickResponse(page, childDelete(page, id, 2), `/delete-child/${id}/item-2`, 400);
+        const error = await response;
+        expect(error.headers()['x-editing-demo-modal']).toBe('true');
+        expect(await error.text()).not.toContain('hx-swap-oob');
+        await expect(page.locator('#editing-child-error')).toContainText('would lose a retained empty item');
+        await expect(page.locator(`#${id} li`)).toHaveText(['a', '', 'b']);
+        expect(await page.locator('#page-content').innerHTML()).toBe(unchanged);
+        expect(await pendingCards(page, request)).toEqual(pending);
+        await uniqueHosts(page);
+        expect(pageErrors).toEqual([]);
+    } finally { await cleanup(fixture); }
+});
+
+test('phase16 native USER DELETE stages live-based replacement and approval preserves the module', async ({page, editingFixture}) => {
+    test.setTimeout(90000);
+    const fixture = await setup(editingFixture, {content: 'Only', mode: 'USER_EDIT', canDelete: false});
+    const {id, request, baseURL} = fixture;
+    try {
+        await enter(page, 'direct', baseURL);
         await clickResponse(page, opener(page, id), `/edit/${id}`);
         await expect(childDelete(page, id)).toHaveAttribute('hx-delete', new RegExp('editMode=USER_EDIT$'));
         await expect(page.getByRole('dialog')).toContainText('prior pending child and property changes are discarded');
@@ -598,5 +640,10 @@ test('phase16 native USER DELETE stages live-based replacement and approval pres
         await expect(page.getByRole('button', {name: 'Delete Module', exact: true})).toHaveCount(0);
         await expect(page.locator(`[hx-get^="/editing-demo/edit-child/${id}/"]`)).toHaveCount(0);
         await expect(page.locator('select[name=width]')).toHaveValue('12');
-    } finally { await cleanup(request, id); }
+        await expect(page.locator('input[name=title]')).toHaveValue('Nested Editing Demo');
+        expect((await request.delete(`/editing-demo/delete/${id}`)).status()).toBe(403);
+        await expect(page.locator(`#${id}`)).toContainText('No items yet.');
+        expect(await fixture.stop()).toEqual({present: true, kind: 'LIST', title: 'Nested Editing Demo',
+            content: '', width: 12, useMarkdown: true, canEdit: true, canDelete: false, mode: 'USER_EDIT'});
+    } finally { await cleanup(fixture); }
 });

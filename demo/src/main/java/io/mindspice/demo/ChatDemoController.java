@@ -6,207 +6,109 @@ import io.mindspice.simplypages.builders.BannerBuilder;
 import io.mindspice.simplypages.builders.ShellBuilder;
 import io.mindspice.simplypages.builders.TopNavBuilder;
 import io.mindspice.simplypages.components.RawHtml;
+import io.mindspice.simplypages.components.display.Alert;
 import io.mindspice.simplypages.core.Component;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Controller
 @RequestMapping("/chat")
 public class ChatDemoController {
-
-    private static final String SESSION_CHAT_CONVERSATION_ID = "chat.demo.conversation.id";
-    private static final String SESSION_CHAT_DISPLAY_NAME = "chat.demo.viewer.name";
-
     private final ChatDemoService chatDemoService;
     private final ChatDemoPage chatDemoPage;
-    private final Map<String, CopyOnWriteArrayList<SseEmitter>> emittersByConversation = new ConcurrentHashMap<>();
 
     public ChatDemoController(ChatDemoService chatDemoService, ChatDemoPage chatDemoPage) {
         this.chatDemoService = chatDemoService;
         this.chatDemoPage = chatDemoPage;
     }
 
-    @GetMapping(produces = MediaType.TEXT_HTML_VALUE)
-    @ResponseBody
-    public String chatPage(
-        @RequestHeader(value = "HX-Request", required = false) String hxRequest,
-        HttpSession session,
-        HttpServletResponse response
-    ) {
-        addHxVary(response);
-        if ("true".equalsIgnoreCase(hxRequest)) {
-            response.setHeader("HX-Redirect", "/chat");
-            return "";
-        }
-
-        String conversationId = resolveConversationId(session);
-        String main = chatDemoPage.renderMain(
-            conversationId,
-            chatDemoService.history(conversationId),
-            null,
-            false
-        );
-
-        return ShellBuilder.create()
-            .withPageTitle("SimplyPages Chat Demo")
-            .withTopBanner(BannerBuilder.create()
-                .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
-                .withTitle("SimplyPages")
-                .withSubtitle("Chat module + SSE smoke test")
-                .build())
-            .withTopNav(buildGlobalTopNav())
-            .withContent(new RawHtml(main))
-            .addCustomJs("/js/chat-demo.js")
-            .build();
-    }
-
-    @GetMapping(value = "/history", produces = MediaType.TEXT_HTML_VALUE)
-    @ResponseBody
-    public String historyFragment(
-        @RequestParam("conversationId") String conversationId,
-        HttpServletResponse response
-    ) {
-        addHxVary(response);
-        return chatDemoPage.renderTranscript(conversationId, chatDemoService.history(conversationId));
-    }
-
-    @PostMapping(value = "/messages", produces = MediaType.TEXT_HTML_VALUE)
-    @ResponseBody
-    public String postMessage(
-        @RequestParam("conversationId") String conversationId,
-        @RequestParam("message") String message,
-        HttpSession session,
-        HttpServletResponse response
-    ) {
-        addHxVary(response);
-        String displayName = resolveDisplayName(session);
-        Optional<Long> cursor = chatDemoService.appendExchange(conversationId, message, displayName);
-
-        if (cursor.isEmpty()) {
-            response.setStatus(400);
-            return chatDemoPage.renderTranscript(conversationId, chatDemoService.history(conversationId));
-        }
-
-        publishUpdate(conversationId, cursor.get());
-        return chatDemoPage.renderTranscript(conversationId, chatDemoService.history(conversationId));
-    }
-
-    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @ResponseBody
-    public SseEmitter stream(@RequestParam("conversationId") String conversationId) {
-        SseEmitter emitter = new SseEmitter(0L);
-        emittersByConversation
-            .computeIfAbsent(conversationId, ignored -> new CopyOnWriteArrayList<>())
-            .add(emitter);
-
-        emitter.onCompletion(() -> removeEmitter(conversationId, emitter));
-        emitter.onTimeout(() -> removeEmitter(conversationId, emitter));
-        emitter.onError(ex -> removeEmitter(conversationId, emitter));
-
-        long currentCursor = chatDemoService.currentCursor(conversationId);
-        try {
-            emitter.send(SseEmitter.event()
-                .name("chat-updated")
-                .id(String.valueOf(currentCursor))
-                .data(currentCursor));
-        } catch (IOException e) {
-            removeEmitter(conversationId, emitter);
-            emitter.completeWithError(e);
-        }
-
-        return emitter;
-    }
-
-    private void addHxVary(HttpServletResponse response) {
+    @ModelAttribute
+    private void privateResponse(HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
         for (String header : response.getHeaders("Vary")) {
-            for (String token : header.split(",")) {
-                if ("HX-Request".equalsIgnoreCase(token.trim())) {
-                    return;
-                }
-            }
+            for (String token : header.split(",")) if ("HX-Request".equalsIgnoreCase(token.trim())) return;
         }
         response.addHeader("Vary", "HX-Request");
     }
 
-    private void publishUpdate(String conversationId, long cursor) {
-        List<SseEmitter> emitters = emittersByConversation.get(conversationId);
-        if (emitters == null || emitters.isEmpty()) {
-            return;
+    @GetMapping(produces = MediaType.TEXT_HTML_VALUE)
+    @ResponseBody
+    public String chatPage(@RequestHeader(value = "HX-Request", required = false) String hxRequest,
+                           HttpServletRequest request, HttpServletResponse response) {
+        if ("true".equalsIgnoreCase(hxRequest)) {
+            response.setHeader("HX-Redirect", "/chat");
+            return ""; // No session or conversation allocation for navigation fragments.
         }
-
-        for (SseEmitter emitter : emitters) {
-            try {
-                emitter.send(SseEmitter.event()
-                    .name("chat-updated")
-                    .id(String.valueOf(cursor))
-                    .data(cursor));
-            } catch (IOException e) {
-                removeEmitter(conversationId, emitter);
-                emitter.completeWithError(e);
-            }
+        HttpSession session = request.getSession();
+        String main;
+        try {
+            ChatDemoService.Snapshot snapshot = chatDemoService.initialize(session, false);
+            main = chatDemoPage.renderMain(snapshot.conversationId(), snapshot.messages(), null, false);
+        } catch (ChatDemoService.ChatFailure failure) {
+            if (failure.status() != 410) throw failure;
+            response.setStatus(410);
+            main = chatDemoPage.renderMain((String) session.getAttribute(ChatDemoService.SESSION_CONVERSATION),
+                List.of(), failure.getMessage(), true);
         }
+        return ShellBuilder.create()
+            .withPageTitle("SimplyPages Chat Demo")
+            .withTopBanner(BannerBuilder.create().withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
+                .withTitle("SimplyPages").withSubtitle("Private chat + finite SSE sandbox").build())
+            .withTopNav(buildGlobalTopNav()).withContent(new RawHtml(main))
+            .addCustomJs("/js/chat-demo.js").build();
     }
 
-    private void removeEmitter(String conversationId, SseEmitter emitter) {
-        List<SseEmitter> emitters = emittersByConversation.get(conversationId);
-        if (emitters == null) {
-            return;
-        }
-        emitters.remove(emitter);
-        if (emitters.isEmpty()) {
-            emittersByConversation.remove(conversationId);
-        }
+    @PostMapping(value = "/new", produces = MediaType.TEXT_HTML_VALUE)
+    @ResponseBody
+    public String startNew(HttpServletRequest request) {
+        ChatDemoService.Snapshot snapshot = chatDemoService.initialize(request.getSession(), true);
+        return chatDemoPage.renderMain(snapshot.conversationId(), snapshot.messages(), null, false);
     }
 
-    private String resolveConversationId(HttpSession session) {
-        Object existing = session.getAttribute(SESSION_CHAT_CONVERSATION_ID);
-        if (existing instanceof String existingId && !existingId.isBlank()) {
-            return existingId;
-        }
-
-        String generated = "conv-" + Instant.now().toEpochMilli() + "-" + UUID.randomUUID().toString().substring(0, 6);
-        session.setAttribute(SESSION_CHAT_CONVERSATION_ID, generated);
-        return generated;
+    @GetMapping(value = "/history", produces = MediaType.TEXT_HTML_VALUE)
+    @ResponseBody
+    public String historyFragment(@RequestParam(value = "conversationId", required = false) String id,
+                                  HttpServletRequest request) {
+        ChatDemoService.Snapshot snapshot = chatDemoService.history(request.getSession(false), id);
+        return chatDemoPage.renderTranscript(snapshot.conversationId(), snapshot.messages());
     }
 
-    private String resolveDisplayName(HttpSession session) {
-        Object existing = session.getAttribute(SESSION_CHAT_DISPLAY_NAME);
-        if (existing instanceof String name && !name.isBlank()) {
-            return name;
-        }
-        String fallback = "Demo User";
-        session.setAttribute(SESSION_CHAT_DISPLAY_NAME, fallback);
-        return fallback;
+    @PostMapping(value = "/messages", produces = MediaType.TEXT_HTML_VALUE)
+    @ResponseBody
+    public String postMessage(@RequestParam(value = "conversationId", required = false) String id,
+                              @RequestParam(value = "message", required = false) String message,
+                              HttpServletRequest request) {
+        // Fixed bounded display fallback: session scope is not authenticated identity.
+        ChatDemoService.Snapshot snapshot = chatDemoService.appendExchange(request.getSession(false), id, message, "Demo User");
+        return chatDemoPage.renderTranscript(snapshot.conversationId(), snapshot.messages());
+    }
+
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @ResponseBody
+    public SseEmitter stream(@RequestParam(value = "conversationId", required = false) String id,
+                             HttpServletRequest request) {
+        return chatDemoService.stream(request.getSession(false), id);
+    }
+
+    @ExceptionHandler(ChatDemoService.ChatFailure.class)
+    public ResponseEntity<String> chatFailure(ChatDemoService.ChatFailure failure) {
+        return ResponseEntity.status(failure.status()).contentType(MediaType.TEXT_HTML)
+            .body(Alert.warning(failure.getMessage()).render());
     }
 
     private Component buildGlobalTopNav() {
-        return TopNavBuilder.create()
-            .withHtmxNavigation(false)
-            .addPrimaryLink("Home", "/home")
-            .addPrimaryLink("Demos", "/demos")
-            .addPrimaryLink("Javadocs", "/javadocs-view")
-            .addPrimaryLink("Forum", "/forum")
-            .addPrimaryLink("Chat", "/chat")
-            .addPrimaryLink("Blog", "/blog")
-            .addPrimaryLink("Docs", "/docs")
-            .build();
+        return TopNavBuilder.create().withHtmxNavigation(false)
+            .addPrimaryLink("Home", "/home").addPrimaryLink("Demos", "/demos")
+            .addPrimaryLink("Javadocs", "/javadocs-view").addPrimaryLink("Forum", "/forum")
+            .addPrimaryLink("Chat", "/chat").addPrimaryLink("Blog", "/blog")
+            .addPrimaryLink("Docs", "/docs").build();
     }
 }

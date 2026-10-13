@@ -57,8 +57,12 @@ public class EditingDemoController {
     private static final String PAGE_ID = "demo-page";
     private static final String PAGE_CONTAINER_ID = "page-content";
     private static final String MODAL_CONTAINER_ID = "edit-modal-container";
+    private static final String PRIVATE_WARNING = "Private shared, non-durable sandbox. Flags and selectable OWNER/USER modes are simulations, not authentication. Approval is a sandbox action. No CSRF, rate protection or production security guarantees.";
+
+    private enum ModuleKind { CONTENT, LIST }
 
     private static class DemoModule {
+        final ModuleKind kind;
         String id;
         String title;
         String content;
@@ -69,6 +73,11 @@ public class EditingDemoController {
         EditMode editMode = EditMode.OWNER_EDIT;
 
         DemoModule(String id, String title, String content, int width) {
+            this(id, title, content, width, ModuleKind.CONTENT);
+        }
+
+        DemoModule(String id, String title, String content, int width, ModuleKind kind) {
+            this.kind = kind;
             this.id = id;
             this.title = title;
             this.content = content;
@@ -109,6 +118,8 @@ public class EditingDemoController {
         }
     }
 
+    // All state access and rendered snapshots share this monitor; HTTP writes follow return.
+    private final Object stateLock = new Object();
     private final Map<String, PageData> pages = new ConcurrentHashMap<>();
     private final Map<String, List<PendingEdit>> pendingEdits = new ConcurrentHashMap<>();
     private final AtomicInteger idCounter = new AtomicInteger(100);
@@ -123,7 +134,7 @@ public class EditingDemoController {
         DemoRow row1 = new DemoRow("row-1", 0);
         DemoModule intro = new DemoModule("module-1", "Welcome to the Editing Demo",
                 "# Phase 6.5 Patterns\n\n" +
-                "This page mirrors the gold-standard behavior from `/test/phase6-5`.\n\n" +
+                "This is a shared, non-durable private editing sandbox.\n\n" +
                 "- Single modal container\n" +
                 "- OOB swaps for save/delete\n" +
                 "- Row insert opens add-module modal\n\n" +
@@ -183,7 +194,7 @@ public class EditingDemoController {
 
         DemoRow row5 = new DemoRow("row-5", 4);
         DemoModule listDemo = new DemoModule("module-9", "Nested Editing Demo",
-                "Simple List Module", 12);
+                "Simple List Module", 12, ModuleKind.LIST);
         // Using 'content' field to store serialized list for demo simplicity or just ignoring it
         listDemo.content = "Item 1,Item 2,Item 3";
         row5.modules.add(listDemo);
@@ -199,6 +210,7 @@ public class EditingDemoController {
             @RequestHeader(value = "HX-Request", required = false) String hxRequest,
             HttpServletResponse response
     ) {
+        return inState(() -> {
         varyHx(response);
 
         if (!pages.containsKey(PAGE_ID)) {
@@ -211,6 +223,7 @@ public class EditingDemoController {
         }
 
         return renderWithShell(content);
+        });
     }
 
     private String renderPageView() {
@@ -228,7 +241,7 @@ public class EditingDemoController {
 
         content.withChild(Header.H1("Editing Demo (Phase 6.5 Patterns)").withClass("mb-3"));
 
-        content.withChild(Alert.success("Gold-standard patterns: single modal container, OOB swaps, row inserts, and permission flags.")
+        content.withChild(Alert.warning(PRIVATE_WARNING)
                 .withClass("mb-3"));
         content.withChild(Alert.info("Try editing modules, adding modules, inserting rows, and approving pending edits.")
                 .withClass("mb-4"));
@@ -256,7 +269,7 @@ public class EditingDemoController {
             for (DemoModule module : demoRow.modules) {
                 io.mindspice.simplypages.core.Module displayModule;
 
-                if (module.title.equals("Nested Editing Demo")) {
+                if (module.kind == ModuleKind.LIST) {
                      SimpleListModule listModule = SimpleListModule.create()
                             .withModuleId(module.id)
                             .withTitle(module.title);
@@ -326,17 +339,17 @@ public class EditingDemoController {
     @ResponseBody
     public String editModule(
             @PathVariable String moduleId,
-            @RequestParam(required = false) String editMode
+            @RequestParam(required = false) String editMode,
+            HttpServletResponse response
     ) {
+        return inState(() -> {
         DemoModule module = findModule(moduleId);
-        if (module == null) {
-            return Modal.create().withTitle("Error")
-                    .withBody(Alert.danger("Module not found"))
-                    .render();
-        }
+        if (module == null) return stateError(response, 404, "Module not found");
+        if (!module.canEdit) return stateError(response, 403, "This module does not allow editing.");
 
         EditMode mode = resolveEditMode(editMode, module);
         return buildEditModal(module, mode);
+        });
     }
 
     @PostMapping("/save/{moduleId}")
@@ -344,14 +357,13 @@ public class EditingDemoController {
     public String saveModule(
             @PathVariable String moduleId,
             @RequestParam Map<String, String> formData,
-            @RequestParam(required = false) String editMode
+            @RequestParam(required = false) String editMode,
+            HttpServletResponse response
     ) {
+        return inState(() -> {
         DemoModule module = findModule(moduleId);
-        if (module == null) {
-            return Modal.create().withTitle("Error")
-                    .withBody(Alert.danger("Module not found"))
-                    .render();
-        }
+        if (module == null) return stateError(response, 404, "Module not found");
+        if (!module.canEdit) return stateError(response, 403, "This module does not allow editing.");
 
         EditMode mode = resolveEditMode(editMode, module);
         if (mode == EditMode.USER_EDIT) {
@@ -363,16 +375,23 @@ public class EditingDemoController {
 
         applyModuleEdits(module, formData);
         return buildOobResponse();
+        });
     }
 
     @DeleteMapping("/delete/{moduleId}")
     @ResponseBody
     public String deleteModule(@PathVariable String moduleId, HttpServletResponse response) {
+        return inState(() -> {
         PageData pageData = pages.get(PAGE_ID);
         if (pageData == null) {
             response.setStatus(404);
             return Alert.danger("Page not found").render();
         }
+
+        DemoModule module = findModule(moduleId);
+        if (module == null) return stateError(response, 404, "Module not found");
+        if (!module.canDelete) return stateError(response, 403, "This module does not allow deletion.");
+        getPendingEdits().removeIf(edit -> edit.moduleId.equals(moduleId));
 
         DemoRow containingRow = null;
         for (DemoRow row : pageData.rows) {
@@ -390,11 +409,13 @@ public class EditingDemoController {
         }
 
         return buildOobResponse();
+        });
     }
 
     @PostMapping("/insert-row/{position}")
     @ResponseBody
     public String insertRow(@PathVariable String position, HttpServletResponse response) {
+        return inState(() -> {
         varyHx(response);
         PageData pageData = pages.get(PAGE_ID);
         if (pageData == null) {
@@ -421,13 +442,19 @@ public class EditingDemoController {
             pageData.rows.get(i).position = i;
         }
 
-        return showAddModuleModal(rowId);
+        return showAddModuleModal(rowId, response);
+        });
     }
 
     @GetMapping("/add-module-modal/{rowId}")
     @ResponseBody
-    public String showAddModuleModal(@PathVariable String rowId) {
-        Div body = new Div();
+    public String showAddModuleModal(@PathVariable String rowId, HttpServletResponse response) {
+        return inState(() -> {
+        DemoRow row = findRow(rowId);
+        if (row == null) return stateError(response, 404, "Row not found");
+        if (!row.canAddModule) return stateError(response, 403, "This row cannot add modules.");
+        if (row.modules.size() >= 3) return stateError(response, 409, "Maximum 3 modules per row");
+        Div body = new Div().withChild(Alert.warning(PRIVATE_WARNING));
 
         Div titleGroup = new Div().withClass("form-field");
         titleGroup.withChild(new Paragraph("Title:").withClass("form-label"));
@@ -484,32 +511,21 @@ public class EditingDemoController {
                 .withBody(body)
                 .withFooter(footer)
                 .render();
+        });
     }
 
     @PostMapping("/add-module/{rowId}")
     @ResponseBody
     public String addModule(
             @PathVariable String rowId,
-            @RequestParam Map<String, String> formData
+            @RequestParam Map<String, String> formData,
+            HttpServletResponse response
     ) {
+        return inState(() -> {
         DemoRow row = findRow(rowId);
-        if (row == null) {
-            return Modal.create().withTitle("Error")
-                    .withBody(Alert.danger("Row not found"))
-                    .render();
-        }
-
-        if (!row.canAddModule) {
-            return Modal.create().withTitle("Error")
-                    .withBody(Alert.warning("This row is locked and cannot add modules."))
-                    .render();
-        }
-
-        if (row.modules.size() >= 3) {
-            return Modal.create().withTitle("Error")
-                    .withBody(Alert.warning("Maximum 3 modules per row"))
-                    .render();
-        }
+        if (row == null) return stateError(response, 404, "Row not found");
+        if (!row.canAddModule) return stateError(response, 403, "This row cannot add modules.");
+        if (row.modules.size() >= 3) return stateError(response, 409, "Maximum 3 modules per row");
 
         String moduleId = "module-" + idCounter.incrementAndGet();
         String title = safeText(formData.getOrDefault("title", "New Module"));
@@ -524,14 +540,16 @@ public class EditingDemoController {
         row.modules.add(newModule);
 
         return buildOobResponse();
+        });
     }
 
     @GetMapping("/pending-edits")
     @ResponseBody
     public String showPendingEditsModal() {
+        return inState(() -> {
         List<PendingEdit> pending = getPendingEdits();
 
-        Div body = new Div();
+        Div body = new Div().withChild(Alert.warning(PRIVATE_WARNING));
         if (pending.isEmpty()) {
             body.withChild(Alert.info("No pending edits."));
         } else {
@@ -572,44 +590,58 @@ public class EditingDemoController {
                 .withBody(body)
                 .withFooter(footer)
                 .render();
+        });
     }
 
     @PostMapping("/pending-edits/{moduleId}/approve")
     @ResponseBody
-    public String approvePendingEdit(@PathVariable String moduleId) {
+    public String approvePendingEdit(@PathVariable String moduleId, HttpServletResponse response) {
+        return inState(() -> {
         List<PendingEdit> pending = getPendingEdits();
         PendingEdit edit = pending.stream()
                 .filter(p -> p.moduleId.equals(moduleId))
                 .findFirst()
                 .orElse(null);
 
-        if (edit == null) {
-            return Modal.create().withTitle("Error")
-                    .withBody(Alert.warning("Pending edit not found"))
-                    .render();
-        }
-
         DemoModule module = findModule(moduleId);
-        if (module != null) {
-            applyPendingEdit(module, edit);
-        }
+        if (edit == null || module == null) return stateError(response, 404, "Module or pending edit not found");
+        if (!module.canEdit) return stateError(response, 403, "This module does not allow approval.");
+        applyPendingEdit(module, edit);
         pending.remove(edit);
 
         return buildOobResponse();
+        });
     }
 
     @DeleteMapping("/pending-edits/{moduleId}/reject")
     @ResponseBody
-    public String rejectPendingEdit(@PathVariable String moduleId) {
+    public String rejectPendingEdit(@PathVariable String moduleId, HttpServletResponse response) {
+        return inState(() -> {
         List<PendingEdit> pending = getPendingEdits();
+        if (pending.stream().noneMatch(edit -> edit.moduleId.equals(moduleId))) {
+            return stateError(response, 404, "Pending edit not found");
+        }
         pending.removeIf(p -> p.moduleId.equals(moduleId));
         return buildOobResponse();
+        });
+    }
+
+    private String inState(java.util.function.Supplier<String> operation) {
+        synchronized (stateLock) {
+            return operation.get();
+        }
+    }
+
+    private String stateError(HttpServletResponse response, int status, String message) {
+        response.setStatus(status);
+        return Modal.create().withTitle("Private Sandbox")
+                .withBody(new Div().withChild(Alert.warning(PRIVATE_WARNING)).withChild(Alert.danger(message))).render();
     }
 
     private String buildEditModal(DemoModule module, EditMode mode) {
         Editable<?> editable;
 
-        if (module.title.equals("Nested Editing Demo")) {
+        if (module.kind == ModuleKind.LIST) {
             SimpleListModule listModule = SimpleListModule.create()
                     .withModuleId(module.id)
                     .withTitle(module.title);
@@ -630,7 +662,7 @@ public class EditingDemoController {
             editable = contentMod;
         }
 
-        Div combinedForm = new Div();
+        Div combinedForm = new Div().withChild(Alert.warning(PRIVATE_WARNING));
 
         if (mode == EditMode.USER_EDIT) {
             combinedForm.withChild(Alert.info("Edits will be staged for approval. Child changes start from live content and replace the whole pending proposal; prior pending child and property changes are discarded.")
@@ -674,13 +706,15 @@ public class EditingDemoController {
     @ResponseBody
     public String editChild(@PathVariable String moduleId, @PathVariable String childId,
             @RequestParam(required = false) String editMode, HttpServletResponse response) {
-        EditMode mode = resolveEditMode(editMode, findModule(moduleId));
-        try {
-            ChildTarget child = resolveChild(moduleId, childId);
-            return buildChildModal(moduleId, childId, mode, child.items().get(child.index()), null);
-        } catch (ChildFailure failure) {
-            return childError(moduleId, childId, mode, "", failure, response);
-        }
+        return inState(() -> {
+            EditMode mode = resolveEditMode(editMode, findModule(moduleId));
+            try {
+                ChildTarget child = resolveChild(moduleId, childId);
+                return buildChildModal(moduleId, childId, mode, child.items().get(child.index()), null);
+            } catch (ChildFailure failure) {
+                return childError(moduleId, childId, mode, "", failure, response);
+            }
+        });
     }
 
     @PostMapping("/save-child/{moduleId}/{childId}")
@@ -688,6 +722,7 @@ public class EditingDemoController {
     public String saveChild(@PathVariable String moduleId, @PathVariable String childId,
             @RequestParam(required = false) String text,
             @RequestParam(required = false) String editMode, HttpServletResponse response) {
+        return inState(() -> {
         EditMode mode = resolveEditMode(editMode, findModule(moduleId));
         try {
             ChildTarget child = resolveChild(moduleId, childId);
@@ -702,12 +737,14 @@ public class EditingDemoController {
         } catch (ChildFailure failure) {
             return childError(moduleId, childId, mode, text, failure, response);
         }
+        });
     }
 
     @DeleteMapping("/delete-child/{moduleId}/{childId}")
     @ResponseBody
     public String deleteChild(@PathVariable String moduleId, @PathVariable String childId,
             @RequestParam(required = false) String editMode, HttpServletResponse response) {
+        return inState(() -> {
         EditMode mode = resolveEditMode(editMode, findModule(moduleId));
         try {
             ChildTarget child = resolveChild(moduleId, childId);
@@ -720,6 +757,7 @@ public class EditingDemoController {
         } catch (ChildFailure failure) {
             return childError(moduleId, childId, mode, "", failure, response);
         }
+        });
     }
 
     private record ChildTarget(DemoModule module, List<String> items, int index) { }
@@ -744,7 +782,7 @@ public class EditingDemoController {
             throw new ChildFailure(400, "Child position is too large.");
         }
         DemoModule module = findModule(moduleId);
-        if (module == null || !"Nested Editing Demo".equals(module.title)) {
+        if (module == null || module.kind != ModuleKind.LIST) {
             throw new ChildFailure(404, "Current list module not found.");
         }
         if (!module.canEdit) {
@@ -791,7 +829,8 @@ public class EditingDemoController {
     }
 
     private String buildChildModal(String moduleId, String childId, EditMode mode, String text, String error) {
-        Div body = new Div().withAttribute("style", "overflow-wrap: anywhere");
+        Div body = new Div().withAttribute("style", "overflow-wrap: anywhere")
+                .withChild(Alert.warning(PRIVATE_WARNING));
         if (error != null) {
             body.withChild(new Div().withId("editing-child-error").withAttribute("role", "alert")
                     .withChild(Alert.danger(error)));

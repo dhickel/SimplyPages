@@ -153,7 +153,7 @@ class EditingDemoChildIntegrationTest {
                         assertEquals("\n" + draft, Jsoup.parse(body(result)).selectFirst("textarea").wholeText());
                     }
                 }
-                call(delete("/editing-demo/pending-edits/module-9/reject"), 200);
+                call(delete("/editing-demo/pending-edits/module-9/reject"), existingProposal ? 200 : 404);
             }
         }
     }
@@ -183,10 +183,10 @@ class EditingDemoChildIntegrationTest {
     void canEditAloneGovernsChildControlsAndEnforcement(boolean edit, boolean deleteParent) throws Exception {
         set("canEdit", edit);
         set("canDelete", deleteParent);
-        var parent = Jsoup.parse(body(call(get("/editing-demo/edit/module-9"), 200)));
+        var parent = Jsoup.parse(body(call(get("/editing-demo/edit/module-9"), edit ? 200 : 403)));
         assertEquals(edit ? 3 : 0, parent.select("[hx-get^=/editing-demo/edit-child]").size());
         assertEquals(edit ? 3 : 0, parent.select("[hx-delete^=/editing-demo/delete-child]").size());
-        assertEquals(deleteParent ? 1 : 0, parent.select("[hx-delete^=/editing-demo/delete/module-9]").size());
+        assertEquals(edit && deleteParent ? 1 : 0, parent.select("[hx-delete^=/editing-demo/delete/module-9]").size());
         call(get(route("edit-child", "item-0")), edit ? 200 : 403);
         call(post(route("save-child", "item-0")).param("text", "Changed"), edit ? 200 : 403);
         call(delete(route("delete-child", "item-0")), edit ? 200 : 403);
