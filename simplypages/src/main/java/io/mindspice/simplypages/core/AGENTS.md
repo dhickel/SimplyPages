@@ -21,7 +21,9 @@ Owns rendering primitives and contracts used by the whole framework.
 - Stable standard tag rendering must not mutate configured structure. Configuration is not thread-safe; retained custom delegates (including framework overrides) must be safe to share, and contexts remain request-owned.
 - Direct slots and text slots honor explicit compiled entries and COMPILE_ON_FIRST_HIT; contexts remain request-owned.
 - Tag/attribute names reject markup delimiters; attribute replacement is case-insensitive.
-- Failed module builds restore children and attributes before retry; subclasses own rollback of external effects.
+- Failed initial Module builds restore entry-state ordered shallow children/attributes/cached id and remain retryable. Explicit rebuild snapshots before clearing and also restores prior built status on RuntimeException/Error, rethrowing the same failure; ordinary render of a previously built instance does not retry. Caller changes before rebuilding belong to entry state. Module id/title/text/slots/trusted HTML/subclass/descendant/external state is excluded, not a deep transaction.
+- Paragraph/Divider/EditableRow/EditablePage preserve stored state during render/compile while retaining their public render overrides and live template configuration. Use component-local temporary derivation, not new generic core hooks.
+- Preserve existing fluent descriptors/bridges and Column.withAttribute's declared HtmlTag return for legacy subclass compatibility.
 
 ## Do
 - Add core API only when needed by multiple packages.

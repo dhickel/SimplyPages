@@ -49,6 +49,49 @@ are included in compiled templates. Custom renderers retain their `render(Render
 behavior. Code blocks escape both code and title text; modal body/footer content receives
 the render context.
 
+### Paragraph
+
+Alignment helpers replace only the known whole `align-left`, `align-center`, `align-right`
+and `align-justify` tokens in temporary output, preserving other tokens and their order.
+Logical class aliases such as `CLASS` are recognized. Stored attributes/children remain unchanged;
+text and inherited children retain normal escaping, slots and context dispatch. Its compiled
+renderer stays live, including later alignment or text configuration.
+
+### Divider
+
+Divider derives classes/styles without changing stored configuration. Horizontal output reserves
+these **exact lowercase** inline properties and the **whole** outer `divider-with-text` token:
+
+| Text state | Active generated properties | Suppressed properties/token |
+|---|---|---|
+| `null` | `border-top`, `width`, `display`, `line-height` | `position`, `text-align`, `margin`, `divider-with-text` |
+| Any non-null string, including empty | `position`, `text-align`, `margin`, `divider-with-text` | `border-top`, `width`, `display`, `line-height` |
+
+Active generated values override the same canonical caller property. Inactive names/token are
+suppressed from **temporary output even when caller-supplied**, while stored attributes survive.
+Vertical output generates only `border-left` and `display`, ignores text and performs no inactive
+cleanup or ownership of the outer text token. Vertical height remains configurable;
+`withHeight` on a horizontal divider is still a no-op.
+
+Logical `CLASS`/`STYLE` aliases work, but CSS names and class tokens are case-sensitive for this
+cleanup. Outside declarations/classes, case variants (`WIDTH`), height, custom properties,
+border shorthands/longhands and construction/opposite-orientation tokens remain caller-owned.
+Cleanup does not restore caller-replaced base classes or prevent every possible CSS conflict.
+Generated escaped text precedes inherited children and owns `divider-text` on its span.
+Templates retain the renderer live, including text/style configuration changes.
+
+**Migration:** do not rely on inactive canonical inline names or the reserved outer token surviving
+in a horizontal divider's rendered output. Put independent styling on a surrounding component or
+use a non-reserved declaration. No historical render styling accumulates on the configured object.
+Finish configuration before sharing; custom children and contexts retain separate obligations.
+
+### SimpleListModule
+
+Configure items before building. `addItem` and `removeItem` update only the model and current
+editable descriptors; `applyEdits` explicitly rebuilds existing markup. Raw non-null item ids
+are literal lookup identities; positional `item-N` descriptors for unassigned ids are separate
+and may renumber. See [item identity and lifecycle](editing-api-reference.md#simplelistmodule-item-identity-and-lifecycle).
+
 ### Modal
 
 `Modal.create()` renders a `.modal-backdrop` containing a `.modal-container` dialog.

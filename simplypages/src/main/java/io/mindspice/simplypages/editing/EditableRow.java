@@ -23,8 +23,11 @@ import java.util.List;
  * <p>Lifecycle: module list is mutable via configuration methods; the registered-module row/column
  * structure is rebuilt on each render call with equal-width columns (fill columns above twelve).</p>
  *
- * <p>Mutability and thread-safety: mutable and not thread-safe. Intended for request-scoped page
- * builder usage.</p>
+ * <p>Rendering uses a temporary tag and does not change stored wrapper attributes or children.
+ * Generic inherited children remain stored but are not emitted; only the supplied row and
+ * generated registration/add-control composition is emitted. Templates retain this renderer live.
+ * Finish mutable configuration before sharing; supplied custom renderers, modules and request
+ * contexts retain their own lifecycle and sharing obligations.</p>
  */
 public class EditableRow extends HtmlTag {
 
@@ -198,10 +201,10 @@ public class EditableRow extends HtmlTag {
     /** Renders the supplied row, then rebuilt editable-module columns and an optional add control. */
     @Override
     public String render(RenderContext context) {
-        children.clear();
+        RenderTag output = new RenderTag();
 
         if (wrappedRow != null) {
-            super.withChild(wrappedRow);
+            output.withChild(wrappedRow);
         }
 
         // Build a fresh row with all modules at proper column widths
@@ -226,7 +229,7 @@ public class EditableRow extends HtmlTag {
             }
         }
 
-        super.withChild(row);
+        output.withChild(row);
 
         // Add "Add Module" button if space available AND adding is permitted
         if (canAddModule && modules.size() < maxModulesPerRow) {
@@ -241,10 +244,21 @@ public class EditableRow extends HtmlTag {
             addBtn.withAttribute("hx-swap", "innerHTML");
 
             addModuleSection.withChild(addBtn);
-            super.withChild(addModuleSection);
+            output.withChild(addModuleSection);
         }
 
-        return super.render(context);
+        return output.render(context);
+    }
+
+    private final class RenderTag extends HtmlTag {
+        private RenderTag() {
+            super(EditableRow.this.tagName, EditableRow.this.selfClosing);
+            attributes.addAll(EditableRow.this.attributes);
+            id = EditableRow.this.id;
+            innerText = EditableRow.this.innerText;
+            innerTextSlot = EditableRow.this.innerTextSlot;
+            trustedHtml = EditableRow.this.trustedHtml;
+        }
     }
 
     @Override

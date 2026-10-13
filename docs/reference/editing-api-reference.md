@@ -77,7 +77,11 @@ control with position `0` for an empty page, or one after each supplied row with
 change endpoint configuration on rows supplied through `addEditableRow`.
 
 Templates are checked at the setter; a used page id is checked and encoded at render time.
-The wrapper remains mutable and not thread-safe. Creation does not validate the page id.
+Creation does not validate the page id. Rendering and compilation leave stored wrapper
+attributes, children and row configuration unchanged. Generic inherited children remain stored
+but are not emitted. Templates retain this renderer live, including later row/URL configuration.
+Finish configuration before sharing; row delegates, descendants and request contexts have separate
+sharing obligations. These generic insertion indices are not a private controller's position policy.
 
 ## EditableRow
 
@@ -98,8 +102,11 @@ Each wrapper render passes the same `RenderContext` to the supplied row exactly 
 including a custom `render(RenderContext)` override. Rendering through `Template` retains
 this dispatch and resolves changing context values rather than flattening the source renderer.
 The wrapper does not mutate the supplied row's structure; custom renderers and descendants
-remain responsible for their own behavior. `EditableRow` itself is mutable and not thread-safe,
-including when retained by a template.
+remain responsible for their own behavior. The wrapper also leaves its own stored attributes,
+children and registration configuration unchanged during rendering and compilation. Generic
+inherited children remain stored but are not emitted. Templates keep this renderer live, including
+later registration, gate, mode and URL changes. Finish configuration before sharing; registered
+modules, source delegates and contexts must independently meet their lifecycle/sharing requirements.
 
 Configuration methods:
 
@@ -212,6 +219,23 @@ to the pre-fragment query. It retains all existing parameters, including an exis
 and preserves the fragment exactly. Empty queries and trailing `?`/`&` receive no extra separator.
 For example, `/edit?tab=details#section?note` becomes
 `/edit?tab=details&editMode=OWNER_EDIT#section?note`. A null mode leaves the complete URL unchanged.
+
+## SimpleListModule item identity and lifecycle
+
+`findItem(id)` returns the first item with a **non-null raw** `ListItem.getId()` exactly equal to
+a non-null query. `removeItem(id)` removes every such duplicate. Null queries match/remove
+nothing; unassigned ids are skipped. Non-null spelling is literal, including empty strings,
+spaces, case and Unicode. No trimming, normalization or descriptor fallback occurs.
+
+`getEditableChildren()` remains model-derived. An unassigned raw id receives a positional
+`item-N` descriptor without assigning that id to the item. Descriptors can renumber and can
+collide with caller-assigned raw ids; they are not stable persistence identities. `getItems()`
+returns a copied list, not the mutable model collection.
+
+Adding/removing items is configuration-only: it changes the model and current descriptors but
+does not build or rebuild an already-built child tree. Configure before building. `applyEdits`
+explicitly rebuilds, making current model changes visible in markup. Applications own their
+editing lookup/persistence policy and must not infer it from these raw convenience methods.
 
 ## ModuleEditHandler<T>
 

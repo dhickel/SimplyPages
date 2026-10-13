@@ -62,6 +62,11 @@ SimplyPages is an active internal Java-first SSR framework for building data-hea
 ### Module Lifecycle Contract
 - Modules are built lazily and idempotently through `build()`
 - `buildContent()` is structure composition, not per-request mutation logic
+- Failed initial builds restore entry-state shallow children/attributes/cached id and remain retryable. Explicit rebuild failure also restores prior build status before rethrowing the same RuntimeException/Error: an already-built module does not retry during ordinary render. This excludes moduleId/title/text/slots/trusted HTML/subclass/descendant/external state; no deep transaction guarantee.
+- Paragraph/Divider/EditableRow/EditablePage derive readonly temporary output and remain live template delegates. Editable wrappers retain generic inherited children without emitting them; source rows keep exactly-once same-context dispatch. Finish configuration before sharing; arbitrary delegates/contexts/descendants have separate obligations.
+- Divider reserves exact orientation-local generated styling in temporary output; inactive canonical horizontal names and whole divider-with-text token are suppressed even when caller-configured. Preserve outside/case-variant styles and stored configuration; see the catalog for the exact namespace.
+- SimpleList lookup/removal uses literal non-null raw item ids, not positional editable descriptors. add/remove are configuration-only; applyEdits explicitly rebuilds.
+- Preserve actual fluent declared returns/bridges; Column.withAttribute declares HtmlTag for legacy subclass source compatibility. Do not introduce a blanket covariant/self-type rewrite.
 - Module width methods (`withWidth`, `withMaxWidth`, `withMinWidth`) are intentionally blocked on `Module`
 - Layout controls module sizing via `Row`/`Column` containers
 

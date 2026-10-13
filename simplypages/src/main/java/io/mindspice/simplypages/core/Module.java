@@ -122,25 +122,29 @@ public abstract class Module extends HtmlTag {
     protected abstract void buildContent();
 
     /**
-     * Clears children, resets build guard, and immediately rebuilds structure.
+     * Replaces built structure immediately, restoring entry-state children, attributes, cached id
+     * and build status if composition throws a {@link RuntimeException} or {@link Error}.
+     *
+     * <p>The snapshot is shallow and includes caller changes made before this call. It does not
+     * restore module id, title, text/slots, subclass fields, descendants or external effects.
+     * A previously built module remains built after failure; a never-built module remains retryable.</p>
      */
     protected void rebuildContent() {
         synchronized (buildLock) {
-            children.clear();
-            built = false;
-            doBuildLocked();
+            doBuildLocked(true);
         }
     }
 
     /**
-     * Ensures module structure is built once. Failed builds restore child and attribute
-     * collections so a later call can retry; subclasses own rollback of other side effects.
+     * Ensures module structure is built once. Failed initial builds restore shallow child and
+     * attribute collections and cached id so a later call can retry. Subclasses own rollback of
+     * all other state and side effects; see {@link #rebuildContent()} for the explicit rebuild boundary.
      */
     public Module build() {
         if (!built) {
             synchronized (buildLock) {
                 if (!built) {
-                    doBuildLocked();
+                    doBuildLocked(false);
                 }
             }
         }
@@ -174,11 +178,16 @@ public abstract class Module extends HtmlTag {
     /**
      * Build implementation that must run while holding {@link #buildLock}.
      */
-    private void doBuildLocked() {
+    private void doBuildLocked(boolean rebuild) {
         var originalChildren = new java.util.ArrayList<>(children);
         var originalAttributes = new java.util.ArrayList<>(attributes);
         String originalId = id;
+        boolean originallyBuilt = built;
         try {
+            if (rebuild) {
+                children.clear();
+                built = false;
+            }
             ensureModuleClass();
             buildContent();
             built = true;
@@ -188,6 +197,7 @@ public abstract class Module extends HtmlTag {
             attributes.clear();
             attributes.addAll(originalAttributes);
             id = originalId;
+            built = originallyBuilt;
             throw failure;
         }
     }

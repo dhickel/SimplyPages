@@ -128,6 +128,25 @@ class PageTest {
     }
 
     @Test
+    void standardPagePreservesConfiguredRowsAcrossDirectCompiledAndRepeatedRendering() {
+        Row first = new Row().withId("first-row");
+        Row second = new Row().withId("second-row");
+        first.withInnerText("first");
+        second.withInnerText("second");
+        Page page = Page.builder().addRow(first).addRow(second).build();
+
+        String direct = page.render();
+        String compiled = page.compile().render(RenderContext.empty());
+        String repeated = page.render();
+
+        assertEquals(direct, compiled);
+        assertEquals(direct, repeated);
+        assertTrue(direct.indexOf("id=\"first-row\"") < direct.indexOf("id=\"second-row\""));
+        assertTrue(direct.contains("first"));
+        assertTrue(direct.contains("second"));
+    }
+
+    @Test
     void nativeDisclosureDirectAndCompiledRenderingPreserveContextAndEscaping() {
         SlotKey<String> key = SlotKey.of("sidebar.text");
         Page page = Page.builder().withStickySidebar(new HtmlTag("a")

@@ -7,7 +7,9 @@ import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
 import io.mindspice.simplypages.core.SlotKey;
 import io.mindspice.simplypages.core.Template;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
@@ -74,6 +76,34 @@ class AccountWidgetTest {
         assertTrue(compiled.contains("<strong>&lt;extra&gt;</strong><em>7</em>"));
         assertFalse(compiled.contains("Sign Up"));
         assertEquals(compiled, widget.render(RenderContext.builder().with(key, "<extra>").build()));
+    }
+
+    @Test
+    void generatedAccountContentDoesNotRewriteConfiguredChildren() throws Exception {
+        SlotKey<String> key = SlotKey.of("account-preserved-child");
+        AccountWidget widget = AccountWidget.createGuest().withSignupUrl(null);
+        HtmlTag child = new HtmlTag("strong").withInnerText(key);
+        widget.withChild(child);
+        List<?> configured = storedChildren(widget);
+        Template template = widget.compile();
+
+        for (String value : List.of("first<&", "second")) {
+            RenderContext directContext = RenderContext.of(key, value);
+            String direct = widget.render(directContext);
+            String compiled = template.render(RenderContext.of(key, value));
+            assertEquals(direct, compiled);
+            assertEquals(value, org.jsoup.Jsoup.parseBodyFragment(direct).selectFirst("strong").text());
+            assertEquals(1, storedChildren(widget).size());
+            assertSame(child, storedChildren(widget).get(0));
+            assertSame(configured, storedChildren(widget));
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<?> storedChildren(AccountWidget widget) throws Exception {
+        Field field = HtmlTag.class.getDeclaredField("children");
+        field.setAccessible(true);
+        return (List<?>) field.get(widget);
     }
 
     @Test

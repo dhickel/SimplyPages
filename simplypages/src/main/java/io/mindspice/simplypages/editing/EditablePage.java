@@ -17,9 +17,10 @@ import java.util.List;
  * <p>Lifecycle: row state is mutated via {@link #addEditableRow(EditableRow)} and markup is
  * rebuilt on each render call.</p>
  *
- * <p>Mutability and thread-safety: mutable and not thread-safe. Mutate in request-scoped
- * page-builder flows; for reuse, stop mutating shared instances and render stable structures with
- * per-request context data.</p>
+ * <p>Rendering composes temporary markup without changing stored attributes or children.
+ * Generic inherited children remain stored but are not emitted. Templates retain this renderer
+ * live, including later row and URL configuration. Finish configuration before sharing; row
+ * delegates, descendants and request contexts retain their own sharing obligations.</p>
  */
 public class EditablePage extends HtmlTag {
 
@@ -83,11 +84,12 @@ public class EditablePage extends HtmlTag {
     }
 
     /**
-     * Rebuilds and renders page-builder markup for current rows.
+     * Renders temporary page-builder markup for current rows. Empty pages emit position zero;
+     * nonempty pages emit positions one through the row count, after their respective rows.
      */
     @Override
     public String render(RenderContext context) {
-        children.clear();
+        RenderTag output = new RenderTag();
 
         Div content = new Div().withClass("editable-page");
 
@@ -133,9 +135,20 @@ public class EditablePage extends HtmlTag {
             }
         }
 
-        super.withChild(content);
+        output.withChild(content);
 
-        return super.render(context);
+        return output.render(context);
+    }
+
+    private final class RenderTag extends HtmlTag {
+        private RenderTag() {
+            super(EditablePage.this.tagName, EditablePage.this.selfClosing);
+            attributes.addAll(EditablePage.this.attributes);
+            id = EditablePage.this.id;
+            innerText = EditablePage.this.innerText;
+            innerTextSlot = EditablePage.this.innerTextSlot;
+            trustedHtml = EditablePage.this.trustedHtml;
+        }
     }
 
     @Override

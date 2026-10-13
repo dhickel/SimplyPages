@@ -13,7 +13,9 @@ Owns high-level composed modules built from components/layout primitives.
 - Modules compose structure in `buildContent()`.
 - Module lifecycle uses `build()` idempotently.
 - Module direct width APIs are blocked; layout should size modules.
-- Public fluent APIs remain chainable and readable.
+- Public fluent APIs remain chainable and readable; preserve declared returns/erased bridges rather than standardizing a self type. Module class methods append; layout/class replacement policies remain separate, and Column.withAttribute declares HtmlTag for legacy source compatibility.
+- Explicit Module rebuild failure restores entry-state ordered shallow children/attributes/cached id/priorbuilt on RuntimeException/Error and rethrows the same failure. Previously built instances remain renderable without ordinary retry; never-built instances retry. Module id/title/text/slots/trusted HTML/subclass/descendant/external state is outside rollback.
+- SimpleList find/remove match only literal non-null raw item ids; nullquery no match/removal, unassigned skipped, first find/all duplicate removals. Positional item-N editable descriptors may renumber/collide without assigning raw ids. add/remove update configuration/current descriptors only; built markup changes through explicit applyEdits rebuild. Do not add automatic/eager rebuilding, fallback identity or a new ID grammar.
 
 - Tabs and accordions generate stable, unique per-instance fallback IDs when no module ID is supplied; explicit module IDs retain the existing target ID format.
 - Tab triggers have type=button so embedding a tab module in a form does not submit it.

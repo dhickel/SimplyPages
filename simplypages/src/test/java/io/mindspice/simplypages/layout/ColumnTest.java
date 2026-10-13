@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -53,6 +54,21 @@ class ColumnTest {
     void testInheritedAttributeOverrideRemainsSourceCompatible() {
         HtmlTag configured = new LegacyColumnSubclass().withAttribute("class", "custom");
         assertEquals("<div class=\"custom col\"></div>", configured.render());
+    }
+
+    @Test
+    void testFluentDeclarationsRetainLegacyReturnsAndBridges() throws NoSuchMethodException {
+        var withAttribute = Column.class.getDeclaredMethod("withAttribute", String.class, String.class);
+        assertEquals(HtmlTag.class, withAttribute.getReturnType());
+        assertFalse(withAttribute.isBridge(), "withAttribute must retain the inherited HtmlTag descriptor");
+        assertEquals(Column.class, Column.class.getDeclaredMethod("withId", String.class).getReturnType());
+        assertEquals(Column.class, Column.class.getDeclaredMethod("withChild", io.mindspice.simplypages.core.Component.class).getReturnType());
+        assertEquals(Column.class, Column.class.getDeclaredMethod("withWidth", int.class).getReturnType());
+        assertEquals(HtmlTag.class,
+            LegacyColumnSubclass.class.getDeclaredMethod("withAttribute", String.class, String.class).getReturnType());
+
+        HtmlTag legacy = new LegacyColumnSubclass().withAttribute("data-legacy", "value");
+        assertTrue(legacy.render().contains("data-legacy=\"value\""));
     }
 
     @Test

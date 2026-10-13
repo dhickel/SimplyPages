@@ -70,6 +70,40 @@ class TemplateTest {
     }
 
     @Test
+    void customRenderOverrideRemainsLiveAfterCompilationAndUsesPublicRenderDescriptors() {
+        SlotKey<String> key = SlotKey.of("live-render-value");
+        AtomicInteger calls = new AtomicInteger();
+        class LiveTag extends HtmlTag {
+            private LiveTag() {
+                super("article");
+            }
+
+            @Override
+            public String render(RenderContext context) {
+                calls.incrementAndGet();
+                return "<section data-value=\"" + context.get(key).orElse("missing") + "\">"
+                        + super.render(context) + "</section>";
+            }
+        }
+
+        LiveTag tag = new LiveTag();
+        tag.withInnerText("body");
+        Template template = tag.compile();
+        assertEquals(0, calls.get());
+
+        tag.withClass("changed");
+        tag.withChild(new Paragraph("added after compile"));
+        RenderContext context = RenderContext.of(key, "first");
+        String expected = tag.render(context);
+        assertEquals(expected, template.render(RenderContext.of(key, "first")));
+        assertTrue(expected.contains("class=\"changed\""));
+        assertTrue(expected.contains("added after compile"));
+
+        assertEquals(expected.replace("first", "map"), tag.render(Map.of(key, "map")));
+        assertEquals(3, calls.get());
+    }
+
+    @Test
     void testConcurrentFreshDefaultColumnRenderingWithoutWarmup() throws Exception {
         for (int round = 0; round < 24; round++) {
             for (boolean compiled : new boolean[] {false, true}) {

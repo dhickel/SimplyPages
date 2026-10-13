@@ -1,17 +1,22 @@
 package io.mindspice.simplypages.components;
 
 import io.mindspice.simplypages.core.Attribute;
+import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Paragraph component with alignment class management helpers.
  *
- * <p>Mutable and not thread-safe. Text/alignment settings are updated in place and reflected at render time. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
+ * <p>Text/alignment configuration is mutable and must finish before sharing. Rendering derives
+ * alignment classes without changing stored attributes or children. Compiled templates retain
+ * this renderer as a live delegate, so later configuration is reflected in their output.
+ * Custom child renderers and request contexts retain their own sharing requirements.</p>
  */
 public class Paragraph extends HtmlTag {
 
@@ -115,7 +120,7 @@ public class Paragraph extends HtmlTag {
     }
 
     /**
-     * Internal method to set alignment and reset applied flag.
+     * Sets the alignment used by the temporary rendering tag.
      */
     private void setAlignmentInternal(String newAlignment) {
         this.alignment = newAlignment;
@@ -123,13 +128,30 @@ public class Paragraph extends HtmlTag {
 
     @Override
     public String render(RenderContext context) {
+        RenderTag output = new RenderTag();
         if (alignment != null) {
-            updateAlignmentClass();
+            updateAlignmentClass(output);
         }
-        return super.render(context);
+        return output.render(context);
     }
 
-    private void updateAlignmentClass() {
+    private final class RenderTag extends HtmlTag {
+        private RenderTag() {
+            super(Paragraph.this.tagName, Paragraph.this.selfClosing);
+            attributes.addAll(Paragraph.this.attributes);
+            id = Paragraph.this.id;
+            innerText = Paragraph.this.innerText;
+            innerTextSlot = Paragraph.this.innerTextSlot;
+            trustedHtml = Paragraph.this.trustedHtml;
+        }
+
+        @Override
+        protected Stream<Component> getChildrenStream() {
+            return Paragraph.this.getChildrenStream();
+        }
+    }
+
+    private void updateAlignmentClass(HtmlTag output) {
         Optional<Attribute> classAttr = attributes.stream()
             .filter(attr -> "class".equalsIgnoreCase(attr.name()))
             .findFirst();
@@ -151,7 +173,7 @@ public class Paragraph extends HtmlTag {
         }
 
         if (!classes.isEmpty()) {
-            this.withAttribute("class", String.join(" ", classes));
+            output.withAttribute("class", String.join(" ", classes));
         }
     }
 

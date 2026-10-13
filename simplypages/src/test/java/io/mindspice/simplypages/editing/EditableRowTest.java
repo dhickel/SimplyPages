@@ -2,6 +2,7 @@ package io.mindspice.simplypages.editing;
 
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.core.Component;
+import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
 import io.mindspice.simplypages.core.Slot;
 import io.mindspice.simplypages.core.SlotKey;
@@ -18,8 +19,14 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -376,16 +383,19 @@ class EditableRowTest {
         for (int i = 0; i < count; i++) {
             wrapper.addEditableModule(ContentModule.create().withContent("Registered " + i), "module-" + i);
         }
-        Element outer = Jsoup.parse(wrapper.render()).getElementById("row-outer");
-        assertEquals("col col-9", outer.child(0).child(0).className());
-        Element generated = outer.child(1);
-        assertEquals(count, generated.childrenSize());
-        for (int i = 0; i < count; i++) {
-            Element column = generated.child(i);
-            assertEquals(width == 0 ? "col col-fill" : "col col-" + width, column.className());
-            assertEquals("Registered " + i, column.selectFirst("#module-" + i).text());
+        for (boolean compiled : List.of(false, true)) {
+            String html = compiled ? wrapper.compile().render(RenderContext.empty()) : wrapper.render();
+            Element outer = Jsoup.parse(html).getElementById("row-outer");
+            assertEquals("col col-9", outer.child(0).child(0).className());
+            Element generated = outer.child(1);
+            assertEquals(count, generated.childrenSize());
+            for (int i = 0; i < count; i++) {
+                Element column = generated.child(i);
+                assertEquals(width == 0 ? "col col-fill" : "col col-" + width, column.className());
+                assertEquals("Registered " + i, column.selectFirst("#module-" + i).text());
+            }
+            assertTrue(outer.select(".add-module-section").isEmpty());
         }
-        assertTrue(outer.select(".add-module-section").isEmpty());
     }
 
     @ParameterizedTest
@@ -423,5 +433,205 @@ class EditableRowTest {
             row.addEditableModule(io.mindspice.simplypages.modules.ContentModule.create().withContent("Item"), "module-" + i);
         }
         org.junit.jupiter.api.Assertions.assertEquals(13, org.jsoup.Jsoup.parse(row.render()).select(".col-fill").size());
+    }
+
+    @Test
+    void renderingAndCompilationPreserveAllWrapperStateAndKeepInheritedChildrenUnemitted() {
+        Row source = new Row().withId("source");
+        source.withInnerText("Source");
+        Column sourceColumn = Column.create().withWidth(6);
+        sourceColumn.withInnerText("source-column");
+        source.addColumn(sourceColumn);
+        EditableRow row = EditableRow.wrap(source, "outer", "page");
+        row.withClass("caller-class").withAttribute("data-caller", "caller-value");
+        row.withMaxModules(13).withEditMode(EditMode.OWNER_EDIT)
+                .addEditableModule(ContentModule.create().withContent("first"), "first")
+                .addEditableModule(ContentModule.create().withContent("second"), "second");
+        row.withChild(new Div().withId("inherited-only").withInnerText("must stay stored"));
+
+        RowState before = rowState(row);
+        TagState sourceBefore = tagState(source);
+        Template compiled = row.compile();
+        assertRowStateUnchanged(before, row);
+        assertEquals(sourceBefore, tagState(source));
+
+        assertRenderedRowStructure(row.render(), List.of("first", "second"));
+        assertFalse(row.render().contains("inherited-only"));
+        assertRowStateUnchanged(before, row);
+        assertEquals(sourceBefore, tagState(source));
+
+        assertRenderedRowStructure(compiled.render(RenderContext.empty()), List.of("first", "second"));
+        assertRowStateUnchanged(before, row);
+        assertEquals(sourceBefore, tagState(source));
+
+        Template fresh = row.compile();
+        assertRowStateUnchanged(before, row);
+        assertRenderedRowStructure(fresh.render(RenderContext.empty()), List.of("first", "second"));
+        assertRowStateUnchanged(before, row);
+
+        row.withEditMode(EditMode.USER_EDIT).withCanAddModule(false);
+        RowState afterConfiguration = rowState(row);
+        String live = compiled.render(RenderContext.empty());
+        assertTrue(live.contains("editMode=USER_EDIT"));
+        assertFalse(live.contains("add-module-section"));
+        assertRowStateUnchanged(afterConfiguration, row);
+        assertEquals(sourceBefore, tagState(source));
+    }
+
+    @Test
+    void freshDirectAndCompiledRendersUseIndependentContextsAtTheSameFirstRenderBarrier() throws Exception {
+        for (boolean compiled : List.of(false, true)) {
+            SlotKey<String> value = SlotKey.of("concurrent-row-value-" + compiled);
+            Row source = new Row() {
+                @Override
+                public String render(RenderContext context) {
+                    return new Div().withClass("context-marker")
+                            .withInnerText(context.get(value).orElseThrow())
+                            .render(context);
+                }
+            };
+            var registered = ContentModule.create().withContent("registered");
+            registered.build();
+            EditableRow row = EditableRow.wrap(source, "concurrent", "page")
+                    .withCanAddModule(false)
+                    .addEditableModule(registered, "registered");
+            Template template = compiled ? row.compile() : null;
+            RowState before = rowState(row);
+            TagState sourceBefore = tagState(source);
+
+            List<String> rendered = renderConcurrently(6, context ->
+                    compiled ? template.render(context) : row.render(context), value);
+            for (int i = 0; i < rendered.size(); i++) {
+                Element outer = Jsoup.parse(rendered.get(i)).getElementById("row-concurrent");
+                assertEquals("value-" + i, outer.selectFirst(".context-marker").text());
+                assertEquals("registered", outer.selectFirst(".module-content").text());
+                assertTrue(outer.select(".add-module-section").isEmpty());
+            }
+            assertRowStateUnchanged(before, row);
+            assertEquals(sourceBefore, tagState(source));
+        }
+    }
+
+    @Test
+    void localWrapperShellPreservesSlotsPoliciesTrustedHtmlIdFallbackAndIgnoredChildren() {
+        for (boolean compiled : List.of(false, true)) {
+            for (var policy : RenderContext.RenderPolicy.values()) {
+                SlotKey<String> key = SlotKey.of("wrapper-shell");
+                EditableRow row = EditableRow.wrap(null, "shell", "page").withCanAddModule(false);
+                row.withAttribute("CLASS", "caller").withAttribute("STYLE", null).withId("fallback");
+                row.withAttribute("data-before", "one").withAttribute("data-after", null).withInnerText(key);
+                row.withChild(context -> { throw new AssertionError("Inherited generic child must not render"); });
+                @SuppressWarnings("unchecked") var attributes = (List<io.mindspice.simplypages.core.Attribute>) rawField(row, "attributes");
+                attributes.removeIf(attribute -> "id".equalsIgnoreCase(attribute.name()));
+                RowState before = rowState(row);
+                Template template = compiled ? row.compile() : null;
+                assertRowStateUnchanged(before, row);
+                RenderContext context = RenderContext.of(key, "<slot>&").withPolicy(policy);
+                String html = compiled ? template.render(context) : row.render(context);
+                assertTrue(html.startsWith("<div id=\"fallback\" CLASS=\"caller\" STYLE data-before=\"one\" data-after>&lt;slot&gt;&amp;"));
+                assertEquals("<slot>&", Jsoup.parse(html).getElementById("fallback").ownText());
+                assertRowStateUnchanged(before, row);
+                row.withUnsafeHtml("<em>trusted</em>");
+                var afterConfiguration = rowState(row);
+                html = compiled ? template.render(RenderContext.empty()) : row.render();
+                assertTrue(html.contains("<em>trusted</em><div class=\"row\"></div>"));
+                assertRowStateUnchanged(afterConfiguration, row);
+            }
+        }
+    }
+
+    private static void assertRenderedRowStructure(String html, List<String> moduleIds) {
+        Element outer = Jsoup.parse(html).getElementById("row-outer");
+        assertNotNull(outer);
+        assertEquals(3, outer.childrenSize());
+        assertEquals("source", outer.child(0).id());
+        assertEquals(moduleIds, outer.child(1).select(".module").stream().map(Element::id).toList());
+        assertTrue(outer.child(2).hasClass("add-module-section"));
+        assertFalse(outer.select("#inherited-only").size() > 0);
+    }
+
+    private static List<String> renderConcurrently(int count,
+                                                    Function<RenderContext, String> renderer,
+                                                    SlotKey<String> key) throws Exception {
+        ExecutorService executor = Executors.newFixedThreadPool(count);
+        CountDownLatch ready = new CountDownLatch(count);
+        CountDownLatch start = new CountDownLatch(1);
+        try {
+            List<Future<String>> futures = new ArrayList<>();
+            for (int i = 0; i < count; i++) {
+                int index = i;
+                futures.add(executor.submit(() -> {
+                    ready.countDown();
+                    assertTrue(start.await(5, TimeUnit.SECONDS));
+                    return renderer.apply(RenderContext.of(key, "value-" + index));
+                }));
+            }
+            assertTrue(ready.await(5, TimeUnit.SECONDS));
+            start.countDown();
+            List<String> result = new ArrayList<>();
+            for (Future<String> future : futures) {
+                result.add(future.get(10, TimeUnit.SECONDS));
+            }
+            return result;
+        } finally {
+            start.countDown();
+            executor.shutdownNow();
+            assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS));
+        }
+    }
+
+    private record TagState(Object attributesRef, List<?> attributes, Object childrenRef, List<?> children,
+                            Object id, Object innerText, Object innerTextSlot, Object trustedHtml) {}
+
+    private record ModuleState(Object module, Object moduleId) {}
+
+    private record RowState(TagState tag, Object wrappedRow, Object rowId, Object pageId,
+                            Object editUrl, Object deleteUrl, Object addUrl, int maxModules,
+                            Object modulesRef, List<ModuleState> modules, Object editMode,
+                            boolean canAddModule) {}
+
+    private static RowState rowState(EditableRow row) {
+        List<?> modules = rawList(row, "modules");
+        return new RowState(tagState(row), rawField(row, "wrappedRow"), rawField(row, "rowId"),
+                rawField(row, "pageId"), rawField(row, "moduleEditUrlTemplate"),
+                rawField(row, "moduleDeleteUrlTemplate"), rawField(row, "addModuleFormUrlTemplate"),
+                (int) rawField(row, "maxModulesPerRow"), rawField(row, "modules"),
+                modules.stream().map(entry -> new ModuleState(rawField(entry, "module"), rawField(entry, "moduleId"))).toList(),
+                rawField(row, "editMode"), (boolean) rawField(row, "canAddModule"));
+    }
+
+    private static void assertRowStateUnchanged(RowState expected, EditableRow actual) {
+        RowState current = rowState(actual);
+        assertSame(expected.tag().attributesRef(), current.tag().attributesRef());
+        assertSame(expected.tag().childrenRef(), current.tag().childrenRef());
+        assertSame(expected.modulesRef(), current.modulesRef());
+        assertEquals(expected, current);
+    }
+
+    private static TagState tagState(HtmlTag tag) {
+        return new TagState(rawField(tag, "attributes"), rawList(tag, "attributes"),
+                rawField(tag, "children"), rawList(tag, "children"), rawField(tag, "id"),
+                rawField(tag, "innerText"), rawField(tag, "innerTextSlot"), rawField(tag, "trustedHtml"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<?> rawList(Object target, String name) {
+        return new ArrayList<>((List<Object>) rawField(target, name));
+    }
+
+    private static Object rawField(Object target, String name) {
+        Class<?> type = target.getClass();
+        while (type != null) {
+            try {
+                Field field = type.getDeclaredField(name);
+                field.trySetAccessible();
+                return field.get(target);
+            } catch (NoSuchFieldException ignored) {
+                type = type.getSuperclass();
+            } catch (ReflectiveOperationException exception) {
+                throw new AssertionError("Could not inspect " + name, exception);
+            }
+        }
+        throw new AssertionError("Missing field " + name + " on " + target.getClass());
     }
 }
