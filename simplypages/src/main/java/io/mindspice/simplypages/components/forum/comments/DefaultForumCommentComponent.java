@@ -8,7 +8,19 @@ import io.mindspice.simplypages.core.RenderContext;
 import java.util.List;
 
 /**
- * Default comment component implementation.
+ * Default flat comment card with raw depth metadata and bounded CSS indentation.
+ *
+ * <p>Every card emits the configured signed {@code int} as {@code data-depth}. Only the
+ * visual class is clamped to {@code forum-comment-depth-0} through
+ * {@code forum-comment-depth-4}; negative depths look like zero. Framework CSS indents
+ * from the logical start by 16px per level (8px at viewport widths up to 920px), limited
+ * to 8% of the containing inline size. Host CSS can override these defaults.</p>
+ *
+ * <p>Depth and parent ID are independent metadata, not a validated hierarchy. Rendering
+ * keeps configured state unchanged and dispatches body/actions with the supplied context.
+ * Templates retain live rendering, including later configuration and subclass overrides.
+ * Finish configuration before sharing; contexts and child delegates have their own
+ * sharing requirements.</p>
  */
 public class DefaultForumCommentComponent implements ForumCommentComponent {
     private String id;
@@ -45,6 +57,12 @@ public class DefaultForumCommentComponent implements ForumCommentComponent {
         return this;
     }
 
+    /**
+     * Stores the raw depth unchanged; only its default visual class is clamped to 0..4.
+     *
+     * @param depth any signed int, independent of the parent ID
+     * @return this component
+     */
     @Override
     public ForumCommentComponent withDepth(int depth) {
         this.depth = depth;
@@ -95,10 +113,12 @@ public class DefaultForumCommentComponent implements ForumCommentComponent {
 
     @Override
     public String render(RenderContext context) {
+        int visualDepth = Math.max(0, Math.min(depth, 4));
         HtmlTag comment = new HtmlTag("div")
-            .withAttribute("class", "forum-comment")
+            .withAttribute("class", "forum-comment forum-comment-depth-" + visualDepth)
             .withAttribute("data-comment-id", id == null ? "" : id)
-            .withAttribute("data-topic-id", topicId == null ? "" : topicId);
+            .withAttribute("data-topic-id", topicId == null ? "" : topicId)
+            .withAttribute("data-depth", String.valueOf(depth));
 
         if (parentId != null && !parentId.isBlank()) {
             comment.withAttribute("data-parent-id", parentId);

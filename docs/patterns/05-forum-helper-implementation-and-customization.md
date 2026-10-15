@@ -88,6 +88,32 @@ Component comments = commentRenderer.render(List.of(
 ), viewer);
 ```
 
+## Comment Depth and Custom Components
+
+The default comment card emits every configured signed `int` as `data-depth`, unchanged.
+Its single `forum-comment-depth-0..4` class clamps only presentation: negative values look
+like zero and values above four look like four. Parent ID and depth are independent;
+null/blank parents omit `data-parent-id`, while nonblank values remain escaped metadata.
+
+Framework CSS indents from the logical start by 16px per visual level, or 8px at viewport
+widths up to 920px, capped at four levels and 8% of the containing inline size. Cards use
+the remaining width. Narrow hosts can stack the default owned layout while retaining the
+150x150 avatar reservation and usable controls. No depth inline style is added, so host
+CSS can override the defaults.
+
+Existing default-card consumers now see depth metadata/classes and indentation. Custom
+suppliers still receive raw parent/depth once per selected item and own their markup;
+metadata or the common `forum-comment` class alone does not enable this new styling.
+Default rendering leaves configured state unchanged and dispatches body/actions once with
+the same context. Compiled templates retain live default/subclass rendering. Complete
+configuration before sharing; request contexts and child delegates retain separate sharing
+requirements.
+
+These are flat cards, not a hierarchy engine. Rendering preserves collection order and
+does not validate, resolve or sort parent references, even if absent, self-referential,
+cyclic or cross-topic. Pagination can put a child before its parent or on another page.
+Applications own hierarchy rules and data loading.
+
 ## Pagination
 
 Topic pagination:
@@ -217,6 +243,7 @@ Recommended wiring pattern used in demo:
 - renderers target one fragment root (for example `#forum-main`) with `outerHTML` swaps
 - action endpoints return refreshed fragments, not raw status payloads
 - ownership/moderation checks run in controller/service before update/delete
+- the demo's reply-creation depth cap of five is application policy, not a framework input limit or visual cap
 
 ## Testing Checklist
 
@@ -225,3 +252,6 @@ Recommended wiring pattern used in demo:
 - Topic/comment pagination controls and HTMX attributes
 - Action rendering with context-sensitive predicates
 - Required ID validation failures for topics/comments
+- Raw depth extremes, parent independence, flat order/filter/page splits and custom supplier dispatch
+- Default direct/fresh-compiled rendering, unchanged configured state and same-context body/actions
+- Numeric depth indentation, LTR/RTL, narrow-host avatar/body/control containment and native keyboard use

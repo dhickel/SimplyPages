@@ -17,7 +17,10 @@ Owns discussion/community components and helper rendering contracts.
 ## Invariants
 - Forum renderer output remains composable and render-safe.
 - Markdown/text content handling remains aligned with core escaping rules.
-- Topic/comment ordering behavior is predictable.
+- Comment rendering preserves flat input order across topics when unpaginated. Pagination filters by topic, then strictly slices; parent and child may land on different pages. Do not infer or validate parent graphs, sort comments, or build tree DOM.
+- Default comments emit every raw signed int as `data-depth`, including zero and extremes. Depth is independent of parent ID; null/blank parents remain omitted. Only the single generated `forum-comment-depth-0..4` class is clamped: negative looks like zero, above four looks like four.
+- Default depth CSS uses logical-start indentation: 16px/level desktop, 8px at <=920px, capped at four levels and 8% of the containing inline size. Keep root inline style blank. Container fallback is limited to generated default roots and their immediate owned layout/meta; preserve desktop identity/main columns outside narrow hosts, native controls, and ordinary host overrides. Raw metadata or the common class alone must not impose this new styling on custom components.
+- Custom comment suppliers receive unchanged parent/depth once per selected item and own their markup. Default rendering/compilation leaves configured fields/body/actions unchanged, with exactly-once same-context child dispatch and live custom render overrides. Configure before sharing; contexts and descendants have separate sharing obligations.
 - Tag parsing is fault-tolerant: malformed/unresolved tags preserve visible literal output.
 - Tag resolver registration is deterministic and duplicate keys fail fast.
 - Comment identity layout reserves a 150x150 avatar slot; missing avatars must remain blank without collapsing layout.
@@ -47,7 +50,9 @@ Owns discussion/community components and helper rendering contracts.
 
 ## Required Tests
 - Existing forum component test suite and any new render-path tests
-- Regression tests for hierarchy/nesting and metadata fields
+- Raw depth/parent independence, bounded visual classes, flat order/filter/page splits and custom metadata dispatch
+- Direct/fresh-compiled/context/exactly-once child rendering, raw state preservation and independent-context first-render barriers
+- Native numeric indentation, LTR/RTL, breakpoint/narrow-host containment, 150x150 avatar fallback and keyboard controls
 
 ## Dependencies
 - Depends on `core` and base/shared components.

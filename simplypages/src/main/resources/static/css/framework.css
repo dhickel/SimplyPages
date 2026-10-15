@@ -1745,6 +1745,31 @@ pre::-webkit-scrollbar-thumb:hover {
     padding: var(--sp-space-sm);
 }
 
+.forum-comment:where(.forum-comment-depth-0, .forum-comment-depth-1, .forum-comment-depth-2,
+    .forum-comment-depth-3, .forum-comment-depth-4) {
+    container-type: inline-size;
+}
+
+.forum-comment:where(.forum-comment-depth-0) {
+    margin-inline-start: 0;
+}
+
+.forum-comment:where(.forum-comment-depth-1) {
+    margin-inline-start: min(16px, 8%);
+}
+
+.forum-comment:where(.forum-comment-depth-2) {
+    margin-inline-start: min(32px, 8%);
+}
+
+.forum-comment:where(.forum-comment-depth-3) {
+    margin-inline-start: min(48px, 8%);
+}
+
+.forum-comment:where(.forum-comment-depth-4) {
+    margin-inline-start: min(64px, 8%);
+}
+
 .forum-comment-layout {
     display: grid;
     grid-template-columns: 170px minmax(0, 1fr);
@@ -1974,6 +1999,22 @@ pre::-webkit-scrollbar-thumb:hover {
         align-items: stretch;
     }
 
+    .forum-comment:where(.forum-comment-depth-1) {
+        margin-inline-start: min(8px, 8%);
+    }
+
+    .forum-comment:where(.forum-comment-depth-2) {
+        margin-inline-start: min(16px, 8%);
+    }
+
+    .forum-comment:where(.forum-comment-depth-3) {
+        margin-inline-start: min(24px, 8%);
+    }
+
+    .forum-comment:where(.forum-comment-depth-4) {
+        margin-inline-start: min(32px, 8%);
+    }
+
     .forum-comment-layout {
         grid-template-columns: 1fr;
     }
@@ -1985,6 +2026,20 @@ pre::-webkit-scrollbar-thumb:hover {
     .forum-topics-pagination,
     .forum-comments-pagination {
         justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+}
+
+/* Keep 170px identity + 15px gap beside a usable 185px main; stack smaller cards. */
+@container (max-width: 370px) {
+    .forum-comment:where(.forum-comment-depth-0, .forum-comment-depth-1, .forum-comment-depth-2,
+        .forum-comment-depth-3, .forum-comment-depth-4) > .forum-comment-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .forum-comment:where(.forum-comment-depth-0, .forum-comment-depth-1, .forum-comment-depth-2,
+        .forum-comment-depth-3, .forum-comment-depth-4) > .forum-comment-layout > .forum-comment-main
+        > .forum-comment-meta {
         flex-wrap: wrap;
     }
 }
