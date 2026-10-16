@@ -54,7 +54,8 @@ public class AccountWidget extends HtmlTag {
     }
 
     /**
-     * Creates an HTMX placeholder that loads widget HTML from an endpoint.
+     * Creates an HTMX placeholder that loads widget HTML from an application-controlled or
+     * separately endpoint-validated URL. Encoding does not enforce destination policy or auth.
      *
      * @param endpoint HTMX GET endpoint
      * @return placeholder div
@@ -68,7 +69,8 @@ public class AccountWidget extends HtmlTag {
     }
 
     /**
-     * Sets login URL.
+     * Sets an application-controlled or separately navigation-validated login URL.
+     * The generated href is encoded, without Link's scheme policy.
      *
      * @param url login URL
      * @return this widget
@@ -79,7 +81,8 @@ public class AccountWidget extends HtmlTag {
     }
 
     /**
-     * Sets signup URL.
+     * Sets an application-controlled or separately navigation-validated signup URL.
+     * The generated href is encoded, without Link's scheme policy; null omits the signup link.
      *
      * @param url signup URL
      * @return this widget
@@ -90,7 +93,8 @@ public class AccountWidget extends HtmlTag {
     }
 
     /**
-     * Sets profile URL.
+     * Sets an application-controlled or separately navigation-validated profile URL.
+     * The generated href is encoded, without Link's scheme policy.
      *
      * @param url profile URL
      * @return this widget
@@ -101,7 +105,8 @@ public class AccountWidget extends HtmlTag {
     }
 
     /**
-     * Sets logout URL.
+     * Sets an application-controlled or separately navigation-validated logout URL.
+     * The generated href is encoded, without Link's scheme policy or endpoint authorization.
      *
      * @param url logout URL
      * @return this widget

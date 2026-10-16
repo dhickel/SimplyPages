@@ -1,5 +1,7 @@
 package io.mindspice.simplypages.core;
 
+import io.mindspice.simplypages.components.Image;
+import io.mindspice.simplypages.components.navigation.Link;
 import io.mindspice.simplypages.testutil.HtmlAssert;
 import io.mindspice.simplypages.testutil.SnapshotAssert;
 import org.jsoup.Jsoup;
@@ -17,6 +19,28 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class HtmlTagTest {
+
+    @Test
+    void genericUrlReplacementRemainsEncodedOrderedAndSeparateFromTypedGetters() {
+        String raw = "javascript:void(0)?a=\"x\"&b=<value>";
+        Link link = Link.create("/validated", "text").withId("link");
+        var snapshot = link.compile();
+        link.withAttribute("HREF", raw);
+        assertEquals("/validated", link.getHref());
+        assertEquals("<a id=\"link\" HREF=\"javascript:void(0)?a=&#34;x&#34;&amp;b=&lt;value>\">text</a>", link.render());
+        assertEquals("<a href=\"/validated\" id=\"link\">text</a>", snapshot.render(RenderContext.empty()));
+        assertEquals(link.render(), link.compile().render(RenderContext.empty()));
+        Image image = Image.create("/validated.png").withId("image");
+        image.withAttribute("SRC", raw);
+        assertEquals("/validated.png", image.getSrc());
+        assertEquals(raw, Jsoup.parse(image.render()).selectFirst("img").attr("src"));
+        assertEquals(image.render(), image.compile().render(RenderContext.empty()));
+        HtmlTag endpoint = new HtmlTag("button").hxGet(raw).hxPost(raw).hxPut(raw).hxPatch(raw).hxDelete(raw);
+        for (String name : new String[] {"hx-get", "hx-post", "hx-put", "hx-patch", "hx-delete"}) {
+            assertEquals(raw, Jsoup.parse(endpoint.render()).selectFirst("button").attr(name));
+        }
+        assertEquals(endpoint.render(), endpoint.compile().render(RenderContext.empty()));
+    }
 
     @Test
     @DisplayName("HtmlTag should escape inner text")

@@ -9,6 +9,7 @@ Owns display-oriented UI components and visual containers.
 
 ## Invariants
 - Display components remain composable and class-driven.
+- Card.withImage encodes an application-controlled or separately image-context-validated source without Image's validator. ProgressBar.withHeight directly assembles raw CSS and retains declaration separators; require application-controlled or separately CSS-context-validated values. Neither gains a new semantic policy from HTML encoding or inherited width/addStyle guards.
 - `DataTable` and `Table` rendering contracts remain stable.
 - Modal behavior and IDs remain predictable/safe.
 

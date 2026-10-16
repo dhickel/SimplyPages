@@ -39,7 +39,8 @@ public class Form extends HtmlTag {
     }
 
     /**
-     * Sets form action URL.
+     * Sets an application-controlled or separately form-destination-validated action URL.
+     * Encoding does not validate schemes, authorize submission, or enforce CSRF.
      *
      * @param action action URL
      * @return this form
@@ -87,7 +88,8 @@ public class Form extends HtmlTag {
     }
 
     /**
-     * Sets {@code hx-post}.
+     * Sets {@code hx-post} to an application-controlled or separately endpoint-validated URL.
+     * Encoding does not enforce destination policy, authorization, or CSRF.
      *
      * @param url endpoint URL
      * @return this form
@@ -98,7 +100,8 @@ public class Form extends HtmlTag {
     }
 
     /**
-     * Sets {@code hx-get}.
+     * Sets {@code hx-get} to an application-controlled or separately endpoint-validated URL.
+     * Encoding does not enforce destination policy or authorization.
      *
      * @param url endpoint URL
      * @return this form
@@ -109,7 +112,8 @@ public class Form extends HtmlTag {
     }
 
     /**
-     * Sets {@code hx-put}.
+     * Sets {@code hx-put} to an application-controlled or separately endpoint-validated URL.
+     * Encoding does not enforce destination policy, authorization, or CSRF.
      *
      * @param url endpoint URL
      * @return this form
@@ -120,7 +124,8 @@ public class Form extends HtmlTag {
     }
 
     /**
-     * Sets {@code hx-delete}.
+     * Sets {@code hx-delete} to an application-controlled or separately endpoint-validated URL.
+     * Encoding does not enforce destination policy, authorization, or CSRF.
      *
      * @param url endpoint URL
      * @return this form
@@ -231,7 +236,9 @@ public class Form extends HtmlTag {
     }
 
     /**
-     * Convenience helper for HTMX POST with CSRF header.
+     * Attaches a CSRF header to HTMX POST using an application-controlled or separately
+     * endpoint-validated URL. This does not validate destinations, issue/verify tokens, or
+     * authorize requests; token and endpoint enforcement belong to the application.
      *
      * @param url the URL to POST to
      * @param csrfToken the CSRF token value

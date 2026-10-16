@@ -66,7 +66,9 @@ public class HeroModule extends Module {
     }
 
     /**
-     * Sets a background image for the hero section.
+     * Sets a background image using raw single-quoted CSS url() interpolation. Supply an
+     * application-controlled or separately CSS-context-validated value; there is no CSS escaping
+     * or Image validation. Image's scheme policy alone does not control CSS syntax.
      *
      * @param imageUrl URL or path to the background image
      */
@@ -76,7 +78,8 @@ public class HeroModule extends Module {
     }
 
     /**
-     * Sets a background color for the hero section.
+     * Sets raw CSS background color. Supply an application-controlled or separately
+     * CSS-context-validated value; attribute encoding is not declaration-breakout protection.
      *
      * @param color CSS color value
      */
@@ -86,7 +89,8 @@ public class HeroModule extends Module {
     }
 
     /**
-     * Adds a primary call-to-action button.
+     * Adds a primary CTA with an application-controlled or separately navigation-validated URL.
+     * The href is encoded without Link's scheme policy; null uses the existing fragment fallback.
      *
      * @param text button text
      * @param url button link URL
@@ -98,7 +102,8 @@ public class HeroModule extends Module {
     }
 
     /**
-     * Adds a secondary call-to-action button.
+     * Adds a secondary CTA with an application-controlled or separately navigation-validated URL.
+     * The href is encoded without Link's scheme policy; null uses the existing fragment fallback.
      *
      * @param text button text
      * @param url button link URL

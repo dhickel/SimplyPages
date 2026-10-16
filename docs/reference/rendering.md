@@ -22,6 +22,34 @@ Tag and attribute names reject malformed markup delimiters. Attribute values tha
 or null render as boolean attributes. Generic attributes do not validate JavaScript, URL
 schemes, or business policy; attribute escaping does not make those contexts safe.
 
+### URL and style method boundaries
+
+`Link` constructors/`create`/`withHref` apply the http/https/mailto/tel/relative policy.
+`Image` constructors/factories/`withSrc` reject javascript and non-image data prefixes,
+retaining custom/FTP/blob schemes and the existing `data:image/` prefix behavior. For
+classification only, both trim boundary C0/ASCII space, remove TAB/LF/CR and fold ASCII
+case independently of locale. Normalized supported spellings such as `ht<TAB>tp:` and
+`data:im<TAB>age/` are accepted. Storage/getters and encoded output keep the original value;
+there is no entity/percent decoding, Unicode normalization, MIME/payload inspection or
+destination authorization. Rejected typed setters leave prior state unchanged.
+
+Generic href/src replacement bypasses those validators and need not update their getters.
+HTMX endpoints, Dropdown/AccountWidget/nav entries (including nested constructors/utility
+links), top/side builder links and aliases, Hero CTAs, Card/Gallery images, Audio/Video
+sources/posters and Form/FormModule destinations remain application-controlled or separately
+validated for their actual context. AccountBar's link conveniences already construct Link;
+Banner's generated ordinary horizontal image constructs Image at build. Neither delegates
+CSS backgrounds or dynamic endpoints to those policies.
+
+`addStyle` supplies property-name/declaration-breakout checks, not semantic CSS/URL policy.
+`addTrustedStyle` bypasses value-breakout checks; `Style.addInlineStyle` and raw style
+attributes retain separators. Banner/Hero CSS background URLs need control of single-quoted
+`url()` syntax, not merely Image validation. Their colors, AccountBar background color,
+`Spacer.custom` and `ProgressBar.withHeight` are raw style assembly. Supply application-controlled
+or separately CSS-context-validated inputs; width helpers' restricted token grammar is a
+different contract. Compilation adds no URL/CSS checks and standard static snapshots retain
+the configuration present at compile time.
+
 ## Keys and values
 
 The `SlotKey<T>` canonical constructor and all `SlotKey.of` factories throw

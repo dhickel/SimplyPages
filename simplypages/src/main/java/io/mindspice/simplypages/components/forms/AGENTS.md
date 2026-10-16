@@ -8,7 +8,7 @@ Owns form input and form container components.
 
 ## Invariants
 - Form element APIs remain fluent and typed.
-- Name/value/attribute rendering stays HTML-safe.
+- Name/value/attribute rendering stays HTML-encoded, not URL-policy validated. Form.withAction, URL-taking HTMX methods and withHxPostCsrf require application-controlled or separately endpoint-context-validated destinations. CSRF helpers attach supplied tokens/headers only; issuance, verification, authorization and destination policy remain application-owned. Do not introduce Link/Image validation by analogy.
 - Width helper methods on form components remain valid and validated by core style rules.
 - Input type helpers map to correct HTML input types.
 

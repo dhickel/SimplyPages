@@ -11,6 +11,7 @@ Owns high-level composed modules built from components/layout primitives.
 
 ## Invariants
 - Modules compose structure in `buildContent()`.
+- Hero CTA destinations and FormModule submit URLs remain application-controlled or separately navigation/endpoint-context-validated; encoded attributes do not apply Link's scheme policy or authorize operations. Hero background image/color assembly is raw CSS: single-quoted url() interpolation needs CSS syntax control, not merely Image validation. Preserve these boundaries rather than adding validation by analogy; configure before build.
 - Module lifecycle uses `build()` idempotently.
 - Module direct width APIs are blocked; layout should size modules.
 - Public fluent APIs remain chainable and readable; preserve declared returns/erased bridges rather than standardizing a self type. Module class methods append; layout/class replacement policies remain separate, and Column.withAttribute declares HtmlTag for legacy source compatibility.

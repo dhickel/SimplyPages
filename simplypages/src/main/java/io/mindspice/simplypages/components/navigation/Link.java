@@ -9,7 +9,11 @@ import io.mindspice.simplypages.core.HtmlTag;
  * <p>Mutable and not thread-safe. Configure and render within a request-scoped lifecycle. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
  *
  * <p>Security boundary: {@link #withHref(String)} and constructor validate href schemes and allow
- * only {@code http}, {@code https}, {@code mailto}, {@code tel}, or relative URLs.</p>
+ * only {@code http}, {@code https}, {@code mailto}, {@code tel}, or relative URLs.
+ * Classification trims boundary C0/ASCII space, removes TAB/LF/CR, and folds ASCII case,
+ * independently of locale; the original value is stored and attribute-encoded unchanged.
+ * This is not destination authorization. Generic attribute replacement and HTMX endpoints
+ * do not use this href policy.</p>
  */
 public class Link extends HtmlTag {
 
@@ -119,7 +123,8 @@ public class Link extends HtmlTag {
     }
 
     /**
-     * Sets {@code hx-get}.
+     * Sets {@code hx-get} to an application-controlled or separately endpoint-validated URL.
+     * This does not apply the href scheme policy or authorize requests.
      *
      * @param url HTMX GET endpoint
      * @return this link
@@ -130,7 +135,8 @@ public class Link extends HtmlTag {
     }
 
     /**
-     * Sets {@code hx-post}.
+     * Sets {@code hx-post} to an application-controlled or separately endpoint-validated URL.
+     * This does not apply the href scheme policy or provide authorization/CSRF enforcement.
      *
      * @param url HTMX POST endpoint
      * @return this link
@@ -214,8 +220,18 @@ public class Link extends HtmlTag {
             return;  // Allow empty (browser treats as same page)
         }
 
+        // Classify browser preprocessing without changing the configured attribute value.
         String trimmed = url.trim();
-        String lower = trimmed.toLowerCase();
+        StringBuilder normalized = new StringBuilder(trimmed.length());
+        for (int index = 0; index < trimmed.length(); index++) {
+            char character = trimmed.charAt(index);
+            if (character == '\t' || character == '\n' || character == '\r') {
+                continue;
+            }
+            normalized.append(character >= 'A' && character <= 'Z'
+                ? (char) (character + ('a' - 'A')) : character);
+        }
+        String lower = normalized.toString();
 
         if (lower.startsWith("#")
             || lower.startsWith("/")

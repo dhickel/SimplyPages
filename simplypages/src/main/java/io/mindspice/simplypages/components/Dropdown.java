@@ -41,7 +41,8 @@ public class Dropdown {
     }
 
     /**
-     * Appends an anchor item.
+     * Appends an anchor item with an application-controlled or separately navigation-validated
+     * href. Attribute encoding is applied, but Link's scheme policy is not.
      *
      * @param text link text
      * @param href link href

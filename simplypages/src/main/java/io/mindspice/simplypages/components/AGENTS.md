@@ -12,7 +12,10 @@ Owns shared low-level UI components and base component conventions.
 ## Invariants
 - Components follow `HtmlTag` extension patterns consistently.
 - `create()` factory methods and fluent return types stay consistent.
-- Attribute and text rendering remains safely escaped by default.
+- Attribute and text rendering remains safely escaped by default; encoding is not URL/CSS policy.
+- Image constructors/factories/withSrc classify boundary-C0/ASCII-space-trimmed, TAB/LF/CR-removed, ASCII-case-folded values independently of locale, rejecting javascript/non-image data only. Preserve original storage/emission and existing custom/FTP/blob/data:image prefix acceptance; no payload/MIME guarantee or Link allowlist.
+- Dropdown.addLink and AccountWidget's four destination setters/dynamic endpoint remain application-controlled or separately destination/context-validated, not Link-validated. Preserve their null/optional behavior and encoded output.
+- Spacer.custom assembles raw CSS, retaining separators; require application-controlled or separately CSS-context-validated values. It does not inherit addStyle breakout protection or width-token validation.
 
 - Custom rendering must override render(RenderContext) and forward context to all children.
 - Code titles are escaped; code, spinner, and paragraph presentation must work when nested or compiled.

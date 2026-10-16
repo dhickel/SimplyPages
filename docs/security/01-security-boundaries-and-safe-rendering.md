@@ -12,6 +12,50 @@ SimplyPages provides safe defaults in core rendering paths.
   Generic attribute values remain application-controlled.
 - Slot text output is escaped.
 
+## URL classification is method-specific
+
+`Link` constructors, `create` and `withHref` allow `http`, `https`, `mailto`, `tel`
+and the existing relative/protocol-relative forms. `Image` constructors, factories and
+`withSrc` reject `javascript:` and `data:` without an image prefix, but retain other
+schemes, including custom schemes, FTP and blob URLs. A `data:image/` prefix is not
+MIME or payload inspection, including for SVG.
+
+These methods classify a view with boundary C0 controls/ASCII space trimmed, TAB/LF/CR
+removed, and ASCII letters case-folded independently of locale. Thus an actual TAB in
+`ht<TAB>tp:` or `data:im<TAB>age/` can produce an accepted spelling. Getters and emitted
+attributes retain the original string through ordinary HTML encoding. There is no
+entity/percent decoding or Unicode normalization. This is scheme classification,
+not destination authorization, same-origin enforcement, SSRF protection or a promise
+that a URL loads safely.
+
+Other URL conveniences require **application-controlled or separately context-validated
+values**. This includes Dropdown links; AccountWidget destinations/dynamic endpoints;
+NavBar, SideNav and Breadcrumb entries (including public nested entry constructors and
+utility links); TopNavBuilder/SideNavBuilder links and aliases; Hero CTA links; Card/Gallery
+image sources; Audio/Video sources and video posters; Form actions/HTMX/CSRF URLs and
+FormModule submit URLs. Generic `withAttribute`, inherited HTMX methods and Link's HTMX
+helpers do not apply the href/src validators. Generic replacement can change a Link/Image
+attribute without changing its getter. Template compilation does not add validation.
+
+Two existing delegated paths differ: AccountBarBuilder link conveniences construct `Link`
+immediately; BannerBuilder's ordinary horizontal image constructs `Image` when generated
+content is built. Dynamic endpoints and CSS backgrounds do not share those checks. Default
+forum avatar handling uses its existing Image/fallback path, not a new global URL policy.
+
+## CSS values need their own trust boundary
+
+`HtmlTag.addStyle` checks property names and rejects declaration-breakout characters in
+values. It is not a semantic CSS or URL sanitizer. `addTrustedStyle` bypasses that value
+check; `Style.addInlineStyle` and raw `style` attributes retain declaration separators.
+Supply application-controlled values or validate for the actual CSS context. Width helpers
+have a separate, narrower size-token grammar.
+
+Banner/Hero background-image methods interpolate into a single-quoted CSS `url()` without
+CSS escaping. Image validation alone does not control quotes, backslashes or declaration
+syntax there. Banner background/text colors, Hero/AccountBar background colors,
+`Spacer.custom` and `ProgressBar.withHeight` also assemble raw styles. HTML attribute
+encoding prevents markup breakout, not CSS declaration breakout or unsafe CSS semantics.
+
 ## Application Responsibilities
 
 Your application must enforce:

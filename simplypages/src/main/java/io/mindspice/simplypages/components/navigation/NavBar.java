@@ -48,11 +48,13 @@ public class NavBar extends HtmlTag {
         return this;
     }
 
+    /** Adds an encoded href; supply an application-controlled or separately validated destination. */
     public NavBar addItem(String text, String href) {
         itemsContainer.withChild(new NavItem(text, href));
         return this;
     }
 
+    /** Adds an active-state entry with a trusted/context-validated href, without Link's scheme policy. */
     public NavBar addItem(String text, String href, boolean active) {
         itemsContainer.withChild(new NavItem(text, href, active));
         return this;
@@ -73,10 +75,15 @@ public class NavBar extends HtmlTag {
         return this;
     }
 
+    /** Adds a utility link with an application-controlled or separately navigation-validated href. */
     public NavBar addUtilityLink(String text, String href) {
         return addUtilityLink(text, href, false);
     }
 
+    /**
+     * Adds a utility link with an application-controlled or separately navigation-validated href.
+     * Encoding does not validate schemes; null retains the empty-href fallback.
+     */
     public NavBar addUtilityLink(String text, String href, boolean active) {
         HtmlTag link = new HtmlTag("a")
             .withAttribute("href", href == null ? "" : href)
@@ -120,16 +127,22 @@ public class NavBar extends HtmlTag {
         private String hxTarget;
         private boolean hxPushUrl;
 
+        /** Creates an entry with an application-controlled or separately navigation-validated href. */
         public NavItem(String text, String href) {
             this(text, href, false);
         }
 
+        /**
+         * Creates an active-state entry with an application-controlled or separately navigation-validated
+         * href. Encoding does not apply Link's scheme policy.
+         */
         public NavItem(String text, String href, boolean active) {
             this.text = text;
             this.href = href;
             this.active = active;
         }
 
+        /** Sets an application-controlled or separately endpoint-validated URL; no request authorization. */
         public NavItem withHxGet(String url) {
             this.hxGet = url;
             return this;

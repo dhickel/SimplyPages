@@ -67,6 +67,10 @@ public class Card extends HtmlTag {
         return this;
     }
 
+    /**
+     * Sets an encoded image source without Image's source policy. Supply an application-controlled
+     * or separately image-context-validated URL; encoding does not validate schemes or payloads.
+     */
     public Card withImage(String src, String alt) {
         this.imageComponent = new HtmlTag("img", true)
             .withAttribute("src", src)

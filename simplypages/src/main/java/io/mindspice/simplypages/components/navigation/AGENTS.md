@@ -7,7 +7,9 @@ Owns navigation primitives and reusable nav structures.
 - `Link`, `NavBar`, `SideNav`, `Breadcrumb`
 
 ## Invariants
-- Navigation components remain semantic and link-safe.
+- Navigation components remain semantic; do not claim uniform URL validation.
+- Only Link constructors/factory/withHref apply its http/https/mailto/tel/relative policy. Classify boundary-C0/ASCII-space-trimmed, TAB/LF/CR-removed, ASCII-case-folded values independently of locale, newly accepting normalized supported spellings. Preserve raw storage/encoding, failed-setter state and static templates; no entity/percent decoding or Unicode folding.
+- NavBar entries/utility links/public NavItem constructors, SideNav entries/public NavItem constructor, Breadcrumb.addItem and their HTMX endpoints require application-controlled or separately context-validated destinations. They encode values but do not apply Link's policy. Link HTMX helpers and generic href replacement are likewise separate trusted boundaries.
 - Active/selected state APIs produce stable class and attribute output.
 - Side navigation structure remains builder-friendly.
 - `NavBar` supports primary item and utility item regions without breaking legacy item rendering.

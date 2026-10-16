@@ -21,11 +21,13 @@ public class SideNav extends HtmlTag {
         return new SideNav();
     }
 
+    /** Adds an encoded href; supply an application-controlled or separately validated destination. */
     public SideNav addItem(String text, String href) {
         this.withChild(new NavItem(text, href, false));
         return this;
     }
 
+    /** Adds an active-state entry with a trusted/context-validated href, without Link's scheme policy. */
     public SideNav addItem(String text, String href, boolean active) {
         this.withChild(new NavItem(text, href, active));
         return this;
@@ -58,6 +60,7 @@ public class SideNav extends HtmlTag {
         private String hxTarget;
         private boolean hxPushUrl;
 
+        /** Creates an entry with an application-controlled or separately navigation-validated href. */
         public NavItem(String text, String href, boolean active) {
             this.text = text;
             this.href = href;
@@ -69,6 +72,7 @@ public class SideNav extends HtmlTag {
             return this;
         }
 
+        /** Sets an application-controlled or separately endpoint-validated URL; encoding is not auth. */
         public NavItem withHxGet(String url) {
             this.hxGet = url;
             return this;

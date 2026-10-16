@@ -95,7 +95,9 @@ public class BannerBuilder {
     }
 
     /**
-     * Add an image/logo to the banner (used with HORIZONTAL layout).
+     * Adds an image/logo for HORIZONTAL layout. Building generated horizontal content constructs
+     * an {@link Image}, applying its source policy then, not at this configuration call.
+     * This differs from the raw CSS background-image path.
      */
     public BannerBuilder withImage(String imageUrl, String alt) {
         this.imageUrl = imageUrl;
@@ -113,7 +115,9 @@ public class BannerBuilder {
     }
 
     /**
-     * Set background image URL (used with IMAGE_OVERLAY layout).
+     * Sets a background image for IMAGE_OVERLAY. Supply an application-controlled or separately
+     * CSS-context-validated value: it is interpolated into a single-quoted CSS url(), without
+     * CSS escaping or Image validation. Image's scheme check alone cannot secure CSS syntax.
      */
     public BannerBuilder withBackgroundImage(String imageUrl) {
         this.backgroundImage = imageUrl;
@@ -121,7 +125,8 @@ public class BannerBuilder {
     }
 
     /**
-     * Set banner background color.
+     * Sets a trusted CSS background-color value. Supply application-controlled or separately
+     * CSS-context-validated input; raw style assembly does not reject declaration separators.
      */
     public BannerBuilder withBackgroundColor(String color) {
         this.backgroundColor = color;
@@ -129,7 +134,8 @@ public class BannerBuilder {
     }
 
     /**
-     * Set text color.
+     * Sets a trusted CSS color value. Supply application-controlled or separately CSS-context-validated
+     * input; attribute encoding does not prevent CSS declaration breakout.
      */
     public BannerBuilder withTextColor(String color) {
         this.textColor = color;

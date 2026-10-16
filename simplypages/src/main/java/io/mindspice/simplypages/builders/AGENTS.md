@@ -11,6 +11,8 @@ Owns higher-level shell and navigation builder utilities.
 - Builders remain fluent and simple to compose.
 - `build()` output shape stays stable for consumers.
 - Default values keep generated output functional.
+- TopNavBuilder primary/utility links and addPortal aliases, SideNavBuilder link overloads and dynamic account endpoints require application-controlled or separately navigation/endpoint-context-validated URLs. They encode rather than apply Link's scheme policy. AccountBarBuilder addLeftLink/addRightLink already construct Link immediately; do not confuse these with its raw dynamic endpoint.
+- BannerBuilder ordinary horizontal withImage constructs Image during generated-content build and uses its existing source policy then. Banner/Hero CSS background URLs instead interpolate single-quoted CSS url() without escaping/validation; control CSS syntax as well as destination. Banner background/text colors and AccountBar background color are raw CSS assembly. Require application-controlled or separately CSS-context-validated values, not merely HTML encoding or Image validation; retain runtime behavior.
 - Shell header supports banner + embedded top-nav composition (`withTopNav(...)`).
 - `withAccountBar(...)` remains a compatibility alias path and should not regress existing integrations.
 - Shell sidebar markup keeps stable class hooks for responsive/mobile behavior. Full/template/body mobile toggles are named non-submit buttons with aria-controls/expanded; framework JS synchronizes off-canvas inert/aria-hidden/focus/resize at 768px while preserving desktop collapse state. Page native details navigation is a separate contract.

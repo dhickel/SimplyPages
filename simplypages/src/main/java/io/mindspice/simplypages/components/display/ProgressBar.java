@@ -104,6 +104,11 @@ public class ProgressBar extends HtmlTag {
         return this;
     }
 
+    /**
+     * Sets wrapper height through raw style assembly. Supply an application-controlled or
+     * separately CSS-context-validated value; declaration separators are retained. This does
+     * not use addStyle's breakout check or the width helpers' restricted token grammar.
+     */
     public ProgressBar withHeight(String height) {
         this.withAttribute("style", "height: " + height + ";");
         return this;

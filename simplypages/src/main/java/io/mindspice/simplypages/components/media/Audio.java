@@ -9,12 +9,17 @@ import io.mindspice.simplypages.core.HtmlTag;
  */
 public class Audio extends HtmlTag {
 
+    /**
+     * Creates audio with an application-controlled or separately media-context-validated source.
+     * Attribute encoding does not validate URL schemes, destinations, or media payloads.
+     */
     public Audio(String src) {
         super("audio");
         this.withAttribute("src", src);
         this.addClass("audio");
     }
 
+    /** Creates audio with the trusted/context-validated source contract of {@link #Audio(String)}. */
     public static Audio create(String src) {
         return new Audio(src);
     }

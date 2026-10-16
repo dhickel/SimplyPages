@@ -12,10 +12,32 @@ These protections keep text from becoming unintended markup.
 
 Encoding an attribute does not validate the behavior of that attribute. An encoded
 `javascript:` URL is still a JavaScript URL, and an encoded event handler is still code.
-Use `Link`'s validated URL methods for user-supplied navigation destinations. Generic
-`HtmlTag.withAttribute`, event-handler values, application URL schemes, and raw style strings
-require application control. `addStyle` rejects declaration breakout; it is not a complete
-CSS policy engine.
+`Link` constructors/factory/`withHref` classify http/https/mailto/tel and relative forms;
+`Image` constructors/factories/`withSrc` instead reject javascript and non-image data URLs
+while retaining other schemes. Their classification view trims boundary C0/ASCII space,
+removes TAB/LF/CR and folds ASCII case independently of locale. Supported obfuscated
+spellings are accepted, but getters and encoded attributes preserve the original input.
+There is no entity/percent decoding, Unicode normalization, destination authorization or
+payload/MIME inspection. An accepted image source is not a safety or loadability guarantee.
+
+The policy belongs to those methods, not every anchor or image helper. Dropdown/account/nav
+entries and public nested nav constructors, top/side navigation builder links and aliases,
+Hero CTAs, Card/Gallery images, media sources/posters and form/HTMX endpoints require
+application-controlled or separately context-validated destinations. Generic attribute
+replacement can bypass a typed validator without updating its getter. AccountBar link
+conveniences already delegate to Link at configuration; Banner's generated ordinary horizontal
+image delegates to Image at build. Their dynamic endpoints and CSS backgrounds remain separate.
+Existing editing complete URLs remain caller-owned; endpoint-template placement and ID encoding
+do not establish a destination allowlist.
+
+`HtmlTag.withAttribute`, event-handler values and raw style strings require application
+control or separate validation for the actual context. `addStyle` checks property names and
+rejects declaration breakout, not semantic CSS/URL values. `addTrustedStyle`, `Style` inline
+fragments and raw style attributes retain trusted separators; width helpers impose a separate
+restricted size grammar. Banner/Hero background URLs interpolate single-quoted CSS `url()`;
+Image validation alone cannot secure that CSS syntax. Banner/Hero/AccountBar colors,
+Spacer custom spacing and ProgressBar height also use raw CSS assembly. Encoding those
+attributes is not CSS sanitization.
 
 `RawHtml`, `withUnsafeHtml`, `putCompiled`, and unsafe Markdown opt into trust. Only pass
 trusted generated or sanitized HTML. Template compilation does not sanitize these paths.

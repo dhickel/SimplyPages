@@ -28,6 +28,10 @@ public class Breadcrumb extends HtmlTag {
         return new Breadcrumb();
     }
 
+    /**
+     * Adds an application-controlled or separately navigation-validated href. Non-null hrefs
+     * are encoded without Link's scheme policy; null renders text rather than a link.
+     */
     public Breadcrumb addItem(String text, String href) {
         items.add(new BreadcrumbItem(text, href, false));
         return this;
