@@ -23,6 +23,56 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ShellBuilderTest {
 
     @Test
+    void compatibilityOwnershipMatchesFullAndTemplateAssetOrder() {
+        for (boolean included : List.of(true, false)) {
+            var builder = ShellBuilder.create().withHtmx(included)
+                .withContent(new Paragraph("Configured content"))
+                .withCustomJs(List.of("/js/app.js", "/js/feature.js"));
+            for (String html : List.of(builder.build(), builder.buildTemplate().render(RenderContext.empty()))) {
+                var document = Jsoup.parse(html);
+                var markers = document.select("meta[name=simplypages-htmx-compatibility]");
+                assertEquals(included ? 1 : 0, markers.size());
+                assertTrue(document.select("meta[name=htmx-config]").isEmpty());
+                var scripts = document.select("head script[src]");
+                assertEquals(included
+                    ? List.of("/webjars/htmx.org/dist/htmx.min.js", "/js/framework.js", "/js/app.js", "/js/feature.js")
+                    : List.of("/js/framework.js", "/js/app.js", "/js/feature.js"), scripts.eachAttr("src"));
+                assertTrue(scripts.stream().allMatch(script -> script.hasAttr("defer")));
+                if (included) {
+                    assertEquals("1", markers.first().attr("content"));
+                    assertEquals("head", markers.first().parent().tagName());
+                    assertTrue(html.indexOf("name=\"simplypages-htmx-compatibility\"") < html.indexOf("src=\"/webjars/"));
+                }
+            }
+        }
+    }
+
+    @Test
+    void bodyNeverEmitsCompatibilityMarkerOrAssetsInEitherHtmxMode() {
+        for (boolean included : List.of(true, false)) {
+            Component body = ShellBuilder.create().withHtmx(included)
+                .withCustomJs("/js/app.js").withCustomCss("/css/app.css")
+                .withContent(new Paragraph("Fragment")).buildBody();
+            for (String html : List.of(body.render(), body.compile().render(RenderContext.empty()))) {
+                assertTrue(Jsoup.parseBodyFragment(html).select("meta, script, link").isEmpty());
+                assertFalse(html.contains("simplypages-htmx-compatibility"));
+            }
+        }
+    }
+
+    @Test
+    void templateContextChangesContentWithoutChangingCompatibilityOwnership() {
+        var template = ShellBuilder.create().withContent(new Paragraph("Fallback")).buildTemplate();
+        var context = RenderContext.of(template.contentSlot(), new Paragraph("<request & value>"));
+        String html = template.render(context);
+        var document = Jsoup.parse(html);
+        assertEquals(1, document.select("head meta[name=simplypages-htmx-compatibility][content=1]").size());
+        assertEquals("<request & value>", document.selectFirst("#content-area").text());
+        assertFalse(html.contains("<request & value>"));
+        assertEquals(1, Jsoup.parse(template.render()).select("head meta[name=simplypages-htmx-compatibility]").size());
+    }
+
+    @Test
     @DisplayName("ShellBuilder should render full document with side nav and HTMX")
     void testShellBuilderFullDocument() {
         SideNav sideNav = SideNavBuilder.create()

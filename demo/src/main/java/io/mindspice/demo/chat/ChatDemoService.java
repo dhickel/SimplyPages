@@ -17,6 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -219,16 +220,25 @@ public class ChatDemoService implements AutoCloseable {
     private void sendUpdate(Registration reg, long cursor) {
         synchronized (lock) { if (reg.ended) return; }
         try {
-            reg.emitter.send(SseEmitter.event().name("chat-updated").id(Long.toString(cursor)).data(cursor));
+            sendEvent(reg, SseEmitter.event().name("chat-updated").id(Long.toString(cursor)).data(cursor));
         } catch (IOException | IllegalStateException failed) {
             detach(reg);
             reg.emitter.completeWithError(failed);
         }
     }
 
+    private void sendEvent(Registration reg, SseEmitter.SseEventBuilder event) throws IOException {
+        // Spring 7 suppresses converter-level flushes. Preserve the prior per-part network
+        // boundary so an update observes a departed socket without waiting for another event.
+        // Serialize the whole event, not just its parts; never hold the state monitor here.
+        synchronized (reg) {
+            for (var part : event.build()) reg.emitter.send(Set.of(part));
+        }
+    }
+
     private void finish(List<End> endings) {
         for (End end : endings) {
-            try { end.reg.emitter.send(SseEmitter.event().name("chat-ended").data(end.reason)); }
+            try { sendEvent(end.reg, SseEmitter.event().name("chat-ended").data(end.reason)); }
             catch (IOException | IllegalStateException ignored) { /* Disconnected recipients still release their slot. */ }
             finally { end.reg.emitter.complete(); }
         }

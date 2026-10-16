@@ -718,6 +718,122 @@ class ChatDemoLifecycleTest {
         }
     }
 
+    @Test
+    void springTransportReleasesDepartedStreamWithinOneUpdateWithoutEvictingHealthyPeer() throws Exception {
+        try (ChatDemoService service = service(new MutableClock())) {
+            MockHttpSession session = new MockHttpSession();
+            String id = service.initialize(session, false).conversationId();
+            SseEmitter departed = service.stream(session, id);
+            FlushingTransport disconnected = new FlushingTransport(service, departed);
+            FlushingTransport healthy = new FlushingTransport(service, service.stream(session, id));
+            assertEquals("event:chat-updated\nid:1\ndata:1\n\n", disconnected.output());
+            disconnected.disconnected = true;
+            ChatDemoService.Snapshot committed = service.appendExchange(session, id, "after departure", "Name");
+            assertEquals(3, committed.cursor());
+            assertEquals(committed, service.history(session, id));
+            assertEquals(1, service.streamCount(), "A failed second flush must release only the departed registration");
+            assertEquals(2, disconnected.disconnectedFlushes);
+            assertTrue(disconnected.result.hasResult());
+            assertInstanceOf(IOException.class, disconnected.result.getResult());
+            assertFalse(healthy.result.hasResult());
+            assertEquals("event:chat-updated\nid:1\ndata:1\n\nevent:chat-updated\nid:3\ndata:3\n\n", healthy.output());
+            assertEquals(List.of("event:chat-updated\nid:3\ndata:", "3", "\n\n"), healthy.flushes.subList(1, 4));
+            service.stream(session, id);
+            assertEquals(2, service.streamCount());
+            failure(429, () -> service.stream(session, id));
+            // A late container callback from the old identity cannot remove either current stream.
+            @SuppressWarnings("unchecked")
+            Consumer<Throwable> error = (Consumer<Throwable>) Transport.fieldFromEmitter(departed, "errorCallback");
+            error.accept(new IOException("late disconnect"));
+            ((Runnable) Transport.fieldFromEmitter(departed, "completionCallback")).run();
+            assertEquals(2, service.streamCount());
+        }
+    }
+
+    @Test
+    void explicitlyFlushedEventPartsRemainWholeAcrossConcurrentUpdates() throws Exception {
+        try (ChatDemoService service = service(new MutableClock())) {
+            MockHttpSession session = new MockHttpSession();
+            String id = service.initialize(session, false).conversationId();
+            FlushingTransport transport = new FlushingTransport(service, service.stream(session, id));
+            race(40, i -> service.appendExchange(session, id, "concurrent flush " + i, "Name"));
+            String[] events = transport.output().split("\n\n");
+            assertEquals(41, events.length);
+            var pattern = java.util.regex.Pattern.compile("event:chat-updated\\nid:(\\d+)\\ndata:\\1");
+            HashSet<Long> cursors = new HashSet<>();
+            for (String event : events) {
+                var match = pattern.matcher(event);
+                assertTrue(match.matches(), "Event fragments must not interleave: " + event);
+                cursors.add(Long.parseLong(match.group(1)));
+            }
+            assertEquals(41, cursors.size());
+            assertEquals(1 + 40 * 3, transport.flushes.size());
+            assertEquals(1, service.streamCount());
+            assertFalse(transport.result.hasResult());
+        }
+    }
+
+    @Test
+    void terminalEventUsesSameExplicitFlushBoundaryAndUnchangedWireBytes() throws Exception {
+        MutableClock clock = new MutableClock();
+        try (ChatDemoService service = service(clock)) {
+            MockHttpSession session = new MockHttpSession();
+            String id = service.initialize(session, false).conversationId();
+            FlushingTransport transport = new FlushingTransport(service, service.stream(session, id));
+            clock.advance(STREAM);
+            service.sweep();
+            assertEquals(0, service.streamCount());
+            assertEquals(1, service.conversationCount());
+            assertTrue(transport.result.hasResult());
+            assertNull(transport.result.getResult());
+            assertEquals("event:chat-updated\nid:1\ndata:1\n\nevent:chat-ended\ndata:ended\n\n", transport.output());
+            assertEquals(5, transport.flushes.size());
+            assertEquals(List.of("event:chat-ended\ndata:", "ended", "\n\n", ""), transport.flushes.subList(1, 5));
+        }
+    }
+
+    /** Real Spring emitter handler/converters/response; only the servlet network sink is controlled. */
+    private static final class FlushingTransport {
+        final org.springframework.web.context.request.async.DeferredResult<Object> result =
+            new org.springframework.web.context.request.async.DeferredResult<>();
+        final List<String> flushes = new ArrayList<>();
+        private final org.springframework.mock.web.MockHttpServletResponse response =
+            new org.springframework.mock.web.MockHttpServletResponse();
+        private int flushed;
+        boolean disconnected;
+        int disconnectedFlushes;
+
+        FlushingTransport(ChatDemoService service, SseEmitter emitter) throws Exception {
+            Object serviceLock = field(service, "lock");
+            var servlet = new jakarta.servlet.http.HttpServletResponseWrapper(response) {
+                @Override public void flushBuffer() throws IOException {
+                    assertFalse(Thread.holdsLock(serviceLock), "Network flushes must be outside the service monitor");
+                    // A FIN can allow one write before the socket reports the reset on the next flush.
+                    if (disconnected && ++disconnectedFlushes >= 2) throw new IOException("Departed socket reset");
+                    String content = response.getContentAsString();
+                    flushes.add(content.substring(flushed));
+                    flushed = content.length();
+                    super.flushBuffer();
+                    Thread.yield();
+                }
+            };
+            Class<?> handlerType = Class.forName(ResponseBodyEmitter.class.getName() + "$Handler");
+            Class<?> implementation = Class.forName(
+                "org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitterReturnValueHandler$DefaultSseEmitterHandler");
+            var constructor = implementation.getDeclaredConstructors()[0];
+            constructor.setAccessible(true);
+            Object handler = constructor.newInstance(List.of(
+                    new org.springframework.http.converter.StringHttpMessageConverter(java.nio.charset.StandardCharsets.UTF_8),
+                    new org.springframework.http.converter.json.JacksonJsonHttpMessageConverter()),
+                null, new org.springframework.http.server.ServletServerHttpResponse(servlet), result);
+            Method initialize = ResponseBodyEmitter.class.getDeclaredMethod("initialize", handlerType);
+            initialize.setAccessible(true);
+            initialize.invoke(emitter, handler);
+        }
+
+        String output() throws java.io.UnsupportedEncodingException { return response.getContentAsString(); }
+    }
+
     private static ChatDemoService service(MutableClock clock) { return new ChatDemoService(clock, false); }
 
     private static MockHttpSession strangerWithForeignAttribute(MockHttpSession session, String id) {

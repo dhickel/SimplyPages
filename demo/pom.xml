@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.3</version>
+        <version>4.1.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -18,7 +18,7 @@
     <description>Demo application for SimplyPages</description>
 
     <properties>
-        <!-- Keep demo bytecode readable by Spring 6.2.3 ASM; the library requires a JDK 25 runtime. -->
+        <!-- Retain Java 21 demo bytecode; the library requires a JDK 25 runtime. -->
         <java.version>21</java.version>
     </properties>
 
@@ -33,19 +33,19 @@
         <!-- Spring Boot Starter for web applications -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
 
         <!-- WebJars Locator for version-less WebJar paths (needed for serving HTMX from webjar) -->
         <dependency>
             <groupId>org.webjars</groupId>
-            <artifactId>webjars-locator-core</artifactId>
+            <artifactId>webjars-locator-lite</artifactId>
         </dependency>
 
         <!-- Spring Boot Starter for testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

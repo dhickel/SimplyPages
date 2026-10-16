@@ -50,11 +50,26 @@ Request `/greeting/fragment?name=Ada`; it returns only the `div#greeting` fragme
 
 Expose `/css/framework.css` and `/js/framework.js` from the library's `static/` classpath
 resources. Spring Boot's default resource handling does this. The default HTMX URL is
-`/webjars/htmx.org/dist/htmx.min.js`; the demo includes `webjars-locator-core` for this
-versionless path. Configure an equivalent mapping in another host.
+`/webjars/htmx.org/dist/htmx.min.js`; the Boot 4.1.1 demo includes BOM-managed
+`org.webjars:webjars-locator-lite` 1.1.4 for Spring 7's versionless resource resolver.
+The bundled HTMX 2.0.11 WebJar is served unchanged. Configure equivalent resource handling
+in another host; the core library does not install HTTP mappings.
 
 Keep custom CSS after framework CSS. Use `ShellBuilder.withCustomCss("/css/app.css")`.
-The shell loads HTMX, framework JavaScript, then custom JavaScript, all deferred.
+Full and template shells load HTMX, framework JavaScript, then custom JavaScript, all deferred.
+When the shell includes HTMX, framework JS initializes the legacy cross-origin-request,
+DELETE-body, and smooth-scroll defaults before custom JS. Set application policy through normal
+`htmx.config` assignments in that custom script or an explicit upstream `htmx-config` meta;
+those choices win. No extra public shell option or asset is needed.
+
+Body fragments load no assets or configuration. Their document host must load assets once.
+`withHtmx(false)` and unmarked/manual hosts receive no automatic compatibility defaults, even
+when framework JS is present. If a manual host wants the legacy settings, explicitly configure
+`selfRequestsOnly: false`, `methodsThatUseUrlParams: ['get']`, and `scrollBehavior: 'smooth'`
+using upstream configuration before making requests. See the [asset reference](../reference/build-and-assets.md)
+for initialization timing, the bounded Form-header repair, and its event-stage limits.
+Applications still own destinations, CORS, CSRF verification, and authorization; compatibility
+configuration is not endpoint security.
 
 ## Update one target
 

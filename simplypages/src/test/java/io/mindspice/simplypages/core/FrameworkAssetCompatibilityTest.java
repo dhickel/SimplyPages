@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -96,6 +97,33 @@ class FrameworkAssetCompatibilityTest {
         assertTrue(js.contains("nav.inert = blocked"));
         assertTrue(js.contains("--sp-modal-stack"));
         assertFalse(js.contains("style.zIndex = 1000"));
+    }
+
+    @Test
+    void shellDefaultsAreEarlyPrivateMarkerOwnedNotSettleConfiguration() throws IOException {
+        String js = readClasspathResource("static/js/framework.js");
+        assertTrue(js.contains("document.head.querySelector('meta[name=\"simplypages-htmx-compatibility\"][content=\"1\"]') && window.htmx"));
+        assertTrue(js.contains("selfRequestsOnly: false"));
+        assertTrue(js.contains("methodsThatUseUrlParams: ['get']"));
+        assertTrue(js.contains("scrollBehavior: 'smooth'"));
+        assertTrue(js.indexOf("Object.assign(window.htmx.config") < js.indexOf("// Global event delegation"));
+        assertEquals(1, js.split("Object.assign\\(window.htmx.config", -1).length - 1);
+    }
+
+    @Test
+    void formHookUsesOwnDataDefinitionWithoutClassOrTransportInterception() throws IOException {
+        String js = readClasspathResource("static/js/framework.js");
+        String hook = js.substring(js.indexOf("/** Recover only missing"), js.indexOf("// Global event delegation"));
+        assertTrue(hook.contains("event.defaultPrevented || !(source instanceof HTMLFormElement)"));
+        assertTrue(hook.contains("source.getAttribute('hx-headers')"));
+        assertTrue(hook.contains("JSON.parse(raw)"));
+        assertTrue(hook.contains("name in Object.prototype"));
+        assertTrue(hook.contains("Object.getOwnPropertyNames(headers)"));
+        assertTrue(hook.contains("Object.isExtensible(headers)"));
+        assertTrue(hook.contains("Object.defineProperty(headers, name"));
+        assertFalse(hook.contains("classList"));
+        assertFalse(hook.contains("XMLHttpRequest"));
+        assertFalse(hook.contains("closest("));
     }
 
     private String readClasspathResource(String path) throws IOException {

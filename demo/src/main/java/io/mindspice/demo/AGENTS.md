@@ -65,6 +65,9 @@ The demo-local default is server.address=127.0.0.1 with the existing port and or
 
 ## Dependencies
 - Depends on `simplypages` published module APIs.
+- Demo integration uses Boot 4.1.1, Spring MVC 7.0.9, Servlet 6.1/Tomcat 11.0.24, modular webmvc/webmvc-test starters, and Boot-managed webjars-locator-lite 1.1.4 for versionless unmodified HTMX 2.0.11. Do not retain locator-core/ClassGraph or add Jackson 2 databind fallback; the test launcher uses Jackson 3. Production servlet listener/filter registration imports retain their existing packages.
+- Keep JDK 25 runtime/library bytecode and Java 21 demo bytecode. Boot migration does not alter private editing/session/SSE policies or establish a cause/fix for the separately tracked shutdown warning.
+- Full/template shell-owned legacy client defaults precede deferred custom JS; explicit upstream meta/custom overrides win. Body/manual/disabled hosts own configuration. The bounded framework Form-header hook is compatibility, not demo endpoint security or CSRF verification.
 - No dependency from framework modules back to demo.
 
 ## Maintenance Requirement

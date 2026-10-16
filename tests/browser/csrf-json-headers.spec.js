@@ -49,9 +49,14 @@ test.beforeAll(async ({request}) => {
             assets[url] = await response.body();
         }
         expect(assets['/css/framework.css'].equals(read('simplypages/src/main/resources/static/css/framework.css'))).toBe(true);
-        const htmxEntry = 'META-INF/resources/webjars/htmx.org/1.9.10/dist/htmx.min.js';
+        const htmxEntry = 'META-INF/resources/webjars/htmx.org/2.0.11/dist/htmx.min.js';
+        const webjar = fs.readFileSync(path.join(process.env.HOME,
+            '.m2/repository/org/webjars/npm/htmx.org/2.0.11/htmx.org-2.0.11.jar'));
+        expect(unpack(demoJar, 'BOOT-INF/lib/htmx.org-2.0.11.jar').equals(webjar)).toBe(true);
         expect(assets['/webjars/htmx.org/dist/htmx.min.js'].equals(unpack(
-            path.join(process.env.HOME, '.m2/repository/org/webjars/npm/htmx.org/1.9.10/htmx.org-1.9.10.jar'), htmxEntry))).toBe(true);
+            path.join(process.env.HOME, '.m2/repository/org/webjars/npm/htmx.org/2.0.11/htmx.org-2.0.11.jar'), htmxEntry))).toBe(true);
+        expect(sha256(assets['/webjars/htmx.org/dist/htmx.min.js']))
+            .toBe('d6fdc75f204e6bdefa99b69bf1e6d4ac69b8a364f77929f45c13476b4000f717');
         server = http.createServer((req, res) => {
             const url = new URL(req.url, 'http://127.0.0.1:18081');
             if (req.method === 'GET' && url.pathname === '/csrf-json-fixture') {
@@ -93,7 +98,7 @@ test.beforeEach(async ({page}) => {
     page.csrfErrors = [];
     page.on('pageerror', error => page.csrfErrors.push(error.message));
     await page.goto('http://127.0.0.1:18081/csrf-json-fixture');
-    expect(await page.evaluate(() => window.htmx.version)).toBe('1.9.10');
+    expect(await page.evaluate(() => window.htmx.version)).toBe('2.0.11');
 });
 test.afterEach(({page}) => { expect(page.csrfErrors).toEqual([]); });
 

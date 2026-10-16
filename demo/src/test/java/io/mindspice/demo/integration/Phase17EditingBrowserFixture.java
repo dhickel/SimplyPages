@@ -1,12 +1,12 @@
 package io.mindspice.demo.integration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.mindspice.demo.DemoApplication;
 import io.mindspice.demo.EditingDemoController;
 import io.mindspice.simplypages.editing.EditMode;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.web.context.WebServerInitializedEvent;
+import org.springframework.boot.web.server.context.WebServerInitializedEvent;
 
 import java.lang.reflect.Field;
 import java.net.InetAddress;

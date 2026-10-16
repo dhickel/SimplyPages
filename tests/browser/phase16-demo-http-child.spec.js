@@ -18,7 +18,7 @@ async function enter(page, host, baseURL) {
         await expect(page.locator('#editing-fragment #page-content')).toHaveCount(1);
     }
     await expect(page.locator('script[src="/js/editing-demo.js"]')).toHaveCount(1);
-    expect(await page.evaluate(() => htmx.version)).toBe('1.9.10');
+    expect(await page.evaluate(() => htmx.version)).toBe('2.0.11');
 }
 
 async function listenerCount(page) {
@@ -37,7 +37,7 @@ function childEdit(page, id, index = 0) { return page.locator(`[hx-get^="/editin
 function childDelete(page, id, index = 0) { return page.locator(`[hx-delete^="/editing-demo/delete-child/${id}/item-${index}?"]`); }
 
 async function clickResponse(page, control, suffix, status = 200) {
-    // HTMX 1.9.10 initializes inserted controls at settle, not when they first become visible.
+    // HTMX 2.0.11 initializes inserted controls at settle, not when they first become visible.
     await expect(page.locator('.htmx-added, .htmx-settling, .htmx-request')).toHaveCount(0);
     const response = page.waitForResponse(response => response.url().includes(suffix));
     await control.click();

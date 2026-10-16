@@ -59,6 +59,12 @@ SimplyPages is an active internal Java-first SSR framework for building data-hea
 - Template sharing requires retained custom delegates to be safe to share
 - Prefer slot-driven rendering for request-time dynamic content over mutating built module structure
 
+### Shell and Client Ownership
+- The library bundles unmodified HTMX 2.0.11 through WebJars; the Boot 4.1.1 demo uses BOM-managed locator-lite for the versionless URL.
+- Full/template shells that include HTMX privately initialize legacy selfRequestsOnly=false, GET-only URL parameters (DELETE body), and smooth-scroll defaults at the top of existing framework JS, before deferred custom JS. Explicit upstream host meta and custom-script/ready overrides win. The private head marker is not public configuration; no insertion/settle reapplication.
+- withHtmx(false), body fragments, and unmarked/manual hosts do not select compatibility defaults. Hosts load assets once and explicitly configure desired upstream policy. Compatibility is not destination/CORS/CSRF/authorization enforcement.
+- The Form-source configRequest hook repairs only missing Object.prototype-collision headers from an own literal exactly-one-string-pair attribute. Preserve event-stage own entries/case aliases/null/accessors/nonextensible maps/cancellation and later overrides. No generic inherited/evaluated/options parser, Form runtime/JSON change, header rewrite, token verification, or alternate transport. See the asset reference for upstream pre-event ajax-options limits.
+
 ### Module Lifecycle Contract
 - Modules are built lazily and idempotently through `build()`
 - `buildContent()` is structure composition, not per-request mutation logic
@@ -146,7 +152,7 @@ cd demo && ../mvnw spring-boot:run
 - `docs/reference/`: API/build contracts; `docs/explanation/`: design and integration reasoning.
 - Keep existing topic-based URLs stable and link new pages from their section and `docs/INDEX.md`.
 - Documentation tests validate local links/anchors, guide discoverability, and complete Java examples.
-- JDK 25 is required; the demo retains Java 21 bytecode for its current Spring class scanner.
+- JDK 25 is required; retain library Java 25 bytecode and the demo's Java 21 bytecode target. Dependency migration does not authorize API/bridge or target changes.
 
 ## Documentation TOC (Terse)
 - Full index: `docs/INDEX.md`

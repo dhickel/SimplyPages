@@ -4,6 +4,34 @@
  * Uses event delegation for better performance and HTMX compatibility
  */
 
+/** Private shell-owned defaults run between deferred HTMX and application scripts, never at settle. */
+if (document.head.querySelector('meta[name="simplypages-htmx-compatibility"][content="1"]') && window.htmx) {
+    Object.assign(window.htmx.config, {
+        selfRequestsOnly: false,
+        methodsThatUseUrlParams: ['get'],
+        scrollBehavior: 'smooth'
+    });
+}
+
+/** Recover only missing prototype-collision headers from a source form's own literal string pair. */
+document.addEventListener('htmx:configRequest', event => {
+    const source = event.detail?.elt;
+    if (event.defaultPrevented || !(source instanceof HTMLFormElement)) return;
+    const raw = source.getAttribute('hx-headers');
+    if (!raw || !/^\s*\{\s*"(?:[^"\\]|\\.)*"\s*:\s*"(?:[^"\\]|\\.)*"\s*\}\s*$/.test(raw)) return;
+    let pair;
+    try { pair = JSON.parse(raw); } catch (_) { return; }
+    const keys = Object.keys(pair);
+    if (keys.length !== 1 || typeof pair[keys[0]] !== 'string') return;
+    const name = keys[0];
+    // Ordinary headers already accumulate upstream; do not undo application deletion.
+    if (!(name in Object.prototype)) return;
+    const headers = event.detail.headers;
+    if (!headers || typeof headers !== 'object' || !Object.isExtensible(headers)
+        || Object.getOwnPropertyNames(headers).some(key => key.toLowerCase() === name.toLowerCase())) return;
+    Object.defineProperty(headers, name, {value: pair[name], enumerable: true, writable: true, configurable: true});
+});
+
 // Global event delegation for all components
 document.addEventListener('click', function(event) {
     // 1. Accordion

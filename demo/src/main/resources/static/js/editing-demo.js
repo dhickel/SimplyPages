@@ -1,4 +1,4 @@
-// Private demo only: opt in to server-marked child-modal 4xx responses under HTMX 1.9.10.
+// Private demo only: opt in to server-marked child-modal 4xx responses under HTMX 2.0.11.
 (() => {
     'use strict';
     document.addEventListener('htmx:beforeSwap', event => {

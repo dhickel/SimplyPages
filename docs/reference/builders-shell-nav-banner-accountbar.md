@@ -71,6 +71,18 @@ Script load order in `build()`:
 2. framework JS (`/js/framework.js`)
 3. custom JS files in configured order
 
+These deferred-script rules also apply to compiled templates. When HTMX is included, the existing
+framework script privately initializes the bundled 2.0.11 client with the legacy request-origin,
+DELETE-body, and smooth-scroll defaults before custom JS. Explicit upstream `htmx-config` meta,
+immediate custom-script assignments, and custom ready handlers can override them. Initialization
+is not repeated after swaps or fragment insertion.
+
+`withHtmx(false)` omits the HTMX asset and private initialization marker. Body-only output always
+omits assets, scripts, and that marker; manual hosts own their HTMX configuration. The marker is
+not a public option, and there is no new fluent API or automatically loaded compatibility asset.
+See [build requirements and assets](build-and-assets.md) for manual-host configuration, bounded
+Form-header compatibility, and application-owned destination/CORS/CSRF boundaries.
+
 Custom JS setup example:
 
 ```java
@@ -102,6 +114,7 @@ Notes:
 - `ShellTemplate.renderWithContent(...)` renders full document HTML (with doctype).
 - If `withContent(...)` was configured before `buildTemplate()`, that content becomes default slot content.
 - Template mode does not emit shell content auto-load attributes (`hx-get="/home"`, `hx-trigger="load"`).
+- Template heads use the same HTMX inclusion, private early defaults, deferred order, and application-override rules as full builds; request content does not change that ownership.
 
 ## SideNavBuilder and TopNavBuilder
 

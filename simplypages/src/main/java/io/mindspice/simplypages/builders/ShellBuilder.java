@@ -152,6 +152,11 @@ public class ShellBuilder {
 
     /**
      * Enable/disable HTMX inclusion.
+     *
+     * <p>Full documents and templates that include HTMX initialize the legacy request-origin,
+     * DELETE-body and smooth-scroll defaults before custom scripts. Explicit application
+     * HTMX configuration remains authoritative. Body fragments do not initialize assets or
+     * defaults; their host owns configuration.</p>
      */
     public ShellBuilder withHtmx(boolean include) {
         this.includeHtmx = include;
@@ -259,6 +264,8 @@ public class ShellBuilder {
         }
 
         if (includeHtmx) {
+            head.withChild(new HtmlTag("meta", true)
+                .withAttribute("name", "simplypages-htmx-compatibility").withAttribute("content", "1"));
             head.withChild(new HtmlTag("script")
                 .withAttribute("src", "/webjars/htmx.org/dist/htmx.min.js")
                 .withAttribute("defer", ""));
@@ -329,6 +336,8 @@ public class ShellBuilder {
         }
 
         if (includeHtmx) {
+            head.withChild(new HtmlTag("meta", true)
+                .withAttribute("name", "simplypages-htmx-compatibility").withAttribute("content", "1"));
             head.withChild(new HtmlTag("script")
                 .withAttribute("src", "/webjars/htmx.org/dist/htmx.min.js")
                 .withAttribute("defer", ""));
