@@ -52,6 +52,26 @@ using the dependency; public Maven publication is not assumed.
 - Framework module: Java 25 release target.
 - Demo module: Java 21 release target, built in this repo with a Java 25 JDK.
 - Full reactor builds should run on JDK 25 so the framework module can compile.
+- Runtime: JDK 25 for both library consumers and the Spring Boot 4.1.1 demo,
+  even though the demo emits Java 21 bytecode.
+
+## Quickstart path
+
+1. [Clone/build locally](docs/getting-started/README.md), then run the
+   [first-page tutorial](docs/tutorials/first-page.md) with its complete POM and Java source.
+2. [Render dynamic data with slots](docs/tutorials/dynamic-page.md) in the same project.
+3. [Serve pages and HTMX fragments](docs/how-to/serve-pages-and-fragments.md) in your HTTP host.
+4. Build a [blog](docs/how-to/build-a-markdown-blog.md),
+   [forum browser](docs/how-to/build-a-forum.md),
+   [editable page](docs/how-to/build-user-editable-pages.md),
+   [chat panel](docs/how-to/add-chat.md),
+   [dashboard](docs/how-to/build-a-dashboard.md), or
+   [server-validated form](docs/how-to/handle-form-submissions.md).
+
+The sketches below illustrate the rendering model; the linked task guides contain
+complete controllers and state their application security/storage prerequisites.
+SimplyPages does not install authentication, CSRF verification, persistence, or
+transport servers. The repository demo remains a private, nondurable sandbox.
 
 ## 1) Static Page (Build Once, Serve Fast)
 
@@ -219,8 +239,9 @@ public class ProfileSummaryModule extends Module {
 
 Start at the [documentation home](docs/README.md), organized by reader need:
 
+- [Getting started](docs/getting-started/README.md): local build → tutorials → HTTP → application tasks.
 - [Tutorials](docs/tutorials/README.md): runnable first page and dynamic rendering lessons.
-- [How-to guides](docs/how-to/README.md): serving, editing, content publishing, and testing.
+- [How-to guides](docs/how-to/README.md): blog, forum, editing, chat, dashboard, forms, and maintenance.
 - [Reference](docs/reference/README.md): APIs, constraints, defaults, and assets.
 - [Explanation](docs/explanation/README.md): rendering, reuse, security, and integration.
 

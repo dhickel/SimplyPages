@@ -3,6 +3,8 @@
 # Documentation Index
 
 This page is the table of contents for all framework documentation.
+New users should follow [Getting started](getting-started/README.md): local build,
+the two runnable tutorials, HTTP serving, then an application task.
 
 ## Tutorials
 
@@ -14,6 +16,12 @@ This page is the table of contents for all framework documentation.
 
 - [Task overview](how-to/README.md)
 - [Serve full pages and HTMX fragments](how-to/serve-pages-and-fragments.md)
+- [Build a Markdown blog](how-to/build-a-markdown-blog.md)
+- [Build a forum browser](how-to/build-a-forum.md)
+- [Build user-editable pages](how-to/build-user-editable-pages.md)
+- [Add a session-local chat panel with polling](how-to/add-chat.md)
+- [Build a dashboard](how-to/build-a-dashboard.md)
+- [Handle server-validated form submissions](how-to/handle-form-submissions.md)
 - [Implement an authorized editing flow](how-to/edit-content.md)
 - [Publish a Markdown directory](how-to/publish-markdown.md)
 - [Build, test, and browse the documentation](how-to/build-test-and-document.md)

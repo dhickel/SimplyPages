@@ -10,6 +10,21 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DocumentationIntegrityTest {
+    @Test void learningPathAndSixApplicationTasksAreDiscoverable() throws Exception {
+        Path root = Path.of("../docs");
+        String landing = Files.readString(root.resolve("README.md"));
+        for (String section : List.of("tutorials", "how-to", "reference", "explanation")) {
+            assertTrue(landing.contains(section + "/README.md"), section);
+        }
+        String tasks = Files.readString(root.resolve("how-to/README.md"));
+        for (String task : DocumentationExamplesTest.TASKS) {
+            assertTrue(tasks.contains(task + ".md"), "Missing application task: " + task);
+        }
+        String start = Files.readString(root.resolve("getting-started/README.md"));
+        assertTrue(start.contains("tutorials/first-page.md"), "Getting started must lead to the complete first exercise");
+        assertTrue(start.contains("how-to/README.md"), "Getting started must lead to application tasks");
+    }
+
     @Test void localMarkdownLinksAndAnchorsResolve() throws Exception {
         Path root = Path.of("../docs").toAbsolutePath().normalize();
         var service = new DocumentationService();
