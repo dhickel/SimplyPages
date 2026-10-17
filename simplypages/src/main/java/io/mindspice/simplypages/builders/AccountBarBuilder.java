@@ -57,7 +57,8 @@ public class AccountBarBuilder {
     }
 
     /**
-     * Appends a standard link to the left section.
+     * Appends a left link through {@link Link#create(String, String)}, applying its href scheme
+     * policy immediately. Destination authorization remains application-owned.
      */
     public AccountBarBuilder addLeftLink(String text, String href) {
         leftItems.add(Link.create(href, text));
@@ -65,7 +66,8 @@ public class AccountBarBuilder {
     }
 
     /**
-     * Appends a standard link to the right section.
+     * Appends a right link through {@link Link#create(String, String)}, applying its href scheme
+     * policy immediately. This does not validate arbitrary supplied components or HTMX endpoints.
      */
     public AccountBarBuilder addRightLink(String text, String href) {
         rightItems.add(Link.create(href, text));
@@ -81,7 +83,8 @@ public class AccountBarBuilder {
     }
 
     /**
-     * Sets inline background color on the root account bar element.
+     * Sets raw inline background color. Supply an application-controlled or separately
+     * CSS-context-validated value; declaration separators are retained, not sanitized.
      */
     public AccountBarBuilder withBackgroundColor(String color) {
         this.backgroundColor = color;
@@ -89,7 +92,8 @@ public class AccountBarBuilder {
     }
 
     /**
-     * Appends a dynamic account widget (HTMX-backed) to the right section.
+     * Appends a dynamic account widget using an application-controlled or separately endpoint-validated
+     * URL. Unlike link conveniences, this path does not apply Link's href policy or authorize requests.
      */
     public AccountBarBuilder addRightAccountWidget(String endpoint) {
         rightItems.add(AccountWidget.createDynamic(endpoint));
@@ -120,7 +124,7 @@ public class AccountBarBuilder {
         accountBar.withAttribute("class", "account-bar" + (customClass != null ? " " + customClass : ""));
 
         if (backgroundColor != null) {
-            accountBar.addStyle("background-color", backgroundColor);
+            accountBar.withAttribute("style", "background-color: " + backgroundColor);
         }
 
         // Left section

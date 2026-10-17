@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class ModuleLifecycleTest {
 
@@ -20,6 +21,9 @@ class ModuleLifecycleTest {
         String initial = module.render();
         assertEquals(1, countOccurrences(initial, "module-title"));
 
+        module.withContent("Unapplied model change");
+        assertEquals(initial, module.render(), "ordinary rendering must not rebuild configuration-only changes");
+
         Map<String, String> edits = new HashMap<>();
         edits.put("title", "Updated");
         edits.put("content", "Updated Content");
@@ -28,6 +32,8 @@ class ModuleLifecycleTest {
 
         String updated = module.render();
         assertEquals(1, countOccurrences(updated, "module-title"));
+        assertEquals(1, countOccurrences(updated, "Updated Content"));
+        assertFalse(updated.contains("Unapplied model change"));
     }
 
     private static int countOccurrences(String haystack, String needle) {

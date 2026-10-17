@@ -142,7 +142,10 @@ public class Style {
     /**
      * Appends an inline style fragment in the form {@code property: value}.
      *
-     * <p>No CSS sanitization is performed.</p>
+     * <p>Both arguments must be application-controlled or separately validated for their
+     * CSS context. No property-name, declaration-breakout, semantic CSS, or URL validation is
+     * performed; separators are retained. Attribute encoding by a later tag does not supply
+     * these checks. Unlike {@link HtmlTag#addStyle(String, String)}, this is a raw fragment path.</p>
      */
     public Style addInlineStyle(String property, String value) {
         inlineStyles.add(property + ": " + value);

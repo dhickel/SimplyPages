@@ -1,14 +1,17 @@
 package io.mindspice.simplypages.components;
 
+import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
-import io.mindspice.simplypages.core.RenderContext;
-import io.mindspice.simplypages.core.SafeUrl;
+import java.util.stream.Stream;
 
 /**
  * Account-state widget that renders either guest links or authenticated user actions.
  *
- * <p>Mutable and not thread-safe. Render methods rebuild child content on each call based on
- * current authentication state fields. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
+ * <p>Configuration is mutable and not thread-safe. Rendering generates state-derived content
+ * without modifying stored children, and forwards context to inherited children. Configure before
+ * sharing; custom child delegates and request contexts have their own sharing requirements.</p>
+ * <p>Authenticated actions use disclosure navigation, not an ARIA menu. Load framework JS/CSS
+ * once in the shell for native-button activation and dismissal.</p>
  */
 public class AccountWidget extends HtmlTag {
 
@@ -18,6 +21,7 @@ public class AccountWidget extends HtmlTag {
     private String profileUrl = "/profile";
     private String logoutUrl = "/logout";
     private boolean isAuthenticated = false;
+    private final String dropdownId = "account-actions-" + java.util.UUID.randomUUID();
 
     /**
      * Creates a widget root with class {@code account-widget}.
@@ -50,13 +54,13 @@ public class AccountWidget extends HtmlTag {
     }
 
     /**
-     * Creates an HTMX placeholder that loads widget HTML from an endpoint.
+     * Creates an HTMX placeholder that loads widget HTML from an application-controlled or
+     * separately endpoint-validated URL. Encoding does not enforce destination policy or auth.
      *
      * @param endpoint HTMX GET endpoint
      * @return placeholder div
      */
     public static HtmlTag createDynamic(String endpoint) {
-        SafeUrl.validateHref(endpoint);
         return new HtmlTag("div")
             .withAttribute("class", "account-widget")
             .withAttribute("hx-get", endpoint)
@@ -65,96 +69,83 @@ public class AccountWidget extends HtmlTag {
     }
 
     /**
-     * Sets login URL.
+     * Sets an application-controlled or separately navigation-validated login URL.
+     * The generated href is encoded, without Link's scheme policy.
      *
      * @param url login URL
      * @return this widget
      */
     public AccountWidget withLoginUrl(String url) {
-        SafeUrl.validateHref(url);
         this.loginUrl = url;
         return this;
     }
 
     /**
-     * Sets signup URL.
+     * Sets an application-controlled or separately navigation-validated signup URL.
+     * The generated href is encoded, without Link's scheme policy; null omits the signup link.
      *
      * @param url signup URL
      * @return this widget
      */
     public AccountWidget withSignupUrl(String url) {
-        SafeUrl.validateHref(url);
         this.signupUrl = url;
         return this;
     }
 
     /**
-     * Sets profile URL.
+     * Sets an application-controlled or separately navigation-validated profile URL.
+     * The generated href is encoded, without Link's scheme policy.
      *
      * @param url profile URL
      * @return this widget
      */
     public AccountWidget withProfileUrl(String url) {
-        SafeUrl.validateHref(url);
         this.profileUrl = url;
         return this;
     }
 
     /**
-     * Sets logout URL.
+     * Sets an application-controlled or separately navigation-validated logout URL.
+     * The generated href is encoded, without Link's scheme policy or endpoint authorization.
      *
      * @param url logout URL
      * @return this widget
      */
     public AccountWidget withLogoutUrl(String url) {
-        SafeUrl.validateHref(url);
         this.logoutUrl = url;
         return this;
     }
 
-    /**
-     * Rebuilds children for current auth state and renders root container.
-     *
-     * @param context render context
-     * @return widget HTML
-     */
+    /** Generates account content followed by inherited children without mutating either. */
     @Override
-    public String render(RenderContext context) {
-        children.clear();
-        if (isAuthenticated) {
-            buildAuthenticatedContent();
-        } else {
-            buildGuestContent();
-        }
-        return super.render(context);
-    }
-
-    /**
-     * Renders using empty context.
-     *
-     * @return widget HTML
-     */
-    @Override
-    public String render() {
-        return render(RenderContext.empty());
+    protected Stream<Component> getChildrenStream() {
+        Component account = isAuthenticated ? buildAuthenticatedContent() : buildGuestContent();
+        return Stream.concat(Stream.of(account), super.getChildrenStream());
     }
 
     /**
      * Builds child nodes for authenticated state.
      */
-    private void buildAuthenticatedContent() {
+    private Component buildAuthenticatedContent() {
         // User info container
         HtmlTag userInfo = new HtmlTag("div")
-            .withAttribute("class", "account-widget-user");
+            .withAttribute("class", "account-widget-user")
+            .withAttribute("data-sp-disclosure", "");
 
         // Username/greeting
-        HtmlTag greeting = new HtmlTag("span")
+        HtmlTag greeting = new HtmlTag("button")
+            .withAttribute("type", "button")
             .withAttribute("class", "account-widget-greeting")
+            .withAttribute("data-sp-disclosure-toggle", "")
+            .withAttribute("aria-controls", dropdownId)
+            .withAttribute("aria-expanded", "false")
             .withInnerText("Hello, " + username);
         userInfo.withChild(greeting);
 
         // Dropdown menu container
         HtmlTag dropdown = new HtmlTag("div")
+            .withId(dropdownId)
+            .withAttribute("hidden", "")
             .withAttribute("class", "account-widget-dropdown");
 
         // Profile link
@@ -172,13 +163,13 @@ public class AccountWidget extends HtmlTag {
         dropdown.withChild(logoutLink);
 
         userInfo.withChild(dropdown);
-        this.withChild(userInfo);
+        return userInfo;
     }
 
     /**
      * Builds child nodes for guest state.
      */
-    private void buildGuestContent() {
+    private Component buildGuestContent() {
         HtmlTag guestContainer = new HtmlTag("div")
             .withAttribute("class", "account-widget-guest");
 
@@ -198,6 +189,6 @@ public class AccountWidget extends HtmlTag {
             guestContainer.withChild(signupLink);
         }
 
-        this.withChild(guestContainer);
+        return guestContainer;
     }
 }

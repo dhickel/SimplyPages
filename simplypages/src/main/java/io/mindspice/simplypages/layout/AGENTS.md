@@ -11,11 +11,19 @@ Owns page composition and responsive layout primitives.
 - `Row.withChild` auto-wrap behavior for non-`Column` components stays predictable.
 - `Column.withWidth(int)` accepts only 1..12.
 - `Column.auto()` and `Column.fill()` semantics remain stable.
-- `Column` must normalize the exact `col` class token in direct, nested, context, and template render paths.
-- Row/Grid layout token helpers must emit classes backed by `framework.css`.
-- Layout mutators must preserve base/custom class tokens and replace only their own token family.
-- `Page.withStickySidebar(...)` keeps stable markup hooks used by responsive CSS.
+- `Column` establishes the exact `col` token during configuration, never during rendering; preserve its documented replacement semantics and HtmlTag-declared withAttribute return.
+- Row layout token helpers emit CSS-backed classes. Grid accepts columns 1..6 and retains caller gap spelling; Grid updates preserve whole custom tokens and recognize class aliases without folding token case.
+- Container/Section and Row modifiers preserve base/custom classes and replace their own token families; do not extend this rule to Column's class replacement helpers.
+- `Page.withStickySidebar(...)` keeps one initially open native details/first summary/content stream and stable responsive hooks, separate from ShellBuilder's drawer. Generated details has fixed tabindex -1 programmatic fallback, not a sequential stop; later caller tabindex is never overwritten.
+- Shared framework JS keeps desktop >=769 natively open and restores each element's remembered observable native/application open preference at <=768. Desktop close updates mobile preference before reopening. Ordinary nested details are untouched; new/replacement nodes initialize independently, same-element reinsert/reparent retains preference, detached nodes receive no responsive writes/focus.
+- Page native state uses private target-only open observers with pending drains/isolated owned writes, not coalesced-toggle ignore flags/property interception/general mutation services. Desktop state initializes before modal traversal. Transition-contained focus uses summary/content/root and existing private top-modal/reveal boundaries; preserve deliberate/application focus and caller attrs, never steal covered/background focus or scroll. Reveal retained in-dialog focus after responsive reflow within existing internal clipping/scroll boundaries. Alert loan/opener observers remain separate.
+- CSS follows native open state. Without JS closed desktop summaries remain usable, and open summaries stay displayed while themselves focused for keyboard recovery. Validate native visibility/Tab eligibility, not positive boxes/display alone.
 - `PageBuilder.build()` remains idempotent for unchanged builder state.
+
+- Column establishes its base `col` token during configuration, including generic class attributes; standard rendering must not mutate attributes.
+- `Column.withClass`, `withWidth(int)`, `auto`, and `fill` replace classes; `addClass` appends.
+- Default Column styling must be present in nested context-aware rendering.
+- Finish mutable configuration before sharing; standard Column compiles as tag structure, while custom subclass render overrides remain caller-owned live delegates.
 
 ## Do
 - Keep layout APIs fluent and simple.
@@ -35,6 +43,7 @@ Owns page composition and responsive layout primitives.
 ## Required Tests
 - `RowTest`, `ColumnTest`, `PageTest`, `GridTest`, `ContainerTest`, `SectionTest`
 - Regression coverage for width validation and class generation
+- Fresh Column/template concurrent first rendering without warm-up, independent contexts, unchanged attributes, direct/compiled parity, and custom subclass delegation
 
 ## Dependencies
 - Depend on `core` and generic components only.

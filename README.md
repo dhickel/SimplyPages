@@ -24,15 +24,25 @@ It is built for practical web apps: admin portals, internal tools, content-heavy
 - HTMX-friendly fragment update workflows.
 - Editable module patterns for real-world content operations.
 
+## Beta status
+
+This checkout is a **controlled beta**, not an unqualified production-ready release.
+The baseline is Java 25 with local Chromium desktop/mobile-viewport checks; other browsers,
+Windows, and remote CI are unverified. Review the [known issues and support boundaries](docs/reference/build-and-assets.md#beta-status-known-issues-and-support)
+before adopting it. The private demo is a loopback sandbox, not a production security example.
+
 ## Install
 
-Current release: `1.0.1`.
+Current release: `1.1.0a`.
+
+Use JDK 25. Install this checkout locally with `./mvnw -pl simplypages install` before
+using the dependency; public Maven publication is not assumed.
 
 ```xml
 <dependency>
   <groupId>io.mindspice</groupId>
   <artifactId>simplypages</artifactId>
-  <version>1.0.1</version>
+  <version>1.1.0a</version>
 </dependency>
 ```
 
@@ -128,22 +138,39 @@ public String editModule(@PathVariable String id, Principal principal) {
 
 @PostMapping("/modules/{id}/save")
 @ResponseBody
-public String saveModule(@PathVariable String id, @RequestParam Map<String, String> formData) {
+public String saveModule(@PathVariable String id, @RequestParam Map<String, String> formData,
+                         Principal principal) {
+    if (principal == null || !authChecker.canEdit(id, principal.getName())) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
     ContentModule module = moduleService.loadContentModule(id);
 
     ValidationResult vr = module.validate(formData);
     if (!vr.isValid()) {
-        return Alert.danger(String.join(", ", vr.getErrors())).render();
+        return new Div().withId("edit-errors").withAttribute("hx-swap-oob", "true")
+            .withChild(Alert.danger(String.join(", ", vr.getErrors()))).render();
     }
 
     module.applyEdits(formData);
     moduleService.save(module);
 
-    String closeModal = "<div id=\"edit-modal-container\" hx-swap-oob=\"true\"></div>";
-    String updateModule = "<div id=\"" + id + "\" hx-swap-oob=\"true\">" + module.render() + "</div>";
+    String closeModal = new Div().withId("edit-modal-container")
+        .withAttribute("hx-swap-oob", "true").render();
+    String updateModule = new Div().withId("container-" + id)
+        .withAttribute("hx-swap-oob", "true").withChild(module).render();
     return closeModal + updateModule;
 }
 ```
+
+The page must already contain `edit-errors`, `edit-modal-container`, and the distinct
+`container-<id>` module wrapper. The save example assumes HTTP-layer CSRF validation and
+request-owned module instances; error updates use OOB because the modal saves with
+`hx-swap="none"`. `ResponseStatusException` and `HttpStatus` are Spring types.
+
+The default shell loads the framework modal assets. Focus enters an inserted edit dialog,
+Tab stays contained, and Escape or Close returns to the connected launcher. Editing modals
+disable backdrop dismissal; external/OOB removal also restores focus when the launcher
+survives. See the [Modal contract](docs/reference/components-and-modules-catalog.md#modal).
 
 ## 4) Custom Components and Modules (Scaffolding)
 
@@ -190,66 +217,30 @@ public class ProfileSummaryModule extends Module {
 
 ## Documentation
 
-Start at `docs/README.md`.
+Start at the [documentation home](docs/README.md), organized by reader need:
 
-Recommended sequence:
+- [Tutorials](docs/tutorials/README.md): runnable first page and dynamic rendering lessons.
+- [How-to guides](docs/how-to/README.md): serving, editing, content publishing, and testing.
+- [Reference](docs/reference/README.md): APIs, constraints, defaults, and assets.
+- [Explanation](docs/explanation/README.md): rendering, reuse, security, and integration.
 
-1. `docs/fundamentals/01-web-and-htmx-primer.md`
-2. `docs/getting-started/01-installation-and-first-static-page.md`
-3. `docs/getting-started/02-dynamic-pages-with-slotkey-rendercontext.md`
-4. `docs/getting-started/03-editing-system-first-implementation.md`
+The [complete index](docs/INDEX.md) includes the existing topic-based guides.
+The running demo serves these pages at `/docs` and generated API docs at `/javadocs/index.html`.
 
 ## Build and Test
 
 ```bash
 ./mvnw clean install
+./mvnw clean verify
 ./mvnw test
 ./mvnw -pl simplypages test
 ./mvnw -pl demo spring-boot:run
 ```
 
+Use the checksum-pinned Maven wrapper with JDK 25 for both modules. The demo targets Java 21
+bytecode but requires Java 25 at runtime because it loads the library. See the
+[build and browser-test guide](docs/how-to/build-test-and-document.md) for fresh-package requirements.
+
 ## Docs TOC
 
-- `docs/README.md`
-- `docs/INDEX.md`
-- Fundamentals:
-  - `docs/fundamentals/01-web-and-htmx-primer.md`
-  - `docs/fundamentals/02-simplypages-mental-model.md`
-  - `docs/fundamentals/03-css-fundamentals.md`
-- Getting Started:
-  - `docs/getting-started/README.md`
-  - `docs/getting-started/01-installation-and-first-static-page.md`
-  - `docs/getting-started/02-dynamic-pages-with-slotkey-rendercontext.md`
-  - `docs/getting-started/03-editing-system-first-implementation.md`
-- Core:
-  - `docs/core/01-components-htmltag-and-module-lifecycle.md`
-  - `docs/core/02-layout-page-row-column-grid.md`
-  - `docs/core/03-template-rendercontext-slotkey-reference.md`
-  - `docs/core/04-rendering-pipeline-high-and-low-level.md`
-  - `docs/core/05-css-defaults-overrides-and-structure.md`
-  - `docs/core/06-shell-project-structure-and-asset-load-chain.md`
-  - `docs/core/07-mobile-rendering-model-and-responsive-behavior.md`
-- Patterns:
-  - `docs/patterns/01-static-page-serving-patterns.md`
-  - `docs/patterns/02-dynamic-fragment-caching-patterns.md`
-  - `docs/patterns/03-htmx-endpoint-and-swap-patterns.md`
-  - `docs/patterns/04-editing-workflows-owner-user-approval.md`
-  - `docs/patterns/05-forum-helper-implementation-and-customization.md`
-  - `docs/patterns/06-chat-helper-sse-and-ws-hooks.md`
-  - `docs/patterns/07-chat-conversation-scoping-and-authorization-patterns.md`
-  - `docs/patterns/08-static-content-helper-markdown-directory-pipeline.md`
-- Security:
-  - `docs/security/01-security-boundaries-and-safe-rendering.md`
-  - `docs/security/02-authwrapper-authorizationchecker-integration.md`
-- Operations:
-  - `docs/operations/01-performance-threading-and-cache-lifecycles.md`
-  - `docs/operations/02-testing-and-troubleshooting-playbook.md`
-  - `docs/operations/03-writing-tests-for-components-and-modules.md`
-  - `docs/operations/04-migrating-to-1.0.1.md`
-- Reference:
-  - `docs/reference/components-and-modules-catalog.md`
-  - `docs/reference/builders-shell-nav-banner-accountbar.md`
-  - `docs/reference/forum-helper-api-reference.md`
-  - `docs/reference/chat-helper-api-reference.md`
-  - `docs/reference/content-helper-api-reference.md`
-  - `docs/reference/editing-api-reference.md`
+See the [complete documentation index](docs/INDEX.md).

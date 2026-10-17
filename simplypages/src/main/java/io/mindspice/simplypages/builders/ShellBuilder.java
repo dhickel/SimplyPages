@@ -152,6 +152,11 @@ public class ShellBuilder {
 
     /**
      * Enable/disable HTMX inclusion.
+     *
+     * <p>Full documents and templates that include HTMX initialize the legacy request-origin,
+     * DELETE-body and smooth-scroll defaults before custom scripts. Explicit application
+     * HTMX configuration remains authoritative. Body fragments do not initialize assets or
+     * defaults; their host owns configuration.</p>
      */
     public ShellBuilder withHtmx(boolean include) {
         this.includeHtmx = include;
@@ -259,6 +264,8 @@ public class ShellBuilder {
         }
 
         if (includeHtmx) {
+            head.withChild(new HtmlTag("meta", true)
+                .withAttribute("name", "simplypages-htmx-compatibility").withAttribute("content", "1"));
             head.withChild(new HtmlTag("script")
                 .withAttribute("src", "/webjars/htmx.org/dist/htmx.min.js")
                 .withAttribute("defer", ""));
@@ -280,17 +287,23 @@ public class ShellBuilder {
     }
 
     /**
-     * Builds shell body content only, without {@code html/head} tags.
+     * Builds a shell-body fragment containing navigation and the main content target.
+     *
+     * <p>Omits the document, header/banner/top navigation, assets and inline scripts. The host
+     * must load framework CSS/JS once (and HTMX when used). Shared framework JS initializes
+     * desktop collapse and the mobile drawer, including fragments inserted later. Desktop
+     * persistence uses {@code sidebarCollapsed} best effort; denied storage does not disable
+     * document-local toggling.</p>
      */
     public Component buildBody() {
         HtmlTag body = new HtmlTag("div")
             .withAttribute("class", "shell-body");
 
         if (sideNav != null) {
-            body.withChild(buildMobileSidebarToggle(false));
+            body.withChild(buildMobileSidebarToggle());
         }
 
-        body.withChild(buildMainContainer(false, null));
+        body.withChild(buildMainContainer(null));
         return body;
     }
 
@@ -323,6 +336,8 @@ public class ShellBuilder {
         }
 
         if (includeHtmx) {
+            head.withChild(new HtmlTag("meta", true)
+                .withAttribute("name", "simplypages-htmx-compatibility").withAttribute("content", "1"));
             head.withChild(new HtmlTag("script")
                 .withAttribute("src", "/webjars/htmx.org/dist/htmx.min.js")
                 .withAttribute("defer", ""));
@@ -362,10 +377,10 @@ public class ShellBuilder {
         }
 
         if (sideNav != null) {
-            body.withChild(buildMobileSidebarToggle(true));
+            body.withChild(buildMobileSidebarToggle());
         }
 
-        body.withChild(buildMainContainer(true, contentSlot));
+        body.withChild(buildMainContainer(contentSlot));
         return body;
     }
 
@@ -384,7 +399,7 @@ public class ShellBuilder {
         return classes.toString();
     }
 
-    private HtmlTag buildMainContainer(boolean includeAriaLabel, SlotKey<Component> contentSlot) {
+    private HtmlTag buildMainContainer(SlotKey<Component> contentSlot) {
         HtmlTag mainContainer = new HtmlTag("div").withAttribute("class", getContainerClass());
 
         if (sideNav != null) {
@@ -394,12 +409,11 @@ public class ShellBuilder {
 
             if (collapsibleSideNav) {
                 HtmlTag collapseBtn = new HtmlTag("button")
+                    .withAttribute("type", "button")
                     .withAttribute("class", "sidebar-toggle")
                     .withAttribute("onclick", "toggleSidebar()")
+                    .withAttribute("aria-label", "Toggle sidebar")
                     .withInnerText("☰");
-                if (includeAriaLabel) {
-                    collapseBtn.withAttribute("aria-label", "Toggle sidebar");
-                }
                 aside.withChild(collapseBtn);
             }
 
@@ -430,7 +444,7 @@ public class ShellBuilder {
         return mainContainer;
     }
 
-    private HtmlTag buildMobileSidebarToggle(boolean includeAriaLabel) {
+    private HtmlTag buildMobileSidebarToggle() {
         HtmlTag mobileToggle = new HtmlTag("button")
             .withAttribute("type", "button")
             .withAttribute("class", "mobile-sidebar-toggle")
@@ -439,38 +453,12 @@ public class ShellBuilder {
             .withAttribute("aria-expanded", "false")
             .withInnerText("☰");
 
-        if (includeAriaLabel) {
-            mobileToggle.withAttribute("aria-label", "Toggle navigation");
-        }
+        mobileToggle.withAttribute("aria-label", "Toggle navigation");
 
         return mobileToggle;
     }
 
     private void appendInlineScripts(HtmlTag body) {
-        if (collapsibleSideNav) {
-            body.withChild(new HtmlTag("script").withUnsafeHtml("""
-                function toggleSidebar() {
-                    const sidebar = document.getElementById('main-sidebar');
-                    const container = document.querySelector('.main-container');
-                    sidebar.classList.toggle('collapsed');
-                    container.classList.toggle('sidebar-collapsed');
-
-                    // Save state to localStorage
-                    const isCollapsed = sidebar.classList.contains('collapsed');
-                    localStorage.setItem('sidebarCollapsed', isCollapsed);
-                }
-
-                // Restore sidebar state on page load
-                document.addEventListener('DOMContentLoaded', function() {
-                    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-                    if (isCollapsed) {
-                        document.getElementById('main-sidebar').classList.add('collapsed');
-                        document.querySelector('.main-container').classList.add('sidebar-collapsed');
-                    }
-                });
-                """));
-        }
-
         if (includeHtmx) {
             body.withChild(new HtmlTag("script").withUnsafeHtml("""
                 // Update active navigation link when content changes

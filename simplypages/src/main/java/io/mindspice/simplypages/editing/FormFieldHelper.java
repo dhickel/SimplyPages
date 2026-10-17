@@ -1,7 +1,7 @@
 package io.mindspice.simplypages.editing;
 
 import io.mindspice.simplypages.components.Div;
-import io.mindspice.simplypages.components.Paragraph;
+import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.components.forms.Checkbox;
 import io.mindspice.simplypages.components.forms.TextArea;
 import io.mindspice.simplypages.components.forms.TextInput;
@@ -27,8 +27,9 @@ public final class FormFieldHelper {
      */
     public static Component textField(String label, String name, String value) {
         Div group = new Div().withClass("form-field");
-        group.withChild(new Paragraph(label + ":").withClass("form-label"));
-        group.withChild(TextInput.create(name)
+        String id = "field-" + java.util.UUID.randomUUID();
+        group.withChild(new HtmlTag("label").withClass("form-label").withAttribute("for", id).withInnerText(label + ":"));
+        group.withChild(TextInput.create(name).withId(id)
             .withValue(value != null ? value : "")
             .withMaxWidth("100%"));
         return group;
@@ -45,8 +46,9 @@ public final class FormFieldHelper {
      */
     public static Component textAreaField(String label, String name, String value, int rows) {
         Div group = new Div().withClass("form-field");
-        group.withChild(new Paragraph(label + ":").withClass("form-label"));
-        group.withChild(TextArea.create(name)
+        String id = "field-" + java.util.UUID.randomUUID();
+        group.withChild(new HtmlTag("label").withClass("form-label").withAttribute("for", id).withInnerText(label + ":"));
+        group.withChild(TextArea.create(name).withId(id)
             .withValue(value != null ? value : "")
             .withRows(rows)
             .withMaxWidth("100%"));

@@ -8,7 +8,6 @@ import io.mindspice.simplypages.components.Paragraph;
 import io.mindspice.simplypages.components.forms.Button;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
-import io.mindspice.simplypages.core.SafeUrl;
 
 /**
  * Module for prominent hero/banner page sections with optional CTA links.
@@ -67,18 +66,20 @@ public class HeroModule extends Module {
     }
 
     /**
-     * Sets a background image for the hero section.
+     * Sets a background image using raw single-quoted CSS url() interpolation. Supply an
+     * application-controlled or separately CSS-context-validated value; there is no CSS escaping
+     * or Image validation. Image's scheme policy alone does not control CSS syntax.
      *
      * @param imageUrl URL or path to the background image
      */
     public HeroModule withBackgroundImage(String imageUrl) {
-        SafeUrl.validateCssImageUrl(imageUrl);
         this.backgroundImage = imageUrl;
         return this;
     }
 
     /**
-     * Sets a background color for the hero section.
+     * Sets raw CSS background color. Supply an application-controlled or separately
+     * CSS-context-validated value; attribute encoding is not declaration-breakout protection.
      *
      * @param color CSS color value
      */
@@ -88,26 +89,26 @@ public class HeroModule extends Module {
     }
 
     /**
-     * Adds a primary call-to-action button.
+     * Adds a primary CTA with an application-controlled or separately navigation-validated URL.
+     * The href is encoded without Link's scheme policy; null uses the existing fragment fallback.
      *
      * @param text button text
      * @param url button link URL
      */
     public HeroModule withPrimaryButton(String text, String url) {
-        SafeUrl.validateHref(url);
         this.primaryButtonText = text;
         this.primaryButtonUrl = url;
         return this;
     }
 
     /**
-     * Adds a secondary call-to-action button.
+     * Adds a secondary CTA with an application-controlled or separately navigation-validated URL.
+     * The href is encoded without Link's scheme policy; null uses the existing fragment fallback.
      *
      * @param text button text
      * @param url button link URL
      */
     public HeroModule withSecondaryButton(String text, String url) {
-        SafeUrl.validateHref(url);
         this.secondaryButtonText = text;
         this.secondaryButtonUrl = url;
         return this;
@@ -133,13 +134,17 @@ public class HeroModule extends Module {
 
     @Override
     protected void buildContent() {
+        // These values are application-controlled CSS, not URL or declaration validated.
+        StringBuilder style = new StringBuilder();
         if (backgroundImage != null) {
-            super.addTrustedStyle("background-image", SafeUrl.cssUrl(backgroundImage));
-            super.addStyle("background-size", "cover");
-            super.addStyle("background-position", "center");
+            style.append("background-image: url('").append(backgroundImage).append("'); ")
+                .append("background-size: cover; background-position: center;");
         }
         if (backgroundColor != null) {
-            super.addStyle("background-color", backgroundColor);
+            style.append("background-color: ").append(backgroundColor).append(";");
+        }
+        if (style.length() > 0) {
+            super.withAttribute("style", style.toString());
         }
 
         // Create content wrapper

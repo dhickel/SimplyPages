@@ -9,7 +9,9 @@ Owns media rendering components for images, audio, video, and galleries.
 ## Invariants
 - Media component HTML output remains standards-compliant.
 - Gallery composition and child ordering behavior stays stable.
-- Attribute rendering remains escaped/safe by core rules.
+- Attribute rendering remains encoded by core rules, not URL-policy validated. Audio/Video source constructors/factories, Video.withPoster and both Gallery.addImage overloads require application-controlled or separately media/image-context-validated URLs. They do not use Image's blacklist or Link's allowlist; preserve their existing source/null/order semantics. No MIME, payload, destination or loadability guarantee.
+
+- withControls(false) removes a previously enabled controls attribute for audio and video.
 
 ## Do
 - Keep APIs focused on media configuration and layout hints.

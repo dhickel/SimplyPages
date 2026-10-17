@@ -12,6 +12,8 @@ import io.mindspice.simplypages.components.display.Alert;
 import io.mindspice.simplypages.components.display.Modal;
 import io.mindspice.simplypages.components.forms.Button;
 import io.mindspice.simplypages.components.forms.Checkbox;
+import io.mindspice.simplypages.components.forms.Form;
+import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.components.forms.Select;
 import io.mindspice.simplypages.components.forms.TextArea;
 import io.mindspice.simplypages.components.forms.TextInput;
@@ -28,8 +30,11 @@ import io.mindspice.simplypages.modules.EditableModule;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.NumberUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,14 +51,18 @@ import java.util.concurrent.atomic.AtomicInteger;
  * - Permission flags for modules and rows
  */
 @Controller
-@RequestMapping("/editing-demo")
+@RequestMapping(value = "/editing-demo", produces = "text/html;charset=UTF-8")
 public class EditingDemoController {
 
     private static final String PAGE_ID = "demo-page";
     private static final String PAGE_CONTAINER_ID = "page-content";
     private static final String MODAL_CONTAINER_ID = "edit-modal-container";
+    private static final String PRIVATE_WARNING = "Private shared, non-durable sandbox. Flags and selectable OWNER/USER modes are simulations, not authentication. Approval is a sandbox action. No CSRF, rate protection or production security guarantees.";
+
+    private enum ModuleKind { CONTENT, LIST }
 
     private static class DemoModule {
+        final ModuleKind kind;
         String id;
         String title;
         String content;
@@ -64,6 +73,11 @@ public class EditingDemoController {
         EditMode editMode = EditMode.OWNER_EDIT;
 
         DemoModule(String id, String title, String content, int width) {
+            this(id, title, content, width, ModuleKind.CONTENT);
+        }
+
+        DemoModule(String id, String title, String content, int width, ModuleKind kind) {
+            this.kind = kind;
             this.id = id;
             this.title = title;
             this.content = content;
@@ -104,6 +118,8 @@ public class EditingDemoController {
         }
     }
 
+    // All state access and rendered snapshots share this monitor; HTTP writes follow return.
+    private final Object stateLock = new Object();
     private final Map<String, PageData> pages = new ConcurrentHashMap<>();
     private final Map<String, List<PendingEdit>> pendingEdits = new ConcurrentHashMap<>();
     private final AtomicInteger idCounter = new AtomicInteger(100);
@@ -118,7 +134,7 @@ public class EditingDemoController {
         DemoRow row1 = new DemoRow("row-1", 0);
         DemoModule intro = new DemoModule("module-1", "Welcome to the Editing Demo",
                 "# Phase 6.5 Patterns\n\n" +
-                "This page mirrors the gold-standard behavior from `/test/phase6-5`.\n\n" +
+                "This is a shared, non-durable private editing sandbox.\n\n" +
                 "- Single modal container\n" +
                 "- OOB swaps for save/delete\n" +
                 "- Row insert opens add-module modal\n\n" +
@@ -178,7 +194,7 @@ public class EditingDemoController {
 
         DemoRow row5 = new DemoRow("row-5", 4);
         DemoModule listDemo = new DemoModule("module-9", "Nested Editing Demo",
-                "Simple List Module", 12);
+                "Simple List Module", 12, ModuleKind.LIST);
         // Using 'content' field to store serialized list for demo simplicity or just ignoring it
         listDemo.content = "Item 1,Item 2,Item 3";
         row5.modules.add(listDemo);
@@ -194,15 +210,20 @@ public class EditingDemoController {
             @RequestHeader(value = "HX-Request", required = false) String hxRequest,
             HttpServletResponse response
     ) {
-        response.setHeader("Vary", "HX-Request");
+        return inState(() -> {
+        varyHx(response);
 
+        if (!pages.containsKey(PAGE_ID)) {
+            response.setStatus(404);
+        }
         String content = renderPageView();
 
-        if (hxRequest != null) {
+        if ("true".equalsIgnoreCase(hxRequest)) {
             return content;
         }
 
         return renderWithShell(content);
+        });
     }
 
     private String renderPageView() {
@@ -220,7 +241,7 @@ public class EditingDemoController {
 
         content.withChild(Header.H1("Editing Demo (Phase 6.5 Patterns)").withClass("mb-3"));
 
-        content.withChild(Alert.success("Gold-standard patterns: single modal container, OOB swaps, row inserts, and permission flags.")
+        content.withChild(Alert.warning(PRIVATE_WARNING)
                 .withClass("mb-3"));
         content.withChild(Alert.info("Try editing modules, adding modules, inserting rows, and approving pending edits.")
                 .withClass("mb-4"));
@@ -248,7 +269,7 @@ public class EditingDemoController {
             for (DemoModule module : demoRow.modules) {
                 io.mindspice.simplypages.core.Module displayModule;
 
-                if (module.title.equals("Nested Editing Demo")) {
+                if (module.kind == ModuleKind.LIST) {
                      SimpleListModule listModule = SimpleListModule.create()
                             .withModuleId(module.id)
                             .withTitle(module.title);
@@ -321,22 +342,14 @@ public class EditingDemoController {
             @RequestParam(required = false) String editMode,
             HttpServletResponse response
     ) {
+        return inState(() -> {
         DemoModule module = findModule(moduleId);
-        if (module == null) {
-            response.setStatus(HttpStatus.NOT_FOUND.value());
-            return Modal.create().withTitle("Error")
-                    .withBody(Alert.danger("Module not found"))
-                    .render();
-        }
-        if (!module.canEdit) {
-            response.setStatus(HttpStatus.FORBIDDEN.value());
-            return Modal.create().withTitle("Forbidden")
-                    .withBody(Alert.warning("This module cannot be edited."))
-                    .render();
-        }
+        if (module == null) return stateError(response, 404, "Module not found");
+        if (!module.canEdit) return stateError(response, 403, "This module does not allow editing.");
 
         EditMode mode = resolveEditMode(editMode, module);
         return buildEditModal(module, mode);
+        });
     }
 
     @PostMapping("/save/{moduleId}")
@@ -347,19 +360,10 @@ public class EditingDemoController {
             @RequestParam(required = false) String editMode,
             HttpServletResponse response
     ) {
+        return inState(() -> {
         DemoModule module = findModule(moduleId);
-        if (module == null) {
-            response.setStatus(HttpStatus.NOT_FOUND.value());
-            return Modal.create().withTitle("Error")
-                    .withBody(Alert.danger("Module not found"))
-                    .render();
-        }
-        if (!module.canEdit) {
-            response.setStatus(HttpStatus.FORBIDDEN.value());
-            return Modal.create().withTitle("Forbidden")
-                    .withBody(Alert.warning("This module cannot be edited."))
-                    .render();
-        }
+        if (module == null) return stateError(response, 404, "Module not found");
+        if (!module.canEdit) return stateError(response, 403, "This module does not allow editing.");
 
         EditMode mode = resolveEditMode(editMode, module);
         if (mode == EditMode.USER_EDIT) {
@@ -371,25 +375,22 @@ public class EditingDemoController {
 
         applyModuleEdits(module, formData);
         return buildOobResponse();
+        });
     }
 
     @DeleteMapping("/delete/{moduleId}")
     @ResponseBody
     public String deleteModule(@PathVariable String moduleId, HttpServletResponse response) {
+        return inState(() -> {
         PageData pageData = pages.get(PAGE_ID);
         if (pageData == null) {
             response.setStatus(HttpStatus.NOT_FOUND.value());
             return Alert.danger("Page not found").render();
         }
         DemoModule module = findModule(moduleId);
-        if (module == null) {
-            response.setStatus(HttpStatus.NOT_FOUND.value());
-            return Alert.danger("Module not found").render();
-        }
-        if (!module.canDelete) {
-            response.setStatus(HttpStatus.FORBIDDEN.value());
-            return Alert.warning("This module cannot be deleted.").render();
-        }
+        if (module == null) return stateError(response, 404, "Module not found");
+        if (!module.canDelete) return stateError(response, 403, "This module does not allow deletion.");
+        getPendingEdits().removeIf(edit -> edit.moduleId.equals(moduleId));
 
         DemoRow containingRow = null;
         for (DemoRow row : pageData.rows) {
@@ -407,36 +408,52 @@ public class EditingDemoController {
         }
 
         return buildOobResponse();
+        });
     }
 
     @PostMapping("/insert-row/{position}")
     @ResponseBody
-    public String insertRow(@PathVariable int position, HttpServletResponse response) {
+    public String insertRow(@PathVariable String position, HttpServletResponse response) {
+        return inState(() -> {
+        varyHx(response);
         PageData pageData = pages.get(PAGE_ID);
         if (pageData == null) {
-            response.setStatus(HttpStatus.NOT_FOUND.value());
+            response.setStatus(404);
             return Alert.danger("Page not found").render();
         }
-        if (position < -1 || position >= pageData.rows.size()) {
-            response.setStatus(HttpStatus.BAD_REQUEST.value());
-            return Alert.danger("Invalid row insert position").render();
+        final int index;
+        try {
+            index = NumberUtils.parseNumber(position, Integer.class);
+        } catch (NumberFormatException invalid) {
+            response.setStatus(400);
+            return Alert.danger("Insertion position must be an integer.").render();
+        }
+        if (index < -1 || index >= pageData.rows.size()) {
+            response.setStatus(400);
+            return Alert.danger("Insertion position is outside the current page.").render();
         }
 
         String rowId = "row-" + idCounter.incrementAndGet();
-        DemoRow newRow = new DemoRow(rowId, position + 1);
-        pageData.rows.add(position + 1, newRow);
+        DemoRow newRow = new DemoRow(rowId, index + 1);
+        pageData.rows.add(index + 1, newRow);
 
         for (int i = 0; i < pageData.rows.size(); i++) {
             pageData.rows.get(i).position = i;
         }
 
-        return showAddModuleModal(rowId);
+        return showAddModuleModal(rowId, response);
+        });
     }
 
     @GetMapping("/add-module-modal/{rowId}")
     @ResponseBody
-    public String showAddModuleModal(@PathVariable String rowId) {
-        Div body = new Div();
+    public String showAddModuleModal(@PathVariable String rowId, HttpServletResponse response) {
+        return inState(() -> {
+        DemoRow row = findRow(rowId);
+        if (row == null) return stateError(response, 404, "Row not found");
+        if (!row.canAddModule) return stateError(response, 403, "This row cannot add modules.");
+        if (row.modules.size() >= 3) return stateError(response, 409, "Maximum 3 modules per row");
+        Div body = new Div().withChild(Alert.warning(PRIVATE_WARNING));
 
         Div titleGroup = new Div().withClass("form-field");
         titleGroup.withChild(new Paragraph("Title:").withClass("form-label"));
@@ -493,32 +510,21 @@ public class EditingDemoController {
                 .withBody(body)
                 .withFooter(footer)
                 .render();
+        });
     }
 
     @PostMapping("/add-module/{rowId}")
     @ResponseBody
     public String addModule(
             @PathVariable String rowId,
-            @RequestParam Map<String, String> formData
+            @RequestParam Map<String, String> formData,
+            HttpServletResponse response
     ) {
+        return inState(() -> {
         DemoRow row = findRow(rowId);
-        if (row == null) {
-            return Modal.create().withTitle("Error")
-                    .withBody(Alert.danger("Row not found"))
-                    .render();
-        }
-
-        if (!row.canAddModule) {
-            return Modal.create().withTitle("Error")
-                    .withBody(Alert.warning("This row is locked and cannot add modules."))
-                    .render();
-        }
-
-        if (row.modules.size() >= 3) {
-            return Modal.create().withTitle("Error")
-                    .withBody(Alert.warning("Maximum 3 modules per row"))
-                    .render();
-        }
+        if (row == null) return stateError(response, 404, "Row not found");
+        if (!row.canAddModule) return stateError(response, 403, "This row cannot add modules.");
+        if (row.modules.size() >= 3) return stateError(response, 409, "Maximum 3 modules per row");
 
         String moduleId = "module-" + idCounter.incrementAndGet();
         String title = safeText(formData.getOrDefault("title", "New Module"));
@@ -533,14 +539,16 @@ public class EditingDemoController {
         row.modules.add(newModule);
 
         return buildOobResponse();
+        });
     }
 
     @GetMapping("/pending-edits")
     @ResponseBody
     public String showPendingEditsModal() {
+        return inState(() -> {
         List<PendingEdit> pending = getPendingEdits();
 
-        Div body = new Div();
+        Div body = new Div().withChild(Alert.warning(PRIVATE_WARNING));
         if (pending.isEmpty()) {
             body.withChild(Alert.info("No pending edits."));
         } else {
@@ -581,151 +589,58 @@ public class EditingDemoController {
                 .withBody(body)
                 .withFooter(footer)
                 .render();
+        });
     }
 
     @PostMapping("/pending-edits/{moduleId}/approve")
     @ResponseBody
-    public String approvePendingEdit(@PathVariable String moduleId) {
+    public String approvePendingEdit(@PathVariable String moduleId, HttpServletResponse response) {
+        return inState(() -> {
         List<PendingEdit> pending = getPendingEdits();
         PendingEdit edit = pending.stream()
                 .filter(p -> p.moduleId.equals(moduleId))
                 .findFirst()
                 .orElse(null);
 
-        if (edit == null) {
-            return Modal.create().withTitle("Error")
-                    .withBody(Alert.warning("Pending edit not found"))
-                    .render();
-        }
-
         DemoModule module = findModule(moduleId);
-        if (module != null) {
-            applyPendingEdit(module, edit);
-        }
+        if (edit == null || module == null) return stateError(response, 404, "Module or pending edit not found");
+        if (!module.canEdit) return stateError(response, 403, "This module does not allow approval.");
+        applyPendingEdit(module, edit);
         pending.remove(edit);
 
         return buildOobResponse();
+        });
     }
 
     @DeleteMapping("/pending-edits/{moduleId}/reject")
     @ResponseBody
-    public String rejectPendingEdit(@PathVariable String moduleId) {
+    public String rejectPendingEdit(@PathVariable String moduleId, HttpServletResponse response) {
+        return inState(() -> {
         List<PendingEdit> pending = getPendingEdits();
+        if (pending.stream().noneMatch(edit -> edit.moduleId.equals(moduleId))) {
+            return stateError(response, 404, "Pending edit not found");
+        }
         pending.removeIf(p -> p.moduleId.equals(moduleId));
         return buildOobResponse();
+        });
     }
 
-    @GetMapping("/edit-child/{moduleId}/{childId}")
-    @ResponseBody
-    public String editChild(
-            @PathVariable String moduleId,
-            @PathVariable String childId,
-            HttpServletResponse response
-    ) {
-        DemoModule module = findModule(moduleId);
-        if (module == null) {
-            response.setStatus(HttpStatus.NOT_FOUND.value());
-            return Modal.create().withTitle("Error")
-                    .withBody(Alert.danger("Module not found"))
-                    .render();
+    private String inState(java.util.function.Supplier<String> operation) {
+        synchronized (stateLock) {
+            return operation.get();
         }
-        if (!module.canEdit || !module.title.equals("Nested Editing Demo")) {
-            response.setStatus(HttpStatus.FORBIDDEN.value());
-            return Modal.create().withTitle("Forbidden")
-                    .withBody(Alert.warning("This child item cannot be edited."))
-                    .render();
-        }
-
-        int index = childIndex(childId);
-        List<String> items = listItems(module);
-        if (index < 0 || index >= items.size()) {
-            response.setStatus(HttpStatus.NOT_FOUND.value());
-            return Modal.create().withTitle("Error")
-                    .withBody(Alert.warning("List item not found"))
-                    .render();
-        }
-
-        Div body = new Div().withClass("form-field");
-        body.withChild(new Paragraph("Item text:").withClass("form-label"));
-        body.withChild(TextInput.create("text").withValue(items.get(index)));
-
-        Div footer = new Div().withClass("d-flex justify-content-end gap-2");
-        Button save = Button.create("Save Item").withStyle(Button.ButtonStyle.PRIMARY);
-        save.withAttribute("hx-post", "/editing-demo/save-child/" + moduleId + "/" + childId);
-        save.withAttribute("hx-swap", "none");
-        save.withAttribute("hx-include", ".modal-body input");
-        footer.withChild(save);
-
-        return Modal.create()
-                .withTitle("Edit List Item")
-                .withBody(body)
-                .withFooter(footer)
-                .render();
     }
 
-    @PostMapping("/save-child/{moduleId}/{childId}")
-    @ResponseBody
-    public String saveChild(
-            @PathVariable String moduleId,
-            @PathVariable String childId,
-            @RequestParam Map<String, String> formData,
-            HttpServletResponse response
-    ) {
-        DemoModule module = findModule(moduleId);
-        if (module == null) {
-            response.setStatus(HttpStatus.NOT_FOUND.value());
-            return Alert.danger("Module not found").render();
-        }
-        if (!module.canEdit || !module.title.equals("Nested Editing Demo")) {
-            response.setStatus(HttpStatus.FORBIDDEN.value());
-            return Alert.warning("This child item cannot be edited.").render();
-        }
-
-        int index = childIndex(childId);
-        List<String> items = listItems(module);
-        if (index < 0 || index >= items.size()) {
-            response.setStatus(HttpStatus.NOT_FOUND.value());
-            return Alert.warning("List item not found").render();
-        }
-
-        items.set(index, safeText(formData.getOrDefault("text", "")));
-        module.content = String.join(",", items);
-        return buildOobResponse();
-    }
-
-    @DeleteMapping("/delete-child/{moduleId}/{childId}")
-    @ResponseBody
-    public String deleteChild(
-            @PathVariable String moduleId,
-            @PathVariable String childId,
-            HttpServletResponse response
-    ) {
-        DemoModule module = findModule(moduleId);
-        if (module == null) {
-            response.setStatus(HttpStatus.NOT_FOUND.value());
-            return Alert.danger("Module not found").render();
-        }
-        if (!module.canDelete || !module.title.equals("Nested Editing Demo")) {
-            response.setStatus(HttpStatus.FORBIDDEN.value());
-            return Alert.warning("This child item cannot be deleted.").render();
-        }
-
-        int index = childIndex(childId);
-        List<String> items = listItems(module);
-        if (index < 0 || index >= items.size()) {
-            response.setStatus(HttpStatus.NOT_FOUND.value());
-            return Alert.warning("List item not found").render();
-        }
-
-        items.remove(index);
-        module.content = String.join(",", items);
-        return buildOobResponse();
+    private String stateError(HttpServletResponse response, int status, String message) {
+        response.setStatus(status);
+        return Modal.create().withTitle("Private Sandbox")
+                .withBody(new Div().withChild(Alert.warning(PRIVATE_WARNING)).withChild(Alert.danger(message))).render();
     }
 
     private String buildEditModal(DemoModule module, EditMode mode) {
         Editable<?> editable;
 
-        if (module.title.equals("Nested Editing Demo")) {
+        if (module.kind == ModuleKind.LIST) {
             SimpleListModule listModule = SimpleListModule.create()
                     .withModuleId(module.id)
                     .withTitle(module.title);
@@ -746,10 +661,10 @@ public class EditingDemoController {
             editable = contentMod;
         }
 
-        Div combinedForm = new Div();
+        Div combinedForm = new Div().withChild(Alert.warning(PRIVATE_WARNING));
 
         if (mode == EditMode.USER_EDIT) {
-            combinedForm.withChild(Alert.info("Edits will be staged for approval.")
+            combinedForm.withChild(Alert.info("Edits will be staged for approval. Child changes start from live content and replace the whole pending proposal; prior pending child and property changes are discarded.")
                     .withClass("mb-3"));
         }
 
@@ -774,8 +689,8 @@ public class EditingDemoController {
                 .withEditable(editable)     // Pass editable to enable child editing if supported
                 .withSaveUrl(buildSaveUrl(module.id, mode))
                 .withDeleteUrl(buildDeleteUrl(module.id, mode))
-                .withChildEditUrl("/editing-demo/edit-child/" + module.id + "/{id}")
-                .withChildDeleteUrl("/editing-demo/delete-child/" + module.id + "/{id}")
+                .withChildEditUrl(module.canEdit ? childUrlTemplate("edit-child", module.id, mode) : null)
+                .withChildDeleteUrl(module.canEdit ? childUrlTemplate("delete-child", module.id, mode) : null)
                 .withPageContainerId(PAGE_CONTAINER_ID)
                 .withModalContainerId(MODAL_CONTAINER_ID);
 
@@ -784,6 +699,194 @@ public class EditingDemoController {
         }
 
         return builder.build().render();
+    }
+
+    @GetMapping("/edit-child/{moduleId}/{childId}")
+    @ResponseBody
+    public String editChild(@PathVariable String moduleId, @PathVariable String childId,
+            @RequestParam(required = false) String editMode, HttpServletResponse response) {
+        return inState(() -> {
+            EditMode mode = resolveEditMode(editMode, findModule(moduleId));
+            try {
+                ChildTarget child = resolveChild(moduleId, childId);
+                return buildChildModal(moduleId, childId, mode, child.items().get(child.index()), null);
+            } catch (ChildFailure failure) {
+                return childError(moduleId, childId, mode, "", failure, response);
+            }
+        });
+    }
+
+    @PostMapping("/save-child/{moduleId}/{childId}")
+    @ResponseBody
+    public String saveChild(@PathVariable String moduleId, @PathVariable String childId,
+            @RequestParam(required = false) String text,
+            @RequestParam(required = false) String editMode, HttpServletResponse response) {
+        return inState(() -> {
+        EditMode mode = resolveEditMode(editMode, findModule(moduleId));
+        try {
+            ChildTarget child = resolveChild(moduleId, childId);
+            String label = text == null ? "" : text.trim();
+            if (label.isBlank() || label.contains(",")) {
+                throw new ChildFailure(400, "Enter nonblank text without commas (this demo stores a CSV list).");
+            }
+            List<String> candidate = new ArrayList<>(child.items());
+            candidate.set(child.index(), label);
+            storeChildContent(child.module(), candidate, mode);
+            return buildOobResponse();
+        } catch (ChildFailure failure) {
+            return childError(moduleId, childId, mode, text, failure, response);
+        }
+        });
+    }
+
+    @DeleteMapping("/delete-child/{moduleId}/{childId}")
+    @ResponseBody
+    public String deleteChild(@PathVariable String moduleId, @PathVariable String childId,
+            @RequestParam(required = false) String editMode, HttpServletResponse response) {
+        return inState(() -> {
+        EditMode mode = resolveEditMode(editMode, findModule(moduleId));
+        try {
+            ChildTarget child = resolveChild(moduleId, childId);
+            List<String> candidate = new ArrayList<>(child.items());
+            candidate.remove(child.index());
+            storeChildContent(child.module(), candidate, mode);
+            // Generated child DELETE controls otherwise default to an in-band innerHTML swap.
+            response.setHeader("HX-Reswap", "none");
+            return buildOobResponse();
+        } catch (ChildFailure failure) {
+            return childError(moduleId, childId, mode, "", failure, response);
+        }
+        });
+    }
+
+    private record ChildTarget(DemoModule module, List<String> items, int index) { }
+
+    private static class ChildFailure extends RuntimeException {
+        final int status;
+
+        ChildFailure(int status, String message) {
+            super(message);
+            this.status = status;
+        }
+    }
+
+    private ChildTarget resolveChild(String moduleId, String childId) {
+        if (!childId.matches("item-(0|[1-9][0-9]*)")) {
+            throw new ChildFailure(400, "Invalid positional child ID.");
+        }
+        final int index;
+        try {
+            index = Integer.parseInt(childId.substring(5));
+        } catch (NumberFormatException invalid) {
+            throw new ChildFailure(400, "Child position is too large.");
+        }
+        DemoModule module = findModule(moduleId);
+        if (module == null || module.kind != ModuleKind.LIST) {
+            throw new ChildFailure(404, "Current list module not found.");
+        }
+        if (!module.canEdit) {
+            throw new ChildFailure(403, "This module does not allow child editing.");
+        }
+        List<String> items = visibleItems(module.content);
+        if (index >= items.size()) {
+            throw new ChildFailure(404, "Child position is not in the current list.");
+        }
+        return new ChildTarget(module, items, index);
+    }
+
+    private List<String> visibleItems(String content) {
+        if (content == null || content.isEmpty()) {
+            return List.of();
+        }
+        List<String> items = new ArrayList<>();
+        for (String item : content.split(",")) {
+            items.add(item.trim());
+        }
+        return items;
+    }
+
+    private void storeChildContent(DemoModule module, List<String> candidate, EditMode mode) {
+        String content = String.join(",", candidate);
+        if (!visibleItems(content).equals(candidate)) {
+            throw new ChildFailure(400, "This change would lose a retained empty item in CSV storage. Edit that item first.");
+        }
+        if (mode == EditMode.USER_EDIT) {
+            List<PendingEdit> pending = getPendingEdits();
+            pending.removeIf(edit -> edit.moduleId.equals(module.id));
+            pending.add(new PendingEdit(module.id, Map.of("content", content)));
+        } else {
+            module.content = content;
+        }
+    }
+
+    private String childError(String moduleId, String childId, EditMode mode, String text,
+            ChildFailure failure, HttpServletResponse response) {
+        response.setStatus(failure.status);
+        response.setHeader("X-Editing-Demo-Modal", "true");
+        response.setHeader("HX-Reswap", "innerHTML");
+        return buildChildModal(moduleId, childId, mode, text, failure.getMessage());
+    }
+
+    private String buildChildModal(String moduleId, String childId, EditMode mode, String text, String error) {
+        Div body = new Div().withAttribute("style", "overflow-wrap: anywhere")
+                .withChild(Alert.warning(PRIVATE_WARNING));
+        if (error != null) {
+            body.withChild(new Div().withId("editing-child-error").withAttribute("role", "alert")
+                    .withChild(Alert.danger(error)));
+        }
+        body.withChild(new Paragraph("Child IDs describe current list positions, not persistent identities. Labels must be nonblank and comma-free."));
+        if (mode == EditMode.USER_EDIT) {
+            body.withChild(Alert.warning("Submitting starts from live content and replaces the whole pending proposal. Prior pending child and property changes are discarded."));
+        }
+        String url = childUrlTemplate("save-child", moduleId, mode)
+                .replace("{id}", UriUtils.encode(childId, StandardCharsets.UTF_8));
+        Form form = Form.create().withId("editing-child-form").withMethod(Form.Method.POST)
+                .withAction(url).withHxPost(url).withHxTarget("#" + MODAL_CONTAINER_ID).withHxSwap("none");
+        Div field = new Div().withClass("form-field");
+        field.withChild(new HtmlTag("label").withClass("form-label")
+                .withAttribute("for", "editing-child-text").withInnerText("Text"));
+        // HTML consumes one initial textarea LF; supply it separately to retain leading draft LFs.
+        TextArea input = TextArea.create("text").withRows(3).withWrap("soft")
+                .withValue("\n" + (text == null ? "" : text));
+        input.withId("editing-child-text");
+        input.withAttribute("autofocus", "autofocus");
+        if (error != null) {
+            input.withAttribute("aria-invalid", "true");
+            input.withAttribute("aria-describedby", "editing-child-error");
+        }
+        field.withChild(input);
+        form.withChild(field);
+        form.withChild(Button.create("Save Item").withAttribute("type", "submit"));
+        body.withChild(form);
+        Button cancel = Button.create("Cancel").withStyle(Button.ButtonStyle.SECONDARY);
+        cancel.withAttribute("onclick", "document.getElementById('" + MODAL_CONTAINER_ID + "').innerHTML = ''");
+        return Modal.create().withTitle("Edit List Item").withBody(body).withFooter(cancel)
+                .closeOnBackdrop(false).render();
+    }
+
+    private String childUrlTemplate(String action, String moduleId, EditMode mode) {
+        // Encode raw IDs, including reserved characters such as matrix-parameter ';'.
+        // Only the framework-owned child placeholder remains unencoded until substitution.
+        return "/editing-demo/" + action + "/" + UriUtils.encode(moduleId, StandardCharsets.UTF_8)
+                + "/{id}?editMode=" + mode.name();
+    }
+
+    @ModelAttribute
+    private void renderedResponse(HttpServletResponse response) {
+        varyHx(response);
+    }
+
+    private void varyHx(HttpServletResponse response) {
+        List<String> tokens = new ArrayList<>();
+        for (String value : response.getHeaders("Vary")) {
+            for (String token : value.split(",")) {
+                if (!token.isBlank()) tokens.add(token.trim());
+            }
+        }
+        if (tokens.stream().noneMatch(token -> token.equalsIgnoreCase("HX-Request"))) {
+            tokens.add("HX-Request");
+        }
+        response.setHeader("Vary", String.join(", ", tokens));
     }
 
     private String buildSaveUrl(String moduleId, EditMode mode) {
@@ -890,27 +993,6 @@ public class EditingDemoController {
         return fallback;
     }
 
-    private List<String> listItems(DemoModule module) {
-        List<String> items = new ArrayList<>();
-        if (module.content != null && !module.content.isEmpty()) {
-            for (String item : module.content.split(",")) {
-                items.add(item.trim());
-            }
-        }
-        return items;
-    }
-
-    private int childIndex(String childId) {
-        if (childId == null || !childId.startsWith("item-")) {
-            return -1;
-        }
-        try {
-            return Integer.parseInt(childId.substring("item-".length()));
-        } catch (NumberFormatException ignored) {
-            return -1;
-        }
-    }
-
     private EditMode resolveEditMode(String editMode, DemoModule module) {
         if (editMode != null) {
             try {
@@ -984,6 +1066,7 @@ public class EditingDemoController {
                                 .build()
                 )
                 .withContent(new RawHtml(content))
+                .addCustomJs("/js/editing-demo.js")
                 .build();
     }
 }

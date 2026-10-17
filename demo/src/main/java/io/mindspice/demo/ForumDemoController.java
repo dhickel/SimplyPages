@@ -28,6 +28,7 @@ import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.layout.Page;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -68,7 +69,7 @@ public class ForumDemoController {
         this.forumService = forumService;
     }
 
-    @GetMapping
+    @GetMapping(produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String forumPage(
         @RequestHeader(value = "HX-Request", required = false) String hxRequest,
@@ -76,13 +77,12 @@ public class ForumDemoController {
         HttpSession session,
         HttpServletResponse response
     ) {
+        addHxVary(response);
         ForumState requested = parseState(params, null, null);
         ForumViewer viewer = resolveViewer(session);
 
-        response.setHeader("Vary", "HX-Request");
-
         String main = renderForumMain(requested, viewer, null, null, null, FlashType.INFO);
-        if (hxRequest != null) {
+        if ("true".equalsIgnoreCase(hxRequest)) {
             return main;
         }
 
@@ -98,19 +98,19 @@ public class ForumDemoController {
             .build();
     }
 
-    @GetMapping("/topics")
+    @GetMapping(value = "/topics", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String topicsFragment(
         @RequestParam Map<String, String> params,
         HttpSession session,
         HttpServletResponse response
     ) {
-        response.setHeader("Vary", "HX-Request");
+        addHxVary(response);
         ForumState requested = parseState(params, null, ForumStage.TOPICS);
         return renderForumMain(requested, resolveViewer(session), null, null, null, FlashType.INFO);
     }
 
-    @GetMapping("/topics/{topicId}/comments")
+    @GetMapping(value = "/topics/{topicId}/comments", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String commentsFragment(
         @PathVariable String topicId,
@@ -118,18 +118,19 @@ public class ForumDemoController {
         HttpSession session,
         HttpServletResponse response
     ) {
-        response.setHeader("Vary", "HX-Request");
+        addHxVary(response);
         ForumState requested = parseState(params, topicId, ForumStage.COMMENTS);
         return renderForumMain(requested, resolveViewer(session), null, null, null, FlashType.INFO);
     }
 
-    @PostMapping("/viewer")
+    @PostMapping(value = "/viewer", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String setViewer(
         @RequestParam Map<String, String> params,
         HttpSession session,
         HttpServletResponse response
     ) {
+        addHxVary(response);
         String name = safeTrim(params.get("displayName"));
         String userId = safeTrim(params.get("userId"));
         if (name == null) {
@@ -144,21 +145,20 @@ public class ForumDemoController {
         session.setAttribute(SESSION_VIEWER_NAME, name);
         session.setAttribute(SESSION_VIEWER_ID, userId);
         session.setAttribute(SESSION_VIEWER_MODERATOR, moderator);
-
-        response.setHeader("Vary", "HX-Request");
         ForumState requested = parseState(params, null, null);
         ForumViewer viewer = resolveViewer(session);
         String msg = "Viewer set to " + viewer.displayName() + (viewer.moderator() ? " (moderator)" : "");
         return renderForumMain(requested, viewer, null, null, msg, FlashType.SUCCESS);
     }
 
-    @PostMapping("/topics/create")
+    @PostMapping(value = "/topics/create", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String createTopic(
         @RequestParam Map<String, String> params,
         HttpSession session,
         HttpServletResponse response
     ) {
+        addHxVary(response);
         ForumViewer viewer = resolveViewer(session);
         ForumState requested = parseState(params, null, ForumStage.TOPICS);
         String scopeId = resolveScope(requested.scopeId());
@@ -169,8 +169,6 @@ public class ForumDemoController {
             params.get("body"),
             viewer
         );
-
-        response.setHeader("Vary", "HX-Request");
 
         if (created.isEmpty()) {
             TopicDraft failedDraft = new TopicDraft(null, false, params.get("title"), params.get("body"));
@@ -189,13 +187,14 @@ public class ForumDemoController {
         return renderForumMain(next, viewer, null, null, "Topic created.", FlashType.SUCCESS);
     }
 
-    @PostMapping("/comments/create")
+    @PostMapping(value = "/comments/create", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String createComment(
         @RequestParam Map<String, String> params,
         HttpSession session,
         HttpServletResponse response
     ) {
+        addHxVary(response);
         ForumViewer viewer = resolveViewer(session);
         ForumState requested = parseState(params, safeTrim(params.get("topic")), ForumStage.COMMENTS);
         String topicId = safeTrim(params.get("topicId"));
@@ -215,8 +214,6 @@ public class ForumDemoController {
             viewer
         );
 
-        response.setHeader("Vary", "HX-Request");
-
         if (created.isEmpty()) {
             CommentDraft failedDraft = new CommentDraft(null, false, params.get("body"));
             response.setStatus(400);
@@ -234,7 +231,7 @@ public class ForumDemoController {
         return renderForumMain(next, viewer, null, null, "Comment posted.", FlashType.SUCCESS);
     }
 
-    @PostMapping("/topics/{topicId}/quote")
+    @PostMapping(value = "/topics/{topicId}/quote", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String quoteTopic(
         @PathVariable String topicId,
@@ -242,11 +239,10 @@ public class ForumDemoController {
         HttpSession session,
         HttpServletResponse response
     ) {
+        addHxVary(response);
         ForumViewer viewer = resolveViewer(session);
         ForumState requested = parseState(params, topicId, ForumStage.COMMENTS);
         Optional<ForumDemoService.TopicView> topic = forumService.findTopic(topicId);
-
-        response.setHeader("Vary", "HX-Request");
 
         if (topic.isEmpty()) {
             response.setStatus(404);
@@ -258,7 +254,7 @@ public class ForumDemoController {
         return renderForumMain(next, viewer, null, draft, "Quote inserted into comment composer.", FlashType.INFO);
     }
 
-    @PostMapping("/comments/{commentId}/quote")
+    @PostMapping(value = "/comments/{commentId}/quote", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String quoteComment(
         @PathVariable String commentId,
@@ -266,11 +262,10 @@ public class ForumDemoController {
         HttpSession session,
         HttpServletResponse response
     ) {
+        addHxVary(response);
         ForumViewer viewer = resolveViewer(session);
         ForumState requested = parseState(params, null, ForumStage.COMMENTS);
         Optional<ForumDemoService.CommentView> comment = forumService.findComment(commentId);
-
-        response.setHeader("Vary", "HX-Request");
 
         if (comment.isEmpty()) {
             response.setStatus(404);
@@ -285,7 +280,7 @@ public class ForumDemoController {
         return renderForumMain(next, viewer, null, draft, "Quote inserted into comment composer.", FlashType.INFO);
     }
 
-    @PostMapping("/topics/{topicId}/edit")
+    @PostMapping(value = "/topics/{topicId}/edit", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String editTopicDraft(
         @PathVariable String topicId,
@@ -293,11 +288,10 @@ public class ForumDemoController {
         HttpSession session,
         HttpServletResponse response
     ) {
+        addHxVary(response);
         ForumViewer viewer = resolveViewer(session);
         ForumState requested = parseState(params, topicId, ForumStage.TOPICS);
         Optional<ForumDemoService.TopicView> topic = forumService.findTopic(topicId);
-
-        response.setHeader("Vary", "HX-Request");
 
         if (topic.isEmpty()) {
             response.setStatus(404);
@@ -313,7 +307,7 @@ public class ForumDemoController {
         return renderForumMain(next, viewer, draft, null, "Editing topic.", FlashType.INFO);
     }
 
-    @PostMapping("/comments/{commentId}/edit")
+    @PostMapping(value = "/comments/{commentId}/edit", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String editCommentDraft(
         @PathVariable String commentId,
@@ -321,11 +315,10 @@ public class ForumDemoController {
         HttpSession session,
         HttpServletResponse response
     ) {
+        addHxVary(response);
         ForumViewer viewer = resolveViewer(session);
         ForumState requested = parseState(params, null, ForumStage.COMMENTS);
         Optional<ForumDemoService.CommentView> comment = forumService.findComment(commentId);
-
-        response.setHeader("Vary", "HX-Request");
 
         if (comment.isEmpty()) {
             response.setStatus(404);
@@ -344,7 +337,7 @@ public class ForumDemoController {
         return renderForumMain(next, viewer, null, draft, "Editing comment.", FlashType.INFO);
     }
 
-    @PostMapping("/topics/{topicId}/update")
+    @PostMapping(value = "/topics/{topicId}/update", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String updateTopic(
         @PathVariable String topicId,
@@ -352,10 +345,10 @@ public class ForumDemoController {
         HttpSession session,
         HttpServletResponse response
     ) {
+        addHxVary(response);
         ForumViewer viewer = resolveViewer(session);
         ForumState requested = parseState(params, topicId, ForumStage.TOPICS);
 
-        response.setHeader("Vary", "HX-Request");
 
         Optional<ForumDemoService.TopicView> topic = forumService.findTopic(topicId);
         if (topic.isEmpty()) {
@@ -378,7 +371,7 @@ public class ForumDemoController {
         return renderForumMain(next, viewer, null, null, "Topic updated.", FlashType.SUCCESS);
     }
 
-    @PostMapping("/comments/{commentId}/update")
+    @PostMapping(value = "/comments/{commentId}/update", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String updateComment(
         @PathVariable String commentId,
@@ -386,10 +379,10 @@ public class ForumDemoController {
         HttpSession session,
         HttpServletResponse response
     ) {
+        addHxVary(response);
         ForumViewer viewer = resolveViewer(session);
         ForumState requested = parseState(params, null, ForumStage.COMMENTS);
 
-        response.setHeader("Vary", "HX-Request");
 
         Optional<ForumDemoService.CommentView> comment = forumService.findComment(commentId);
         if (comment.isEmpty()) {
@@ -414,7 +407,7 @@ public class ForumDemoController {
         return renderForumMain(next, viewer, null, null, "Comment updated.", FlashType.SUCCESS);
     }
 
-    @PostMapping("/topics/{topicId}/delete")
+    @PostMapping(value = "/topics/{topicId}/delete", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String deleteTopic(
         @PathVariable String topicId,
@@ -422,10 +415,10 @@ public class ForumDemoController {
         HttpSession session,
         HttpServletResponse response
     ) {
+        addHxVary(response);
         ForumViewer viewer = resolveViewer(session);
         ForumState requested = parseState(params, null, ForumStage.TOPICS);
 
-        response.setHeader("Vary", "HX-Request");
 
         Optional<ForumDemoService.TopicView> topic = forumService.findTopic(topicId);
         if (topic.isEmpty()) {
@@ -445,7 +438,7 @@ public class ForumDemoController {
         return renderForumMain(next, viewer, null, null, "Topic deleted.", FlashType.SUCCESS);
     }
 
-    @PostMapping("/comments/{commentId}/delete")
+    @PostMapping(value = "/comments/{commentId}/delete", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String deleteComment(
         @PathVariable String commentId,
@@ -453,10 +446,10 @@ public class ForumDemoController {
         HttpSession session,
         HttpServletResponse response
     ) {
+        addHxVary(response);
         ForumViewer viewer = resolveViewer(session);
         ForumState requested = parseState(params, null, ForumStage.COMMENTS);
 
-        response.setHeader("Vary", "HX-Request");
 
         Optional<ForumDemoService.CommentView> comment = forumService.findComment(commentId);
         if (comment.isEmpty()) {
@@ -473,6 +466,17 @@ public class ForumDemoController {
         String scopeId = topic.map(ForumDemoService.TopicView::categoryId).orElse(requested.scopeId());
         ForumState next = new ForumState(scopeId, comment.get().topicId(), requested.topicPage(), requested.topicSize(), requested.commentPage(), requested.commentSize(), ForumStage.COMMENTS);
         return renderForumMain(next, viewer, null, null, "Comment deleted.", FlashType.SUCCESS);
+    }
+
+    private void addHxVary(HttpServletResponse response) {
+        for (String header : response.getHeaders("Vary")) {
+            for (String token : header.split(",")) {
+                if ("HX-Request".equalsIgnoreCase(token.trim())) {
+                    return;
+                }
+            }
+        }
+        response.addHeader("Vary", "HX-Request");
     }
 
     private String renderForumMain(

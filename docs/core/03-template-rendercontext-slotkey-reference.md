@@ -13,8 +13,11 @@ public static final SlotKey<String> SUBTITLE = SlotKey.of("subtitle", "Default s
 
 Notes:
 
-- Equality is based on key name.
-- Keep keys centralized to avoid accidental mismatches.
+- The canonical constructor and all `SlotKey.of` factories throw `NullPointerException` for a null name at construction, rather than during later hash or map use.
+- Every non-null name is preserved literally, including empty and blank strings. Names are not trimmed, case-folded, or Unicode-normalized.
+- Default providers may be null and are not evaluated during construction.
+- Equality and hash code use only the name, not the generic type or default provider.
+- Keep keys centralized with a consistent type for each name to avoid accidental mismatches.
 
 ## Slot
 
@@ -91,7 +94,22 @@ Reuse guidance:
 
 ## Compile Policies
 
-- `NEVER_COMPILE`: always resolve live entries.
+- `NEVER_COMPILE`: render live entries without creating new compiled entries; existing compiled entries still render as trusted HTML.
 - `COMPILE_ON_FIRST_HIT`: live slot values can be memoized into compiled entries for reused contexts.
 
 Defaults provided in `SlotKey` are rendered live and are not persisted as compiled entries.
+
+## Direct and compiled rendering parity
+
+Both paths render explicit compiled entries as trusted HTML. `NEVER_COMPILE` prevents new
+cache entries; it does not ignore an existing compiled entry. `get(key)` returns live typed
+values or defaults, while `getCompiled(key)` retrieves cached HTML.
+
+Compilation preserves generated child streams and delegates custom `render(RenderContext)`
+overrides. Standard `Column` structure is compiled as ordinary tag structure, with its base
+class already established during configuration; no warm-up render is required. A custom
+`Column` subclass render override still remains a live delegate.
+
+Templates can therefore retain mutable components, including framework components with
+custom renderers; share only when those delegates are safe to share. Contexts and slot-provided
+components remain request-owned. See the [rendering reference](../reference/rendering.md).

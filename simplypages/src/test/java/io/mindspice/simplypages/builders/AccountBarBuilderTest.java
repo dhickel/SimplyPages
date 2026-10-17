@@ -43,14 +43,13 @@ class AccountBarBuilderTest {
     }
 
     @Test
-    @DisplayName("AccountBarBuilder should reject unsafe URL and style values")
-    void testUnsafeValues() {
+    @DisplayName("AccountBarBuilder validates Link destinations but leaves raw CSS caller-owned")
+    void testLinkPolicyAndCallerControlledStyles() {
         assertThrows(IllegalArgumentException.class,
             () -> AccountBarBuilder.create().addLeftLink("Bad", "javascript:alert(1)"));
 
-        assertThrows(IllegalArgumentException.class,
-            () -> AccountBarBuilder.create()
-                .withBackgroundColor("#fff;color:red")
-                .build());
+        String html = AccountBarBuilder.create().withBackgroundColor("#fff;color:red").build().render();
+        org.junit.jupiter.api.Assertions.assertEquals("background-color: #fff;color:red",
+                org.jsoup.Jsoup.parse(html).selectFirst(".account-bar").attr("style"));
     }
 }

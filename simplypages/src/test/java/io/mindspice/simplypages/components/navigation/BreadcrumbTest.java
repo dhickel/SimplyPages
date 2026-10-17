@@ -40,8 +40,9 @@ class BreadcrumbTest {
     }
 
     @Test
-    @DisplayName("Breadcrumb should reject unsafe href schemes")
-    void testBreadcrumbUnsafeHref() {
-        assertThrows(IllegalArgumentException.class, () -> Breadcrumb.create().addItem("Bad", "javascript:alert(1)"));
+    @DisplayName("Breadcrumb hrefs remain caller-controlled")
+    void testBreadcrumbCallerControlledHref() {
+        var document = org.jsoup.Jsoup.parse(Breadcrumb.create().addItem("Bad", "javascript:alert(1)").render());
+        org.junit.jupiter.api.Assertions.assertEquals("javascript:alert(1)", document.selectFirst("a").attr("href"));
     }
 }

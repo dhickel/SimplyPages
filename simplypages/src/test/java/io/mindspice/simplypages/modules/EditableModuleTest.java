@@ -5,6 +5,10 @@ import io.mindspice.simplypages.editing.EditMode;
 import io.mindspice.simplypages.testutil.HtmlAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.jsoup.Jsoup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,10 +19,50 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EditableModuleTest {
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "/edit | /edit?editMode=USER_EDIT",
+            "/edit#fragment | /edit?editMode=USER_EDIT#fragment",
+            "/edit?x=1#fragment | /edit?x=1&editMode=USER_EDIT#fragment",
+            "/edit?#fragment | /edit?editMode=USER_EDIT#fragment",
+            "/edit?x=1&#fragment | /edit?x=1&editMode=USER_EDIT#fragment",
+            "/edit? | /edit?editMode=USER_EDIT",
+            "/edit?x=1& | /edit?x=1&editMode=USER_EDIT",
+            "/edit#fragment?notQuery | /edit?editMode=USER_EDIT#fragment?notQuery",
+            "/edit?editMode=OWNER_EDIT#F | /edit?editMode=OWNER_EDIT&editMode=USER_EDIT#F",
+            "/edit/{id}?literal=%2f#F?&#tail | /edit/{id}?literal=%2f&editMode=USER_EDIT#F?&#tail",
+            "https://Host/path# | https://Host/path?editMode=USER_EDIT#"
+    })
+    void appendsModeBeforeFragmentWithoutReplacingCallerUrl(String url, String expected) {
+        var document = Jsoup.parse(EditableModule.wrap(new Paragraph("Body"))
+                .withEditUrl(url).withDeleteUrl(url).withEditMode(EditMode.USER_EDIT).render());
+        assertEquals(expected, document.selectFirst(".module-edit-btn").attr("hx-get"));
+        assertEquals(expected, document.selectFirst(".module-delete-btn").attr("hx-delete"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/edit/{moduleId}?x=%2f#F?", "/edit?", "/edit?x=1&", "/edit#?x=1"})
+    void nullModeLeavesCompleteUrlsUnchanged(String url) {
+        var document = Jsoup.parse(EditableModule.wrap(new Paragraph("Body"))
+                .withEditUrl(url).withDeleteUrl(url).withEditMode(null).render());
+        assertEquals(url, document.selectFirst(".module-edit-btn").attr("hx-get"));
+        assertEquals(url, document.selectFirst(".module-delete-btn").attr("hx-delete"));
+    }
+
+    @Test
+    void nullOrEmptyCompleteUrlsStillDisableControls() {
+        for (String url : java.util.Arrays.asList(null, "")) {
+            var document = Jsoup.parse(EditableModule.wrap(new Paragraph("Body"))
+                    .withEditUrl(url).withDeleteUrl(url).withEditMode(EditMode.OWNER_EDIT).render());
+            assertTrue(document.select(".module-edit-btn, .module-delete-btn").isEmpty());
+        }
+    }
 
     @Test
     @DisplayName("EditableModule should render edit/delete buttons without editMode params")
@@ -37,6 +81,19 @@ class EditableModuleTest {
         assertTrue(html.contains("hx-delete=\"/delete/1\""));
         assertTrue(html.contains("hx-target=\"#edit-modal-container\""));
         assertTrue(html.contains("hx-target=\"#module-1\""));
+    }
+
+    @Test
+    void editLauncherPreservesCustomModalTargetAndButtonSemantics() {
+        String html = EditableModule.wrap(new Paragraph("Body"))
+            .withModuleId("custom-launcher").withEditUrl("/edit/custom")
+            .withEditTarget("#custom-modal-host").withEditSwap("beforeend").render();
+        HtmlAssert.assertThat(html)
+            .hasElementCount("button.module-edit-btn", 1)
+            .attributeEquals("button.module-edit-btn", "type", "button")
+            .attributeEquals("button.module-edit-btn", "hx-target", "#custom-modal-host")
+            .attributeEquals("button.module-edit-btn", "hx-swap", "beforeend")
+            .attributeEquals("button.module-edit-btn", "title", "Edit");
     }
 
     @Test

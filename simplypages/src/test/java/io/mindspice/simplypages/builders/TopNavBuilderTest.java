@@ -72,11 +72,14 @@ class TopNavBuilderTest {
     }
 
     @Test
-    @DisplayName("TopNavBuilder should reject unsafe href schemes")
-    void testUnsafeHref() {
-        assertThrows(IllegalArgumentException.class,
-            () -> TopNavBuilder.create().addPrimaryLink("Bad", "javascript:alert(1)"));
-        assertThrows(IllegalArgumentException.class,
-            () -> TopNavBuilder.create().addUtilityLink("Bad", "data:text/html,<svg>"));
+    @DisplayName("TopNavBuilder preserves caller-controlled destinations with attribute encoding")
+    void testCallerControlledHref() {
+        var document = org.jsoup.Jsoup.parse(TopNavBuilder.create()
+                .addPrimaryLink("Primary", "javascript:alert(1)")
+                .addUtilityLink("Utility", "data:text/html,<svg>").build().render());
+        var links = document.select("a");
+        org.junit.jupiter.api.Assertions.assertEquals("javascript:alert(1)", links.get(0).attr("href"));
+        org.junit.jupiter.api.Assertions.assertEquals("data:text/html,<svg>", links.get(1).attr("href"));
+        assertTrue(document.select("svg").isEmpty());
     }
 }

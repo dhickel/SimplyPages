@@ -81,7 +81,9 @@ public class Spacer extends HtmlTag {
     }
 
     /**
-     * Sets custom spacing with any CSS size value.
+     * Sets custom spacing through raw style assembly. Supply an application-controlled or
+     * separately CSS-context-validated value; declaration separators are retained. This does
+     * not use addStyle's breakout check or the width helpers' restricted token grammar.
      *
      * @param size CSS size value (e.g., "50px", "3rem", "10%")
      */

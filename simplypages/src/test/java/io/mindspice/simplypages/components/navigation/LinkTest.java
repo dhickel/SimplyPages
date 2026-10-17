@@ -3,11 +3,57 @@ package io.mindspice.simplypages.components.navigation;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import io.mindspice.simplypages.core.RenderContext;
+import io.mindspice.simplypages.core.SlotKey;
+import io.mindspice.simplypages.core.Template;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LinkTest {
+
+    @Test
+    void rejectedSetterPreservesLiteralStateOrderAndPriorStaticSnapshot() {
+        Link link = Link.create("/old?x=1&y=2", "<text>").withId("link").withTarget("_self");
+        Template before = link.compile();
+        String original = link.render();
+        for (String prohibited : new String[] {"JaVa\tScRiPt:x", "da\nta:text/plain,x", "ftp://example.test"}) {
+            assertThrows(IllegalArgumentException.class, () -> link.withHref(prohibited));
+            assertEquals("/old?x=1&y=2", link.getHref());
+            assertEquals("<text>", link.getText());
+            assertEquals(original, link.render());
+            assertEquals(original, before.render(RenderContext.empty()));
+        }
+        String raw = " \u0001HT\nTPS://example.test/?a=1&b=\"x\"\r ";
+        assertSame(link, link.withHref(raw));
+        assertEquals(raw, link.getHref());
+        assertEquals(original, before.render(RenderContext.empty()));
+        assertEquals(link.render(), link.compile().render(RenderContext.empty()));
+        assertTrue(link.render().indexOf("target=") < link.render().indexOf("href="));
+        assertTrue(link.render().contains("&amp;b=&#34;x&#34;"));
+    }
+
+    @Test
+    void customContextRendererRemainsLiveAndTypedFluentReturnsStayIntact() {
+        SlotKey<String> value = SlotKey.of("link-context");
+        Link custom = new Link("/first", "text") {
+            @Override public String render(RenderContext context) {
+                return super.render(context) + context.get(value).orElseThrow();
+            }
+        };
+        Template compiled = custom.compile();
+        assertSame(custom, custom.withHref("ht\ttp:/next").withId("id").withClass("link")
+            .withTarget("_self").withHxGet("custom:get").withHxPost("custom:post"));
+        for (String text : new String[] {"one", "two"}) {
+            RenderContext context = RenderContext.of(value, text);
+            assertEquals(custom.render(context), compiled.render(context));
+            assertTrue(compiled.render(context).endsWith(text));
+        }
+    }
 
     @Test
     @DisplayName("Link should render href and HTMX attributes")

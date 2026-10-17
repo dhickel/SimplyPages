@@ -19,6 +19,8 @@ import java.util.List;
  */
 public class AccordionModule extends Module {
 
+    private final String defaultId = "accordion-" + java.util.UUID.randomUUID();
+
     public static class AccordionItem {
         private final String header;
         private final String content;
@@ -124,7 +126,7 @@ public class AccordionModule extends Module {
 
         for (int i = 0; i < items.size(); i++) {
             AccordionItem item = items.get(i);
-            String itemId = (moduleId != null ? moduleId : "accordion") + "-item-" + i;
+            String itemId = (moduleId != null ? moduleId : defaultId) + "-item-" + i;
 
             Div accordionItem = new Div().withClass("accordion-item");
 
@@ -132,6 +134,7 @@ public class AccordionModule extends Module {
             HtmlTag headerBtn = new HtmlTag("button")
                 .withAttribute("class", "accordion-header" + (item.isExpanded() ? " active" : ""))
                 .withAttribute("type", "button")
+                .withAttribute("id", itemId + "-header")
                 .withAttribute("aria-expanded", String.valueOf(item.isExpanded()))
                 .withAttribute("aria-controls", itemId + "-content")
                 .withInnerText(item.getHeader());
@@ -139,19 +142,28 @@ public class AccordionModule extends Module {
             accordionItem.withChild(headerBtn);
 
             // Content panel
+            boolean expanded = item.isExpanded();
             Div contentPanel = new Div()
-                .withClass("accordion-content" + (item.isExpanded() ? " expanded" : ""))
+                .withClass("accordion-content" + (expanded ? " expanded" : ""))
                 .withAttribute("id", itemId + "-content")
-                .withAttribute("role", "region");
+                .withAttribute("role", "region")
+                .withAttribute("aria-labelledby", itemId + "-header")
+                .withAttribute("aria-hidden", String.valueOf(!expanded));
+            if (!expanded) {
+                contentPanel.withAttribute("hidden", "true")
+                    .withAttribute("inert", "true");
+            }
 
+            Div contentBody = new Div().withClass("accordion-body");
             if (item.getCustomContent() != null) {
-                contentPanel.withChild(item.getCustomContent());
+                contentBody.withChild(item.getCustomContent());
             } else if (item.getContent() != null && !item.getContent().isEmpty()) {
                 HtmlTag contentText = new HtmlTag("div")
                     .withAttribute("class", "accordion-text")
                     .withInnerText(item.getContent());
-                contentPanel.withChild(contentText);
+                contentBody.withChild(contentText);
             }
+            contentPanel.withChild(contentBody);
 
             accordionItem.withChild(contentPanel);
             accordion.withChild(accordionItem);

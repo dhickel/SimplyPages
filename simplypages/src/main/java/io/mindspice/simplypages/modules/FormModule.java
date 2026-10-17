@@ -34,7 +34,10 @@ public class FormModule extends Module {
         return new FormModule();
     }
 
-    /** Sets HTMX submit endpoint for the wrapped form. */
+    /**
+     * Sets an application-controlled or separately endpoint-validated submit URL, applied as
+     * hx-post during build. Encoding is not scheme/destination validation, authorization, or CSRF.
+     */
     public FormModule withSubmitUrl(String url) {
         this.submitUrl = url;
         return this;

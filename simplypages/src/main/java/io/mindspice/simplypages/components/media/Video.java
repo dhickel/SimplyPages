@@ -9,12 +9,17 @@ import io.mindspice.simplypages.core.HtmlTag;
  */
 public class Video extends HtmlTag {
 
+    /**
+     * Creates video with an application-controlled or separately media-context-validated source.
+     * Attribute encoding does not validate URL schemes, destinations, or media payloads.
+     */
     public Video(String src) {
         super("video");
         this.withAttribute("src", src);
         this.addClass("video");
     }
 
+    /** Creates video with the trusted/context-validated source contract of {@link #Video(String)}. */
     public static Video create(String src) {
         return new Video(src);
     }
@@ -26,13 +31,12 @@ public class Video extends HtmlTag {
 
     // Add method accepting boolean to match demo usage if needed, though boolean attr usually don't take value.
     // Demo says: .withControls(true).
+    /** Sets or removes the native playback controls. */
     public Video withControls(boolean controls) {
         if (controls) {
             this.withAttribute("controls", "");
         } else {
-            // Remove attribute? HtmlTag doesn't support removal easily by public API except via withAttribute replacement?
-            // Actually withAttribute replaces.
-            // We can't remove easily. But typically you just don't call it.
+            attributes.removeIf(attribute -> "controls".equalsIgnoreCase(attribute.name()));
         }
         return this;
     }
@@ -52,6 +56,10 @@ public class Video extends HtmlTag {
         return this;
     }
 
+    /**
+     * Sets an encoded poster URL without Image's source policy. Supply an application-controlled
+     * or separately image-context-validated destination; encoding is not scheme validation.
+     */
     public Video withPoster(String posterUrl) {
         this.withAttribute("poster", posterUrl);
         return this;

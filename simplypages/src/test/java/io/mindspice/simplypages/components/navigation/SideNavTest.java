@@ -47,8 +47,9 @@ class SideNavTest {
     }
 
     @Test
-    @DisplayName("SideNav should reject unsafe href schemes")
-    void testSideNavUnsafeHref() {
-        assertThrows(IllegalArgumentException.class, () -> SideNav.create().addItem("Bad", "javascript:alert(1)"));
+    @DisplayName("SideNav hrefs remain caller-controlled")
+    void testSideNavCallerControlledHref() {
+        var document = org.jsoup.Jsoup.parse(SideNav.create().addItem("Bad", "javascript:alert(1)").render());
+        org.junit.jupiter.api.Assertions.assertEquals("javascript:alert(1)", document.selectFirst("a").attr("href"));
     }
 }

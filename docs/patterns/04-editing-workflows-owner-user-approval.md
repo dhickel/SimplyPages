@@ -13,16 +13,16 @@ SimplyPages editing APIs support direct edits and staged edits.
 
 ## Owner Edit Workflow
 
-1. Open edit modal.
-2. Validate input.
+1. Authenticate and authorize opening the edit modal.
+2. Recheck resource permission and CSRF at save, then validate input.
 3. Apply edits directly.
 4. Persist changes.
 5. Return OOB swaps.
 
 ## User Edit Workflow (Staged)
 
-1. Open edit modal.
-2. Validate input.
+1. Authenticate and authorize opening the edit modal.
+2. Recheck resource permission and CSRF at save, then validate input.
 3. Store change request in approval queue.
 4. Return pending status UI.
 5. Owner approves or rejects.
@@ -53,7 +53,10 @@ public interface ModuleEditHandler<T> {
 4. Enforce authorization in the controller/service handler, not only by hiding buttons in the UI.
 5. Escape at render time. Store validated plain text from forms unless the application owns a
    sanitization pipeline for trusted HTML.
-6. Keep path identifiers constrained to safe path segments and URL-encode child identifiers when
-   expanding child endpoint templates.
+6. Supply raw identifiers to framework URL templates; they are encoded once when interpolated.
+   Applications own routing, decoding and business-ID validation.
 7. Return explicit `403`, `404`, or `400` responses for blocked permissions, missing records, and
    invalid positions or IDs.
+
+Never trust a request-provided `editMode` as authorization. Derive the permitted mode server-side.
+Approval queues, persistence, and audit trails are application-owned.

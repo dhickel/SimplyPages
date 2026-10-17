@@ -113,6 +113,28 @@ Renderer-populated fluent methods:
 - `withLikes(Integer)`
 - `withReplies(Integer)`
 
+#### Default comment depth and layout
+
+`DefaultForumCommentComponent` emits `data-depth` on every card as the exact configured
+signed `int`, including zero, negative values and integer extremes. It stores the value
+unchanged. A single `forum-comment-depth-0` through `forum-comment-depth-4` class controls
+presentation: negative depths look like zero; depths above four look like four.
+`parentId` is independent of depth. Null/blank parents omit `data-parent-id`; nonblank
+values are emitted with attribute escaping.
+
+Framework CSS uses logical-start indentation of 16px per visual level, or 8px at viewport
+widths up to 920px, additionally limited to 8% of the containing inline size. Cards flow
+into the remaining width. The default retains its 150x150 avatar reservation, including
+blank/invalid-URL fallback, and stacks its owned layout in narrow hosts when needed.
+Depth adds no inline style; ordinary host CSS can override these defaults.
+
+Custom component suppliers receive the raw parent/depth unchanged once per selected item
+and own their markup. Raw depth metadata or the common `forum-comment` class alone does
+not opt custom markup into the generated depth styling. Default rendering preserves
+configured state and passes the same context to body/actions exactly once. Templates
+retain live default/subclass rendering; finish configuration before sharing and keep
+contexts and child delegates appropriately owned.
+
 ### `ForumCollapsibleComposer`
 
 Factory:
@@ -269,7 +291,9 @@ Fields:
 
 Notes:
 
+- Without pagination, comments retain flat collection order, including comments from different topics.
 - When pagination is supplied, renderer filters incoming comments by `topicId` before slicing.
+- Parent/depth metadata does not reorder or group comments. A child can precede its parent or appear on a different page; missing, self, cyclic and cross-topic parent references are not reconciled or validated. There is no tree DOM or subtree pagination.
 - `totalComments` should represent all comments for the topic scope (not only current page slice).
 - `commentsPerPage` is the hard render cap for one response. If `commentsPerPage=8`, the renderer outputs at most 8 comment items.
 - Enabled pagination controls include `data-sp-scroll-top="target"` for target-fragment top reset after HTMX swaps.

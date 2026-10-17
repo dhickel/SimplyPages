@@ -5,6 +5,7 @@ import io.mindspice.simplypages.core.Template;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -17,6 +18,19 @@ class BasicComponentsTest {
 
         assertTrue(html.contains("<h2"));
         assertTrue(html.contains(">Title</h2>"));
+    }
+
+    @Test
+    @DisplayName("Header alignment should preserve custom classes from mixed-case aliases")
+    void testHeaderAlignmentWithCaseInsensitiveClassLookup() {
+        Header header = Header.H2("Title");
+        header.withAttribute("cLaSs", "custom align-left");
+        String html = header.center().render();
+
+        assertTrue(html.contains("custom"));
+        assertTrue(html.contains("align-center"));
+        assertFalse(html.contains("align-left"));
+        assertEquals(1, html.toLowerCase().split("\\sclass=").length - 1);
     }
 
     @Test
@@ -45,6 +59,19 @@ class BasicComponentsTest {
         assertTrue(html.contains("lead"));
         assertTrue(html.contains("align-right"));
         assertFalse(html.contains("align-left"));
+    }
+
+    @Test
+    @DisplayName("Paragraph alignment should preserve custom classes from mixed-case aliases")
+    void testParagraphAlignmentWithCaseInsensitiveClassLookup() {
+        Paragraph paragraph = new Paragraph("Text");
+        paragraph.withAttribute("ClAsS", "custom align-left");
+        String html = paragraph.right().render();
+
+        assertTrue(html.contains("custom"));
+        assertTrue(html.contains("align-right"));
+        assertFalse(html.contains("align-left"));
+        assertEquals(1, html.toLowerCase().split("\\sclass=").length - 1);
     }
 
     @Test

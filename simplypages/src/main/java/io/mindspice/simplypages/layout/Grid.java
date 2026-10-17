@@ -1,10 +1,11 @@
 package io.mindspice.simplypages.layout;
 
+import io.mindspice.simplypages.core.Attribute;
 import io.mindspice.simplypages.core.Component;
-import io.mindspice.simplypages.core.CssClassNames;
 import io.mindspice.simplypages.core.HtmlTag;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Generic CSS-class driven grid container.
@@ -18,7 +19,6 @@ public class Grid extends HtmlTag {
     protected int columns = 3;
     protected String gap = "medium";
     protected final String baseClass;
-    private static final Set<String> GAP_TOKENS = Set.of("sm", "medium", "lg");
 
     /**
      * Creates a grid with base class {@code grid}, 3 columns, and {@code medium} gap.
@@ -70,7 +70,7 @@ public class Grid extends HtmlTag {
      * @return this grid
      */
     public Grid withGap(String gap) {
-        this.gap = normalizeGap(gap);
+        this.gap = gap;
         updateClasses();
         return this;
     }
@@ -107,27 +107,30 @@ public class Grid extends HtmlTag {
         // Logic to update grid classes based on state
         // We need to remove old grid-cols/gap classes to prevent accumulation.
 
-        CssClassNames.replaceMatching(
-            this,
-            baseClass,
-            "grid-cols-" + columns + " gap-" + gap,
-            token -> token.matches("grid-cols-\\d+") || token.startsWith("gap-")
-        );
-    }
+        String currentClass = attributes.stream()
+                .filter(attr -> "class".equalsIgnoreCase(attr.name()))
+                .map(Attribute::value)
+                .filter(value -> value != null)
+                .findFirst()
+                .orElse("");
 
-    private String normalizeGap(String token) {
-        if (token == null || token.isBlank()) {
-            throw new IllegalArgumentException("Grid gap token cannot be blank");
+        // Keep only complete custom tokens and remove the owned layout tokens.
+        List<String> classTokens = new ArrayList<>();
+        String normalizedClass = currentClass.trim();
+        if (!normalizedClass.isEmpty()) {
+            for (String token : normalizedClass.split("\\s+")) {
+                classTokens.add(token);
+            }
         }
-        String normalized = token.trim().toLowerCase();
-        if ("small".equals(normalized)) {
-            normalized = "sm";
-        } else if ("large".equals(normalized)) {
-            normalized = "lg";
+        classTokens.removeIf(token -> token.matches("grid-cols-\\d+") || token.matches("gap-\\w+"));
+
+        // Ensure the exact base token is present without treating it as a substring.
+        if (!classTokens.contains(baseClass)) {
+            classTokens.add(0, baseClass);
         }
-        if (!GAP_TOKENS.contains(normalized)) {
-            throw new IllegalArgumentException("Unsupported grid gap token: " + token);
-        }
-        return normalized;
+
+        classTokens.add("grid-cols-" + columns);
+        classTokens.add("gap-" + gap);
+        this.withAttribute("class", String.join(" ", classTokens));
     }
 }

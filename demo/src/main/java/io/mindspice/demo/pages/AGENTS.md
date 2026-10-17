@@ -12,6 +12,10 @@ Owns page composition classes used by demo controllers.
 - Page classes should stay readable and educational.
 - Compositions should reflect current recommended APIs.
 
+- Docs use canonical paths, safe Markdown with heading anchors, and exact resource lookup.
+- Documentation HTMX links replace the content wrapper with outerHTML; keep one docs-content ID.
+- The docs page uses framework module-content styling and descriptive navigation labels.
+
 ## Do
 - Keep page classes focused on rendering/composition.
 - Prefer reusable helper patterns when examples repeat.
@@ -26,6 +30,10 @@ Owns page composition classes used by demo controllers.
 - Example code lagging behind module/component API changes.
 - Overly complex page classes that hide framework concepts.
 - Mixing unrelated concerns in one demo page.
+
+## Private chat composition
+
+ChatDemoPage renders actual framework ChatModule/Form/Button/Alert components and private finite-stream controls. Visible copy must disclose non-durable history, session ownership not authentication, pruning/limits and no CSRF/rate/production guarantees. Resume opens the same owned ID only; Start New is an explicit demo action. Keep generated composer maxlength=4096 (UTF-16 units), with the server authoritative before trim. New generations use the existing app-private chat-demo.js asset, preserve drafts and settle original queued work before replacement; do not add framework transport/bootstrap/focus hooks. Public chat metadata remains app-owned routing, not library authentication.
 
 ## Required Tests
 - Add/adjust demo integration coverage when page behavior changes materially

@@ -10,6 +10,7 @@ import io.mindspice.simplypages.components.display.Alert;
 import io.mindspice.simplypages.core.Component;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,7 +50,7 @@ public class DemoController {
         this.documentationService = documentationService;
     }
 
-    @GetMapping({"/", "/home"})
+    @GetMapping(value = {"/", "/home"}, produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String home(
         @RequestHeader(value = "HX-Request", required = false) String hxRequest,
@@ -58,7 +59,7 @@ public class DemoController {
         return renderInHomeShell(homePage, hxRequest, response);
     }
 
-    @GetMapping("/demos")
+    @GetMapping(value = "/demos", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String demos(
         @RequestHeader(value = "HX-Request", required = false) String hxRequest,
@@ -67,7 +68,7 @@ public class DemoController {
         return renderInDemoShell(demosOverviewPage, hxRequest, response);
     }
 
-    @GetMapping("/demos/basics-forms")
+    @GetMapping(value = "/demos/basics-forms", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String basicsForms(
         @RequestHeader(value = "HX-Request", required = false) String hxRequest,
@@ -76,7 +77,7 @@ public class DemoController {
         return renderInDemoShell(basicsFormsDemoPage, hxRequest, response);
     }
 
-    @GetMapping("/demos/display-data")
+    @GetMapping(value = "/demos/display-data", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String displayData(
         @RequestHeader(value = "HX-Request", required = false) String hxRequest,
@@ -85,7 +86,7 @@ public class DemoController {
         return renderInDemoShell(displayDataDemoPage, hxRequest, response);
     }
 
-    @GetMapping("/demos/modules")
+    @GetMapping(value = "/demos/modules", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String modules(
         @RequestHeader(value = "HX-Request", required = false) String hxRequest,
@@ -94,7 +95,7 @@ public class DemoController {
         return renderInDemoShell(modulesDemoPage, hxRequest, response);
     }
 
-    @GetMapping("/demos/htmx-editing")
+    @GetMapping(value = "/demos/htmx-editing", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String htmxEditing(
         @RequestHeader(value = "HX-Request", required = false) String hxRequest,
@@ -103,36 +104,31 @@ public class DemoController {
         return renderInDemoShell(htmxEditingDemoPage, hxRequest, response);
     }
 
-    @GetMapping(value = {"/docs/**", "/docs"})
+    @GetMapping(value = {"/docs/**", "/docs"}, produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String docs(
         HttpServletRequest request,
         HttpServletResponse response,
         @RequestHeader(value = "HX-Request", required = false) String hxRequest
     ) {
+        addHxVary(response);
         String path = documentationService.normalizePath(request.getRequestURI());
         String markdown = documentationService.getDocContent(path);
 
         if (markdown == null) {
             response.setStatus(404);
-            return "Documentation not found: " + path;
+            return "Documentation not found: " + org.owasp.encoder.Encode.forHtml(path);
         }
 
-        String title = path.contains("/") ? path.substring(path.lastIndexOf('/') + 1) : path;
-        title = title.replace("-", " ").replace(".md", "");
-        title = title.substring(0, 1).toUpperCase() + title.substring(1);
-
-        DocsPage docsPage = new DocsPage(title, markdown, documentationService.getDocsNavigation());
-        response.setHeader("Vary", "HX-Request");
-
-        if (hxRequest != null) {
+        DocsPage docsPage = new DocsPage(documentationService.renderMarkdown(path, markdown), documentationService.getDocsNavigation());
+        if (isHxRequest(hxRequest)) {
             return docsPage.renderContent();
         }
 
         return renderInHomeShell(docsPage, null, response);
     }
 
-    @GetMapping("/javadocs-view")
+    @GetMapping(value = "/javadocs-view", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String javadocs(
         @RequestHeader(value = "HX-Request", required = false) String hxRequest,
@@ -141,7 +137,7 @@ public class DemoController {
         return renderInHomeShell(javadocsPage, hxRequest, response);
     }
 
-    @PostMapping("/demos/api/template-card")
+    @PostMapping(value = "/demos/api/template-card", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String templateCard(
         @RequestParam("title") String title,
@@ -150,7 +146,7 @@ public class DemoController {
         return HtmxEditingDemoPage.renderTemplateCard(title, body);
     }
 
-    @PostMapping("/demos/api/form-preview")
+    @PostMapping(value = "/demos/api/form-preview", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
     public String formPreview(
         @RequestParam(value = "name", required = false) String name,
@@ -168,8 +164,8 @@ public class DemoController {
     }
 
     private String renderInHomeShell(DemoPage page, String hxRequest, HttpServletResponse response) {
-        response.setHeader("Vary", "HX-Request");
-        if (hxRequest != null) {
+        addHxVary(response);
+        if (isHxRequest(hxRequest)) {
             return page.render();
         }
 
@@ -182,12 +178,13 @@ public class DemoController {
                 .build())
             .withTopNav(buildGlobalTopNav())
             .withContent(new RawHtml(page.render()))
+            .addCustomJs("/js/editing-demo.js")
             .build();
     }
 
     private String renderInDemoShell(DemoPage page, String hxRequest, HttpServletResponse response) {
-        response.setHeader("Vary", "HX-Request");
-        if (hxRequest != null) {
+        addHxVary(response);
+        if (isHxRequest(hxRequest)) {
             return page.render();
         }
 
@@ -209,7 +206,23 @@ public class DemoController {
                 .addLink("Chat", "/chat")
                 .build())
             .withContent(new RawHtml(page.render()))
+            .addCustomJs("/js/editing-demo.js")
             .build();
+    }
+
+    private boolean isHxRequest(String hxRequest) {
+        return "true".equalsIgnoreCase(hxRequest);
+    }
+
+    private void addHxVary(HttpServletResponse response) {
+        for (String header : response.getHeaders("Vary")) {
+            for (String token : header.split(",")) {
+                if ("HX-Request".equalsIgnoreCase(token.trim())) {
+                    return;
+                }
+            }
+        }
+        response.addHeader("Vary", "HX-Request");
     }
 
     private Component buildGlobalTopNav() {

@@ -47,4 +47,11 @@ class VideoTest {
         assertTrue(html.contains("height=\"480\""));
         assertFalse(html.contains("controls"));
     }
+
+    @Test void controlsCanBeDisabledAfterEnabling() {
+        var element = org.jsoup.Jsoup.parse(Video.create("/media").withControls(true).withControls(false).render())
+            .selectFirst("video");
+        org.junit.jupiter.api.Assertions.assertFalse(element.hasAttr("controls"));
+    }
+
 }

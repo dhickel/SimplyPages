@@ -4,12 +4,26 @@ import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
 
+import java.util.Arrays;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * Visual separator supporting horizontal/vertical orientation and style options.
  *
- * <p>Mutable and not thread-safe. Style/orientation fields are applied when rendered. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
+ * <p>Rendering derives temporary attributes without changing stored configuration. Horizontal
+ * dividers reserve the exact lowercase properties {@code border-top}, {@code width},
+ * {@code display}, {@code line-height}, {@code position}, {@code text-align}, {@code margin}
+ * and the whole outer class token {@code divider-with-text}. With null text, the first four
+ * properties are generated and the last three/token suppressed; with any non-null text,
+ * including empty text, the reverse applies. Inactive reserved names are suppressed even when
+ * caller-configured. Vertical dividers generate only {@code border-left} and {@code display};
+ * they do not suppress other properties or the outer text token.</p>
+ *
+ * <p>Other declarations, case variants and classes remain caller-owned. Cleanup does not repair
+ * arbitrary CSS conflicts. Configuration is mutable and must finish before sharing; templates
+ * retain this renderer live. Child delegates and request contexts have separate sharing obligations.</p>
  */
 public class Divider extends HtmlTag {
 
@@ -88,6 +102,7 @@ public class Divider extends HtmlTag {
     }
 
     public Divider withColor(String color) {
+        if (color != null) new HtmlTag("span").addStyle("color", color);
         this.color = color;
         return this;
     }
@@ -124,27 +139,71 @@ public class Divider extends HtmlTag {
         return Stream.concat(builder.build(), super.getChildrenStream());
     }
 
-    // Override render(RenderContext) to apply styles/classes BEFORE invoking super.render
     @Override
     public String render(RenderContext context) {
-        // Apply styles and classes based on current state
-        this.withAttribute("style", buildStyle());
-
+        RenderTag output = new RenderTag();
+        if (orientation == DividerOrientation.HORIZONTAL) {
+            output.suppressStyles(text == null
+                    ? new String[]{"position", "text-align", "margin"}
+                    : new String[]{"border-top", "width", "display", "line-height"});
+            if (text == null) {
+                output.suppressTextClass();
+            }
+        }
+        for (String declaration : buildStyle().split(";")) {
+            int colon = declaration.indexOf(':');
+            if (colon >= 0) {
+                output.addStyle(declaration.substring(0, colon).trim(), declaration.substring(colon + 1).trim());
+            }
+        }
         if (text != null && orientation == DividerOrientation.HORIZONTAL) {
-            // We need to ensure the class includes 'divider-with-text'
-            // We use addClass to preserve other classes
-             this.addClass("divider-with-text");
+            output.addClass("divider-with-text");
+        }
+        return output.render(context);
+    }
+
+    private final class RenderTag extends HtmlTag {
+        private RenderTag() {
+            super(Divider.this.tagName, Divider.this.selfClosing);
+            attributes.addAll(Divider.this.attributes);
+            id = Divider.this.id;
+            innerText = Divider.this.innerText;
+            innerTextSlot = Divider.this.innerTextSlot;
+            trustedHtml = Divider.this.trustedHtml;
         }
 
-        return super.render(context);
+        @Override
+        protected Stream<Component> getChildrenStream() {
+            return Divider.this.getChildrenStream();
+        }
+
+        private void suppressStyles(String[] properties) {
+            attributes.stream().filter(attr -> "style".equalsIgnoreCase(attr.name())).findFirst()
+                    .ifPresent(attr -> {
+                        String styles = attr.value() == null ? "" : attr.value();
+                        for (String property : properties) {
+                            styles = styles.replaceAll("(^|;)\\s*" + Pattern.quote(property) + "\\s*:[^;]*", "$1");
+                        }
+                        withAttribute(attr.name(), styles);
+                    });
+        }
+
+        private void suppressTextClass() {
+            attributes.stream().filter(attr -> "class".equalsIgnoreCase(attr.name())).findFirst()
+                    .filter(attr -> attr.value() != null)
+                    .ifPresent(attr -> {
+                        String[] tokens = attr.value().trim().split("\\s+");
+                        if (Arrays.asList(tokens).contains("divider-with-text")) {
+                            withAttribute(attr.name(), Arrays.stream(tokens)
+                                    .filter(token -> !"divider-with-text".equals(token))
+                                    .collect(Collectors.joining(" ")));
+                        }
+                    });
+        }
     }
 
     private String buildStyle() {
         StringBuilder styleBuilder = new StringBuilder();
-
-        // Preserve existing height style if any
-        // Accessing attributes is hard here without parsing.
-        // We will just regenerate the border style.
 
         if (orientation == DividerOrientation.HORIZONTAL) {
             if (text == null) {

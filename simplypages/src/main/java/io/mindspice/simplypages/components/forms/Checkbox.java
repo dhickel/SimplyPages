@@ -50,21 +50,32 @@ public class Checkbox extends Div {
      * @return this checkbox
      */
     public Checkbox withId(String id) {
-        this.input.withAttribute("id", id);
+        this.input.withId(id);
+        if (label != null) {
+            label.withAttribute("for", id);
+        }
         return this;
+    }
+
+    @Override
+    public String getId() {
+        return input.getId();
     }
 
     /**
      * Creates and attaches a label linked to this checkbox.
      *
-     * <p>This method always assigns a generated id to the input and overwrites any previous id.</p>
+     * <p>Preserves an explicit input id, or generates one when absent.</p>
      *
      * @param labelText label text
      * @return this checkbox
      */
     public Checkbox withLabel(String labelText) {
-        String id = "checkbox-" + System.nanoTime();
-        this.input.withAttribute("id", id);
+        String id = input.getId();
+        if (id == null) {
+            id = "checkbox-" + java.util.UUID.randomUUID();
+            input.withId(id);
+        }
 
         this.label = new HtmlTag("label")
             .withAttribute("for", id)

@@ -37,4 +37,11 @@ class AudioTest {
         assertTrue(html.contains("muted"));
         assertFalse(html.contains("controls"));
     }
+
+    @Test void controlsCanBeDisabledAfterEnabling() {
+        var element = org.jsoup.Jsoup.parse(Audio.create("/media").withControls(true).withControls(false).render())
+            .selectFirst("audio");
+        org.junit.jupiter.api.Assertions.assertFalse(element.hasAttr("controls"));
+    }
+
 }

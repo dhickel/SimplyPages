@@ -11,7 +11,9 @@ import java.util.regex.Pattern;
 /**
  * Builds standardized edit modals for module property and child-edit flows.
  *
- * <p>Contract: exactly one edit source must be provided ({@code editView} or {@code editable}).
+ * <p>Contract: provide an explicit {@code editView}, an {@code editable}, or both.
+ * An explicit view supplies the property form; otherwise the builder uses
+ * {@code editable.buildEditView()}. When supplied, {@code editable} also provides child handles.
  * Save actions post to {@code saveUrl}; child actions are emitted only when corresponding URL
  * templates are configured.</p>
  *
@@ -53,7 +55,7 @@ public class EditModalBuilder {
 
     /** Sets the module identifier used by callers for endpoint construction. */
     public EditModalBuilder withModuleId(String moduleId) {
-        this.moduleId = moduleId == null ? null : EditingIds.requireSafeSegment(moduleId, "moduleId");
+        this.moduleId = moduleId;
         return this;
     }
 
@@ -69,27 +71,54 @@ public class EditModalBuilder {
         return this;
     }
 
-    /** Sets endpoint used by the Save action button. */
+    /** Sets the complete caller URL used by Save; no template substitution or URL encoding. */
     public EditModalBuilder withSaveUrl(String saveUrl) {
         this.saveUrl = saveUrl;
         return this;
     }
 
-    /** Sets endpoint used by the Delete action button. */
+    /** Sets the complete caller URL used by Delete; no template substitution or URL encoding. */
     public EditModalBuilder withDeleteUrl(String deleteUrl) {
         this.deleteUrl = deleteUrl;
         return this;
     }
 
-    /** Sets child-edit URL template; {@code {id}} is replaced per child. */
+    /**
+     * Sets the child-edit URL template; null disables the action.
+     * Only {@code {id}} is supported, as a whole path segment or whole query value.
+     * Repeated/omitted tokens and fixed URLs are allowed; literal URL text is preserved.
+     * In browser-relevant structure, token-bearing absolute URLs require
+     * {@code scheme://nonempty-literal-authority};
+     * protocol-relative, root-relative, relative-path and query-only references are supported.
+     * Placement is also checked after browser-style control/space and path-backslash handling,
+     * without rewriting the output. Scheme shorthands, empty authorities and opaque templated
+     * URLs are unsupported; fixed URLs do not acquire structural validation.
+     *
+     * <p>When a child action is built, its raw id is UTF-8 percent-encoded without trimming,
+     * normalization or decoding. Used ids must be non-null, nonempty, nonblank, not exactly
+     * {@code .} or {@code ..}, and valid UTF-16. Literal percent signs are encoded too.
+     * No id validation occurs for disabled actions, empty child lists or omitted tokens.
+     * Legacy partial-segment, query-key, authority and fragment token placements are rejected.</p>
+     *
+     * @param childEditUrl caller-owned template or null
+     * @return this builder
+     * @throws IllegalArgumentException for unsupported tokens or token placements
+     */
     public EditModalBuilder withChildEditUrl(String childEditUrl) {
-        this.childEditUrl = childEditUrl;
+        this.childEditUrl = childEditUrl == null ? null : EditingUrlTemplate.validate(childEditUrl, "id");
         return this;
     }
 
-    /** Sets child-delete URL template; {@code {id}} is replaced per child. */
+    /**
+     * Sets the child-delete URL template; null disables the action. Uses the same token placement,
+     * raw-id encoding and build-time id validation as {@link #withChildEditUrl(String)}.
+     *
+     * @param childDeleteUrl caller-owned template or null
+     * @return this builder
+     * @throws IllegalArgumentException for unsupported tokens or token placements
+     */
     public EditModalBuilder withChildDeleteUrl(String childDeleteUrl) {
-        this.childDeleteUrl = childDeleteUrl;
+        this.childDeleteUrl = childDeleteUrl == null ? null : EditingUrlTemplate.validate(childDeleteUrl, "id");
         return this;
     }
 
@@ -179,7 +208,7 @@ public class EditModalBuilder {
              Div actions = new Div().withClass("btn-group btn-group-sm");
 
              if (childEditUrl != null) {
-                 String url = childEditUrl.replace("{id}", EditingIds.encodePathSegment(child.getId()));
+                 String url = EditingUrlTemplate.expand(childEditUrl, token -> child.getId());
                  Component editBtn = Button.create("Edit")
                          .withStyle(Button.ButtonStyle.SECONDARY)
                          .withAttribute("hx-get", url)
@@ -189,7 +218,7 @@ public class EditModalBuilder {
              }
 
              if (childDeleteUrl != null) {
-                 String url = childDeleteUrl.replace("{id}", EditingIds.encodePathSegment(child.getId()));
+                 String url = EditingUrlTemplate.expand(childDeleteUrl, token -> child.getId());
                   Component deleteBtn = Button.create("Delete")
                          .withStyle(Button.ButtonStyle.DANGER)
                          .withAttribute("hx-delete", url)

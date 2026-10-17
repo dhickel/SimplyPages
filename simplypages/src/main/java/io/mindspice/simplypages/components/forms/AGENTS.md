@@ -8,10 +8,21 @@ Owns form input and form container components.
 
 ## Invariants
 - Form element APIs remain fluent and typed.
-- Name/value/attribute rendering stays HTML-safe.
 - Structured attribute payloads such as `hx-headers` must be encoded as their target format before attribute escaping.
+- Name/value/attribute rendering stays HTML-encoded, not URL-policy validated. Form.withAction, URL-taking HTMX methods and withHxPostCsrf require application-controlled or separately endpoint-context-validated destinations. CSRF helpers attach supplied tokens/headers only; issuance, verification, authorization and destination policy remain application-owned. Do not introduce Link/Image validation by analogy.
+- Form.withHxPostCsrf raw JSON remains exactly one string pair with existing getters/null-string/order/static-template/UTF-16 semantics. Do not change Form.java or introduce a generated Form marker for client compatibility.
+- With HTMX 2.0.11 and framework JS, one delegated configRequest hook repairs only missing Object.prototype-name collisions from an actual source FORM's own literal lexically-one-string-pair hx-headers. No CSS-class requirement; identically shaped hand-authored forms also qualify. Exclude inherited-only/evaluated/multi/duplicate/non-string/non-form shapes. Safely define an own data entry without prototype mutation, preserving existing own case-insensitive data/null/accessor/non-enumerable entries, nonextensible maps, prior cancellation, and later overrides/cancellation. Ordinary deleted headers are not restored; own null/cancel explicitly suppresses collisions.
+- Ownership begins at available configRequest entries. Upstream-discarded ajax options.__proto__ overrides are not recovered as those earlier values; stopped propagation/frozen maps remain host controlled. No generalized options/parser/XHR/transport/retry/header policy or token verification. Exact JSON representability does not guarantee arbitrary HTTP header transport; applications own destinations/CORS/CSRF/auth.
 - Width helper methods on form components remain valid and validated by core style rules.
 - Input type helpers map to correct HTML input types.
+
+- `Form.addField` associates nonempty labels with known single controls (`TextInput`, `TextArea`, `Select`, `Checkbox`, `Button`). Preserve existing control IDs, including raw ID attributes on single-tag controls; assign absent/empty IDs once during field assembly, never during rendering.
+- Configure control IDs before `addField`; changing IDs afterward does not update assembled field labels. Applications own explicit ID uniqueness and configure components before sharing or compiling.
+- Checkbox IDs and labels stay associated regardless of setter order. `Checkbox.getId/withId` target the internal input; inherited `withAttribute("id", ...)` targets the wrapper. A Form label must target the input while preserving an independently configured wrapper ID and the checkbox's own label.
+- RadioGroup has `role="radiogroup"`. A nonempty Form field caption uses `span.form-label` with a stable unique ID referenced by the group's `aria-labelledby`; do not point a native label at the group div or replace individual option labels. Standalone groups use application-supplied `aria-label`/`aria-labelledby` through existing attribute APIs; the submission name is not an accessible name.
+- Radio option IDs are unique and stable per instance; consumers must not derive IDs from field values.
+- RadioGroup.required() applies to subsequently added options as well as existing ones.
+- Arbitrary/custom and multi-control components passed to `addField` receive only a visible `span.form-label` caption. Applications compose their own native labels or accessible names inside/alongside those components. Do not infer a control from rendered HTML, a generic HtmlTag, or a wrapper ID. Null/empty field labels do not generate IDs or change application names.
 
 ## Do
 - Preserve ergonomics for common form tasks.
@@ -30,6 +41,9 @@ Owns form input and form container components.
 ## Required Tests
 - `FormTest`, `TextInputTest`, `TextAreaTest`, `SelectTest`, `CheckboxTest`, `RadioGroupTest`, `ButtonTest`
 - Regression tests for new fluent methods and attribute rendering
+- Semantic field/control linkage for default, explicit and raw IDs, including Checkbox wrapper/input separation and preservation of option labels
+- Unique IDs across repeated names/independent forms, assignment before the first render, repeated-render stability, fresh compiled/direct parity and custom-component labeling boundaries
+- Deliberately review forms snapshot changes and rerun tests without snapshot update mode
 
 ## Dependencies
 - Depends on `core` and shared components.

@@ -38,9 +38,10 @@ sequenceDiagram
 - Dynamic slot segments (`SlotKey` lookups)
 - Opaque component segments (fallback component rendering)
 
-Modules are built before compilation (`module.build()`).
-`HtmlTag` subclasses that declare custom `render()` or `render(RenderContext)` methods are emitted
-as opaque component segments so template rendering does not bypass custom markup behavior.
+Modules are built before compilation (`module.build()`). Generated child streams are traversed.
+Custom `render(RenderContext)` overrides, including inherited overrides, remain live delegates
+so their behavior is preserved. A subclass declaring `render()` is also retained as an opaque
+component; context-aware rendering remains the canonical dispatch contract.
 
 This means `Template` wraps the compiled component/module tree; callers typically interact with the
 template for repeated renders rather than mutating the original tree per request.

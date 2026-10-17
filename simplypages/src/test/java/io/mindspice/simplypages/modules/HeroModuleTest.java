@@ -37,19 +37,23 @@ class HeroModuleTest {
     }
 
     @Test
-    @DisplayName("HeroModule should reject unsafe button and background URLs")
-    void testUnsafeUrls() {
-        assertThrows(IllegalArgumentException.class,
-            () -> HeroModule.create().withPrimaryButton("Bad", "javascript:alert(1)"));
-        assertThrows(IllegalArgumentException.class,
-            () -> HeroModule.create().withBackgroundImage("/bg.png\");color:red"));
+    @DisplayName("HeroModule keeps caller-controlled button and background URLs")
+    void testCallerControlledUrls() {
+        var document = org.jsoup.Jsoup.parse(HeroModule.create()
+                .withPrimaryButton("Bad", "javascript:alert(1)")
+                .withBackgroundImage("/bg.png\");color:red").render());
+        org.junit.jupiter.api.Assertions.assertEquals("javascript:alert(1)", document.selectFirst("a").attr("href"));
+        org.junit.jupiter.api.Assertions.assertEquals("background-image: url('/bg.png\");color:red'); "
+                        + "background-size: cover; background-position: center;",
+                document.selectFirst(".hero-module").attr("style"));
     }
 
     @Test
-    @DisplayName("HeroModule should reject inline style breakout values")
-    void testUnsafeStyleValues() {
+    @DisplayName("HeroModule background colors retain caller-owned CSS syntax")
+    void testCallerControlledStyleValues() {
         HeroModule module = HeroModule.create().withBackgroundColor("#fff;color:red");
 
-        assertThrows(IllegalArgumentException.class, module::render);
+        org.junit.jupiter.api.Assertions.assertEquals("background-color: #fff;color:red;",
+                org.jsoup.Jsoup.parse(module.render()).selectFirst(".hero-module").attr("style"));
     }
 }

@@ -115,10 +115,10 @@ class FullPageRenderingTest {
             .hasDoctype("html")
             .hasElement("body > button.mobile-sidebar-toggle[onclick='toggleMobileSidebar()']")
             .hasElement("body > div.main-container.has-sidebar.collapsible-sidebar")
-            .hasElement("aside#main-sidebar.collapsible > button.sidebar-toggle")
+            .hasElement("aside#main-sidebar.collapsible > button.sidebar-toggle[type='button']")
             .attributeEquals("aside#main-sidebar > button.sidebar-toggle", "aria-label", "Toggle sidebar")
-            .hasElementCount("body > script", 2)
-            .hasElement("body > script:containsData(toggleSidebar)")
+            .hasElementCount("body > script", 1)
+            .doesNotHaveElement("body > script:containsData(toggleSidebar)")
             .hasElement("body > script:containsData(htmx:afterSettle)")
             .childOrder("aside#main-sidebar", "button.sidebar-toggle", "nav.sidenav");
 

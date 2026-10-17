@@ -39,7 +39,8 @@ public class Form extends HtmlTag {
     }
 
     /**
-     * Sets form action URL.
+     * Sets an application-controlled or separately form-destination-validated action URL.
+     * Encoding does not validate schemes, authorize submission, or enforce CSRF.
      *
      * @param action action URL
      * @return this form
@@ -87,7 +88,8 @@ public class Form extends HtmlTag {
     }
 
     /**
-     * Sets {@code hx-post}.
+     * Sets {@code hx-post} to an application-controlled or separately endpoint-validated URL.
+     * Encoding does not enforce destination policy, authorization, or CSRF.
      *
      * @param url endpoint URL
      * @return this form
@@ -98,7 +100,8 @@ public class Form extends HtmlTag {
     }
 
     /**
-     * Sets {@code hx-get}.
+     * Sets {@code hx-get} to an application-controlled or separately endpoint-validated URL.
+     * Encoding does not enforce destination policy or authorization.
      *
      * @param url endpoint URL
      * @return this form
@@ -109,7 +112,8 @@ public class Form extends HtmlTag {
     }
 
     /**
-     * Sets {@code hx-put}.
+     * Sets {@code hx-put} to an application-controlled or separately endpoint-validated URL.
+     * Encoding does not enforce destination policy, authorization, or CSRF.
      *
      * @param url endpoint URL
      * @return this form
@@ -120,7 +124,8 @@ public class Form extends HtmlTag {
     }
 
     /**
-     * Sets {@code hx-delete}.
+     * Sets {@code hx-delete} to an application-controlled or separately endpoint-validated URL.
+     * Encoding does not enforce destination policy, authorization, or CSRF.
      *
      * @param url endpoint URL
      * @return this form
@@ -231,7 +236,9 @@ public class Form extends HtmlTag {
     }
 
     /**
-     * Convenience helper for HTMX POST with CSRF header.
+     * Attaches a CSRF header to HTMX POST using an application-controlled or separately
+     * endpoint-validated URL. This does not validate destinations, issue/verify tokens, or
+     * authorize requests; token and endpoint enforcement belong to the application.
      *
      * @param url the URL to POST to
      * @param csrfToken the CSRF token value
@@ -240,41 +247,31 @@ public class Form extends HtmlTag {
     public Form withHxPostCsrf(String url, String csrfToken) {
         withHxPost(url);
         // Add CSRF token as request header for HTMX
-        String headers = "{"
-            + jsonString(String.valueOf(csrfHeaderName))
-            + ": "
-            + jsonString(String.valueOf(csrfToken))
-            + "}";
+        String headers = String.format("{%s: %s}", quotedJsonString(String.valueOf(csrfHeaderName)),
+            quotedJsonString(String.valueOf(csrfToken)));
         withAttribute("hx-headers", headers);
         return this;
     }
 
-    private String jsonString(String value) {
-        if (value == null) {
-            return "null";
-        }
-        StringBuilder escaped = new StringBuilder("\"");
-        for (int i = 0; i < value.length(); i++) {
-            char ch = value.charAt(i);
-            switch (ch) {
-                case '"' -> escaped.append("\\\"");
-                case '\\' -> escaped.append("\\\\");
-                case '\b' -> escaped.append("\\b");
-                case '\f' -> escaped.append("\\f");
-                case '\n' -> escaped.append("\\n");
-                case '\r' -> escaped.append("\\r");
-                case '\t' -> escaped.append("\\t");
-                default -> {
-                    if (ch < 0x20) {
-                        escaped.append(String.format("\\u%04x", (int) ch));
-                    } else {
-                        escaped.append(ch);
-                    }
-                }
+    private static String quotedJsonString(String value) {
+        StringBuilder result = new StringBuilder(value.length() + 2).append('"');
+        for (int index = 0; index < value.length(); index++) {
+            char character = value.charAt(index);
+            if (character == '"') {
+                result.append("\\\"");
+            } else if (character == '\\') {
+                result.append("\\\\");
+            } else if (character < 0x20 || character >= 0x7f) {
+                result.append('\\').append('u');
+                result.append(Character.forDigit(character >>> 12, 16));
+                result.append(Character.forDigit((character >>> 8) & 0xf, 16));
+                result.append(Character.forDigit((character >>> 4) & 0xf, 16));
+                result.append(Character.forDigit(character & 0xf, 16));
+            } else {
+                result.append(character);
             }
         }
-        escaped.append('"');
-        return escaped.toString();
+        return result.append('"').toString();
     }
 
     /**
@@ -304,6 +301,16 @@ public class Form extends HtmlTag {
     /**
      * Appends a field wrapper containing optional label and input component.
      *
+     * <p>For {@link TextInput}, {@link TextArea}, {@link Select}, {@link Checkbox}, and
+     * {@link Button}, a nonempty label targets the control's existing ID, or a unique ID assigned
+     * during this call. Checkbox IDs target its internal input, not its wrapper. Configure control
+     * IDs before adding fields; changing an ID later does not update the assembled field label.</p>
+     *
+     * <p>For {@link RadioGroup}, the caption names the group through {@code aria-labelledby};
+     * individual option labels are unchanged. Other components receive only a visible caption.
+     * Applications must compose their own labels or accessible names for arbitrary/custom and
+     * multi-control components; this method does not inspect their markup or infer a target.</p>
+     *
      * @param label label text; omitted when null/empty
      * @param input input component
      * @return this form
@@ -312,9 +319,26 @@ public class Form extends HtmlTag {
         Div fieldGroup = new Div().withClass("form-field");
 
         if (label != null && !label.isEmpty()) {
-            HtmlTag labelTag = new HtmlTag("label")
+            boolean singleControl = input instanceof TextInput || input instanceof TextArea
+                || input instanceof Select || input instanceof Checkbox || input instanceof Button;
+            HtmlTag labelTag = new HtmlTag(singleControl ? "label" : "span")
                 .withAttribute("class", "form-label")
                 .withInnerText(label);
+
+            if (singleControl) {
+                HtmlTag control = (HtmlTag) input;
+                String controlId = control.getId();
+                if (controlId == null || controlId.isEmpty()) {
+                    controlId = "form-field-" + java.util.UUID.randomUUID();
+                    control.withId(controlId);
+                }
+                labelTag.withAttribute("for", controlId);
+            } else if (input instanceof RadioGroup group) {
+                String labelId = "form-label-" + java.util.UUID.randomUUID();
+                labelTag.withId(labelId);
+                group.withAttribute("aria-labelledby", labelId);
+            }
+
             fieldGroup.withChild(labelTag);
         }
 

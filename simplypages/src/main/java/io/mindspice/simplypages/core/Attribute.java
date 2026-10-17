@@ -2,8 +2,6 @@ package io.mindspice.simplypages.core;
 
 import org.owasp.encoder.Encode;
 
-import java.util.regex.Pattern;
-
 /**
  * Immutable HTML attribute pair used by {@link HtmlTag}.
  *
@@ -14,14 +12,14 @@ import java.util.regex.Pattern;
  * <p>Mutability/thread-safety: immutable and thread-safe.</p>
  */
 public record Attribute(String name, String value) {
-    private static final Pattern ATTRIBUTE_NAME_PATTERN =
-            Pattern.compile("^[A-Za-z_:][A-Za-z0-9_:.\\-]*$");
-
     public Attribute {
-        if (name == null || name.isBlank() || !ATTRIBUTE_NAME_PATTERN.matcher(name).matches()) {
+        if (name == null || name.isEmpty() || name.chars().anyMatch(c ->
+                Character.isWhitespace(c) || Character.isISOControl(c)
+                    || "\"'<>/=".indexOf(c) >= 0)) {
             throw new IllegalArgumentException("Invalid HTML attribute name: " + name);
         }
     }
+
 
     /**
      * Renders this attribute for insertion into an opening tag.

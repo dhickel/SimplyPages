@@ -17,6 +17,17 @@ Owns rendering primitives and contracts used by the whole framework.
 - `render()` remains the empty-context convenience path.
 - `Module.build()` is idempotent and drives build-once lifecycle semantics.
 - Slot/template rendering must preserve type-safe key usage.
+- `SlotKey` rejects null names with `NullPointerException` in its canonical constructor and all factories. Every non-null name remains literal, including empty/blank strings; no trimming, case folding, or Unicode normalization. Providers remain nullable and unevaluated during construction; key identity remains name-only.
+
+- Template compilation traverses getChildrenStream() and preserves custom render(RenderContext) overrides as live delegates.
+- Stable standard tag rendering must not mutate configured structure. Configuration is not thread-safe; retained custom delegates (including framework overrides) must be safe to share, and contexts remain request-owned.
+- Direct slots and text slots honor explicit compiled entries and COMPILE_ON_FIRST_HIT; contexts remain request-owned.
+- Tag/attribute names reject markup delimiters; attribute replacement is case-insensitive.
+- HTML encoding is not URL/CSS/HTMX policy. Generic withAttribute (including href/src replacements), raw style and HTMX endpoint helpers require application-controlled or separately context-validated values. Replacements do not synchronize Link/Image getters or invoke their typed validators.
+- addStyle validates property names and rejects declaration breakout, not semantic CSS/URL values. addTrustedStyle bypasses value-breakout checks; Style.addInlineStyle is raw fragment assembly without those checks. Width helpers retain their narrower token grammar. Do not retrofit generic semantic restrictions.
+- Failed initial Module builds restore entry-state ordered shallow children/attributes/cached id and remain retryable. Explicit rebuild snapshots before clearing and also restores prior built status on RuntimeException/Error, rethrowing the same failure; ordinary render of a previously built instance does not retry. Caller changes before rebuilding belong to entry state. Module id/title/text/slots/trusted HTML/subclass/descendant/external state is excluded, not a deep transaction.
+- Paragraph/Divider/EditableRow/EditablePage preserve stored state during render/compile while retaining their public render overrides and live template configuration. Use component-local temporary derivation, not new generic core hooks.
+- Preserve existing fluent descriptors/bridges and Column.withAttribute's declared HtmlTag return for legacy subclass compatibility.
 
 ## Do
 - Add core API only when needed by multiple packages.

@@ -3,7 +3,6 @@ package io.mindspice.simplypages.builders;
 import io.mindspice.simplypages.components.Image;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
-import io.mindspice.simplypages.core.SafeUrl;
 
 /**
  * Builds top-banner components across supported layout presets.
@@ -96,7 +95,9 @@ public class BannerBuilder {
     }
 
     /**
-     * Add an image/logo to the banner (used with HORIZONTAL layout).
+     * Adds an image/logo for HORIZONTAL layout. Building generated horizontal content constructs
+     * an {@link Image}, applying its source policy then, not at this configuration call.
+     * This differs from the raw CSS background-image path.
      */
     public BannerBuilder withImage(String imageUrl, String alt) {
         this.imageUrl = imageUrl;
@@ -114,16 +115,18 @@ public class BannerBuilder {
     }
 
     /**
-     * Set background image URL (used with IMAGE_OVERLAY layout).
+     * Sets a background image for IMAGE_OVERLAY. Supply an application-controlled or separately
+     * CSS-context-validated value: it is interpolated into a single-quoted CSS url(), without
+     * CSS escaping or Image validation. Image's scheme check alone cannot secure CSS syntax.
      */
     public BannerBuilder withBackgroundImage(String imageUrl) {
-        SafeUrl.validateCssImageUrl(imageUrl);
         this.backgroundImage = imageUrl;
         return this;
     }
 
     /**
-     * Set banner background color.
+     * Sets a trusted CSS background-color value. Supply application-controlled or separately
+     * CSS-context-validated input; raw style assembly does not reject declaration separators.
      */
     public BannerBuilder withBackgroundColor(String color) {
         this.backgroundColor = color;
@@ -131,7 +134,8 @@ public class BannerBuilder {
     }
 
     /**
-     * Set text color.
+     * Sets a trusted CSS color value. Supply application-controlled or separately CSS-context-validated
+     * input; attribute encoding does not prevent CSS declaration breakout.
      */
     public BannerBuilder withTextColor(String color) {
         this.textColor = color;
@@ -176,19 +180,24 @@ public class BannerBuilder {
         }
         banner.withAttribute("class", classBuilder.toString());
 
+        // These values are application-controlled CSS, not URL or declaration validated.
+        StringBuilder style = new StringBuilder();
         if (backgroundColor != null) {
-            banner.addStyle("background-color", backgroundColor);
+            style.append("background-color: ").append(backgroundColor).append(";");
         }
         if (textColor != null) {
-            banner.addStyle("color", textColor);
+            style.append("color: ").append(textColor).append(";");
         }
         if (backgroundImage != null && layout == BannerLayout.IMAGE_OVERLAY) {
-            banner.addTrustedStyle("background-image", SafeUrl.cssUrl(backgroundImage));
-            banner.addStyle("background-size", "cover");
-            banner.addStyle("background-position", "center");
+            style.append("background-image: url('").append(backgroundImage).append("');");
+            style.append("background-size: cover;");
+            style.append("background-position: center;");
         }
         if (minHeight != null) {
-            banner.addStyle("min-height", minHeight + "px");
+            style.append("min-height: ").append(minHeight).append("px;");
+        }
+        if (style.length() > 0) {
+            banner.withAttribute("style", style.toString());
         }
 
         // Create content container

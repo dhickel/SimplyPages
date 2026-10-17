@@ -30,6 +30,12 @@ Button.create("Edit")
     .withAttribute("hx-swap", "innerHTML");
 ```
 
+Keep the modal host stable and load the framework CSS/JS once in the shell. `Modal` markup
+inserted here gets focus entry, Tab containment, top-dialog close handling and restoration
+to a connected launcher on close/removal. Replacing the dialog retains its original
+launcher rather than a disappearing child control. See the
+[Modal contract](../reference/components-and-modules-catalog.md#modal).
+
 ## Pattern 3: OOB Multi-Target Update
 
 Use for save flows that must update more than one area.
@@ -48,10 +54,13 @@ Use this when a sticky table-of-contents or side menu navigates between document
 Link.create("/docs/core/01-components-htmltag-and-module-lifecycle", "Components")
     .withHxGet("/docs/core/01-components-htmltag-and-module-lifecycle")
     .withHxTarget("#docs-content")
-    .withHxSwap("innerHTML")
+    .withHxSwap("outerHTML")
     .withHxScrollTargetTop()
     .withHxPushUrl(true);
 ```
+
+The docs endpoint returns the `#docs-content` wrapper as well as its contents. Replace it
+with `outerHTML` to retain exactly one target, rather than nesting a duplicate ID.
 
 Notes:
 1. `withHxScrollTargetTop()` tags the request so the swapped HTMX target fragment scrolls to top.

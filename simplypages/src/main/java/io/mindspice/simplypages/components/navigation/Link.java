@@ -2,7 +2,6 @@ package io.mindspice.simplypages.components.navigation;
 
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
-import io.mindspice.simplypages.core.SafeUrl;
 
 /**
  * Hyperlink component with URL-scheme validation and HTMX helpers.
@@ -10,7 +9,11 @@ import io.mindspice.simplypages.core.SafeUrl;
  * <p>Mutable and not thread-safe. Configure and render within a request-scoped lifecycle. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
  *
  * <p>Security boundary: {@link #withHref(String)} and constructor validate href schemes and allow
- * only {@code http}, {@code https}, {@code mailto}, {@code tel}, or relative URLs.</p>
+ * only {@code http}, {@code https}, {@code mailto}, {@code tel}, or relative URLs.
+ * Classification trims boundary C0/ASCII space, removes TAB/LF/CR, and folds ASCII case,
+ * independently of locale; the original value is stored and attribute-encoded unchanged.
+ * This is not destination authorization. Generic attribute replacement and HTMX endpoints
+ * do not use this href policy.</p>
  */
 public class Link extends HtmlTag {
 
@@ -28,7 +31,7 @@ public class Link extends HtmlTag {
         super("a");
         this.href = href;
         this.text = text;
-        SafeUrl.validateHref(href);
+        validateUrl(href);
         this.withAttribute("href", href);
         this.withInnerText(text);
     }
@@ -102,7 +105,7 @@ public class Link extends HtmlTag {
      * @throws IllegalArgumentException when href scheme is disallowed
      */
     public Link withHref(String href) {
-        SafeUrl.validateHref(href);
+        validateUrl(href);
         this.href = href;
         this.withAttribute("href", href);
         return this;
@@ -120,7 +123,8 @@ public class Link extends HtmlTag {
     }
 
     /**
-     * Sets {@code hx-get}.
+     * Sets {@code hx-get} to an application-controlled or separately endpoint-validated URL.
+     * This does not apply the href scheme policy or authorize requests.
      *
      * @param url HTMX GET endpoint
      * @return this link
@@ -131,7 +135,8 @@ public class Link extends HtmlTag {
     }
 
     /**
-     * Sets {@code hx-post}.
+     * Sets {@code hx-post} to an application-controlled or separately endpoint-validated URL.
+     * This does not apply the href scheme policy or provide authorization/CSRF enforcement.
      *
      * @param url HTMX POST endpoint
      * @return this link
@@ -194,6 +199,63 @@ public class Link extends HtmlTag {
     public Link withChild(Component component) {
         super.withChild(component);
         return this;
+    }
+
+    // Allowlist of safe URL schemes for hyperlinks.
+    private static final String[] ALLOWED_SCHEMES = {
+        "http",
+        "https",
+        "mailto",
+        "tel"
+    };
+
+    /**
+     * Validates href against scheme allowlist.
+     *
+     * @param url the URL to validate
+     * @throws IllegalArgumentException if the URL uses a disallowed scheme
+     */
+    private void validateUrl(String url) {
+        if (url == null || url.isEmpty()) {
+            return;  // Allow empty (browser treats as same page)
+        }
+
+        // Classify browser preprocessing without changing the configured attribute value.
+        String trimmed = url.trim();
+        StringBuilder normalized = new StringBuilder(trimmed.length());
+        for (int index = 0; index < trimmed.length(); index++) {
+            char character = trimmed.charAt(index);
+            if (character == '\t' || character == '\n' || character == '\r') {
+                continue;
+            }
+            normalized.append(character >= 'A' && character <= 'Z'
+                ? (char) (character + ('a' - 'A')) : character);
+        }
+        String lower = normalized.toString();
+
+        if (lower.startsWith("#")
+            || lower.startsWith("/")
+            || lower.startsWith("./")
+            || lower.startsWith("../")
+            || lower.startsWith("?")
+            || lower.startsWith("//")) {
+            return;
+        }
+
+        int colonIndex = lower.indexOf(':');
+        if (colonIndex > 0) {
+            String scheme = lower.substring(0, colonIndex);
+            for (String allowed : ALLOWED_SCHEMES) {
+                if (allowed.equals(scheme)) {
+                    return;
+                }
+            }
+
+            throw new IllegalArgumentException(
+                scheme + " URLs are not allowed for security reasons. " +
+                    "Allowed schemes: http, https, mailto, tel, or relative paths."
+            );
+        }
     }
 
 }

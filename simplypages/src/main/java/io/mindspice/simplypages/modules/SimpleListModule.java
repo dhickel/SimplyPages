@@ -17,8 +17,13 @@ import java.util.*;
 /**
  * Editable module that renders a list of {@link ListItem} components.
  *
- * <p>Mutability and thread-safety: mutable and not thread-safe. Item collection is mutable and
- * should be managed within a single request/edit workflow. For reuse, stop mutating shared instances and render stable structures with per-request context data.</p>
+ * <p>Configure items before building. Adding/removing items changes the model and current
+ * editable descriptors, not an already-built child tree. {@link #applyEdits(Map)} explicitly
+ * rebuilds that tree. Raw item ids and positional editable descriptor ids are separate:
+ * descriptors may use {@code item-N} for unassigned ids and renumber without assigning an id.</p>
+ *
+ * <p>Configuration is mutable and not thread-safe. Finish configuration before sharing;
+ * child delegates and request contexts retain their own sharing requirements.</p>
  */
 public class SimpleListModule extends Module implements Editable<SimpleListModule> {
 
@@ -33,21 +38,34 @@ public class SimpleListModule extends Module implements Editable<SimpleListModul
         return new SimpleListModule();
     }
 
+    /** Adds to the item model without building or rebuilding rendered structure. */
     public SimpleListModule addItem(ListItem item) {
         this.items.add(item);
-        invalidateContent();
         return this;
     }
 
+    /**
+     * Removes every item whose non-null raw id equals the literal query. A null query removes
+     * nothing. Unassigned ids and positional editable descriptors are not lookup identities.
+     * This changes configuration only, not an already-built child tree.
+     */
     public SimpleListModule removeItem(String itemId) {
-        items.removeIf(item -> Objects.equals(item.getId(), itemId));
-        invalidateContent();
+        if (itemId != null) {
+            items.removeIf(item -> itemId.equals(item.getId()));
+        }
         return this;
     }
 
+    /**
+     * Returns the first item with a non-null raw id exactly equal to the query, or null.
+     * Null queries never match; no trimming, normalization or descriptor fallback is performed.
+     */
     public ListItem findItem(String itemId) {
+        if (itemId == null) {
+            return null;
+        }
         return items.stream()
-                .filter(item -> Objects.equals(item.getId(), itemId))
+                .filter(item -> itemId.equals(item.getId()))
                 .findFirst()
                 .orElse(null);
     }

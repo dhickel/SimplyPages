@@ -5,7 +5,6 @@ import io.mindspice.simplypages.components.Dropdown;
 import io.mindspice.simplypages.components.navigation.NavBar;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
-import io.mindspice.simplypages.core.SafeUrl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,17 +64,18 @@ public class TopNavBuilder {
     }
 
     /**
-     * Adds a non-active primary link.
+     * Adds a non-active primary link with an application-controlled or separately validated
+     * navigation/HTMX destination. No Link scheme policy is applied.
      */
     public TopNavBuilder addPrimaryLink(String text, String href) {
         return addPrimaryLink(text, href, false);
     }
 
     /**
-     * Adds a primary link with explicit active state.
+     * Adds a primary link with explicit active state and a trusted/context-validated href.
+     * The same URL supplies hx-get when enabled; encoding is not destination validation.
      */
     public TopNavBuilder addPrimaryLink(String text, String href, boolean active) {
-        SafeUrl.validateHref(href);
         primaryEntries.add(new PrimaryLink(text, href, active));
         return this;
     }
@@ -105,14 +105,16 @@ public class TopNavBuilder {
     }
 
     /**
-     * Adds a utility link aligned to the utility region.
+     * Adds a utility link with an application-controlled or separately navigation/endpoint-validated
+     * href, without Link's scheme policy.
      */
     public TopNavBuilder addUtilityLink(String text, String href) {
         return addUtilityLink(text, href, false);
     }
 
     /**
-     * Adds a utility link with explicit active state.
+     * Adds a utility link with explicit active state and a trusted/context-validated href.
+     * The URL also supplies hx-get when enabled; no destination policy is enforced.
      */
     public TopNavBuilder addUtilityLink(String text, String href, boolean active) {
         HtmlTag link = buildHtmxLink(text, href, active, "navbar-item navbar-utility-item");
@@ -161,7 +163,8 @@ public class TopNavBuilder {
     }
 
     /**
-     * Adds an HTMX-loaded account widget to the utility region.
+     * Adds an HTMX-loaded account widget using an application-controlled or separately
+     * endpoint-validated URL. Encoding does not authorize requests.
      */
     public TopNavBuilder withDynamicAccountWidget(String endpoint) {
         utilityEntries.add(AccountWidget.createDynamic(endpoint));
@@ -180,7 +183,8 @@ public class TopNavBuilder {
     }
 
     /**
-     * Legacy alias for a non-active primary link.
+     * Legacy alias for a non-active primary link; path has the application-controlled or
+     * separately navigation/endpoint-validated contract of {@link #addPrimaryLink(String, String)}.
      */
     @Deprecated
     public TopNavBuilder addPortal(String name, String path) {
@@ -188,7 +192,8 @@ public class TopNavBuilder {
     }
 
     /**
-     * Legacy alias for a primary link with active state.
+     * Legacy alias for a primary link with active state; path has the trusted/context-validated
+     * contract of {@link #addPrimaryLink(String, String, boolean)}, not Link's scheme policy.
      */
     @Deprecated
     public TopNavBuilder addPortal(String name, String path, boolean active) {
@@ -240,7 +245,6 @@ public class TopNavBuilder {
     }
 
     private HtmlTag buildHtmxLink(String text, String href, boolean active, String className) {
-        SafeUrl.validateHref(href);
         String classes = active ? className + " active" : className;
         HtmlTag link = new HtmlTag("a")
             .withAttribute("href", href == null ? "" : href)

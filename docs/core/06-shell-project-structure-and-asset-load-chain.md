@@ -37,8 +37,39 @@ Body behavior:
 - top banner and top nav (if configured; `withAccountBar(...)` remains compatibility alias)
 - mobile sidebar toggle (when sidebar is configured)
 - shell layout container and content target
-- optional inline sidebar script (when collapsible sidebar is enabled)
 - optional inline HTMX nav-active script (when HTMX is enabled)
+
+Desktop collapse and mobile drawer initialization live in the shared framework JS, not a generated
+inline collapse script. All head scripts retain `defer`; custom assets keep their configured order.
+
+Both full and compiled-template heads include a private compatibility marker only when the builder
+includes HTMX. The top of the existing framework script uses it to initialize `selfRequestsOnly: false`,
+`methodsThatUseUrlParams: ['get']`, and `scrollBehavior: 'smooth'` for the bundled HTMX 2.0.11.
+This preserves the legacy request-origin, DELETE-body, and HTMX default-scroll behavior before custom
+JS executes. The marker is not a supported public configuration knob and loads no additional asset.
+
+Immediate deferred custom-script assignments and custom `DOMContentLoaded` handlers can override
+these values. Explicit upstream `htmx-config` meta is merged later by HTMX and also wins. The framework
+does not reapply defaults during insertion or settle. Do not replace this ordering with generated
+standard compatibility meta: its later merge would overwrite immediate custom-script choices.
+`withHtmx(false)` emits no HTMX asset or private marker; framework JS alone leaves the host's defaults alone.
+
+## Body-Only Fragments
+
+`ShellBuilder.buildBody()` returns a `.shell-body` fragment with the optional sidebar/mobile toggle
+and the main content target. It omits the document (`doctype`, `html`, `head`, `body`), header,
+banner, top navigation, stylesheet/script tags, and inline scripts. Content targeting, wrapping,
+and the default HTMX content-load attributes still apply; template mode instead uses its explicit slot.
+
+The fragment contains no compatibility marker. The host document loads framework CSS and JS once,
+plus HTMX when used. Do not reload assets with each fragment. Unmarked/manual hosts explicitly choose
+HTMX policy through upstream configuration; loading framework JS does not select legacy defaults for
+them. See the [asset reference](../reference/build-and-assets.md) for manual-host settings and the bounded
+Form-source header handler. Compatibility does not enforce allowed destinations, CORS, CSRF, or authorization. Shared framework JS initializes both existing shells and later direct/HTMX-inserted
+fragments idempotently. The collapsible desktop button remains `Toggle sidebar`, with the legacy
+`toggleSidebar()` activation and `sidebarCollapsed` storage key. Persistence is best effort; when
+storage is denied, toggling and later fragment initialization retain document-local preference.
+The mobile drawer remains separate from desktop collapse and from a Page's native disclosure.
 
 ## CSS Loading Modes
 

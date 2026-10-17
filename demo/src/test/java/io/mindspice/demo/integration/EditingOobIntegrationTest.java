@@ -4,7 +4,7 @@ import io.mindspice.demo.DemoApplication;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -75,17 +75,17 @@ class EditingOobIntegrationTest {
     void editingDemoEnforcesEndpointPermissions() throws Exception {
         mockMvc.perform(get("/editing-demo/edit/module-3"))
             .andExpect(status().isForbidden())
-            .andExpect(content().string(containsString("cannot be edited")));
+            .andExpect(content().string(containsString("does not allow editing")));
 
         mockMvc.perform(post("/editing-demo/save/module-3")
                 .param("title", "Blocked")
                 .param("content", "Blocked"))
             .andExpect(status().isForbidden())
-            .andExpect(content().string(containsString("cannot be edited")));
+            .andExpect(content().string(containsString("does not allow editing")));
 
         mockMvc.perform(delete("/editing-demo/delete/module-4"))
             .andExpect(status().isForbidden())
-            .andExpect(content().string(containsString("cannot be deleted")));
+            .andExpect(content().string(containsString("does not allow deletion")));
     }
 
     @Test
@@ -93,7 +93,7 @@ class EditingOobIntegrationTest {
     void editingDemoRejectsInvalidInsertBounds() throws Exception {
         mockMvc.perform(post("/editing-demo/insert-row/99"))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string(containsString("Invalid row insert position")));
+            .andExpect(content().string(containsString("Insertion position is outside the current page")));
     }
 
     @Test
@@ -107,7 +107,7 @@ class EditingOobIntegrationTest {
         mockMvc.perform(get("/editing-demo/edit-child/module-9/item-0"))
             .andExpect(status().isOk())
             .andExpect(content().string(containsString("Edit List Item")))
-            .andExpect(content().string(containsString("value=\"Item 1\"")));
+            .andExpect(content().string(containsString("\nItem 1</textarea>")));
 
         mockMvc.perform(post("/editing-demo/save-child/module-9/item-0")
                 .param("text", "Updated Item"))

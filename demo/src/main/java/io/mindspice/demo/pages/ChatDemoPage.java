@@ -12,7 +12,6 @@ import io.mindspice.simplypages.components.forms.Button;
 import io.mindspice.simplypages.components.forms.Form;
 import io.mindspice.simplypages.components.forms.TextInput;
 import io.mindspice.simplypages.core.HtmlTag;
-import io.mindspice.simplypages.layout.Page;
 import io.mindspice.simplypages.modules.ChatModule;
 import org.springframework.stereotype.Component;
 
@@ -43,25 +42,29 @@ public class ChatDemoPage {
                 null
             ));
 
-        Div main = new Div().withId("chat-main")
+        Div main = new Div().withId("chat-main").withAttribute("data-chat-expired", String.valueOf(warning))
             .withChild(Header.H1("Chat Demo"))
             .withChild(new Markdown("""
                 ## Notes
-                - History/session ownership remains in the demo app layer.
-                - The framework module renders transcript/composer + transport hook attributes.
-                - SSE emits lightweight update signals; HTMX refreshes transcript fragments.
+                - Private, non-durable sandbox. Session ownership is not authentication.
+                - No CSRF, rate protection or production security guarantees.
+                - History retains the welcome plus the latest 25 complete exchanges (51 entries).
+                - Messages allow at most 4096 UTF-16 units before trimming; this is not a raw HTTP limit.
+                - Chat expires after 30 idle minutes. Streams end after 5 minutes; Resume is explicit.
+                - At most 32 chats, two streams per session and 64 streams in this process. Expired resources are reclaimed; valid chats are never evicted for admission.
                 """));
 
         if (flashText != null && !flashText.isBlank()) {
             main.withChild(warning ? Alert.warning(flashText) : Alert.success(flashText));
         }
 
-        main.withChild(module);
-
-        return Page.builder()
-            .addComponents(main)
-            .build()
-            .render();
+        Div connection = new Div().withId("chat-connection").withAttribute("role", "status")
+            .withChild(Alert.info("Connecting to a finite private stream.").withId("chat-connection-message"))
+            .withChild(Button.create("Resume").withId("chat-resume").withAttribute("type", "button")
+                .withAttribute("hidden", "hidden").withAttribute("style", "display: none"))
+            .withChild(Button.create("Start New").withId("chat-new").withAttribute("type", "button"));
+        main.withChild(connection).withChild(module);
+        return main.render();
     }
 
     public String renderTranscript(String conversationId, List<ChatDemoService.ChatMessageView> history) {
@@ -72,6 +75,7 @@ public class ChatDemoPage {
         return new HtmlTag("div")
             .withId("chat-history")
             .withAttribute("data-chat-conversation-id", conversationId)
+            .withChild(Alert.warning("Private, non-durable chat. Session ownership is not authentication. No CSRF, rate protection or production security guarantees. Only the welcome and latest 25 complete exchanges are retained."))
             .withChild(transcriptRenderer.render(history, null));
     }
 
@@ -79,6 +83,7 @@ public class ChatDemoPage {
         TextInput messageInput = TextInput.create("message")
             .withPlaceholder("Type a message")
             .required();
+        messageInput.withAttribute("maxlength", "4096");
         messageInput.withAttribute("autocomplete", "off");
         messageInput.withAttribute("autocorrect", "off");
         messageInput.withAttribute("autocapitalize", "off");

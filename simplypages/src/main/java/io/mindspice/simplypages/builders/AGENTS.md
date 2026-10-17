@@ -11,15 +11,21 @@ Owns higher-level shell and navigation builder utilities.
 - Builders remain fluent and simple to compose.
 - `build()` output shape stays stable for consumers.
 - Default values keep generated output functional.
-- Builder link helpers must reuse component/core URL validation instead of emitting unchecked hrefs.
-- Builder inline styles should use `HtmlTag.addStyle(...)` unless a trusted, validated CSS value requires `addTrustedStyle(...)`.
+- TopNavBuilder primary/utility links and addPortal aliases, SideNavBuilder link overloads and dynamic account endpoints require application-controlled or separately navigation/endpoint-context-validated URLs. They encode rather than apply Link's scheme policy. AccountBarBuilder addLeftLink/addRightLink already construct Link immediately; do not confuse these with its raw dynamic endpoint.
+- BannerBuilder ordinary horizontal withImage constructs Image during generated-content build and uses its existing source policy then. Banner/Hero CSS background URLs instead interpolate single-quoted CSS url() without escaping/validation; control CSS syntax as well as destination. Banner background/text colors and AccountBar background color are raw CSS assembly. Require application-controlled or separately CSS-context-validated values, not merely HTML encoding or Image validation; retain runtime behavior.
 - Shell header supports banner + embedded top-nav composition (`withTopNav(...)`).
 - `withAccountBar(...)` remains a compatibility alias path and should not regress existing integrations.
-- Shell sidebar markup keeps stable class hooks for responsive/mobile behavior.
-- Shell head script order remains deterministic: HTMX (optional), framework JS, then custom JS.
+- Shell sidebar markup keeps stable class hooks for responsive/mobile behavior. Full/template/body mobile toggles are named non-submit buttons with aria-controls/expanded; framework JS synchronizes off-canvas inert/aria-hidden/focus/resize at 768px while preserving desktop collapse state. Page native details navigation is a separate contract.
+- Collapsible desktop toggles are named native non-submit buttons in full/template/body output, retaining onclick/global toggleSidebar(), IDs/classes and sidebarCollapsed. Shared framework JS initializes existing/later direct or HTMX fragments idempotently using the owning main-container. Storage persistence is best effort; denied storage retains document-local preference. Do not add duplicate click bindings.
+- buildBody() omits document/head/body/header/banner/top-nav/assets/inline scripts; hosts load framework CSS/JS once and HTMX when used. Full/template inline HTMX active-nav behavior and deferred head/custom asset order remain unchanged; desktop collapse/bootstrap is shared, not inline.
+- Framework CSS owns modal base layering, with JS-relative stack offsets. Navigation toggles must not overlap/activate through active dialogs. Desktop preference remains separate from mobile drawer open state and Page's native disclosure.
+- Shell head script order remains deterministic: HTMX (optional), framework JS, then custom JS, all deferred. Full and compiled-template heads privately mark builder-owned HTMX inclusion; early framework JS initializes only legacy selfRequestsOnly=false, methodsThatUseUrlParams=['get'], scrollBehavior='smooth' before custom JS. Explicit upstream host meta merges later and wins; immediate/ready custom overrides survive. The marker is not a public configuration API and defaults are never reapplied on insertion/settle.
+- withHtmx(false) emits no HTMX asset or compatibility marker; body output is always marker/asset/script-free. Unmarked/manual hosts configure their own upstream policy even when framework JS is present. No general destination security, CORS exemption, or CSRF enforcement follows from compatibility defaults.
 - Shell content target/wrapper hooks (`withContentTargetId`, `withContentTargetClass`, `withContentWrapper`) stay consistent across `build()` and `buildBody()`.
 - `buildTemplate()` returns a reusable compiled shell wrapper with a dedicated content slot.
 - Template shell mode does not emit shell content auto-load attributes (`hx-get="/home"`, `hx-trigger="load"`).
+
+- Compiled shells can retain custom component delegates; sharing requires those delegates to be safe for concurrent rendering.
 
 ## Do
 - Keep generated markup predictable and integration-friendly.

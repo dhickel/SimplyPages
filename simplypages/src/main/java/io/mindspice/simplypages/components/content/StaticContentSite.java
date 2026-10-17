@@ -57,9 +57,19 @@ public final class StaticContentSite {
     private final List<ContentSectionConfig> sectionConfigs;
 
     StaticContentSite(Collection<ContentSectionConfig> sectionConfigs) {
-        this.sectionConfigs = List.copyOf(Objects.requireNonNull(sectionConfigs, "sectionConfigs"));
+        this.sectionConfigs = Objects.requireNonNull(sectionConfigs, "sectionConfigs").stream()
+            .map(ContentSectionConfig::snapshot).toList();
     }
 
+    /**
+     * Generates pages and nonfatal diagnostics from the configured directories.
+     * Published detail routes that match another section's index path produce a warning
+     * naming both source owners. Detail-first request resolution, including page queries,
+     * is unchanged; all generated pages remain available through direct section lookups.
+     * Inspect {@link ContentSiteBundle#warnings()} after each generation.
+     *
+     * @return the generated pages, route index and immutable warning list
+     */
     public ContentSiteBundle generate() {
         List<ContentWarning> warnings = new ArrayList<>();
 
@@ -76,16 +86,46 @@ public final class StaticContentSite {
             detailBySectionSlug.put(config.sectionKey(), generated.site().detailPagesBySlug());
         }
 
+        warnOnDetailIndexCollisions(sectionSites, warnings);
         ContentRouteIndex routeIndex = new ContentRouteIndex(sectionBasePaths, indexBySectionPage, detailBySectionSlug);
         return new ContentSiteBundle(sectionSites, routeIndex, warnings);
     }
 
+    private void warnOnDetailIndexCollisions(
+        Map<String, ContentSectionSite> sectionSites,
+        List<ContentWarning> warnings
+    ) {
+        Map<String, ContentSectionConfig> indexOwners = new LinkedHashMap<>();
+        for (ContentSectionConfig config : sectionConfigs) {
+            indexOwners.put(config.basePath(), config);
+        }
+
+        for (ContentSectionConfig config : sectionConfigs) {
+            for (ContentEntryRecord entry : sectionSites.get(config.sectionKey()).entries()) {
+                ContentSectionConfig indexOwner = indexOwners.get(entry.route());
+                if (indexOwner == null || indexOwner.sectionKey().equals(entry.sectionKey())) {
+                    continue;
+                }
+                warnings.add(new ContentWarning(
+                    entry.sectionKey(),
+                    entry.sourcePath(),
+                    "Route collision at '" + entry.route() + "': detail in section '" + entry.sectionKey()
+                        + "' from file '" + entry.sourcePath() + "' shadows index in section '"
+                        + indexOwner.sectionKey() + "' from directory '" + indexOwner.directoryPath()
+                        + "'. Detail routes take precedence, including page queries; index pagination is masked"
+                        + " through request resolution. Direct resolveIndex lookup remains available."
+                        + " Choose non-overlapping section base paths or published slugs."
+                ));
+            }
+        }
+    }
+
     private GeneratedSection generateSection(ContentSectionConfig config, List<ContentWarning> warnings) {
         List<LoadedEntry> discoveredEntries = discoverEntries(config, warnings);
-        List<LoadedEntry> withUniqueSlugs = uniquifySlugs(discoveredEntries, config, warnings);
+        List<LoadedEntry> withUniqueSlugs = uniquifySlugs(
+            discoveredEntries.stream().filter(entry -> !entry.draft()).toList(), config, warnings);
 
         List<LoadedEntry> renderableEntries = withUniqueSlugs.stream()
-            .filter(entry -> !entry.draft())
             .sorted(Comparator
                 .comparing(LoadedEntry::publishedAt, Comparator.nullsLast(Comparator.reverseOrder()))
                 .thenComparing(LoadedEntry::slug))
@@ -377,20 +417,18 @@ public final class StaticContentSite {
         ContentSectionConfig config,
         List<ContentWarning> warnings
     ) {
-        Map<String, Integer> slugCounts = new LinkedHashMap<>();
+        Set<String> usedSlugs = new LinkedHashSet<>();
         List<LoadedEntry> adjusted = new ArrayList<>(entries.size());
 
         for (LoadedEntry entry : entries) {
             String baseSlug = entry.slug();
-            int next = slugCounts.getOrDefault(baseSlug, 0) + 1;
-            slugCounts.put(baseSlug, next);
+            String adjustedSlug = uniqueSlug(baseSlug, usedSlugs);
 
-            if (next == 1) {
+            if (adjustedSlug.equals(baseSlug)) {
                 adjusted.add(entry);
                 continue;
             }
 
-            String adjustedSlug = baseSlug + "-" + next;
             warnings.add(new ContentWarning(
                 config.sectionKey(),
                 entry.sourcePath(),
@@ -427,7 +465,7 @@ public final class StaticContentSite {
 
     private List<TocHeading> collectHeadings(Node document, IdentityHashMap<Heading, String> headingIds) {
         List<TocHeading> toc = new ArrayList<>();
-        Map<String, Integer> slugCounts = new LinkedHashMap<>();
+        Set<String> usedIds = new LinkedHashSet<>();
 
         document.accept(new AbstractVisitor() {
             @Override
@@ -442,9 +480,7 @@ public final class StaticContentSite {
                     base = "section";
                 }
 
-                int count = slugCounts.getOrDefault(base, 0) + 1;
-                slugCounts.put(base, count);
-                String id = count == 1 ? base : base + "-" + count;
+                String id = uniqueSlug(base, usedIds);
                 headingIds.put(heading, id);
 
                 if (heading.getLevel() >= 2 && heading.getLevel() <= 4) {
@@ -456,6 +492,15 @@ public final class StaticContentSite {
         });
 
         return List.copyOf(toc);
+    }
+
+    private static String uniqueSlug(String base, Set<String> used) {
+        String candidate = base;
+        int suffix = 2;
+        while (!used.add(candidate)) {
+            candidate = base + "-" + suffix++;
+        }
+        return candidate;
     }
 
     private ParsedMarkdown parseFrontmatter(String rawMarkdown) {
@@ -497,7 +542,7 @@ public final class StaticContentSite {
 
             String key = line.substring(0, colon).trim().toLowerCase(Locale.ROOT);
             String value = line.substring(colon + 1).trim();
-            if ((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"))) {
+            if (value.length() >= 2 && ((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'")))) {
                 value = value.substring(1, value.length() - 1);
             }
             metadata.put(key, value);
@@ -757,7 +802,7 @@ public final class StaticContentSite {
     }
 
     private static String buildDetailRoute(String basePath, String slug) {
-        return basePath + "/" + slug;
+        return ("/".equals(basePath) ? "" : basePath) + "/" + slug;
     }
 
     private record LoadedEntry(

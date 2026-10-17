@@ -69,6 +69,13 @@ public final class ContentSectionConfig {
         return this;
     }
 
+    ContentSectionConfig snapshot() {
+        return create(sectionKey, directoryPath, basePath)
+            .withSectionTitle(sectionTitle).withPageSize(pageSize).withMaxDepth(maxDepth)
+            .withAllowUnsafeMarkdown(allowUnsafeMarkdown)
+            .withListItemComponentSupplier(listItemComponentSupplier);
+    }
+
     public String sectionKey() {
         return sectionKey;
     }

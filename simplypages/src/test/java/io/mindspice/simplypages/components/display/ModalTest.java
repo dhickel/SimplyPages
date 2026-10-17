@@ -27,6 +27,14 @@ class ModalTest {
         HtmlAssert.assertThat(html)
             .hasElement("div.modal-backdrop#test-modal")
             .hasElement("div.modal-backdrop#test-modal > div.modal-container")
+            .attributeEquals(".modal-backdrop", "data-close-on-backdrop", "true")
+            .attributeEquals(".modal-backdrop", "data-close-on-escape", "true")
+            .attributeEquals(".modal-container", "role", "dialog")
+            .attributeEquals(".modal-container", "aria-modal", "true")
+            .attributeEquals(".modal-container", "tabindex", "-1")
+            .attributeEquals(".modal-container", "aria-labelledby", "test-modal-title")
+            .attributeEquals(".modal-title", "id", "test-modal-title")
+            .doesNotHaveElement(".modal-backdrop[onclick], .modal-backdrop[onkeydown], .modal-close[onclick]")
             .hasElement("div.modal-container > div.modal-header")
             .hasElement("div.modal-header > h3.modal-title")
             .hasElement("div.modal-container > div.modal-body")
@@ -50,7 +58,9 @@ class ModalTest {
 
         HtmlAssert.assertThat(html)
             .hasElement("div.modal-backdrop#test-modal")
-            .attributeEquals("div.modal-backdrop#test-modal", "tabindex", "0");
+            .attributeEquals("div.modal-backdrop#test-modal", "data-close-on-escape", "false")
+            .attributeEquals(".modal-container", "aria-label", "Dialog")
+            .doesNotHaveElement(".modal-backdrop[tabindex]");
 
         HtmlAssert.assertThat(html)
             .doesNotHaveElement("div.modal-backdrop[onkeydown]");
@@ -70,6 +80,10 @@ class ModalTest {
 
         HtmlAssert.assertThat(html)
             .doesNotHaveElement("div.modal-header")
+            .attributeEquals(".modal-container", "role", "dialog")
+            .attributeEquals(".modal-container", "aria-label", "Dialog")
+            .attributeEquals(".modal-container", "tabindex", "-1")
+            .doesNotHaveElement(".modal-container[aria-labelledby]")
             .hasElement("div.modal-body")
             .hasElement("div.modal-footer")
             .childOrder("div.modal-container", "div.modal-body", "div.modal-footer");
@@ -124,5 +138,43 @@ class ModalTest {
         HtmlAssert.assertThat(templateHtml)
             .elementTextEquals("div.modal-body", "Body from context")
             .elementTextEquals("div.modal-footer", "Footer from context");
+    }
+
+    @Test
+    void flagsBlankTitleAndContextRemainIndependent() {
+        var key = io.mindspice.simplypages.core.SlotKey.<String>of("modal-content");
+        Modal modal = Modal.create().withModalId("context-modal").withTitle(" ")
+            .showCloseButton(false).closeOnBackdrop(false).closeOnEscape(false)
+            .withBody(io.mindspice.simplypages.core.Slot.of(key))
+            .withFooter(io.mindspice.simplypages.core.Slot.of(key));
+        String html = modal.compile().render(io.mindspice.simplypages.core.RenderContext.of(key, "<value>"));
+        HtmlAssert.assertThat(html)
+            .attributeEquals(".modal-backdrop", "data-close-on-backdrop", "false")
+            .attributeEquals(".modal-backdrop", "data-close-on-escape", "false")
+            .attributeEquals(".modal-container", "aria-label", "Dialog")
+            .doesNotHaveElement(".modal-header, .modal-container[aria-labelledby], .modal-close, .modal-body value, .modal-footer value")
+            .elementTextEquals(".modal-body", "<value>")
+            .elementTextEquals(".modal-footer", "<value>");
+    }
+
+    @Test
+    void titleIsEscapedAndIdsAreValidated() {
+        String title = "<img src=x onerror=alert(1)> & \"title\"";
+        HtmlAssert.assertThat(Modal.create().withModalId("safe-title").withTitle(title).render())
+            .elementTextEquals("#safe-title-title", title)
+            .doesNotHaveElement(".modal-title img")
+            .attributeEquals(".modal-container", "aria-labelledby", "safe-title-title");
+        for (String id : new String[]{null, "", "1modal", "bad'id", "bad id"}) {
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> Modal.create().withModalId(id));
+        }
+    }
+
+    @Test void generatedModalIdsAreUniqueAcrossRapidCreation() {
+        var ids = new java.util.HashSet<String>();
+        for (int i = 0; i < 100; i++) {
+            String id = org.jsoup.Jsoup.parse(Modal.create().render()).selectFirst(".modal-backdrop").id();
+            org.junit.jupiter.api.Assertions.assertTrue(ids.add(id));
+        }
     }
 }

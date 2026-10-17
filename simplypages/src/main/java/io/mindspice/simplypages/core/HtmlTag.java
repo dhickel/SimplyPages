@@ -24,8 +24,6 @@ import java.util.stream.Collectors;
  * via {@link Template}) with per-request {@link RenderContext} values.</p>
  */
 public class HtmlTag implements Component {
-    private static final Pattern HTML_TAG_NAME_PATTERN =
-            Pattern.compile("^[A-Za-z][A-Za-z0-9:-]*$");
     private static final Pattern CSS_PROPERTY_NAME_PATTERN =
             Pattern.compile("^(--[a-zA-Z0-9_-]+|[a-zA-Z][a-zA-Z0-9-]*)$");
     private static final Pattern CSS_DECLARATION_BREAKOUT_PATTERN = Pattern.compile("[;{}]");
@@ -61,7 +59,9 @@ public class HtmlTag implements Component {
      * @param selfClosing whether output uses {@code <tag />} form
      */
     public HtmlTag(String tagName, boolean selfClosing) {
-        validateTagName(tagName);
+        if (tagName == null || !tagName.matches("[A-Za-z][A-Za-z0-9:_-]*")) {
+            throw new IllegalArgumentException("Invalid HTML tag name: " + tagName);
+        }
         this.tagName = tagName;
         this.selfClosing = selfClosing;
     }
@@ -81,10 +81,11 @@ public class HtmlTag implements Component {
     }
 
     /**
-     * Sets element id and synchronizes an {@code id} attribute when non-null.
+     * Sets element id, or removes it when null.
      */
     public HtmlTag withId(String id) {
         this.id = id;
+        attributes.removeIf(attr -> "id".equalsIgnoreCase(attr.name()));
         if (id != null) {
             this.withAttribute("id", id);
         }
@@ -92,48 +93,61 @@ public class HtmlTag implements Component {
     }
 
     /**
-     * Adds or replaces an attribute by name.
+     * Adds or replaces an attribute by case-insensitive name. Invalid names are rejected.
      *
      * <p>Side effect: existing attribute with the same name is removed before insert, preventing
      * duplicate names.</p>
+     *
+     * <p>Values are attribute-encoded, not semantically validated. URL/HTMX destinations,
+     * event-handler code, and raw {@code style} values must be application-controlled or
+     * separately validated for their actual context. Replacing {@code href}/{@code src}
+     * on a Link/Image bypasses its typed URL setter and does not update its getter.</p>
      */
     public HtmlTag withAttribute(String name, String value) {
         Attribute attribute = new Attribute(name, value);
-        attributes.removeIf(attr -> attr.name().equals(attribute.name()));
+        attributes.removeIf(attr -> attr.name().equalsIgnoreCase(name));
         attributes.add(attribute);
+        if ("id".equalsIgnoreCase(name)) {
+            this.id = value;
+        }
         return this;
     }
 
     /**
-     * Sets {@code hx-get}.
+     * Sets {@code hx-get}; supply an application-controlled or separately validated endpoint URL.
+     * Attribute encoding does not enforce destination policy or request authorization.
      */
     public HtmlTag hxGet(String url) {
         return withAttribute("hx-get", url);
     }
 
     /**
-     * Sets {@code hx-post}.
+     * Sets {@code hx-post}; supply an application-controlled or separately validated endpoint URL.
+     * Attribute encoding does not enforce destination policy, authorization, or CSRF.
      */
     public HtmlTag hxPost(String url) {
         return withAttribute("hx-post", url);
     }
 
     /**
-     * Sets {@code hx-put}.
+     * Sets {@code hx-put}; supply an application-controlled or separately validated endpoint URL.
+     * Attribute encoding does not enforce destination policy, authorization, or CSRF.
      */
     public HtmlTag hxPut(String url) {
         return withAttribute("hx-put", url);
     }
 
     /**
-     * Sets {@code hx-patch}.
+     * Sets {@code hx-patch}; supply an application-controlled or separately validated endpoint URL.
+     * Attribute encoding does not enforce destination policy, authorization, or CSRF.
      */
     public HtmlTag hxPatch(String url) {
         return withAttribute("hx-patch", url);
     }
 
     /**
-     * Sets {@code hx-delete}.
+     * Sets {@code hx-delete}; supply an application-controlled or separately validated endpoint URL.
+     * Attribute encoding does not enforce destination policy, authorization, or CSRF.
      */
     public HtmlTag hxDelete(String url) {
         return withAttribute("hx-delete", url);
@@ -198,7 +212,7 @@ public class HtmlTag implements Component {
      * <p>Side effect: clears any dynamic text slot and marks content untrusted.</p>
      */
     public HtmlTag withInnerText(String text) {
-        this.innerText = text;
+        this.innerText = text == null ? "" : text;
         this.innerTextSlot = null;
         this.trustedHtml = false;
         return this;
@@ -222,7 +236,7 @@ public class HtmlTag implements Component {
      * <p>Security contract: call only with trusted, already-sanitized HTML.</p>
      */
     public HtmlTag withUnsafeHtml(String html) {
-        this.innerText = html;
+        this.innerText = html == null ? "" : html;
         this.innerTextSlot = null;
         this.trustedHtml = true;
         return this;
@@ -243,12 +257,12 @@ public class HtmlTag implements Component {
      */
     public HtmlTag addClass(String className) {
         Optional<Attribute> classAttr = attributes.stream()
-                .filter(attr -> "class".equals(attr.name()))
+                .filter(attr -> "class".equalsIgnoreCase(attr.name()))
                 .findFirst();
 
         if (classAttr.isPresent()) {
             Attribute attr = classAttr.get();
-            String current = attr.value();
+            String current = attr.value() == null ? "" : attr.value();
             boolean exists = false;
             for (String c : current.split("\\s+")) {
                 if (c.equals(className)) {
@@ -277,9 +291,11 @@ public class HtmlTag implements Component {
     /**
      * Adds or replaces one inline style property on the {@code style} attribute.
      *
-     * <p>Security contract: this method is the hardened path and rejects declaration breakout
-     * characters in values. For trusted advanced values that must include declaration separators
-     * (for example some data URLs), use {@link #addTrustedStyle(String, String)}.</p>
+     * <p>Validates the property name and rejects declaration-breakout characters in values.
+     * This is not semantic CSS or URL validation: values must be application-controlled or
+     * separately validated for the property and CSS syntax context. For trusted advanced values
+     * that require separators (for example some data URLs), use
+     * {@link #addTrustedStyle(String, String)}. Width helpers impose their own narrower token grammar.</p>
      */
     public HtmlTag addStyle(String property, String value) {
         validateCssPropertyName(property);
@@ -291,8 +307,9 @@ public class HtmlTag implements Component {
      * Adds or replaces one inline style property on the {@code style} attribute using a trusted
      * value path.
      *
-     * <p>Call this only with trusted style values. This bypasses breakout checks used by
-     * {@link #addStyle(String, String)}.</p>
+     * <p>Call only with application-controlled or separately CSS-context-validated values.
+     * This bypasses the declaration-breakout check used by {@link #addStyle(String, String)};
+     * property-name validation remains, but neither path supplies semantic CSS/URL policy.</p>
      */
     public HtmlTag addTrustedStyle(String property, String value) {
         validateCssPropertyName(property);
@@ -314,46 +331,23 @@ public class HtmlTag implements Component {
         }
     }
 
-    private void validateTagName(String tagName) {
-        if (tagName == null || tagName.isBlank() || !HTML_TAG_NAME_PATTERN.matcher(tagName).matches()) {
-            throw new IllegalArgumentException("Invalid HTML tag name: " + tagName);
-        }
-    }
-
     private HtmlTag addOrReplaceStyle(String property, String value) {
-        Optional<String> existingStyle = attributes.stream()
-                .filter(attr -> "style".equals(attr.name()))
-                .map(Attribute::value)
+        Optional<Attribute> existingStyle = attributes.stream()
+                .filter(attr -> "style".equalsIgnoreCase(attr.name()))
                 .findFirst();
 
         String newStyle;
         if (existingStyle.isPresent()) {
-            List<String> declarations = new ArrayList<>();
-            boolean replaced = false;
-            for (String declaration : existingStyle.get().split(";")) {
-                String trimmed = declaration.trim();
-                if (trimmed.isEmpty()) {
-                    continue;
-                }
-                String[] keyValue = trimmed.split(":", 2);
-                if (keyValue.length != 2) {
-                    declarations.add(trimmed);
-                    continue;
-                }
-                String existingProperty = keyValue[0].trim();
-                if (existingProperty.equalsIgnoreCase(property)) {
-                    if (!replaced) {
-                        declarations.add(property + ": " + value);
-                        replaced = true;
-                    }
-                } else {
-                    declarations.add(existingProperty + ": " + keyValue[1].trim());
-                }
-            }
-            if (!replaced) {
-                declarations.add(property + ": " + value);
-            }
-            newStyle = String.join("; ", declarations) + ";";
+            String styles = existingStyle.get().value() == null
+                    ? ""
+                    : existingStyle.get().value().trim().replaceAll(";+$", "");
+            String propertyPattern = "(^|;)\\s*" + Pattern.quote(property) + "\\s*:[^;]*";
+            styles = styles.replaceAll(propertyPattern, "$1").trim();
+            styles = styles.replaceAll("^;\\s*", "").replaceAll(";\\s*;", ";");
+            styles = styles.replaceAll(";+$", "");
+            newStyle = styles.isEmpty() ?
+                    property + ": " + value + ";" :
+                    styles + "; " + property + ": " + value + ";";
         } else {
             newStyle = property + ": " + value + ";";
         }
@@ -425,7 +419,7 @@ public class HtmlTag implements Component {
     public String render(RenderContext context) {
         StringBuilder sb = new StringBuilder("<").append(tagName);
 
-        if (id != null && attributes.stream().noneMatch(attr -> "id".equals(attr.name()))) {
+        if (id != null && attributes.stream().noneMatch(attr -> "id".equalsIgnoreCase(attr.name()))) {
             sb.append(new Attribute("id", id).render());
         }
 
@@ -438,8 +432,7 @@ public class HtmlTag implements Component {
         }
 
         if (innerTextSlot != null) {
-            String val = context.get(innerTextSlot).orElse("");
-            sb.append(Encode.forHtml(val));
+            sb.append(Slot.of(innerTextSlot).render(context));
         } else if (!innerText.isEmpty()) {
             if (trustedHtml) {
                 sb.append(innerText);

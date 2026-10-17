@@ -3,10 +3,28 @@ package io.mindspice.simplypages.core;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StyleTest {
+
+    @Test
+    void inlineStyleIsOrderedRawAssemblyNotDeclarationOrUrlValidation() {
+        Style style = Style.create();
+        assertSame(style, style.addInlineStyle("background-image", "url(javascript:void(0))")
+            .addInlineStyle("color", "red; --application: retained")
+            .addInlineStyle("--raw; property", "{value}"));
+        String expected = "background-image: url(javascript:void(0)); color: red; --application: retained; --raw; property: {value}";
+        assertEquals(expected, style.getStyleString());
+        HtmlTag tag = new HtmlTag("div").withAttribute("style", style.getStyleString());
+        var snapshot = tag.compile();
+        assertEquals("<div style=\"" + expected + "\"></div>", tag.render());
+        style.addInlineStyle("color", "blue");
+        assertEquals(tag.render(), snapshot.render(RenderContext.empty()));
+        assertEquals(expected + "; color: blue", style.getStyleString());
+    }
 
     @Test
     @DisplayName("Style should build class strings")

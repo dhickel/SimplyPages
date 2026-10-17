@@ -55,11 +55,24 @@ SimplyPages is an active internal Java-first SSR framework for building data-hea
 ### Template and Slot System (First-Class)
 - Dynamic data injection is modeled via `SlotKey<T>`, `Slot`, and `RenderContext`
 - `Template` compiles static component structure for repeated rendering with context values
+- Compilation preserves generated child streams; custom `render(RenderContext)` overrides remain live delegates
+- Template sharing requires retained custom delegates to be safe to share
 - Prefer slot-driven rendering for request-time dynamic content over mutating built module structure
+
+### Shell and Client Ownership
+- The library bundles unmodified HTMX 2.0.11 through WebJars; the Boot 4.1.1 demo uses BOM-managed locator-lite for the versionless URL.
+- Full/template shells that include HTMX privately initialize legacy selfRequestsOnly=false, GET-only URL parameters (DELETE body), and smooth-scroll defaults at the top of existing framework JS, before deferred custom JS. Explicit upstream host meta and custom-script/ready overrides win. The private head marker is not public configuration; no insertion/settle reapplication.
+- withHtmx(false), body fragments, and unmarked/manual hosts do not select compatibility defaults. Hosts load assets once and explicitly configure desired upstream policy. Compatibility is not destination/CORS/CSRF/authorization enforcement.
+- The Form-source configRequest hook repairs only missing Object.prototype-collision headers from an own literal exactly-one-string-pair attribute. Preserve event-stage own entries/case aliases/null/accessors/nonextensible maps/cancellation and later overrides. No generic inherited/evaluated/options parser, Form runtime/JSON change, header rewrite, token verification, or alternate transport. See the asset reference for upstream pre-event ajax-options limits.
 
 ### Module Lifecycle Contract
 - Modules are built lazily and idempotently through `build()`
 - `buildContent()` is structure composition, not per-request mutation logic
+- Failed initial builds restore entry-state shallow children/attributes/cached id and remain retryable. Explicit rebuild failure also restores prior build status before rethrowing the same RuntimeException/Error: an already-built module does not retry during ordinary render. This excludes moduleId/title/text/slots/trusted HTML/subclass/descendant/external state; no deep transaction guarantee.
+- Paragraph/Divider/EditableRow/EditablePage derive readonly temporary output and remain live template delegates. Editable wrappers retain generic inherited children without emitting them; source rows keep exactly-once same-context dispatch. Finish configuration before sharing; arbitrary delegates/contexts/descendants have separate obligations.
+- Divider reserves exact orientation-local generated styling in temporary output; inactive canonical horizontal names and whole divider-with-text token are suppressed even when caller-configured. Preserve outside/case-variant styles and stored configuration; see the catalog for the exact namespace.
+- SimpleList lookup/removal uses literal non-null raw item ids, not positional editable descriptors. add/remove are configuration-only; applyEdits explicitly rebuilds.
+- Preserve actual fluent declared returns/bridges; Column.withAttribute declares HtmlTag for legacy subclass source compatibility. Do not introduce a blanket covariant/self-type rewrite.
 - Module width methods (`withWidth`, `withMaxWidth`, `withMinWidth`) are intentionally blocked on `Module`
 - Layout controls module sizing via `Row`/`Column` containers
 
@@ -109,9 +122,16 @@ Package-specific operational rules live in package-level `AGENTS.md` files.
 
 ## Build and Test Commands
 
+- Use the official Maven Wrapper 3.3.4 (`only-script`), pinned to Maven 3.10.0 with a distribution checksum. Reactor and independent module POMs enforce JDK 25 and Maven `[3.10.0,4)`.
+- Library output is Java 25 bytecode; demo output is Java 21 bytecode but still requires Java 25 at runtime.
+- Keep pinned plugins, output timestamps, source/Javadoc attachments, and fatal structural Javadoc lint (`all,-missing`). Missing prose remains tracked documentation debt, not a completeness guarantee.
+- Browser checks use the existing `tests/browser` harness after a fresh Maven package including tests/fixtures, then `npm ci` and pinned Playwright/Chromium. See `docs/how-to/build-test-and-document.md`; do not substitute stale artifacts.
+- The controlled-beta support/known-issues record is `docs/reference/build-and-assets.md#beta-status-known-issues-and-support`. Do not infer remote CI, continuous security, coverage gates, publication, or production readiness from local checks.
+
 ### From Repository Root
 ```bash
 ./mvnw clean install
+./mvnw clean verify
 ./mvnw test
 ./mvnw -pl simplypages test
 ./mvnw -pl demo spring-boot:run
@@ -132,6 +152,14 @@ cd demo && ../mvnw spring-boot:run
 - Canonical live URL: `http://192.168.1.113:8080` (assume this is the primary deployment target unless explicitly told otherwise).
 - After a feature improvement or bug fix is finalized, always deploy to the live host and verify behavior.
 - After deployment, verify behavior on the live site before finalizing fixes.
+
+## Documentation Structure
+- `docs/README.md` is the Diátaxis landing page and the default `/docs` entry point.
+- `docs/tutorials/`: runnable learning exercises; `docs/how-to/`: task-oriented instructions.
+- `docs/reference/`: API/build contracts; `docs/explanation/`: design and integration reasoning.
+- Keep existing topic-based URLs stable and link new pages from their section and `docs/INDEX.md`.
+- Documentation tests validate local links/anchors, guide discoverability, and complete Java examples.
+- JDK 25 is required; retain library Java 25 bytecode and the demo's Java 21 bytecode target. Dependency migration does not authorize API/bridge or target changes.
 
 ## Documentation TOC (Terse)
 - Full index: `docs/INDEX.md`

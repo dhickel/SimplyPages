@@ -3,7 +3,6 @@ package io.mindspice.simplypages.components.navigation;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.core.RenderContext;
-import io.mindspice.simplypages.core.SafeUrl;
 import org.owasp.encoder.Encode;
 
 import java.util.ArrayList;
@@ -29,6 +28,10 @@ public class Breadcrumb extends HtmlTag {
         return new Breadcrumb();
     }
 
+    /**
+     * Adds an application-controlled or separately navigation-validated href. Non-null hrefs
+     * are encoded without Link's scheme policy; null renders text rather than a link.
+     */
     public Breadcrumb addItem(String text, String href) {
         items.add(new BreadcrumbItem(text, href, false));
         return this;
@@ -59,7 +62,6 @@ public class Breadcrumb extends HtmlTag {
         private final boolean active;
 
         BreadcrumbItem(String text, String href, boolean active) {
-            SafeUrl.validateHref(href);
             this.text = text;
             this.href = href;
             this.active = active;

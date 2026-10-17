@@ -1,5 +1,7 @@
 package io.mindspice.simplypages.core;
 
+import io.mindspice.simplypages.components.Image;
+import io.mindspice.simplypages.components.navigation.Link;
 import io.mindspice.simplypages.testutil.HtmlAssert;
 import io.mindspice.simplypages.testutil.SnapshotAssert;
 import org.jsoup.Jsoup;
@@ -10,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -56,6 +59,28 @@ class HtmlTagTest {
     }
 
     @Test
+    void genericUrlReplacementRemainsEncodedOrderedAndSeparateFromTypedGetters() {
+        String raw = "javascript:void(0)?a=\"x\"&b=<value>";
+        Link link = Link.create("/validated", "text").withId("link");
+        var snapshot = link.compile();
+        link.withAttribute("HREF", raw);
+        assertEquals("/validated", link.getHref());
+        assertEquals("<a id=\"link\" HREF=\"javascript:void(0)?a=&#34;x&#34;&amp;b=&lt;value>\">text</a>", link.render());
+        assertEquals("<a href=\"/validated\" id=\"link\">text</a>", snapshot.render(RenderContext.empty()));
+        assertEquals(link.render(), link.compile().render(RenderContext.empty()));
+        Image image = Image.create("/validated.png").withId("image");
+        image.withAttribute("SRC", raw);
+        assertEquals("/validated.png", image.getSrc());
+        assertEquals(raw, Jsoup.parse(image.render()).selectFirst("img").attr("src"));
+        assertEquals(image.render(), image.compile().render(RenderContext.empty()));
+        HtmlTag endpoint = new HtmlTag("button").hxGet(raw).hxPost(raw).hxPut(raw).hxPatch(raw).hxDelete(raw);
+        for (String name : new String[] {"hx-get", "hx-post", "hx-put", "hx-patch", "hx-delete"}) {
+            assertEquals(raw, Jsoup.parse(endpoint.render()).selectFirst("button").attr(name));
+        }
+        assertEquals(endpoint.render(), endpoint.compile().render(RenderContext.empty()));
+    }
+
+    @Test
     @DisplayName("HtmlTag should escape inner text")
     void testInnerTextEscaping() {
         HtmlTag div = new HtmlTag("div")
@@ -96,6 +121,75 @@ class HtmlTagTest {
         HtmlAssert.assertThat(html)
             .hasElement("div.alpha")
             .attributeEquals("div", "class", "alpha");
+    }
+
+    @Test
+    @DisplayName("HtmlTag class helpers should recognize aliases without folding class tokens")
+    void testCaseInsensitiveClassHelperLookup() {
+        HtmlTag tag = new HtmlTag("div").withAttribute("CLASS", "base extra");
+        tag.addClass("new").withClass("new");
+
+        assertEquals("<div class=\"base extra new\"></div>", tag.render());
+        assertEquals(1, countAttribute(tag.render(), "class"));
+
+        HtmlTag noOp = new HtmlTag("div").withAttribute("CLASS", "base");
+        noOp.addClass("base");
+        assertEquals("<div CLASS=\"base\"></div>", noOp.render());
+
+        HtmlTag caseSensitiveToken = new HtmlTag("div").withAttribute("ClAsS", "Foo");
+        caseSensitiveToken.addClass("foo");
+        assertEquals("<div class=\"Foo foo\"></div>", caseSensitiveToken.render());
+
+        HtmlTag nullClass = new HtmlTag("div").withAttribute("CLASS", null);
+        nullClass.addClass("extra");
+        HtmlAssert.assertThat(nullClass.render())
+            .attributeEquals("div", "class", " extra");
+        assertEquals(1, countAttribute(nullClass.render(), "class"));
+    }
+
+    @Test
+    @DisplayName("HtmlTag style helpers should merge aliases and retain existing declarations")
+    void testCaseInsensitiveStyleHelperLookup() {
+        HtmlTag styled = new HtmlTag("div")
+            .withAttribute("StYlE", "color: red; width: 25%;");
+        styled.addStyle("width", "50%").withWidth("75%");
+
+        assertEquals("<div style=\"color: red; width: 75%;\"></div>", styled.render());
+        assertEquals(styled.render(), Template.of(styled).render(RenderContext.empty()));
+        assertEquals(1, countAttribute(styled.render(), "style"));
+
+        HtmlTag caseSensitiveProperty = new HtmlTag("div")
+            .addStyle("Color", "red")
+            .addStyle("color", "blue");
+        assertEquals("<div style=\"Color: red; color: blue;\"></div>", caseSensitiveProperty.render());
+
+        HtmlTag trusted = new HtmlTag("div").withAttribute("STYLE", "color: red;");
+        trusted.addTrustedStyle("background-image", "url(data:image/svg+xml;utf8,<svg/>)");
+        HtmlAssert.assertThat(trusted.render())
+            .attributeEquals("div", "style", "color: red; background-image: url(data:image/svg+xml;utf8,<svg/>);");
+        assertEquals(1, countAttribute(trusted.render(), "style"));
+
+        for (String alias : new String[] {"style", "STYLE", "StYlE"}) {
+            HtmlTag nullStyle = new HtmlTag("div").withAttribute(alias, null);
+            nullStyle.withWidth("10px");
+            assertEquals("<div style=\"width: 10px;\"></div>", nullStyle.render());
+        }
+    }
+
+    @Test
+    @DisplayName("HtmlTag generic replacement should preserve supplied spelling, order, and id cache")
+    void testGenericAttributeCompatibility() {
+        HtmlTag ordered = new HtmlTag("div")
+            .withAttribute("data-before", "one")
+            .withAttribute("CLASS", "old")
+            .withAttribute("data-after", "two");
+        ordered.withAttribute("class", "new");
+        assertEquals("<div data-before=\"one\" data-after=\"two\" class=\"new\"></div>", ordered.render());
+
+        HtmlTag idTag = new HtmlTag("div").withAttribute("ID", "old");
+        idTag.withAttribute("iD", "new");
+        assertEquals("new", idTag.getId());
+        assertEquals(1, countAttribute(idTag.render(), "id"));
     }
 
     @Test
@@ -235,6 +329,13 @@ class HtmlTagTest {
         assertThrows(IllegalArgumentException.class, () -> new HtmlTag("div").withWidth("wide"));
         assertThrows(IllegalArgumentException.class, () -> new HtmlTag("div").withMaxWidth("100pt"));
         assertThrows(IllegalArgumentException.class, () -> new HtmlTag("div").withMinWidth("-10px"));
+    }
+
+    private static int countAttribute(String html, String name) {
+        return (int) Pattern.compile("(?i)\\s" + Pattern.quote(name) + "=")
+            .matcher(html)
+            .results()
+            .count();
     }
 
     private static Map<String, String> parseStyles(String html) {

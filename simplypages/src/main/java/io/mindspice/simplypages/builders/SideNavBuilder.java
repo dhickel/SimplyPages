@@ -37,7 +37,8 @@ public class SideNavBuilder {
     }
 
     /**
-     * Appends a non-active link without an icon.
+     * Appends a non-active link without an icon. Path must be application-controlled or
+     * separately validated for navigation and hx-get; no Link scheme policy is applied.
      */
     public SideNavBuilder addLink(String name, String path) {
         items.add(new NavLink(name, path, false, null));
@@ -45,7 +46,8 @@ public class SideNavBuilder {
     }
 
     /**
-     * Appends a link with explicit active state and no icon.
+     * Appends a link with explicit active state and no icon. Path must be application-controlled
+     * or separately navigation/endpoint-validated; encoding does not enforce destination policy.
      */
     public SideNavBuilder addLink(String name, String path, boolean active) {
         items.add(new NavLink(name, path, active, null));
@@ -53,7 +55,8 @@ public class SideNavBuilder {
     }
 
     /**
-     * Appends a non-active link with an icon.
+     * Appends a non-active link with an icon and an application-controlled or separately
+     * navigation/endpoint-validated path; no Link scheme policy is applied.
      */
     public SideNavBuilder addLink(String name, String path, String icon) {
         items.add(new NavLink(name, path, false, icon));
@@ -61,7 +64,8 @@ public class SideNavBuilder {
     }
 
     /**
-     * Appends a link with explicit active state and icon.
+     * Appends a link with explicit active state and icon. Path is encoded into href and hx-get,
+     * not scheme-validated; supply an application-controlled or separately validated destination.
      */
     public SideNavBuilder addLink(String name, String path, boolean active, String icon) {
         items.add(new NavLink(name, path, active, icon));

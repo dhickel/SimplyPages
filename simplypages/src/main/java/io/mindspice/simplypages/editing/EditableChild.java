@@ -13,7 +13,9 @@ public class EditableChild {
     private final Component component;
 
     /**
-     * Creates an editable-child descriptor.
+     * Creates an editable-child descriptor. The id is stored as supplied, not globally validated.
+     * A modal child URL containing {@code {id}} validates and encodes this raw value when its
+     * action is built; disabled actions and templates omitting the token do not validate it.
      */
     public EditableChild(String id, String label, Component component) {
         this.id = id;
@@ -29,7 +31,7 @@ public class EditableChild {
     }
 
     /**
-     * Returns the child identifier used by edit/delete endpoints.
+     * Returns the raw child identifier used by edit/delete templates, not a pre-encoded URL value.
      */
     public String getId() {
         return id;

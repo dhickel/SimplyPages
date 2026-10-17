@@ -2,13 +2,14 @@ package io.mindspice.simplypages.components;
 
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
-import io.mindspice.simplypages.core.SafeUrl;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Builder for dropdown-style menu markup.
+ * Builder for disclosure navigation markup with a native button and ordinary links/items.
+ * Load framework JS/CSS once in the host shell for click, keyboard and dismissal behavior.
+ * This is not an ARIA menu; custom items retain their native keyboard behavior.
  *
  * <p>Mutable and not thread-safe. Items and configuration are accumulated on this builder until
  * {@link #build()} is called.</p>
@@ -40,14 +41,14 @@ public class Dropdown {
     }
 
     /**
-     * Appends an anchor item.
+     * Appends an anchor item with an application-controlled or separately navigation-validated
+     * href. Attribute encoding is applied, but Link's scheme policy is not.
      *
      * @param text link text
      * @param href link href
      * @return this dropdown builder
      */
     public Dropdown addLink(String text, String href) {
-        SafeUrl.validateHref(href);
         HtmlTag link = new HtmlTag("a")
             .withAttribute("href", href)
             .withAttribute("class", "dropdown-link")
@@ -110,14 +111,22 @@ public class Dropdown {
         HtmlTag container = new HtmlTag("div");
         container.withAttribute("class", "dropdown" + (customClass != null ? " " + customClass : ""));
 
-        // Trigger element
-        HtmlTag trigger = new HtmlTag("span")
+        String menuId = "dropdown-" + java.util.UUID.randomUUID();
+        container.withAttribute("data-sp-disclosure", "");
+
+        HtmlTag trigger = new HtmlTag("button")
+            .withAttribute("type", "button")
             .withAttribute("class", "dropdown-trigger")
-            .withInnerText(triggerText);
+            .withAttribute("data-sp-disclosure-toggle", "")
+            .withAttribute("aria-controls", menuId)
+            .withAttribute("aria-expanded", "false")
+            .withInnerText(triggerText == null || triggerText.isBlank() ? "Menu" : triggerText);
         container.withChild(trigger);
 
         // Dropdown menu
         HtmlTag menu = new HtmlTag("div")
+            .withId(menuId)
+            .withAttribute("hidden", "")
             .withAttribute("class", "dropdown-menu dropdown-align-" + alignment);
 
         // Add all items to the menu

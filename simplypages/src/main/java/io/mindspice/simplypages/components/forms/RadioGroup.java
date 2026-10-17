@@ -9,7 +9,12 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Radio button group with shared input name.
+ * Radio button group with shared input name and {@code radiogroup} role.
+ *
+ * <p>{@link Form#addField(String, Component)} names the group from its visible caption without
+ * changing option labels. Standalone groups need an application-supplied accessible name through
+ * the existing {@code aria-label} or {@code aria-labelledby} attribute APIs; the submission name
+ * is not used as an accessible name.</p>
  *
  * <p>Mutable and not thread-safe. Options are accumulated in-memory and rendered in insertion order. Mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
@@ -18,6 +23,8 @@ public class RadioGroup extends Div {
     private final String name;
     private final List<RadioOption> options = new ArrayList<>();
     private String selectedValue;
+    private boolean required;
+    private final String idPrefix = "radio-" + java.util.UUID.randomUUID();
 
     /**
      * Creates a radio group.
@@ -28,6 +35,7 @@ public class RadioGroup extends Div {
         super();
         this.name = name;
         this.withClass("form-radio-group");
+        this.withAttribute("role", "radiogroup");
     }
 
     /**
@@ -48,7 +56,7 @@ public class RadioGroup extends Div {
      * @return this group
      */
     public RadioGroup addOption(String value, String label) {
-        options.add(new RadioOption(value, label));
+        options.add(new RadioOption(java.util.Objects.requireNonNull(value, "value"), label, idPrefix + "-" + options.size()));
         return this;
     }
 
@@ -64,15 +72,14 @@ public class RadioGroup extends Div {
     }
 
     /**
-     * Marks all current options as required.
+     * Marks current and subsequently added options as required.
      *
-     * <p>Options added after this call are not marked required unless this method is invoked again.</p>
      *
      * @return this group
      */
     public RadioGroup required() {
         // Will be applied to all radio buttons
-        options.forEach(opt -> opt.required = true);
+        required = true;
         return this;
     }
 
@@ -96,7 +103,7 @@ public class RadioGroup extends Div {
         Stream<Component> optionsStream = options.stream().map(option -> {
             Div optionWrapper = new Div().withClass("radio-option");
 
-            String id = name + "-" + option.value.replaceAll("[^a-zA-Z0-9]", "-");
+            String id = option.id;
 
             HtmlTag input = new HtmlTag("input", true)
                 .withAttribute("type", "radio")
@@ -109,7 +116,7 @@ public class RadioGroup extends Div {
                 input.withAttribute("checked", "");
             }
 
-            if (option.required) {
+            if (required) {
                 input.withAttribute("required", "");
             }
 
@@ -131,7 +138,7 @@ public class RadioGroup extends Div {
     private static class RadioOption {
         String value;
         String label;
-        boolean required = false;
+        final String id;
 
         /**
          * Creates an option with label/value.
@@ -139,7 +146,8 @@ public class RadioGroup extends Div {
          * @param value option value
          * @param label option label
          */
-        RadioOption(String value, String label) {
+        RadioOption(String value, String label, String id) {
+            this.id = id;
             this.value = value;
             this.label = label;
         }

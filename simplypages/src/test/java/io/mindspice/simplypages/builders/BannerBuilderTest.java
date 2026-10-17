@@ -78,14 +78,13 @@ class BannerBuilderTest {
     }
 
     @Test
-    @DisplayName("BannerBuilder should reject unsafe background image and style values")
-    void testUnsafeStyles() {
-        assertThrows(IllegalArgumentException.class,
-            () -> BannerBuilder.create().withBackgroundImage("/bg.png');color:red"));
-
-        assertThrows(IllegalArgumentException.class,
-            () -> BannerBuilder.create()
-                .withBackgroundColor("#fff;color:red")
-                .build());
+    @DisplayName("BannerBuilder background image and colors retain caller-owned CSS syntax")
+    void testCallerControlledStyles() {
+        String html = BannerBuilder.create().withLayout(BannerBuilder.BannerLayout.IMAGE_OVERLAY)
+                .withBackgroundImage("/bg.png');color:red").withBackgroundColor("#fff;color:red")
+                .build().render();
+        org.junit.jupiter.api.Assertions.assertEquals("background-color: #fff;color:red;"
+                        + "background-image: url('/bg.png');color:red');background-size: cover;background-position: center;",
+                org.jsoup.Jsoup.parse(html).selectFirst(".banner").attr("style"));
     }
 }

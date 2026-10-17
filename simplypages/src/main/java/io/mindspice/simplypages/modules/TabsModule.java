@@ -9,7 +9,6 @@ import io.mindspice.simplypages.core.HtmlTag;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Module that renders tab navigation and tab panels.
@@ -18,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * are mutable configuration data; mutate within a request-scoped flow. For reuse, stop mutating and render as a stable structure with per-request slot/context values.</p>
  */
 public class TabsModule extends Module {
-    private static final AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
+    private final String defaultId = "tabs-" + java.util.UUID.randomUUID();
 
     public static class Tab {
         private final String label;
@@ -48,7 +47,6 @@ public class TabsModule extends Module {
     }
 
     private List<Tab> tabs = new ArrayList<>();
-    private final String generatedIdPrefix = "tabs-" + INSTANCE_COUNTER.incrementAndGet();
 
     public TabsModule() {
         super("div");
@@ -126,10 +124,11 @@ public class TabsModule extends Module {
 
         Div tabsContainer = new Div().withClass("tabs-container");
 
-        // Tab navigation
+        // SSR has no viewport; framework JS synchronizes orientation to the computed flex axis.
         HtmlTag tabNav = new HtmlTag("ul")
             .withAttribute("class", "tab-nav")
-            .withAttribute("role", "tablist");
+            .withAttribute("role", "tablist")
+            .withAttribute("aria-orientation", "horizontal");
 
         for (int i = 0; i < tabs.size(); i++) {
             Tab tab = tabs.get(i);
@@ -141,10 +140,12 @@ public class TabsModule extends Module {
                 .withAttribute("class", "tab-item");
 
             HtmlTag tabButton = new HtmlTag("button")
+                .withAttribute("type", "button")
                 .withAttribute("class", "tab-button" + (tab.isActive() ? " active" : ""))
                 .withAttribute("id", tabId)
                 .withAttribute("role", "tab")
                 .withAttribute("aria-selected", String.valueOf(tab.isActive()))
+                .withAttribute("tabindex", tab.isActive() ? "0" : "-1")
                 .withAttribute("aria-controls", panelId)
                 .withInnerText(tab.getLabel());
 
@@ -168,6 +169,10 @@ public class TabsModule extends Module {
                 .withAttribute("role", "tabpanel")
                 .withAttribute("aria-labelledby", tabId);
 
+            if (!tab.isActive()) {
+                panel.withAttribute("hidden", "");
+            }
+
             if (tab.getCustomContent() != null) {
                 panel.withChild(tab.getCustomContent());
             } else if (tab.getContent() != null && !tab.getContent().isEmpty()) {
@@ -185,6 +190,6 @@ public class TabsModule extends Module {
     }
 
     private String idPrefix() {
-        return moduleId != null && !moduleId.isBlank() ? moduleId : generatedIdPrefix;
+        return moduleId != null && !moduleId.isBlank() ? moduleId : defaultId;
     }
 }

@@ -24,10 +24,15 @@ public class Gallery extends Grid {
         return this;
     }
 
+    /** Adds an image with an application-controlled or separately image-context-validated source. */
     public Gallery addImage(String src, String alt) {
         return addImage(src, alt, null);
     }
 
+    /**
+     * Adds an encoded source and escaped caption, without Image's source policy. Supply an
+     * application-controlled or separately image-context-validated URL; payloads are not inspected.
+     */
     public Gallery addImage(String src, String alt, String caption) {
         HtmlTag imgWrapper = new HtmlTag("div").addClass("gallery-item");
 

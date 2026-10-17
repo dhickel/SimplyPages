@@ -45,4 +45,16 @@ class CheckboxTest {
             .attributeEquals("input#agree-id", "disabled", "")
             .doesNotHaveElement("label.checkbox-label");
     }
+
+    @Test void labelRemainsAssociatedRegardlessOfSetterOrder() {
+        for (Checkbox checkbox : new Checkbox[] {
+            Checkbox.create("choice", "yes").withId("first").withLabel("Choose"),
+            Checkbox.create("choice", "yes").withLabel("Choose").withId("second")
+        }) {
+            var doc = org.jsoup.Jsoup.parse(checkbox.render());
+            org.junit.jupiter.api.Assertions.assertEquals(checkbox.getId(), doc.selectFirst("input").id());
+            org.junit.jupiter.api.Assertions.assertEquals(checkbox.getId(), doc.selectFirst("label").attr("for"));
+        }
+    }
+
 }

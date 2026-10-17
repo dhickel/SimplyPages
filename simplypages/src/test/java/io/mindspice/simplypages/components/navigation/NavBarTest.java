@@ -45,9 +45,12 @@ class NavBarTest {
     }
 
     @Test
-    @DisplayName("NavBar should reject unsafe href schemes")
-    void testNavBarUnsafeHref() {
-        assertThrows(IllegalArgumentException.class, () -> NavBar.create().addItem("Bad", "javascript:alert(1)"));
-        assertThrows(IllegalArgumentException.class, () -> NavBar.create().addUtilityLink("Bad", "data:text/html,<svg>"));
+    @DisplayName("NavBar hrefs remain caller-controlled and attribute-encoded")
+    void testNavBarCallerControlledHref() {
+        var document = org.jsoup.Jsoup.parse(NavBar.create().addItem("Bad", "javascript:alert(1)")
+                .addUtilityLink("Utility", "data:text/html,<svg>").render());
+        org.junit.jupiter.api.Assertions.assertEquals("javascript:alert(1)", document.select("a").get(0).attr("href"));
+        org.junit.jupiter.api.Assertions.assertEquals("data:text/html,<svg>", document.select("a").get(1).attr("href"));
+        assertTrue(document.select("svg").isEmpty());
     }
 }
