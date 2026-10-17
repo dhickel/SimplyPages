@@ -19,6 +19,9 @@ Install the library locally with `./mvnw -pl simplypages install`; publication t
 repository is not assumed. The demo emits Java 21 bytecode for compatibility with its Spring
 class scanner, but still needs JDK 25 to load the library.
 
+This is a controlled beta. Read the [known issues and support boundaries](reference/build-and-assets.md#beta-status-known-issues-and-support)
+for open defects, the local Chromium baseline, and private-demo limitations before adoption.
+
 ## Read online or locally
 
 These Markdown pages work in repository viewers and in the demo's `/docs` browser.

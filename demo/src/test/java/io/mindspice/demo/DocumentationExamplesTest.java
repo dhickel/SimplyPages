@@ -15,7 +15,8 @@ class DocumentationExamplesTest {
         var blockPattern = Pattern.compile("```java\\s*\\n(.*?)\\n```", Pattern.DOTALL);
         var classPattern = Pattern.compile("public final class (\\w+)");
         int checked = 0;
-        for (String guide : new String[] {"tutorials/first-page.md", "tutorials/dynamic-page.md", "how-to/serve-pages-and-fragments.md"}) {
+        for (String guide : new String[] {"tutorials/first-page.md", "tutorials/dynamic-page.md",
+                "how-to/serve-pages-and-fragments.md", "operations/03-writing-tests-for-components-and-modules.md"}) {
             var blocks = blockPattern.matcher(Files.readString(Path.of("../docs", guide)));
             while (blocks.find()) {
                 String source = blocks.group(1);
@@ -28,6 +29,6 @@ class DocumentationExamplesTest {
                 checked++;
             }
         }
-        assertEquals(3, checked, "Keep complete example coverage explicit");
+        assertEquals(4, checked, "Keep complete example coverage explicit");
     }
 }

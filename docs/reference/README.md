@@ -4,6 +4,7 @@ Use these pages to look up contracts, defaults, supported operations, and integr
 
 - [Rendering API and contracts](rendering.md)
 - [Build requirements and asset paths](build-and-assets.md)
+- [Beta status, known issues, and support](build-and-assets.md#beta-status-known-issues-and-support)
 - [Components and modules catalog](components-and-modules-catalog.md)
 - [Shell and navigation builders](builders-shell-nav-banner-accountbar.md)
 - [Editing API](editing-api-reference.md)

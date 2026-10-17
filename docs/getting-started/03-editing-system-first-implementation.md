@@ -41,6 +41,11 @@ public String editModule(@PathVariable String id, Principal principal) {
 }
 ```
 
+Here `withEditable(module)` supplies the property form through `buildEditView()`. You can
+also supply `withEditView(customForm)` on the same builder: that explicit form takes
+precedence while the editable still provides child handles. Child edit/delete actions
+require their own URL configuration; see the [editing reference](../reference/editing-api-reference.md#editmodalbuilder).
+
 ## Step 3: Handle Save Endpoint
 
 ```java

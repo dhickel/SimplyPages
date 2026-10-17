@@ -52,22 +52,42 @@ void rendersCardStructure() {
 
 ## Module Test Pattern
 
+This complete JUnit example uses Jsoup for structural assertions without depending on the
+repository's test helpers:
+
 ```java
-@Test
-void rendersRichModuleStructureAndSnapshot() {
-    String html = RichContentModule.create("m-1")
-        .withTitle("Docs")
-        .addParagraph("Hello")
-        .render();
+package example;
 
-    HtmlAssert.assertThat(html)
-        .hasElement("#m-1.module")
-        .hasElement("#m-1 .module-title")
-        .hasElement("#m-1 .module-content");
+import io.mindspice.simplypages.components.Paragraph;
+import io.mindspice.simplypages.modules.RichContentModule;
+import org.jsoup.Jsoup;
+import org.junit.jupiter.api.Test;
 
-    SnapshotAssert.assertMatches("modules/rich-content/default", html);
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public final class RichContentExampleTest {
+    @Test
+    void rendersRichModuleStructure() {
+        RichContentModule module = RichContentModule.create("Docs");
+        module.withModuleId("m-1");
+        module.addParagraph(new Paragraph("Hello"));
+        String html = module.render();
+
+        var document = Jsoup.parseBodyFragment(html);
+        assertEquals(1, document.select("#m-1 .rich-content-module").size());
+        assertEquals("Docs", document.select("#m-1 .module-title").text());
+        assertEquals("Hello", document.select("#m-1 .content-container").text());
+    }
 }
 ```
+
+`create(String)` takes the title, not the ID. Set the ID separately: inherited
+`withModuleId` returns `Module`, so chaining into `addParagraph` would lose the concrete
+type. `addParagraph` takes a `Paragraph`, not a string. The content wrapper is
+`.content-container`, not `.module-content`.
+
+For complex output in the library test suite, add a `SnapshotAssert.assertMatches(...)`
+assertion with an intentionally reviewed baseline; see the existing `RichContentModuleTest`.
 
 ## Contribution Library Pattern
 

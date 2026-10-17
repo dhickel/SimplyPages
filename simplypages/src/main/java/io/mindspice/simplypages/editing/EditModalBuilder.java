@@ -11,7 +11,9 @@ import java.util.List;
 /**
  * Builds standardized edit modals for module property and child-edit flows.
  *
- * <p>Contract: exactly one edit source must be provided ({@code editView} or {@code editable}).
+ * <p>Contract: provide an explicit {@code editView}, an {@code editable}, or both.
+ * An explicit view supplies the property form; otherwise the builder uses
+ * {@code editable.buildEditView()}. When supplied, {@code editable} also provides child handles.
  * Save actions post to {@code saveUrl}; child actions are emitted only when corresponding URL
  * templates are configured.</p>
  *

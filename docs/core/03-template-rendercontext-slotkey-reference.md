@@ -94,7 +94,7 @@ Reuse guidance:
 
 ## Compile Policies
 
-- `NEVER_COMPILE`: always resolve live entries.
+- `NEVER_COMPILE`: render live entries without creating new compiled entries; existing compiled entries still render as trusted HTML.
 - `COMPILE_ON_FIRST_HIT`: live slot values can be memoized into compiled entries for reused contexts.
 
 Defaults provided in `SlotKey` are rendered live and are not persisted as compiled entries.

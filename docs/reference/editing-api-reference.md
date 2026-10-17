@@ -29,7 +29,7 @@ Common methods:
 
 - `withTitle(...)`
 - `withModuleId(...)`
-- `withEditable(...)` or `withEditView(...)`
+- `withEditable(...)`, `withEditView(...)`, or both
 - `withSaveUrl(...)`
 - `withDeleteUrl(...)`
 - `withChildEditUrl(...)`
@@ -37,6 +37,12 @@ Common methods:
 - `withPageContainerId(...)`
 - `withModalContainerId(...)`
 - `hideDelete()`
+
+Provide a non-null property view with `withEditView(...)`, or an editable whose
+`buildEditView()` supplies it. Both setters may be used together: the explicit view wins
+for the property form, while the editable still supplies child handles. This is how the
+private editing demo combines extra property fields with child editing. A save URL is required;
+child action URLs are optional and do not construct the property form.
 
 The returned `Modal` disables backdrop closing; Escape and the header close button remain
 enabled. The footer Close button clears the configured modal container. Load the framework

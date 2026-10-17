@@ -16,6 +16,12 @@ CSRF handling, validation, storage, and approval state.
    implement approval persistence for you.
 5. Return escaped component output with the HTMX swap shape your client expects.
 
+An explicit `withEditView(...)` can be used alone for a custom property form or alongside
+`withEditable(...)`. When both are supplied, the explicit form is used for properties and
+the editable supplies child handles. Without an explicit view, the builder calls
+`editable.buildEditView()`. Configure child action URLs separately; see the
+[builder contract](../reference/editing-api-reference.md#editmodalbuilder).
+
 ## Load the modal interaction assets
 
 Include `/css/framework.css`, `/js/framework.js` and HTMX in the page shell once;

@@ -16,23 +16,46 @@ const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 // In particular, target/test-classes (and its Spring test configurations) is NEVER scanned.
 function unpack(jar, directory) {
     const result = spawnSync('python3', ['-c', String.raw`
-import hashlib, json, pathlib, sys, zipfile
+import hashlib, io, json, pathlib, sys, zipfile
 jar, destination, root = map(pathlib.Path, sys.argv[1:])
 sha = lambda b: hashlib.sha256(b).hexdigest()
 with zipfile.ZipFile(jar) as archive:
     entries = archive.namelist()
     assert not any('Phase17EditingBrowserFixture' in n for n in entries), 'Fixture shipped in product'
+    # Reproducible JAR timestamps do not track compilation or resource copying.
     for module in ('demo', 'simplypages'):
         for folder in ('src/main/java', 'src/main/resources'):
-            for p in (root/module/folder).rglob('*'):
-                if p.is_file() and p.suffix != '.md':
-                    assert p.stat().st_mtime <= jar.stat().st_mtime, 'Stale product source: '+str(p)
+            source = root/module/folder
+            for p in source.rglob('*'):
+                if p.is_file() and (folder == 'src/main/resources' or p.suffix == '.java'):
+                    relative = p.relative_to(source)
+                    output = root/module/'target/classes'/(relative.with_suffix('.class') if folder == 'src/main/java' else relative)
+                    assert output.is_file() and p.stat().st_mtime_ns <= output.stat().st_mtime_ns, 'Stale product source: '+str(p)
+                    if folder == 'src/main/resources':
+                        assert output.read_bytes() == p.read_bytes(), 'Stale compiled resource: '+str(p)
     classes = [n for n in entries if n.startswith('BOOT-INF/classes/') and n.endswith('.class')]
     assert len(classes) == 61, 'Unexpected production class set'
+    demo_classes = root/'demo/target/classes'
+    assert {n.removeprefix('BOOT-INF/classes/') for n in classes} == {
+        p.relative_to(demo_classes).as_posix() for p in demo_classes.rglob('*.class')
+    }, 'Stale production class set'
     for n in classes:
-        assert archive.read(n) == (root/'demo/target/classes'/n.removeprefix('BOOT-INF/classes/')).read_bytes(), n
+        assert archive.read(n) == (demo_classes/n.removeprefix('BOOT-INF/classes/')).read_bytes(), n
     library = archive.read('BOOT-INF/lib/simplypages-1.1.0a.jar')
     assert library == (root/'simplypages/target/simplypages-1.1.0a.jar').read_bytes(), 'Stale nested library'
+    with zipfile.ZipFile(io.BytesIO(library)) as nested:
+        library_classes = root/'simplypages/target/classes'
+        packaged_classes = {n for n in nested.namelist() if n.endswith('.class')}
+        assert packaged_classes == {
+            p.relative_to(library_classes).as_posix() for p in library_classes.rglob('*.class')
+        }, 'Stale library class set'
+        for n in packaged_classes:
+            assert nested.read(n) == (library_classes/n).read_bytes(), n
+        library_resources = root/'simplypages/src/main/resources'
+        for p in library_resources.rglob('*'):
+            if p.is_file():
+                n = p.relative_to(library_resources).as_posix()
+                assert nested.read(n) == p.read_bytes(), n
     resources = list((root/'demo/src/main/resources').rglob('*'))
     for p in resources:
         if p.is_file():

@@ -54,10 +54,13 @@ Use this when a sticky table-of-contents or side menu navigates between document
 Link.create("/docs/core/01-components-htmltag-and-module-lifecycle", "Components")
     .withHxGet("/docs/core/01-components-htmltag-and-module-lifecycle")
     .withHxTarget("#docs-content")
-    .withHxSwap("innerHTML")
+    .withHxSwap("outerHTML")
     .withHxScrollTargetTop()
     .withHxPushUrl(true);
 ```
+
+The docs endpoint returns the `#docs-content` wrapper as well as its contents. Replace it
+with `outerHTML` to retain exactly one target, rather than nesting a duplicate ID.
 
 Notes:
 1. `withHxScrollTargetTop()` tags the request so the swapped HTMX target fragment scrolls to top.

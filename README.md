@@ -24,6 +24,13 @@ It is built for practical web apps: admin portals, internal tools, content-heavy
 - HTMX-friendly fragment update workflows.
 - Editable module patterns for real-world content operations.
 
+## Beta status
+
+This checkout is a **controlled beta**, not an unqualified production-ready release.
+The baseline is Java 25 with local Chromium desktop/mobile-viewport checks; other browsers,
+Windows, and remote CI are unverified. Review the [known issues and support boundaries](docs/reference/build-and-assets.md#beta-status-known-issues-and-support)
+before adopting it. The private demo is a loopback sandbox, not a production security example.
+
 ## Install
 
 Use JDK 25. Install this checkout locally with `./mvnw -pl simplypages install` before
@@ -215,10 +222,15 @@ The running demo serves these pages at `/docs` and generated API docs at `/javad
 
 ```bash
 ./mvnw clean install
+./mvnw clean verify
 ./mvnw test
 ./mvnw -pl simplypages test
 ./mvnw -pl demo spring-boot:run
 ```
+
+Use the checksum-pinned Maven wrapper with JDK 25 for both modules. The demo targets Java 21
+bytecode but requires Java 25 at runtime because it loads the library. See the
+[build and browser-test guide](docs/how-to/build-test-and-document.md) for fresh-package requirements.
 
 ## Docs TOC
 

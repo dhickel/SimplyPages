@@ -122,9 +122,16 @@ Package-specific operational rules live in package-level `AGENTS.md` files.
 
 ## Build and Test Commands
 
+- Use the official Maven Wrapper 3.3.4 (`only-script`), pinned to Maven 3.10.0 with a distribution checksum. Reactor and independent module POMs enforce JDK 25 and Maven `[3.10.0,4)`.
+- Library output is Java 25 bytecode; demo output is Java 21 bytecode but still requires Java 25 at runtime.
+- Keep pinned plugins, output timestamps, source/Javadoc attachments, and fatal structural Javadoc lint (`all,-missing`). Missing prose remains tracked documentation debt, not a completeness guarantee.
+- Browser checks use the existing `tests/browser` harness after a fresh Maven package including tests/fixtures, then `npm ci` and pinned Playwright/Chromium. See `docs/how-to/build-test-and-document.md`; do not substitute stale artifacts.
+- The controlled-beta support/known-issues record is `docs/reference/build-and-assets.md#beta-status-known-issues-and-support`. Do not infer remote CI, continuous security, coverage gates, publication, or production readiness from local checks.
+
 ### From Repository Root
 ```bash
 ./mvnw clean install
+./mvnw clean verify
 ./mvnw test
 ./mvnw -pl simplypages test
 ./mvnw -pl demo spring-boot:run

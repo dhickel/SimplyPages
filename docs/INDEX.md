@@ -29,6 +29,7 @@ This page is the table of contents for all framework documentation.
 - [Reference overview](reference/README.md)
 - [Rendering API and contracts](reference/rendering.md)
 - [Build requirements and assets](reference/build-and-assets.md)
+- [Beta status, known issues, and support](reference/build-and-assets.md#beta-status-known-issues-and-support)
 
 The original topic-based guides follow. Their URLs remain stable.
 
