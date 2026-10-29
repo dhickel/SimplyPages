@@ -8,7 +8,7 @@ const {test, expect} = require('playwright/test');
 const root = path.resolve(__dirname, '../..');
 const fixtureRoot = path.join(root, 'simplypages/target/csrf-json-browser-fixtures');
 const formClass = 'io/mindspice/simplypages/components/forms/Form.class';
-const libraryJar = path.join(root, 'simplypages/target/simplypages-1.1.0a.jar');
+const libraryJar = path.join(root, 'simplypages/target/simplypages-1.1.1.jar');
 const demoJar = path.join(root, 'demo/target/simplypages-demo.jar');
 const sha256 = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const read = relative => fs.readFileSync(path.join(root, relative));
@@ -41,7 +41,7 @@ test.beforeAll(async ({request}) => {
             .toBe(oracle.fixtureClassSha256);
         expect(sha256(Buffer.from(html, 'ascii'))).toBe(oracle.htmlSha256);
         expect(sha256(unpack(libraryJar, formClass))).toBe(oracle.formClassSha256);
-        expect(unpack(demoJar, 'BOOT-INF/lib/simplypages-1.1.0a.jar').equals(fs.readFileSync(libraryJar))).toBe(true);
+        expect(unpack(demoJar, 'BOOT-INF/lib/simplypages-1.1.1.jar').equals(fs.readFileSync(libraryJar))).toBe(true);
         assets = {};
         for (const url of ['/css/framework.css', '/webjars/htmx.org/dist/htmx.min.js']) {
             const response = await request.get(url);

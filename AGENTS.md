@@ -163,7 +163,7 @@ cd demo && ../mvnw spring-boot:run
 
 ## Documentation TOC (Terse)
 - Full index: `docs/INDEX.md`
-- Learning path: `docs/getting-started/README.md` → `docs/tutorials/first-page.md` → `docs/tutorials/dynamic-page.md` → `docs/how-to/serve-pages-and-fragments.md`; current examples use locally installed 1.1.0a and JDK 25.
+- Learning path: `docs/getting-started/README.md` → `docs/tutorials/first-page.md` → `docs/tutorials/dynamic-page.md` → `docs/how-to/serve-pages-and-fragments.md`; current examples use locally installed 1.1.1 and JDK 25.
 - Task guides: `docs/how-to/build-a-markdown-blog.md`, `docs/how-to/build-a-forum.md`, `docs/how-to/build-user-editable-pages.md`, `docs/how-to/add-chat.md`, `docs/how-to/build-a-dashboard.md`, `docs/how-to/handle-form-submissions.md`. Keep application identity/CSRF/storage/transport prerequisites explicit; these listings are not installed demo routes.
 - Diátaxis entry points: `docs/tutorials/README.md`, `docs/how-to/README.md`, `docs/reference/README.md`, `docs/explanation/README.md`.
 - Fundamentals: `docs/fundamentals/01-web-and-htmx-primer.md`, `docs/fundamentals/02-simplypages-mental-model.md`, `docs/fundamentals/03-css-fundamentals.md`

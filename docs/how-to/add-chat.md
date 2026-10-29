@@ -9,7 +9,7 @@ There is no assistant, generated reply, or shared public chat room.
 
 ## Prerequisites and boundary
 
-- An existing Spring MVC application running on JDK 25 with SimplyPages **1.1.0a**
+- An existing Spring MVC application running on JDK 25 with SimplyPages **1.1.1**
   installed locally; follow [Getting started](../getting-started/README.md) and
   [serve pages and fragments](serve-pages-and-fragments.md) first.
 - Framework CSS/JavaScript and the HTMX WebJar available through Spring static

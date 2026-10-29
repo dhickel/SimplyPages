@@ -8,7 +8,7 @@ GET handler, and there are no pretend create, edit, or delete controls.
 
 ## Prerequisites
 
-- An existing Spring MVC application running on JDK 25 with SimplyPages **1.1.0a**
+- An existing Spring MVC application running on JDK 25 with SimplyPages **1.1.1**
   installed locally; follow [Getting started](../getting-started/README.md) and
   [serve pages and fragments](serve-pages-and-fragments.md) first.
 - Spring static-resource handling serving framework CSS/JavaScript and the HTMX

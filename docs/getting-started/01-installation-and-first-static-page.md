@@ -16,7 +16,7 @@ Current release: `1.0.1`.
 <dependency>
   <groupId>io.mindspice</groupId>
   <artifactId>simplypages</artifactId>
-  <version>1.1.0a</version>
+  <version>1.1.1</version>
 </dependency>
 ```
 

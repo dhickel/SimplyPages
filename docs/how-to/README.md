@@ -20,7 +20,7 @@ not six separate tutorial applications or bundled demo routes.
 | [Build a dashboard](build-a-dashboard.md) | Summary metrics, queue table, and responsive cards | One immutable example snapshot; application owns live queries |
 | [Handle form submissions](handle-form-submissions.md) | Server-validated address preview with retained drafts | Existing identity/CSRF integration; nothing sent or persisted |
 
-Use SimplyPages **1.1.0a** with **JDK 25**, installed from this checkout. The guides
+Use SimplyPages **1.1.1** with **JDK 25**, installed from this checkout. The guides
 assume an existing Spring MVC host and working framework/WebJar resources. Helpers
 and modules do not supply authentication, authorization, CSRF verification,
 persistence, or transport servers. Keep the security prerequisites in each guide.

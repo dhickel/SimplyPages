@@ -10,7 +10,7 @@ This deliberately does not implement deletion, row insertion, or an approval que
 
 ## Prerequisites
 
-- SimplyPages **1.1.0a** installed locally, JDK 25 at runtime, and Spring MVC.
+- SimplyPages **1.1.1** installed locally, JDK 25 at runtime, and Spring MVC.
   Complete the [learning path](../getting-started/README.md) through
   [serving pages and fragments](serve-pages-and-fragments.md) first.
 - A component-scanned application package. The example uses the demo's

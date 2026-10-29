@@ -33,7 +33,7 @@ before adopting it. The private demo is a loopback sandbox, not a production sec
 
 ## Install
 
-Current release: `1.1.0a`.
+Current release: `1.1.1`.
 
 Use JDK 25. Install this checkout locally with `./mvnw -pl simplypages install` before
 using the dependency; public Maven publication is not assumed.
@@ -42,7 +42,7 @@ using the dependency; public Maven publication is not assumed.
 <dependency>
   <groupId>io.mindspice</groupId>
   <artifactId>simplypages</artifactId>
-  <version>1.1.0a</version>
+  <version>1.1.1</version>
 </dependency>
 ```
 

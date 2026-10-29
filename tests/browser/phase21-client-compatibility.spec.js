@@ -7,7 +7,7 @@ const {test, expect} = require('playwright/test');
 
 const root = path.resolve(__dirname, '../..');
 const fixtures = path.join(root, 'simplypages/target/phase21-client-browser-fixtures');
-const library = path.join(root, 'simplypages/target/simplypages-1.1.0a.jar');
+const library = path.join(root, 'simplypages/target/simplypages-1.1.1.jar');
 const executable = path.join(root, 'demo/target/simplypages-demo.jar');
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const unpack = (jar, entry) => execFileSync('unzip', ['-p', jar, entry], {maxBuffer: 32 * 1024 * 1024});
@@ -62,7 +62,7 @@ test.beforeAll(async ({request}) => {
                 expect(sha(unpack(library, name)), name).toBe(hash);
             }
         }
-        expect(unpack(executable, 'BOOT-INF/lib/simplypages-1.1.0a.jar').equals(fs.readFileSync(library))).toBe(true);
+        expect(unpack(executable, 'BOOT-INF/lib/simplypages-1.1.1.jar').equals(fs.readFileSync(library))).toBe(true);
         const webjar = path.join(process.env.HOME, '.m2/repository/org/webjars/npm/htmx.org/2.0.11/htmx.org-2.0.11.jar');
         expect(unpack(executable, 'BOOT-INF/lib/htmx.org-2.0.11.jar').equals(fs.readFileSync(webjar))).toBe(true);
         assets = {};
