@@ -1,11 +1,11 @@
-# Demo Pages Agent Guide
+# Site Pages Agent Guide
 
 ## Purpose
-Owns page composition classes used by demo controllers.
+Owns official site page composition classes used by site controllers; the Java package remains `io.mindspice.demo.pages`.
 
 ## Owns
 - Demo page builders/compositions under `demo.pages`
-- Consolidated demo pages for `/demos` sidebar navigation
+- Discoverable framework demonstrations and documentation pages for the replacement site
 
 ## Invariants
 - Pages are examples of framework usage, not framework internals.
@@ -14,7 +14,7 @@ Owns page composition classes used by demo controllers.
 
 - Docs use canonical paths, safe Markdown with heading anchors, and exact resource lookup.
 - Documentation HTMX links replace the content wrapper with outerHTML; keep one docs-content ID.
-- The docs page uses framework module-content styling and descriptive navigation labels.
+- Documentation navigation uses descriptive labels and the accepted replacement site design.
 
 ## Do
 - Keep page classes focused on rendering/composition.
@@ -31,9 +31,11 @@ Owns page composition classes used by demo controllers.
 - Overly complex page classes that hide framework concepts.
 - Mixing unrelated concerns in one demo page.
 
-## Private chat composition
+## Chat and sandbox composition
 
-ChatDemoPage renders actual framework ChatModule/Form/Button/Alert components and private finite-stream controls. Visible copy must disclose non-durable history, session ownership not authentication, pruning/limits and no CSRF/rate/production guarantees. Resume opens the same owned ID only; Start New is an explicit demo action. Keep generated composer maxlength=4096 (UTF-16 units), with the server authoritative before trim. New generations use the existing app-private chat-demo.js asset, preserve drafts and settle original queued work before replacement; do not add framework transport/bootstrap/focus hooks. Public chat metadata remains app-owned routing, not library authentication.
+Editing, forum, and chat use bounded temporary session-owned state with server-enforced ownership and same-origin/CSRF protection, including browser token and form wiring. Validate changes against fresh local artifacts. Disclose non-durable state, expiry, limits and the absence of rate protection; distinguish simulated roles and session ownership from authentication. Do not claim production readiness.
+
+Use actual framework chat components and preserve finite-stream behavior: Resume opens the same owned ID only; Start New is explicit. Keep composer maxlength=4096 (UTF-16 units), with the server authoritative before trim. Preserve drafts and settle original queued work before generation replacement; do not add framework transport/bootstrap/focus hooks. Chat metadata remains app-owned routing, not library authentication.
 
 ## Required Tests
 - Add/adjust demo integration coverage when page behavior changes materially

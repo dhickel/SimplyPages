@@ -217,9 +217,9 @@ or `ForumActionProvider<Comment, Viewer>` using `withActionProvider(...)`.
 and POST handler, optionally wrapped in `ForumCollapsibleComposer`.
 
 Follow the [forum implementation pattern](../patterns/05-forum-helper-implementation-and-customization.md)
-and `demo/src/main/java/io/mindspice/demo/ForumDemoController.java` for concrete
-composer/action wiring. Demo classes are not framework dependencies. Do not copy
-the demo's temporary viewer-selection UI as an authentication system. Every
+and `site/src/main/java/io/mindspice/demo/ForumDemoController.java` for concrete
+composer/action wiring. Site classes are not framework dependencies, and this recipe is not
+an installed sandbox route. Do not treat a temporary viewer-selection UI as authentication. Every
 mutation handler must independently enforce identity, ownership/moderation,
 validation, and CSRF policy; a hidden action is not endpoint authorization.
 

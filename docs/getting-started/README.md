@@ -20,14 +20,14 @@ the supported repository build entry point; it installs
 `io.mindspice:simplypages:1.2` into your local Maven repository. Do not assume
 that this version is published to a public Maven repository.
 
-The library emits Java 25 bytecode. The repository demo uses Spring Boot **4.1.1**
+The library emits Java 25 bytecode. The repository site uses Spring Boot **4.1.1**
 and emits Java 21 bytecode, but it **still requires JDK 25 at runtime** to load
 the library. A separate application may choose its own host; Spring is not a
 core rendering dependency. See [build requirements and assets](../reference/build-and-assets.md)
 for the Maven/JDK pins and resource setup.
 
 This is a controlled beta. Read the [known issues and support boundaries](../reference/build-and-assets.md#beta-status-known-issues-and-support).
-The private demo is a loopback, nondurable sandbox. Its editing modes are not
+The current site examples default to loopback and are nondurable. Editing modes are not
 identity/authorization, and its chat session ownership is not authentication.
 Do not expose it as a production application or infer production security from
 its UI controls.
@@ -49,17 +49,19 @@ inside an existing Spring MVC application. It supplies the complete controller,
 full-document and fragment routes, framework/WebJar asset setup, and target/swap
 rules. Confirm direct navigation and fragment replacement before adding features.
 
-To browse this checkout's existing demo and documentation instead of creating a
+To browse this checkout's site and documentation instead of creating a
 host, run these commands from the repository root:
 
 ```bash
-./mvnw clean install
-./mvnw -pl demo spring-boot:run
+./build-site.sh
+java -jar site/target/simplypages-site.jar
 ```
 
-Open `http://localhost:8080/docs`. The demo serves Markdown documentation there and
+Open `http://localhost:8080/docs`. The site serves Markdown documentation there and
 built API documentation at `http://localhost:8080/javadocs/index.html`.
-It is a private example host, not the security layer required by the recipes below.
+The build script skips tests; it verifies packaged documentation and API inventory and bytes.
+The site is not the security layer required by the application recipes below, which are not
+installed sandbox routes.
 
 ## 4. Choose an application task
 

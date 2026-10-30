@@ -24,7 +24,7 @@ Current release: `1.2`.
 
 - Use the repository Maven wrapper (`./mvnw`) for local builds.
 - The framework module compiles with Java 25.
-- The demo module targets Java 21, but full reactor builds should run on JDK 25.
+- The site module targets Java 21, but full reactor builds should run on JDK 25.
 
 ## First Static Page
 

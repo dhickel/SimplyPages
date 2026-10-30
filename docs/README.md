@@ -21,7 +21,7 @@ solving tasks with how-to guides, looking up reference facts, and understanding 
 3. [Serve full pages and HTMX fragments](how-to/serve-pages-and-fragments.md): add
    a real HTTP host, assets, and correct response targets.
 4. Choose a task below. The guides extend your existing application; they are not
-   six new tutorial applications or automatically installed demo endpoints.
+   six new tutorial applications or automatically installed sandbox endpoints.
 
 ## Build something useful
 
@@ -40,20 +40,20 @@ its prerequisites and whether its example state is local or nondurable.
 
 The checkout builds `io.mindspice:simplypages:1.2`. Use **JDK 25** to build and run it.
 Install the library locally with `./mvnw -pl simplypages install`; publication to a public Maven
-repository is not assumed. The Spring Boot 4.1.1 demo emits Java 21 bytecode,
+repository is not assumed. The Spring Boot 4.1.1 site emits Java 21 bytecode,
 but still needs JDK 25 to load the library.
 
 This is a controlled beta. Read the [known issues and support boundaries](reference/build-and-assets.md#beta-status-known-issues-and-support)
-for open defects, the local Chromium baseline, and private-demo limitations before adoption.
+for open defects, the local Chromium baseline, and current site limitations before adoption.
 
 ## Read online or locally
 
-These Markdown pages work in repository viewers and in the demo's `/docs` browser.
-Run `./mvnw clean install` and then `./mvnw -pl demo spring-boot:run`; open
-[local documentation](http://localhost:8080/docs) or
-[local Javadocs](http://localhost:8080/javadocs/index.html).
-The build packages the Markdown and generated Javadocs into the demo JAR, so deployed
-navigation does not require a source checkout.
+These Markdown pages work in repository viewers and in the site's `/docs` browser.
+Run `./build-site.sh` and then `java -jar site/target/simplypages-site.jar`; open
+[local documentation](http://localhost:8080/docs), the [demo catalog](http://localhost:8080/demos),
+or the [Java API entry](http://localhost:8080/api), which links to native generated Javadocs.
+The local build skips tests and verifies the packaged Markdown and generated Javadoc inventories
+and bytes in the site JAR, so those resources do not require a source checkout.
 
 Existing topic-based pages remain available at their original paths. The four sections above
 provide a focused reading path through those pages and the new runnable examples.
