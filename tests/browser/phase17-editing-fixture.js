@@ -34,7 +34,10 @@ with zipfile.ZipFile(jar) as archive:
                     if folder == 'src/main/resources':
                         assert output.read_bytes() == p.read_bytes(), 'Stale compiled resource: '+str(p)
     classes = [n for n in entries if n.startswith('BOOT-INF/classes/') and n.endswith('.class')]
-    assert len(classes) == 61, 'Unexpected production class set'
+    expected_top_levels = {p.relative_to(root/'site/src/main/java').with_suffix('.class').as_posix()
+        for p in (root/'site/src/main/java').rglob('*.java')}
+    actual_top_levels = {n.removeprefix('BOOT-INF/classes/') for n in classes if '$' not in n}
+    assert actual_top_levels == expected_top_levels, 'Unexpected production top-level source/class set'
     demo_classes = root/'site/target/classes'
     assert {n.removeprefix('BOOT-INF/classes/') for n in classes} == {
         p.relative_to(demo_classes).as_posix() for p in demo_classes.rglob('*.class')
@@ -106,7 +109,7 @@ async function freePort(workerIndex) {
     throw new Error('No free owned fixture port; refusing existing servers');
 }
 
-async function launch(options, testInfo) {
+async function launch(options, testInfo, browserContext) {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'phase17-senior117-fixture-'));
     const token = crypto.randomBytes(16).toString('hex');
     const evidence = `/tmp/phase17-senior117-fixture-${token}`;
@@ -176,7 +179,15 @@ async function launch(options, testInfo) {
         }
         if (!ready) throw new Error(`Owned fixture startup timed out: ${evidence}.log`);
         request = await apiRequest.newContext({baseURL});
-        expect((await request.get('/editing-demo')).status()).toBe(200);
+        const initial = await request.get('/editing-demo');
+        expect(initial.status()).toBe(200);
+        const csrf = initial.headers()['x-sandbox-csrf'];
+        expect(csrf).toBeTruthy();
+        const state = await request.storageState();
+        await browserContext.addCookies(state.cookies);
+        await request.dispose();
+        request = await apiRequest.newContext({baseURL, storageState:state,
+            extraHTTPHeaders:{Origin:baseURL, 'X-Sandbox-CSRF':csrf}});
         proof.readinessOwnedToken = true;
         console.log(JSON.stringify({fixture: testInfo.title, jarSHA: proof.jarSHA, port, evidence}));
         return {id: 'module-9', request, baseURL, stop};
@@ -188,11 +199,11 @@ async function launch(options, testInfo) {
 }
 
 const test = base.extend({
-    editingFixture: async ({}, use, testInfo) => {
+    editingFixture: async ({context}, use, testInfo) => {
         const owned = [];
         try {
             await use(async (options = {}) => {
-                const fixture = await launch(options, testInfo);
+                const fixture = await launch(options, testInfo, context);
                 owned.push(fixture);
                 return fixture;
             });

@@ -1,9 +1,6 @@
 package io.mindspice.demo;
 
 
-import io.mindspice.simplypages.builders.BannerBuilder;
-import io.mindspice.simplypages.builders.ShellBuilder;
-import io.mindspice.simplypages.builders.SideNavBuilder;
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.components.Header;
 import io.mindspice.simplypages.components.Paragraph;
@@ -55,13 +52,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Controller
 @RequestScope
-@RequestMapping(value = "/editing-demo", produces = "text/html;charset=UTF-8")
+@RequestMapping(value = {"/editing-demo", "/demos/features/editing"}, produces = "text/html;charset=UTF-8")
 public class EditingDemoController {
 
     private static final String PAGE_ID = "demo-page";
     private static final String PAGE_CONTAINER_ID = "page-content";
     private static final String MODAL_CONTAINER_ID = "edit-modal-container";
-    private static final String PRIVATE_WARNING = "Private shared, non-durable sandbox. Flags and selectable OWNER/USER modes are simulations, not authentication. Approval is a sandbox action. No CSRF, rate protection or production security guarantees.";
+    private static final String PRIVATE_WARNING = "Temporary browser-session sandbox, not published. Flags and selectable OWNER/USER modes are simulations, not authentication. Approval is a sandbox action. Same-origin and CSRF checks are enforced; applications still own authentication, authorization, storage and resource policy.";
 
     private enum ModuleKind { CONTENT, LIST }
 
@@ -150,8 +147,8 @@ public class EditingDemoController {
 
         DemoRow row1 = new DemoRow("row-1", 0);
         DemoModule intro = new DemoModule("module-1", "Welcome to the Editing Demo",
-                "# Phase 6.5 Patterns\n\n" +
-                "This is a shared, non-durable private editing sandbox.\n\n" +
+                "### Request-owned editing\n\n" +
+                "This is your temporary browser-session editing sandbox.\n\n" +
                 "- Single modal container\n" +
                 "- OOB swaps for save/delete\n" +
                 "- Row insert opens add-module modal\n\n" +
@@ -159,7 +156,7 @@ public class EditingDemoController {
         row1.modules.add(intro);
 
         DemoModule userEdit = new DemoModule("module-2", "Approval Workflow (User Edit)",
-                "# USER_EDIT Mode\n\n" +
+                "### USER_EDIT Mode\n\n" +
                 "Edits to this module are staged for approval.\n\n" +
                 "Open the **Pending Edits** modal to approve or reject.", 4);
         userEdit.editMode = EditMode.USER_EDIT;
@@ -169,20 +166,20 @@ public class EditingDemoController {
 
         DemoRow row2 = new DemoRow("row-2", 1);
         DemoModule locked = new DemoModule("module-3", "Fully Locked Module",
-                "# Locked\n\n" +
+                "### Locked\n\n" +
                 "No edit or delete buttons appear for this module.", 4);
         locked.canEdit = false;
         locked.canDelete = false;
         row2.modules.add(locked);
 
         DemoModule editOnly = new DemoModule("module-4", "Edit-Only Module",
-                "# Edit Only\n\n" +
+                "### Edit Only\n\n" +
                 "Can be edited but not deleted.", 4);
         editOnly.canDelete = false;
         row2.modules.add(editOnly);
 
         DemoModule deleteOnly = new DemoModule("module-5", "Delete-Only Module",
-                "# Delete Only\n\n" +
+                "### Delete Only\n\n" +
                 "Can be deleted but not edited.", 4);
         deleteOnly.canEdit = false;
         row2.modules.add(deleteOnly);
@@ -191,7 +188,7 @@ public class EditingDemoController {
         DemoRow row3 = new DemoRow("row-3", 2);
         row3.canAddModule = false;
         DemoModule rowLocked = new DemoModule("module-6", "Row Locked (No Add Module)",
-                "# Row Locking\n\n" +
+                "### Row Locking\n\n" +
                 "This row disables the add-module control.\n\n" +
                 "Modules can still be edited or deleted as allowed.", 12);
         row3.modules.add(rowLocked);
@@ -199,7 +196,7 @@ public class EditingDemoController {
 
         DemoRow row4 = new DemoRow("row-4", 3);
         DemoModule widthDemo = new DemoModule("module-7", "Width Controls",
-                "# Resize Me\n\n" +
+                "### Resize Me\n\n" +
                 "Use the width dropdown in the edit modal to change this column.", 6);
         row4.modules.add(widthDemo);
 
@@ -245,7 +242,9 @@ public class EditingDemoController {
 
     private String renderPageView() {
         Div modalContainer = new Div().withAttribute("id", MODAL_CONTAINER_ID);
-        return renderPageContent() + modalContainer.render();
+        return SiteShell.sandboxNotice() + renderPageContent() + modalContainer.render()
+            + io.mindspice.demo.pages.FeatureExamples.editingExtras()
+            + io.mindspice.demo.pages.FeatureCatalog.references("editing");
     }
 
     private String renderPageContent() {
@@ -256,7 +255,9 @@ public class EditingDemoController {
 
         Page content = Page.builder().build();
 
-        content.withChild(Header.H1("Editing Demo (Phase 6.5 Patterns)").withClass("mb-3"));
+        content.withChild(Header.H2("Live editing sandbox").withClass("mb-3"));
+        content.withChild(new Div().withId("editablemodule").withChild(new Paragraph("EditableModule wraps each live module below. OWNER saves directly; USER proposes content for explicit approval. Nested child edits replace prior proposals; positional child IDs describe current visible items, not permanent identities.")));
+        content.withChild(io.mindspice.simplypages.components.Code.block("EditableModule.wrap(displayModule)\n    .withEditUrl(\"/editing-demo/edit/\" + module.id)\n    .withDeleteUrl(\"/editing-demo/delete/\" + module.id)\n    .withDeleteTarget(\"#page-content\").withDeleteSwap(\"none\")\n    .withCanEdit(module.canEdit).withCanDelete(module.canDelete)\n    .withEditMode(module.editMode);").withLanguage("java").withTitle("EditableModule composition"));
 
         content.withChild(Alert.warning(PRIVATE_WARNING)
                 .withClass("mb-3"));
@@ -462,6 +463,20 @@ public class EditingDemoController {
         }
 
         return showAddModuleModal(rowId, response);
+        });
+    }
+
+    /** Adapts EditablePage's insertion target to this application's existing modal/OOB host. */
+    @PostMapping("/insert-wrapper-row")
+    @ResponseBody
+    public String insertWrapperRow(HttpServletResponse response) {
+        return inState(() -> {
+            String modal = insertRow("0", response);
+            if (response.getStatus() >= 400) return modal;
+            String page = renderPageContent().replace(
+                "<div id=\"" + PAGE_CONTAINER_ID + "\">",
+                "<div hx-swap-oob=\"true\" id=\"" + PAGE_CONTAINER_ID + "\">");
+            return "<div hx-swap-oob=\"innerHTML\" id=\"" + MODAL_CONTAINER_ID + "\">" + modal + "</div>" + page;
         });
     }
 
@@ -1062,33 +1077,7 @@ public class EditingDemoController {
     }
 
     private String renderWithShell(String content) {
-        return ShellBuilder.create()
-                .withPageTitle("SimplyPages Editing Demo")
-                .withTopBanner(
-                        BannerBuilder.create()
-                                .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
-                                .withTitle("SimplyPages - Editing Demo")
-                                .withSubtitle("Phase 6.5 patterns with permissions, row locking, and approval workflow")
-                                .withClass("banner-full-width")
-                                .withBackgroundColor("#2c3e50")
-                                .withTextColor("#ffffff")
-                                .build()
-                )
-                .withSideNav(
-                        SideNavBuilder.create()
-                                .addSection("Editing Demo")
-                                .addLink("Editable Page", "/editing-demo", "✏️")
-                                .addSection("Features")
-                                .addLink("Permissions & Locks", "#", "🔒")
-                                .addLink("Add Modules", "#", "➕")
-                                .addLink("Insert Rows", "#", "📊")
-                                .addLink("Approval Workflow", "#", "✅")
-                                .addSection("Main Demo")
-                                .addLink("Back to Home", "/home", "🏠")
-                                .build()
-                )
-                .withContent(new RawHtml(content))
-                .addCustomJs("/js/editing-demo.js")
-                .build();
+        return SiteShell.render("Editing, permissions & proposals", "/demos/features/editing",
+            SiteShell.intro("Editing, permissions & proposals", "Real module, child, row and approval controls. Changes belong only to this browser session.") + content);
     }
 }

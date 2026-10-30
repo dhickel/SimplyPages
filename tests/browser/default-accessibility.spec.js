@@ -762,10 +762,11 @@ test('generated Page native details reopens on desktop and remembers each mobile
 for (const width of [1440, 390]) {
     test(`packaged Basics/Forms, Modules, Display/Data and shell at ${width}px`, async ({page}, testInfo) => {
         await page.setViewportSize({width, height: width === 390 ? 844 : 900});
-        await page.goto('/demos/basics-forms');
+        await page.goto('/demos/components/forms');
         await expect(page.getByRole('textbox', {name: 'Name', exact: true})).toHaveCount(1);
-        await expect(page.getByRole('radiogroup', {name: 'Plan', exact: true})).toHaveCount(1);
-        const menu = page.getByRole('button', {name: 'Open menu', exact: true});
+        await expect(page.getByRole('radiogroup')).toHaveCount(1);
+        await page.goto('/demos/components/navigation');
+        const menu = page.getByRole('button', {name: 'Learning resources', exact: true});
         await menu.click();
         await expect(menu).toHaveAttribute('aria-expanded', 'true');
         await menu.focus();
@@ -773,7 +774,7 @@ for (const width of [1440, 390]) {
         await expect(page.locator('.dropdown-menu a').first()).toBeFocused();
         await page.keyboard.press('Escape');
         await expect(menu).toHaveAttribute('aria-expanded', 'false');
-        await page.goto('/demos/modules');
+        await page.goto('/demos/modules/tabs');
         const tab = page.locator('.tab-button').first();
         const tablist = page.locator('.tab-nav').first();
         await expect(tablist).toHaveCSS('flex-direction', width <= 768 ? 'column' : 'row');
@@ -789,13 +790,16 @@ for (const width of [1440, 390]) {
         const tabsScreenshot = testInfo.outputPath(`packaged-tabs-${width}.png`);
         await page.locator('.tabs-container').first().screenshot({path: tabsScreenshot});
         await testInfo.attach('packaged-tabs', {path: tabsScreenshot, contentType: 'image/png'});
+        await page.goto('/demos/modules/accordion');
         const region = page.locator('.accordion-content').first();
         const headerId = await region.getAttribute('aria-labelledby');
         expect(headerId).toBeTruthy();
         await expect(page.locator(`[id="${headerId}"]`)).toHaveClass(/accordion-header/);
-        await page.goto('/demos/display-data');
+        await page.goto('/demos/components/display-data');
+        const dialogTrigger = page.getByRole('button', {name:'Open dialog'});
+        await dialogTrigger.click();
         await expect(page.getByRole('dialog')).toHaveCount(1);
-        await page.keyboard.press('Escape'); // Display catalog intentionally renders a live modal sample.
+        await page.keyboard.press('Escape'); // The specimen loads the real server-rendered modal.
         await expect(page.getByRole('dialog')).toHaveCount(0);
         const progress = page.getByRole('progressbar');
         await expect(progress).toHaveAccessibleName('Progress');
@@ -804,6 +808,7 @@ for (const width of [1440, 390]) {
         await progress.scrollIntoViewIfNeeded();
         await evidence(page, testInfo, `packaged-display-${width}`);
         if (width === 390) {
+            await page.goto('/demos/builders/preview/shell');
             await expect(page.locator('#main-sidebar')).toHaveAttribute('inert', '');
             await page.getByRole('button', {name: 'Toggle navigation'}).click();
             await expect(page.locator('#main-sidebar')).not.toHaveAttribute('inert', '');

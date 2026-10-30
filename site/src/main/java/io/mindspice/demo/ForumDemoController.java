@@ -3,9 +3,6 @@ package io.mindspice.demo;
 import io.mindspice.demo.forum.ForumDemoCategoryComponent;
 import io.mindspice.demo.forum.ForumDemoService;
 import io.mindspice.demo.forum.ForumViewer;
-import io.mindspice.simplypages.builders.BannerBuilder;
-import io.mindspice.simplypages.builders.ShellBuilder;
-import io.mindspice.simplypages.builders.TopNavBuilder;
 import io.mindspice.simplypages.components.Div;
 import io.mindspice.simplypages.components.RawHtml;
 import io.mindspice.simplypages.components.display.Alert;
@@ -52,7 +49,7 @@ import java.util.regex.Pattern;
 
 @Controller
 @RequestScope
-@RequestMapping("/forum")
+@RequestMapping({"/forum", "/demos/features/forum"})
 public class ForumDemoController {
 
     static final String SESSION_VIEWER_ID = "forum.viewer.id";
@@ -95,16 +92,7 @@ public class ForumDemoController {
             return main;
         }
 
-        return ShellBuilder.create()
-            .withPageTitle("SimplyPages Forum Demo")
-            .withTopBanner(BannerBuilder.create()
-                .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
-                .withTitle("SimplyPages")
-                .withSubtitle("Forum helper end-to-end demo")
-                .build())
-            .withTopNav(buildGlobalTopNav())
-            .withContent(new RawHtml(main))
-            .build();
+        return SiteShell.render("Forum renderers & actions", "/demos/features/forum", main);
     }
 
     @GetMapping(value = "/topics", produces = MediaType.TEXT_HTML_VALUE)
@@ -547,7 +535,10 @@ public class ForumDemoController {
             stage
         );
 
-        Div root = new Div().withId("forum-main").withClass("forum-demo-main");
+        Div root = new Div().withId("forum-main").withClass("forum-demo-main")
+            .withChild(new RawHtml(SiteShell.intro("Forum renderers & actions", "Seeded example discussions, not real community posts. Try categories, topic and comment pagination, tagged quotes, draft editing and permission-aware actions.")))
+            .withChild(new RawHtml(SiteShell.sandboxNotice()))
+            .withChild(new RawHtml(io.mindspice.demo.pages.FeatureExamples.forumReference()));
 
         if (flashMessage != null && !flashMessage.isBlank()) {
             root.withChild(buildFlash(flashType, flashMessage));
@@ -652,10 +643,10 @@ public class ForumDemoController {
 
     private Component buildViewerPanel(ForumState state, ForumViewer viewer) {
         Div panel = new Div().withClass("forum-demo-panel");
-        panel.withChild(new HtmlTag("h2").withAttribute("class", "forum-demo-panel-title").withInnerText("Viewer Session"));
+        panel.withChild(new HtmlTag("h2").withAttribute("class", "forum-demo-panel-title").withInnerText("Simulated viewer persona"));
         panel.withChild(new HtmlTag("p")
             .withAttribute("class", "forum-demo-panel-subtitle")
-            .withInnerText("Current viewer: " + viewer.displayName() + " [" + viewer.userId() + "]" + (viewer.moderator() ? " · moderator" : "")));
+            .withInnerText("Simulated viewer (not authentication): " + viewer.displayName() + " [" + viewer.userId() + "]" + (viewer.moderator() ? " · moderator" : "")));
 
         Form form = Form.create()
             .withClass("forum-demo-form forum-demo-inline-form")
@@ -1263,18 +1254,6 @@ public class ForumDemoController {
         return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8);
     }
 
-    private Component buildGlobalTopNav() {
-        return TopNavBuilder.create()
-            .withHtmxNavigation(false)
-            .addPrimaryLink("Home", "/home")
-            .addPrimaryLink("Demos", "/demos")
-            .addPrimaryLink("Javadocs", "/javadocs-view")
-            .addPrimaryLink("Forum", "/forum")
-            .addPrimaryLink("Chat", "/chat")
-            .addPrimaryLink("Blog", "/blog")
-            .addPrimaryLink("Docs", "/docs")
-            .build();
-    }
 
     private record ForumDisplaySettings(int topicPreviewChars) {
         private ForumDisplaySettings {

@@ -73,10 +73,10 @@ class DemoHtmlHttpIntegrationTest {
             new DocumentRoute("root", () -> get("/")),
             new DocumentRoute("home", () -> get("/home")),
             new DocumentRoute("demos", () -> get("/demos")),
-            new DocumentRoute("basics", () -> get("/demos/basics-forms")),
-            new DocumentRoute("display", () -> get("/demos/display-data")),
+            new DocumentRoute("basics", () -> get("/demos/components/forms")),
+            new DocumentRoute("display", () -> get("/demos/components/display-data")),
             new DocumentRoute("modules", () -> get("/demos/modules")),
-            new DocumentRoute("htmx editing", () -> get("/demos/htmx-editing")),
+            new DocumentRoute("htmx editing", () -> get("/demos/features/htmx")),
             new DocumentRoute("javadocs", () -> get("/javadocs-view")),
             new DocumentRoute("docs home", () -> get("/docs")),
             new DocumentRoute("docs detail", () -> get("/docs/core/03-template-rendercontext-slotkey-reference.md")),
@@ -234,7 +234,7 @@ class DemoHtmlHttpIntegrationTest {
             .andReturn().getResponse();
         assertEquals(200, template.getStatus());
         assertHtml(template, "template card");
-        assertTrue(template.getContentAsString().contains("dynamic-card-preview"));
+        assertTrue(template.getContentAsString().contains("template-result"));
 
         MockHttpServletResponse form = mockMvc.perform(post("/demos/api/form-preview")
                 .param("name", "Matrix user")

@@ -113,6 +113,7 @@
                 <version>3.11.2</version>
                 <configuration>
                     <notimestamp>true</notimestamp>
+                    <header><![CDATA[<a href="/api">Back to SimplyPages</a>]]></header>
                     <doclint>all,-missing</doclint>
                     <failOnWarnings>true</failOnWarnings>
                 </configuration>

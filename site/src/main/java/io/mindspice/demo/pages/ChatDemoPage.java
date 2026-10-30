@@ -23,13 +23,17 @@ public class ChatDemoPage {
     private final ChatTranscriptRenderer<ChatDemoService.ChatMessageView, Void> transcriptRenderer =
         ChatTranscriptRenderer.<ChatDemoService.ChatMessageView, Void>builder()
             .withEmptyStateText("No messages yet. Start by sending one below.")
+            .withBodyTextResolver((message, context) -> "assistant".equals(message.role())
+                && message.body().equals("Welcome. Send a message to smoke test chat rendering + SSE refresh.")
+                    ? "Welcome to your temporary conversation. Send a message to try server-rendered chat and finite SSE updates."
+                    : message.body())
             .build();
 
     public String renderMain(String conversationId, List<ChatDemoService.ChatMessageView> history, String flashText, boolean warning) {
         ChatModule module = ChatModule.create()
             .withModuleId("chat-module")
-            .withTitle("Chat Smoke Test")
-            .withDescription("Forum-style pluggable rendering contracts with app-owned history/session/networking.")
+            .withTitle("ChatModule")
+            .withDescription("A real transcript and composer with application-owned session history and finite SSE.")
             .withTranscript(buildTranscript(conversationId, history))
             .withComposer(buildComposer(conversationId))
             .withUiConfig(new ChatUiConfig(
@@ -46,8 +50,8 @@ public class ChatDemoPage {
             .withChild(Header.H1("Chat Demo"))
             .withChild(new Markdown("""
                 ## Notes
-                - Private, non-durable sandbox. Session ownership is not authentication.
-                - No CSRF, rate protection or production security guarantees.
+                - Temporary browser-session sandbox, not published. Session ownership is not authentication.
+                - Same-origin and CSRF checks are enforced. No rate-protection or production-readiness guarantee.
                 - History retains the welcome plus the latest 25 complete exchanges (51 entries).
                 - Messages allow at most 4096 UTF-16 units before trimming; this is not a raw HTTP limit.
                 - Chat expires after 30 idle minutes. Streams end after 5 minutes; Resume is explicit.
@@ -63,7 +67,9 @@ public class ChatDemoPage {
             .withChild(Button.create("Resume").withId("chat-resume").withAttribute("type", "button")
                 .withAttribute("hidden", "hidden").withAttribute("style", "display: none"))
             .withChild(Button.create("Start New").withId("chat-new").withAttribute("type", "button"));
-        main.withChild(connection).withChild(module);
+        main.withChild(connection).withChild(new Div().withId("chatmodule").withChild(module))
+            .withChild(new io.mindspice.simplypages.components.RawHtml(FeatureExamples.chatReference()))
+            .withChild(new io.mindspice.simplypages.components.RawHtml(FeatureCatalog.references("chat")));
         return main.render();
     }
 
@@ -75,7 +81,7 @@ public class ChatDemoPage {
         return new HtmlTag("div")
             .withId("chat-history")
             .withAttribute("data-chat-conversation-id", conversationId)
-            .withChild(Alert.warning("Private, non-durable chat. Session ownership is not authentication. No CSRF, rate protection or production security guarantees. Only the welcome and latest 25 complete exchanges are retained."))
+            .withChild(Alert.warning("Temporary, non-published chat. Session ownership is not authentication. Same-origin and CSRF checks are enforced. Only the welcome and latest 25 complete exchanges are retained."))
             .withChild(transcriptRenderer.render(history, null));
     }
 

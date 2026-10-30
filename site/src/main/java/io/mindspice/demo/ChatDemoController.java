@@ -2,12 +2,7 @@ package io.mindspice.demo;
 
 import io.mindspice.demo.chat.ChatDemoService;
 import io.mindspice.demo.pages.ChatDemoPage;
-import io.mindspice.simplypages.builders.BannerBuilder;
-import io.mindspice.simplypages.builders.ShellBuilder;
-import io.mindspice.simplypages.builders.TopNavBuilder;
-import io.mindspice.simplypages.components.RawHtml;
 import io.mindspice.simplypages.components.display.Alert;
-import io.mindspice.simplypages.core.Component;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -20,7 +15,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.util.List;
 
 @Controller
-@RequestMapping("/chat")
+@RequestMapping({"/chat", "/demos/features/chat"})
 public class ChatDemoController {
     private final ChatDemoService chatDemoService;
     private final ChatDemoPage chatDemoPage;
@@ -58,12 +53,7 @@ public class ChatDemoController {
             main = chatDemoPage.renderMain((String) session.getAttribute(ChatDemoService.SESSION_CONVERSATION),
                 List.of(), failure.getMessage(), true);
         }
-        return ShellBuilder.create()
-            .withPageTitle("SimplyPages Chat Demo")
-            .withTopBanner(BannerBuilder.create().withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
-                .withTitle("SimplyPages").withSubtitle("Private chat + finite SSE sandbox").build())
-            .withTopNav(buildGlobalTopNav()).withContent(new RawHtml(main))
-            .addCustomJs("/js/chat-demo.js").build();
+        return SiteShell.render("Chat & finite SSE", "/demos/features/chat", main, "/js/chat-demo.js");
     }
 
     @PostMapping(value = "/new", produces = MediaType.TEXT_HTML_VALUE)
@@ -104,11 +94,4 @@ public class ChatDemoController {
             .body(Alert.warning(failure.getMessage()).render());
     }
 
-    private Component buildGlobalTopNav() {
-        return TopNavBuilder.create().withHtmxNavigation(false)
-            .addPrimaryLink("Home", "/home").addPrimaryLink("Demos", "/demos")
-            .addPrimaryLink("Javadocs", "/javadocs-view").addPrimaryLink("Forum", "/forum")
-            .addPrimaryLink("Chat", "/chat").addPrimaryLink("Blog", "/blog")
-            .addPrimaryLink("Docs", "/docs").build();
-    }
 }

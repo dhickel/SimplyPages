@@ -82,7 +82,7 @@ async function focusedVisible(control) {
 async function geometry(page) {
     return page.getByRole('dialog').evaluate(dialog => {
         const rect = dialog.getBoundingClientRect();
-        const input = dialog.querySelector('input, textarea');
+        const input = dialog.querySelector('input:not([type="hidden"]), textarea');
         const box = input && input.getBoundingClientRect();
         return {
             withinViewport: rect.left >= -1 && rect.right <= innerWidth + 1 && rect.top >= -1 && rect.bottom <= innerHeight + 1,
@@ -507,7 +507,7 @@ test('phase16 native errors remain default for unmarked, foreign-target and serv
         await expect(page.locator('.htmx-added, .htmx-settling, .htmx-request')).toHaveCount(0);
         for (const [url, target, status] of [
             ['/editing-demo/not-a-route', '#edit-modal-container', 404],
-            [`/editing-demo/edit-child/${id}/item-999`, '#dynamic-card-preview', 404],
+            [`/editing-demo/edit-child/${id}/item-999`, '#template-result', 404],
             ['/error', '#edit-modal-container', 500]
         ]) {
             let requests = 0;

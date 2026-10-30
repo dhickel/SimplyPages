@@ -45,10 +45,10 @@ class ForumDemoIntegrationTest {
         mockMvc.perform(get("/forum"))
             .andExpect(status().isOk())
             .andExpect(content().string(containsString("id=\"forum-main\"")))
-            .andExpect(content().string(containsString("Viewer Session")))
+            .andExpect(content().string(containsString("Simulated viewer persona")))
             .andExpect(content().string(containsString("Categories")))
             .andExpect(content().string(not(containsString(">Topics<"))))
-            .andExpect(content().string(containsString("href=\"/blog\"")))
+            .andExpect(content().string(containsString("href=\"/demos\"")))
             .andExpect(content().string(containsString("Forum")));
     }
 
@@ -72,13 +72,13 @@ class ForumDemoIntegrationTest {
                 .param("commentSize", "8"))
             .andExpect(status().isOk())
             .andExpect(content().string(containsString("Viewer set to Moderator User (moderator)")))
-            .andExpect(content().string(containsString("Current viewer: Moderator User [user-moderator] · moderator")))
+            .andExpect(content().string(containsString("Simulated viewer (not authentication): Moderator User [user-moderator] · moderator")))
             .andExpect(content().string(containsString("<option value=\"moderator\" selected>Moderator</option>")));
 
         mockMvc.perform(get("/forum")
                 .session(session))
             .andExpect(status().isOk())
-            .andExpect(content().string(containsString("Current viewer: Moderator User [user-moderator] · moderator")))
+            .andExpect(content().string(containsString("Simulated viewer (not authentication): Moderator User [user-moderator] · moderator")))
             .andExpect(content().string(containsString("<option value=\"moderator\" selected>Moderator</option>")));
     }
 

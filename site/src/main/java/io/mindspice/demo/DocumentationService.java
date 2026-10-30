@@ -59,7 +59,10 @@ public class DocumentationService {
         return docsCache.computeIfAbsent(canonical, this::loadDocContent);
     }
 
-    public Component getDocsNavigation() {
+    public Component getDocsNavigation() { return getDocsNavigation(DEFAULT_DOC_PATH); }
+
+    public Component getDocsNavigation(String currentPath) {
+        String canonicalPath = currentPath.endsWith(".md") ? currentPath : currentPath + ".md";
         Map<String, List<String>> structure = getDocsStructure();
         Div navContainer = new Div().withClass("docs-nav").withAttribute("role", "navigation").withAttribute("aria-label", "Documentation");
 
@@ -79,15 +82,15 @@ public class DocumentationService {
             if (filePath.equals("README.md")) title = "Documentation home";
             if (filePath.equals("INDEX.md")) title = "Complete index";
 
-            container.withChild(new Div().withClass("mb-1").withChild(
-                Link.create("/docs/" + filePath, title)
+            Link link = Link.create("/docs/" + filePath, title)
                     .withHxGet("/docs/" + filePath)
                     .withHxTarget("#docs-content")
                     .withHxSwap("outerHTML")
                     .withHxScrollTargetTop()
                     .withHxPushUrl(true)
-                    .withClass("text-decoration-none text-dark")
-            ));
+                    .withClass("sp-site-doc-link");
+            if (filePath.equals(canonicalPath)) link.withAttribute("aria-current", "page");
+            container.withChild(new Div().withClass("mb-1").withChild(link));
         };
 
         List<String> firstSections = List.of("General", "Tutorials", "How To", "Reference", "Explanation");

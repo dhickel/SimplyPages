@@ -60,6 +60,6 @@ class BlogIntegrationTest {
     void unknownBlogSlugReturnsNotFound() throws Exception {
         mockMvc.perform(get("/blog/does-not-exist"))
             .andExpect(status().isNotFound())
-            .andExpect(content().string(containsString("Blog content not found")));
+            .andExpect(content().string(containsString("Publication entry not found")));
     }
 }

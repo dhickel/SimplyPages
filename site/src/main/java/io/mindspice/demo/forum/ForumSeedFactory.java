@@ -92,7 +92,7 @@ final class ForumSeedFactory {
             """
             I tested quote/edit/delete and the flow is working in HTMX fragments. Session-based ownership checks are also applying correctly in my run.
 
-            Next pass could add a small smoke script that exercises all three actions in sequence.
+            Try quote, edit and delete with the simulated viewer to compare the visible controls with server-enforced permissions.
             """
         );
 

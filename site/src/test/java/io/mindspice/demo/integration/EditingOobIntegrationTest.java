@@ -38,16 +38,16 @@ class EditingOobIntegrationTest {
         mockMvc.perform(get("/demos"))
             .andExpect(status().isOk())
             .andExpect(header().string("Vary", containsString("HX-Request")))
-            .andExpect(content().string(containsString("Home")))
-            .andExpect(content().string(containsString("Javadocs")))
-            .andExpect(content().string(containsString("Forum")))
-            .andExpect(content().string(containsString("Chat")))
-            .andExpect(content().string(containsString("Docs")))
-            .andExpect(content().string(containsString("Basics &amp; Forms")))
-            .andExpect(content().string(containsString("Display &amp; Data")))
+            .andExpect(content().string(containsString("SimplyPages")))
+            .andExpect(content().string(containsString("Java API")))
+            .andExpect(content().string(containsString("Forum renderers &amp; actions")))
+            .andExpect(content().string(containsString("Chat &amp; finite SSE")))
+            .andExpect(content().string(containsString("Documentation")))
+            .andExpect(content().string(containsString("Text &amp; structure")))
+            .andExpect(content().string(containsString("Display &amp; data")))
             .andExpect(content().string(containsString("Modules")))
-            .andExpect(content().string(containsString("HTMX &amp; Editing")))
-            .andExpect(content().string(containsString(">Chat<")));
+            .andExpect(content().string(containsString("HTMX fragments &amp; forms")))
+            .andExpect(content().string(containsString("ChatModule")));
     }
 
     @Test
@@ -62,7 +62,7 @@ class EditingOobIntegrationTest {
     void htmxRequestReturnsFragment() throws Exception {
         mockMvc.perform(get("/demos/modules").header("HX-Request", "true"))
             .andExpect(status().isOk())
-            .andExpect(content().string(containsString("Modules Library")))
+            .andExpect(content().string(containsString("Modules")))
             .andExpect(content().string(org.hamcrest.Matchers.not(containsString("<!DOCTYPE html>"))));
     }
 
@@ -73,7 +73,7 @@ class EditingOobIntegrationTest {
                 .param("title", "Updated")
                 .param("body", "Body value"))
             .andExpect(status().isOk())
-            .andExpect(content().string(containsString("dynamic-card-preview")))
+            .andExpect(content().string(containsString("template-result")))
             .andExpect(content().string(containsString("Updated")))
             .andExpect(content().string(containsString("Body value")));
     }

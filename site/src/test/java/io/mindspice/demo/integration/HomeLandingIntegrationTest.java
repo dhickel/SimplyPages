@@ -1,50 +1,31 @@
 package io.mindspice.demo.integration;
 
 import io.mindspice.demo.DemoApplication;
-import org.junit.jupiter.api.DisplayName;
+import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
-
-import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = DemoApplication.class)
 @AutoConfigureMockMvc
 class HomeLandingIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Test
-    @DisplayName("Home page should render hero landing and visual nav cards")
-    void homePageRendersHeroLanding() throws Exception {
-        mockMvc.perform(get("/home"))
-            .andExpect(status().isOk())
-            .andExpect(content().string(containsString("home-landing-stack")))
-            .andExpect(content().string(containsString("hero-module")))
-            .andExpect(content().string(containsString("home-landing-nav-grid")))
-            .andExpect(content().string(containsString("home-landing-nav-card")))
-            .andExpect(content().string(containsString("href=\"/home\"")))
-            .andExpect(content().string(containsString("href=\"/demos\"")))
-            .andExpect(content().string(containsString("href=\"/javadocs-view\"")))
-            .andExpect(content().string(containsString("href=\"/forum\"")))
-            .andExpect(content().string(containsString("href=\"/chat\"")))
-            .andExpect(content().string(containsString("href=\"/blog\"")))
-            .andExpect(content().string(containsString("href=\"/docs\"")));
-    }
-
-    @Test
-    @DisplayName("Root route should resolve to the home landing page")
-    void rootRouteRendersHomeLanding() throws Exception {
-        mockMvc.perform(get("/"))
-            .andExpect(status().isOk())
-            .andExpect(content().string(containsString("home-landing-stack")))
-            .andExpect(content().string(containsString("hero-module")))
-            .andExpect(content().string(containsString("home-landing-nav-shell")));
+    @Autowired MockMvc mvc;
+    @Test void homeAndRootRenderTheOfficialLandingAndWorkingPreview() throws Exception {
+        for (String route : new String[]{"/", "/home"}) {
+            var doc = Jsoup.parse(mvc.perform(get(route)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+            assertEquals(1, doc.select("main").size());
+            assertEquals(1, doc.select("main h1").size());
+            assertNotNull(doc.selectFirst(".sp-site-home .sp-site-preview .content-module"));
+            assertTrue(doc.select("code").text().contains("ContentModule.create()"));
+            for (String link : new String[]{"/", "/demos", "/api", "/docs", "/demos/features/forum", "/demos/features/chat", "/demos/features/editing"})
+                assertNotNull(doc.selectFirst("a[href='" + link + "']"), link);
+            assertFalse(doc.text().contains("Smoke Test"));
+            assertTrue(doc.select("iframe").isEmpty());
+        }
     }
 }

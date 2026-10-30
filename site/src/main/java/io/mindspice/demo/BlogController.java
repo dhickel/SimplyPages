@@ -1,11 +1,6 @@
 package io.mindspice.demo;
 
-import io.mindspice.simplypages.builders.BannerBuilder;
-import io.mindspice.simplypages.builders.ShellBuilder;
-import io.mindspice.simplypages.builders.TopNavBuilder;
-import io.mindspice.simplypages.components.RawHtml;
 import io.mindspice.simplypages.core.Component;
-import org.owasp.encoder.Encode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
@@ -37,24 +32,20 @@ public class BlogController {
         Component resolved = blogContentService.resolveRequest(requestPath, pageParam).orElse(null);
         if (resolved == null) {
             response.setStatus(404);
-            return "Blog content not found: " + Encode.forHtml(requestPath);
+            return SiteShell.render("Publication entry not found", "/demos/features/static-content",
+                SiteShell.intro("Publication entry not found", "No publication entry exists at: " + requestPath + ". Choose an entry from the generated index.")
+                    + io.mindspice.simplypages.components.navigation.Link.create("/blog", "Publication index").render());
         }
 
-        String renderedContent = resolved.render();
+        String renderedContent = new io.mindspice.simplypages.components.Div().withClass("sp-site-local-nav")
+            .withChild(io.mindspice.simplypages.components.navigation.Link.create("/demos/features/static-content", "Content pipeline example"))
+            .withChild(io.mindspice.simplypages.components.navigation.Link.create("/blog", "Publication index"))
+            .render() + resolved.render();
         if ("true".equalsIgnoreCase(hxRequest)) {
             return renderedContent;
         }
 
-        return ShellBuilder.create()
-            .withPageTitle("SimplyPages Blog")
-            .withTopBanner(BannerBuilder.create()
-                .withLayout(BannerBuilder.BannerLayout.HORIZONTAL)
-                .withTitle("SimplyPages")
-                .withSubtitle("Static content helper smoke test")
-                .build())
-            .withTopNav(buildGlobalTopNav())
-            .withContent(new RawHtml(renderedContent))
-            .build();
+        return SiteShell.render("Markdown publication", "/demos/features/static-content", renderedContent);
     }
 
     private void addHxVary(HttpServletResponse response) {
@@ -68,16 +59,4 @@ public class BlogController {
         response.addHeader("Vary", "HX-Request");
     }
 
-    private Component buildGlobalTopNav() {
-        return TopNavBuilder.create()
-            .withHtmxNavigation(false)
-            .addPrimaryLink("Home", "/home")
-            .addPrimaryLink("Demos", "/demos")
-            .addPrimaryLink("Javadocs", "/javadocs-view")
-            .addPrimaryLink("Forum", "/forum")
-            .addPrimaryLink("Chat", "/chat")
-            .addPrimaryLink("Blog", "/blog")
-            .addPrimaryLink("Docs", "/docs")
-            .build();
-    }
 }
