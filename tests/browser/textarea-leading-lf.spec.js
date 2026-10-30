@@ -8,7 +8,7 @@ const {test, expect} = require('playwright/test');
 const root = path.resolve(__dirname, '../..');
 const fixtureRoot = path.join(root, 'simplypages/target/textarea-browser-fixtures');
 const libraryJar = path.join(root, 'simplypages/target/simplypages-1.2.jar');
-const demoJar = path.join(root, 'demo/target/simplypages-demo.jar');
+const demoJar = path.join(root, 'site/target/simplypages-site.jar');
 const unpack = (jar, entry) => execFileSync('unzip', ['-p', jar, entry], {maxBuffer: 32 * 1024 * 1024});
 const sha256 = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const units = text => Array.from({length: text.length}, (_, index) => text.charCodeAt(index));

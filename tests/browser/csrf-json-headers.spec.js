@@ -9,7 +9,7 @@ const root = path.resolve(__dirname, '../..');
 const fixtureRoot = path.join(root, 'simplypages/target/csrf-json-browser-fixtures');
 const formClass = 'io/mindspice/simplypages/components/forms/Form.class';
 const libraryJar = path.join(root, 'simplypages/target/simplypages-1.2.jar');
-const demoJar = path.join(root, 'demo/target/simplypages-demo.jar');
+const demoJar = path.join(root, 'site/target/simplypages-site.jar');
 const sha256 = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const read = relative => fs.readFileSync(path.join(root, relative));
 const unpack = (jar, entry) => execFileSync('unzip', ['-p', jar, entry], {maxBuffer: 32 * 1024 * 1024});

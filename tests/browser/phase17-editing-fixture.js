@@ -23,7 +23,7 @@ with zipfile.ZipFile(jar) as archive:
     entries = archive.namelist()
     assert not any('Phase17EditingBrowserFixture' in n for n in entries), 'Fixture shipped in product'
     # Reproducible JAR timestamps do not track compilation or resource copying.
-    for module in ('demo', 'simplypages'):
+    for module in ('site', 'simplypages'):
         for folder in ('src/main/java', 'src/main/resources'):
             source = root/module/folder
             for p in source.rglob('*'):
@@ -35,7 +35,7 @@ with zipfile.ZipFile(jar) as archive:
                         assert output.read_bytes() == p.read_bytes(), 'Stale compiled resource: '+str(p)
     classes = [n for n in entries if n.startswith('BOOT-INF/classes/') and n.endswith('.class')]
     assert len(classes) == 61, 'Unexpected production class set'
-    demo_classes = root/'demo/target/classes'
+    demo_classes = root/'site/target/classes'
     assert {n.removeprefix('BOOT-INF/classes/') for n in classes} == {
         p.relative_to(demo_classes).as_posix() for p in demo_classes.rglob('*.class')
     }, 'Stale production class set'
@@ -56,10 +56,10 @@ with zipfile.ZipFile(jar) as archive:
             if p.is_file():
                 n = p.relative_to(library_resources).as_posix()
                 assert nested.read(n) == p.read_bytes(), n
-    resources = list((root/'demo/src/main/resources').rglob('*'))
+    resources = list((root/'site/src/main/resources').rglob('*'))
     for p in resources:
         if p.is_file():
-            n = 'BOOT-INF/classes/'+str(p.relative_to(root/'demo/src/main/resources'))
+            n = 'BOOT-INF/classes/'+str(p.relative_to(root/'site/src/main/resources'))
             assert archive.read(n) == p.read_bytes(), n
     selected = [n for n in entries if not n.endswith('/') and (n.startswith('BOOT-INF/classes/') or n.startswith('BOOT-INF/lib/'))]
     for n in selected:
@@ -73,8 +73,8 @@ with zipfile.ZipFile(jar) as archive:
 `, jar, directory, root], {encoding: 'utf8'});
     if (result.status !== 0) throw new Error(`Package fidelity refused fixture startup:\n${result.stdout}\n${result.stderr}`);
     const proof = JSON.parse(result.stdout);
-    const source = path.join(root, 'demo/src/test/java', classDirectory, 'Phase17EditingBrowserFixture.java');
-    const compiled = path.join(root, 'demo/target/test-classes', classDirectory);
+    const source = path.join(root, 'site/src/test/java', classDirectory, 'Phase17EditingBrowserFixture.java');
+    const compiled = path.join(root, 'site/target/test-classes', classDirectory);
     const names = fs.readdirSync(compiled).filter(name => /^Phase17EditingBrowserFixture(?:\$.*)?\.class$/.test(name));
     if (!names.includes('Phase17EditingBrowserFixture.class')) throw new Error('Run Maven test-compile before browser fixtures');
     const onlyFixture = path.join(directory, 'fixture-only', classDirectory);
@@ -144,7 +144,7 @@ async function launch(options, testInfo) {
         return proof.seedAtShutdown;
     }
     try {
-        const jar = path.resolve(process.env.PHASE17_DEMO_JAR || path.join(root, 'demo/target/simplypages-demo.jar'));
+        const jar = path.resolve(process.env.PHASE17_DEMO_JAR || path.join(root, 'site/target/simplypages-site.jar'));
         proof = {...proof, ...unpack(jar, directory)};
         const port = await freePort(testInfo.workerIndex);
         proof.port = port;

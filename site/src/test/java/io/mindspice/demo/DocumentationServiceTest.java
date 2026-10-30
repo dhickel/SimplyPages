@@ -15,13 +15,13 @@ class DocumentationServiceTest {
         assertEquals(
             "core/01-components-htmltag-and-module-lifecycle.md",
             DocumentationService.extractDocsRelativePath(
-                "jar:nested:/opt/apps/simplypages-demo.jar/!BOOT-INF/classes/!/static/docs/core/01-components-htmltag-and-module-lifecycle.md"
+                "jar:nested:/opt/apps/simplypages-site.jar/!BOOT-INF/classes/!/static/docs/core/01-components-htmltag-and-module-lifecycle.md"
             )
         );
         assertEquals(
             "reference/components-and-modules-catalog.md",
             DocumentationService.extractDocsRelativePath(
-                "file:/home/demo/target/classes/static/docs/reference/components-and-modules-catalog.md"
+                "file:/home/site/target/classes/static/docs/reference/components-and-modules-catalog.md"
             )
         );
         assertEquals(

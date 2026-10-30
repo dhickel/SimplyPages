@@ -12,9 +12,9 @@
     </parent>
 
     <groupId>io.mindspice</groupId>
-    <artifactId>simplypages-demo</artifactId>
+    <artifactId>simplypages-site</artifactId>
     <version>1.2</version>
-    <name>SimplyPages Demo</name>
+    <name>SimplyPages Site</name>
     <description>Demo application for SimplyPages</description>
 
     <properties>
@@ -60,7 +60,7 @@
     </dependencies>
 
     <build>
-        <finalName>simplypages-demo</finalName>
+        <finalName>simplypages-site</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -63,7 +63,7 @@ public class BlogContentService {
     private Path resolveBlogDirectory() {
         List<Path> candidates = List.of(
             Path.of("src/main/resources/static/blog"),
-            Path.of("demo/src/main/resources/static/blog"),
+            Path.of("site/src/main/resources/static/blog"),
             Path.of("target/classes/static/blog")
         );
 
