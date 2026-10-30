@@ -100,6 +100,14 @@ are included in compiled templates. Custom renderers retain their `render(Render
 behavior. Code blocks escape both code and title text; modal body/footer content receives
 the render context.
 
+### TextArea
+
+For escaped static text and text slots beginning with LF or CR, direct and compiled
+`textarea` output prepend one LF to compensate for native HTML parsing consuming an initial
+LF. Browsers normalize CR and CRLF to LF in textarea values; this is not exact raw newline
+preservation. Trusted HTML and children are unchanged, so this does not repair arbitrary markup.
+Do not add a separate padding LF when supplying ordinary text.
+
 ### Paragraph
 
 Alignment helpers replace only the known whole `align-left`, `align-center`, `align-right`

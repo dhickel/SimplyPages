@@ -117,9 +117,6 @@ physical devices. Other browsers, native Windows, and remote CI remain unverifie
 
 Known open issues:
 
-- [#78: TextArea leading newline](https://github.com/dhickel/SimplyPages/issues/78):
-  native HTML parsing consumes an initial LF. The private editing demo compensates; the
-  primitive remains unfixed.
 - [#81: Private chat shutdown warning](https://github.com/dhickel/SimplyPages/issues/81):
   a recycled-response destroy warning can occur after SIGTERM. Processes exit; no leak
   has been proven. This is not evidence of a general framework chat crash.

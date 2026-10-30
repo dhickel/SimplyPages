@@ -22,6 +22,7 @@ Owns rendering primitives and contracts used by the whole framework.
 - Template compilation traverses getChildrenStream() and preserves custom render(RenderContext) overrides as live delegates.
 - Stable standard tag rendering must not mutate configured structure. Configuration is not thread-safe; retained custom delegates (including framework overrides) must be safe to share, and contexts remain request-owned.
 - Direct slots and text slots honor explicit compiled entries and COMPILE_ON_FIRST_HIT; contexts remain request-owned.
+- For textarea tags, escaped static text and text slots beginning with LF or CR receive one leading LF in direct and compiled output to compensate for native HTML parsing. Slot caches retain unpadded payloads. Browsers normalize CR/CRLF to LF; trusted HTML and children are unchanged, not arbitrary markup repairs.
 - Tag/attribute names reject markup delimiters; attribute replacement is case-insensitive.
 - HTML encoding is not URL/CSS/HTMX policy. Generic withAttribute (including href/src replacements), raw style and HTMX endpoint helpers require application-controlled or separately context-validated values. Replacements do not synchronize Link/Image getters or invoke their typed validators.
 - addStyle validates property names and rejects declaration breakout, not semantic CSS/URL values. addTrustedStyle bypasses value-breakout checks; Style.addInlineStyle is raw fragment assembly without those checks. Width helpers retain their narrower token grammar. Do not retrofit generic semantic restrictions.

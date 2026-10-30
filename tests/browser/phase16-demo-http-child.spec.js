@@ -394,7 +394,7 @@ for (const width of [1440, 390]) for (const host of ['direct', 'fragment']) {
                             expect(await pendingSnapshot()).toEqual(pending);
                             const current = await request.get(`/editing-demo/edit-child/${id}/item-0`);
                             expect(current.status()).toBe(200);
-                            expect(await current.text()).toContain('\nAlpha</textarea>');
+                            expect(await current.text()).toContain('>Alpha</textarea>');
                             evidence.push({moduleId, childId, mode, retry, status, action, submittedUrl: response.url(), absolute});
                             if (retry === 2) break;
                             await field.fill(draft);

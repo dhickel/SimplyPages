@@ -845,9 +845,8 @@ public class EditingDemoController {
         Div field = new Div().withClass("form-field");
         field.withChild(new HtmlTag("label").withClass("form-label")
                 .withAttribute("for", "editing-child-text").withInnerText("Text"));
-        // HTML consumes one initial textarea LF; supply it separately to retain leading draft LFs.
         TextArea input = TextArea.create("text").withRows(3).withWrap("soft")
-                .withValue("\n" + (text == null ? "" : text));
+                .withValue(text);
         input.withId("editing-child-text");
         input.withAttribute("autofocus", "autofocus");
         if (error != null) {

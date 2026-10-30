@@ -80,7 +80,7 @@ class EditingDemoChildIntegrationTest {
         }
         String child = body(call(get(route("edit-child", "item-1")).param("editMode", "USER_EDIT"), 200));
         var form = Jsoup.parse(child);
-        assertEquals("\nItem 2", form.selectFirst("textarea[name=text]").wholeText());
+        assertEquals("Item 2", form.selectFirst("textarea[name=text]").wholeText());
         assertEquals(route("save-child", "item-1") + "?editMode=USER_EDIT", form.selectFirst("form").attr("hx-post"));
         assertTrue(form.text().contains("Prior pending child and property changes are discarded"));
         assertFalse(child.contains("hx-swap-oob"));
@@ -203,9 +203,9 @@ class EditingDemoChildIntegrationTest {
         MvcResult response = call(post(route("save-child", "item-0")).param("text", draft).param("editMode", "USER_EDIT"), 400);
         String html = body(response);
         var doc = Jsoup.parse(html);
-        // Jsoup .val() trims textarea edges, and wholeText() retains the parser padding LF.
-        // Assert the full payload here; the packaged browser tests prove the native value.
-        assertEquals("\n" + draft, doc.selectFirst("textarea[name=text]").wholeText());
+        // Jsoup retains the conditional parser LF; packaged browser tests prove native values.
+        String serialized = (draft.startsWith("\n") || draft.startsWith("\r") ? "\n" : "") + draft;
+        assertEquals(serialized, doc.selectFirst("textarea[name=text]").wholeText());
         assertEquals("true", response.getResponse().getHeader("X-Editing-Demo-Modal"));
         assertEquals("innerHTML", response.getResponse().getHeader("HX-Reswap"));
         assertNotNull(doc.selectFirst("[role=alert]"));
@@ -219,7 +219,7 @@ class EditingDemoChildIntegrationTest {
     @Test
     void missingLabelIsControlled400() throws Exception {
         var doc = Jsoup.parse(body(call(post(route("save-child", "item-0")), 400)));
-        assertEquals("\n", doc.selectFirst("textarea").wholeText());
+        assertEquals("", doc.selectFirst("textarea").wholeText());
         assertEquals("Item 1,Item 2,Item 3", content());
     }
 
@@ -253,7 +253,7 @@ class EditingDemoChildIntegrationTest {
         call(post(route("save-child", "item-2")).param("text", value), 200);
         assertEquals("Item 1,Item 2," + value, content());
         var doc = Jsoup.parse(body(call(get(route("edit-child", "item-2")), 200)));
-        assertEquals("\n" + value, doc.selectFirst("textarea").wholeText());
+        assertEquals(value, doc.selectFirst("textarea").wholeText());
     }
 
     @ParameterizedTest
@@ -267,7 +267,7 @@ class EditingDemoChildIntegrationTest {
         var doc = Jsoup.parse(body(call(get(route("edit-child", "item-0")), 200)));
         var input = doc.selectFirst("textarea[name=text]");
         assertNotNull(input);
-        assertEquals("\n" + label, input.wholeText());
+        assertEquals(label, input.wholeText());
         assertEquals("soft", input.attr("wrap"));
         assertFalse(input.hasAttr("maxlength"));
         assertFalse(input.hasAttr("pattern"));
@@ -275,7 +275,7 @@ class EditingDemoChildIntegrationTest {
         assertEquals(label + ",Item 2,Item 3", content());
         assertEquals(false, field(module, "useMarkdown"));
         assertSame(proposal, pending().getFirst());
-        assertEquals("\n" + label, Jsoup.parse(body(call(get(route("edit-child", "item-0")), 200)))
+        assertEquals(label, Jsoup.parse(body(call(get(route("edit-child", "item-0")), 200)))
                 .selectFirst("textarea").wholeText());
         call(post(route("save-child", "item-1")).param("text", " \t" + label + "\n "), 200);
         assertEquals(label + "," + label + ",Item 3", content());
@@ -305,7 +305,7 @@ class EditingDemoChildIntegrationTest {
         assertEquals("none", result.getResponse().getHeader("HX-Reswap"));
         assertEquals("Item 2,Item 3", content());
         // A stale positional item-0 now denotes Item 2, not a persistent Item 1 identity.
-        assertEquals("\nItem 2", Jsoup.parse(body(call(get(route("edit-child", "item-0")), 200))).selectFirst("textarea").wholeText());
+        assertEquals("Item 2", Jsoup.parse(body(call(get(route("edit-child", "item-0")), 200))).selectFirst("textarea").wholeText());
         call(delete(route("delete-child", "item-1")), 200);
         call(delete(route("delete-child", "item-0")), 200);
         assertEquals("", content());

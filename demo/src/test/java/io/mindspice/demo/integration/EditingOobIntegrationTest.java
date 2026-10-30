@@ -107,7 +107,7 @@ class EditingOobIntegrationTest {
         mockMvc.perform(get("/editing-demo/edit-child/module-9/item-0"))
             .andExpect(status().isOk())
             .andExpect(content().string(containsString("Edit List Item")))
-            .andExpect(content().string(containsString("\nItem 1</textarea>")));
+            .andExpect(content().string(containsString(">Item 1</textarea>")));
 
         mockMvc.perform(post("/editing-demo/save-child/module-9/item-0")
                 .param("text", "Updated Item"))

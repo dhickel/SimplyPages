@@ -15,6 +15,7 @@ Owns form input and form container components.
 - Ownership begins at available configRequest entries. Upstream-discarded ajax options.__proto__ overrides are not recovered as those earlier values; stopped propagation/frozen maps remain host controlled. No generalized options/parser/XHR/transport/retry/header policy or token verification. Exact JSON representability does not guarantee arbitrary HTTP header transport; applications own destinations/CORS/CSRF/auth.
 - Width helper methods on form components remain valid and validated by core style rules.
 - Input type helpers map to correct HTML input types.
+- TextArea uses core textarea serialization: escaped static text and text slots starting with LF or CR get one leading LF in direct and compiled output for native parsing. Browser values normalize CR/CRLF to LF. Trusted HTML and children are unchanged; do not manually pad ordinary text or assume arbitrary markup is repaired.
 
 - `Form.addField` associates nonempty labels with known single controls (`TextInput`, `TextArea`, `Select`, `Checkbox`, `Button`). Preserve existing control IDs, including raw ID attributes on single-tag controls; assign absent/empty IDs once during field assembly, never during rendering.
 - Configure control IDs before `addField`; changing IDs afterward does not update assembled field labels. Applications own explicit ID uniqueness and configure components before sharing or compiling.

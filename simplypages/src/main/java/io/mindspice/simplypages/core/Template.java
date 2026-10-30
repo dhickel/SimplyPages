@@ -72,26 +72,32 @@ public class Template {
      */
     private static class TextSlotSegment implements Segment {
         private final SlotKey<String> key;
-        TextSlotSegment(SlotKey<String> key) { this.key = key; }
+        private final String tagName;
+        TextSlotSegment(SlotKey<String> key, String tagName) {
+            this.key = key;
+            this.tagName = tagName;
+        }
         @Override
         public void render(RenderContext context, StringBuilder sb) {
             Optional<SlotEntry> entryOpt = context.getEntry(key);
             if (entryOpt.isPresent()) {
                 SlotEntry entry = entryOpt.get();
                 switch (entry) {
-                    case SlotEntry.CompiledEntry compiled -> sb.append(compiled.html());
+                    case SlotEntry.CompiledEntry compiled ->
+                        sb.append(HtmlTag.preserveLeadingTextAreaNewline(tagName, compiled.html()));
                     case SlotEntry.LiveEntry live -> {
                         String rendered = live.value() == null ? "" : Encode.forHtml(live.value().toString());
                         if (context.getPolicy() == RenderContext.RenderPolicy.COMPILE_ON_FIRST_HIT) {
                             context.putCompiled(key, rendered);
                         }
-                        sb.append(rendered);
+                        sb.append(HtmlTag.preserveLeadingTextAreaNewline(tagName, rendered));
                     }
                 }
                 return;
             }
 
-            context.get(key).ifPresent(val -> sb.append(Encode.forHtml(val)));
+            context.get(key).ifPresent(val ->
+                sb.append(HtmlTag.preserveLeadingTextAreaNewline(tagName, Encode.forHtml(val))));
         }
     }
 
@@ -206,9 +212,10 @@ public class Template {
         segments.add(new StringSegment(sb.toString()));
 
         if (tag.innerTextSlot != null) {
-            segments.add(new TextSlotSegment(tag.innerTextSlot));
+            segments.add(new TextSlotSegment(tag.innerTextSlot, tag.tagName));
         } else if (!tag.innerText.isEmpty()) {
-            String text = tag.trustedHtml ? tag.innerText : Encode.forHtml(tag.innerText);
+            String text = tag.trustedHtml ? tag.innerText
+                : HtmlTag.preserveLeadingTextAreaNewline(tag.tagName, Encode.forHtml(tag.innerText));
             segments.add(new StringSegment(text));
         }
 

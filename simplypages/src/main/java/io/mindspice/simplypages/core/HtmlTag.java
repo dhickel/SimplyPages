@@ -409,6 +409,14 @@ public class HtmlTag implements Component {
         return children.stream();
     }
 
+    static String preserveLeadingTextAreaNewline(String tagName, String text) {
+        if ("textarea".equalsIgnoreCase(tagName) && !text.isEmpty()
+                && (text.charAt(0) == '\n' || text.charAt(0) == '\r')) {
+            return "\n" + text;
+        }
+        return text;
+    }
+
     /**
      * Renders opening tag, text payload, child output, and closing tag.
      *
@@ -432,12 +440,12 @@ public class HtmlTag implements Component {
         }
 
         if (innerTextSlot != null) {
-            sb.append(Slot.of(innerTextSlot).render(context));
+            sb.append(preserveLeadingTextAreaNewline(tagName, Slot.of(innerTextSlot).render(context)));
         } else if (!innerText.isEmpty()) {
             if (trustedHtml) {
                 sb.append(innerText);
             } else {
-                sb.append(Encode.forHtml(innerText));
+                sb.append(preserveLeadingTextAreaNewline(tagName, Encode.forHtml(innerText)));
             }
         }
 
