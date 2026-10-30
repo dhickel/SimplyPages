@@ -24,6 +24,7 @@ public final class SandboxSecurityFilter implements Filter {
     public static final String TOKEN_ATTRIBUTE = "site.sandbox.csrf";
     public static final String TOKEN_HEADER = "X-Sandbox-CSRF";
     public static final String TOKEN_PARAMETER = "_csrf";
+    private static final String REQUEST_TOKEN = SandboxSecurityFilter.class.getName() + ".token";
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final String[] VIEWER_ATTRIBUTES = {
         ForumDemoController.SESSION_VIEWER_ID, ForumDemoController.SESSION_VIEWER_NAME,
@@ -64,17 +65,27 @@ public final class SandboxSecurityFilter implements Filter {
             return;
         }
         boolean reset = "/sandbox/new".equals(path) && "POST".equals(method);
-        boolean stateRoute = path.equals("/editing-demo") || path.startsWith("/editing-demo/")
-            || path.equals("/forum") || path.startsWith("/forum/");
-        boolean initial = "GET".equals(method) && (path.equals("/editing-demo") || path.equals("/forum"));
+        boolean forumRoute = routeFamily(path, "/forum") || routeFamily(path, "/demos/features/forum");
+        boolean stateRoute = routeFamily(path, "/editing-demo")
+            || routeFamily(path, "/demos/features/editing") || forumRoute;
+        boolean initial = "GET".equals(method) && (path.equals("/editing-demo") || path.equals("/forum")
+            || path.equals("/demos/features/editing") || path.equals("/demos/features/forum"));
         // Chat HX navigation must remain allocation-free. Chat APIs retain their own ownership checks.
-        boolean chatPage = "GET".equals(method) && path.equals("/chat")
+        boolean chatRoute = routeFamily(path, "/chat") || routeFamily(path, "/demos/features/chat");
+        boolean chatPage = "GET".equals(method) && (path.equals("/chat") || path.equals("/demos/features/chat"))
             && !"true".equalsIgnoreCase(request.getHeader("HX-Request"));
-        if (initial || chatPage) {
-            response.setHeader(TOKEN_HEADER, token(request.getSession()));
+        boolean presentation = "GET".equals(method) && routeFamily(path, "/demos")
+            && !routeFamily(path, "/demos/api") && !stateRoute && !chatRoute;
+        if (initial || chatPage || presentation) {
+            String value = token(request.getSession());
+            request.setAttribute(REQUEST_TOKEN, value);
+            response.setHeader(TOKEN_HEADER, value);
         } else if (request.getSession(false) != null) {
             Object existing = request.getSession(false).getAttribute(TOKEN_ATTRIBUTE);
-            if (existing instanceof String value) response.setHeader(TOKEN_HEADER, value);
+            if (existing instanceof String value) {
+                request.setAttribute(REQUEST_TOKEN, value);
+                response.setHeader(TOKEN_HEADER, value);
+            }
         }
         if (!stateRoute && !reset) { chain.doFilter(request, response); return; }
         HttpSession session = request.getSession(false);
@@ -93,7 +104,7 @@ public final class SandboxSecurityFilter implements Filter {
                 previousViewer = Arrays.stream(VIEWER_ATTRIBUTES).map(session::getAttribute).toArray();
                 for (String attribute : VIEWER_ATTRIBUTES) session.removeAttribute(attribute);
                 response.setStatus(204);
-            } else if (path.equals("/forum") || path.startsWith("/forum/")) {
+            } else if (forumRoute) {
                 synchronized (entry.forum) { chain.doFilter(request, response); }
             } else {
                 // Editing already serializes lookup, mutation and rendered snapshots on its own monitor.
@@ -139,7 +150,17 @@ public final class SandboxSecurityFilter implements Filter {
             || path.equals("/forum") || path.startsWith("/forum/")
             || path.equals("/chat") || path.startsWith("/chat/")
             || path.equals("/sandbox") || path.startsWith("/sandbox/")
-            || path.startsWith("/demos/api/");
+            || routeFamily(path, "/demos");
+    }
+
+    private static boolean routeFamily(String path, String root) {
+        return path.equals(root) || path.startsWith(root + "/");
+    }
+
+    /** Reads the filter-initialized token for SSR; never creates a session or sandbox. */
+    static String requestToken(HttpServletRequest request) {
+        if (request.getAttribute(REQUEST_TOKEN) instanceof String value) return value;
+        throw new IllegalStateException("No sandbox token initialized for this request.");
     }
 
     private static String token(HttpSession session) {

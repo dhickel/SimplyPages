@@ -201,6 +201,33 @@ class SandboxSecurityIntegrationTest {
         } finally { registry.sessionDestroyed(session.getId()); }
     }
 
+    @Test void demoPresentationTokenSupportsNativeAndHtmxApiPostsWithoutSandboxAdmission() throws Exception {
+        var page = mvc.perform(get("/demos")).andExpect(status().isOk())
+            .andExpect(header().string("Cache-Control", "no-store")).andReturn();
+        MockHttpSession session = (MockHttpSession) page.getRequest().getSession(false);
+        assertNotNull(session);
+        String token = SandboxSecurityFilter.requestToken(page.getRequest());
+        assertEquals(token, page.getResponse().getHeader(SandboxSecurityFilter.TOKEN_HEADER));
+        assertNull(session.getAttribute(SandboxRegistry.SESSION_STARTED));
+        assertNull(session.getAttribute(ChatDemoService.SESSION_CONVERSATION));
+        mvc.perform(post("/demos/api/form-preview").session(session)
+            .header("Referer", "http://localhost/demos/components/forms")
+            .param(SandboxSecurityFilter.TOKEN_PARAMETER, token).param("name", "Native <form>"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Cache-Control", "no-store"))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("Native &lt;form&gt;")));
+        mvc.perform(write(post("/demos/api/template-card"), session)
+            .header("HX-Request", "true").param("title", "Header title").param("body", "Header body"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("Header title")));
+        mvc.perform(write(post("/demos/api/form-preview"), session).param("_csrf", "wrong"))
+            .andExpect(status().isForbidden());
+        assertEquals(token, token(session));
+        assertNull(session.getAttribute(SandboxRegistry.SESSION_STARTED));
+        assertEquals(404, assertThrows(org.springframework.web.server.ResponseStatusException.class,
+            () -> registry.acquire(session, false, false)).getStatusCode().value());
+    }
+
     @Test void tokenDeliveryNativeFormRefererAndHeaderContract() throws Exception {
         MockHttpSession session = visitor("/sandbox/token");
         try {
