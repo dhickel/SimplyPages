@@ -166,6 +166,13 @@ class Phase13ShellPageBrowserFixtureTest {
             assertEquals(1, document.select("button.sidebar-toggle").size(), fileName);
             assertEquals("button", document.selectFirst("button.sidebar-toggle").attr("type"), fileName);
         }
+        assertFalse(document.select("details.sticky-sidebar-mobile-collapse").isEmpty(), fileName);
+        assertEquals(0, document.select("details.sticky-sidebar-mobile-collapse[open]").size(),
+            "Fresh Page disclosures must preserve the closed mobile default: " + fileName);
+        assertEquals(0, document.select("details.sticky-sidebar-mobile-collapse[tabindex], "
+            + "summary.sticky-sidebar-mobile-summary[tabindex]").size(), fileName);
+        assertEquals(document.select("details.sticky-sidebar-mobile-collapse").size(),
+            document.select(".sticky-sidebar-aside[tabindex='-1']").size(), fileName);
         SnapshotAssert.assertMatches(snapshotKey, html);
         Path output = FIXTURE_ROOT.resolve(fileName);
         Files.writeString(output, html, StandardCharsets.UTF_8);

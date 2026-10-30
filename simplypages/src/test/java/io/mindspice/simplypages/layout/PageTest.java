@@ -54,7 +54,7 @@ class PageTest {
     }
 
     @Test
-    @DisplayName("Page sticky sidebar should render mobile collapse structure with default-open details")
+    @DisplayName("Page sticky sidebar should render mobile collapse structure with default-closed details")
     void testStickySidebarMobileCollapseMarkup() {
         Page page = Page.builder()
             .withStickySidebar(new Div().withInnerText("Sidebar"), 8, 4)
@@ -65,7 +65,7 @@ class PageTest {
 
         HtmlAssert.assertThat(html)
             .hasElement(".sticky-sidebar-mobile-collapse")
-            .hasElement(".sticky-sidebar-mobile-collapse[open]")
+            .hasElementCount(".sticky-sidebar-mobile-collapse[open]", 0)
             .hasElement(".sticky-sidebar-mobile-summary")
             .hasElement(".sticky-sidebar-content");
     }
@@ -88,7 +88,7 @@ class PageTest {
     }
 
     @Test
-    @DisplayName("Page should render one initially open native disclosure with a programmatic fallback")
+    @DisplayName("Page should render one initially closed native disclosure with a programmatic fallback")
     void testNativeSidebarDisclosureMarkup() {
         Page page = Page.builder()
             .withStickySidebar(new Div().withInnerText("Sidebar"), 8, 4)
@@ -100,8 +100,10 @@ class PageTest {
         Element details = document.selectFirst("details.sticky-sidebar-mobile-collapse");
 
         assertEquals(1, document.select("details.sticky-sidebar-mobile-collapse").size());
-        assertTrue(details.hasAttr("open"));
-        assertEquals("-1", details.attr("tabindex"));
+        assertFalse(details.hasAttr("open"));
+        assertFalse(details.hasAttr("tabindex"));
+        assertFalse(details.selectFirst("summary").hasAttr("tabindex"));
+        assertEquals("-1", details.parent().attr("tabindex"));
         assertEquals(1, details.select("summary.sticky-sidebar-mobile-summary").size());
         assertEquals(1, details.select("div.sticky-sidebar-content").size());
         assertEquals("Page navigation", details.selectFirst("summary.sticky-sidebar-mobile-summary").text());
@@ -158,8 +160,9 @@ class PageTest {
         String direct = page.render(RenderContext.of(key, value));
         String compiled = page.compile().render(RenderContext.of(key, value));
         assertEquals(direct, compiled);
-        assertTrue(direct.contains("tabindex=\"-1\""));
-        assertTrue(direct.contains("open=\"open\""));
+        assertFalse(Jsoup.parse(direct).selectFirst("details").hasAttr("tabindex"));
+        assertEquals("-1", Jsoup.parse(direct).selectFirst(".sticky-sidebar-aside").attr("tabindex"));
+        assertFalse(Jsoup.parse(direct).selectFirst("details").hasAttr("open"));
         assertFalse(direct.contains(value));
         Element details = Jsoup.parse(direct).selectFirst("details");
         assertEquals("summary", details.child(0).tagName());
@@ -176,7 +179,8 @@ class PageTest {
         var document = Jsoup.parse(html);
 
         assertEquals(2, document.select("details.sticky-sidebar-mobile-collapse").size());
-        assertEquals(2, document.select("details.sticky-sidebar-mobile-collapse[open]").size());
-        assertEquals(2, document.select("details.sticky-sidebar-mobile-collapse[tabindex='-1']").size());
+        assertEquals(0, document.select("details.sticky-sidebar-mobile-collapse[open]").size());
+        assertEquals(0, document.select("details.sticky-sidebar-mobile-collapse[tabindex]").size());
+        assertEquals(2, document.select(".sticky-sidebar-aside[tabindex='-1']").size());
     }
 }

@@ -291,7 +291,7 @@ test.describe('generated ShellBuilder modes', () => {
 
 test.describe('native Page details lifecycle', () => {
     for (const width of [1440, 390, 768, 769]) {
-        test(`native Page is usable at the ${width}px responsive boundary`, async ({page}) => {
+        test(`native Page is usable at the ${width}px responsive boundary`, async ({page}, testInfo) => {
             await page.setViewportSize({width, height: width <= 768 ? 844 : 900});
             await loadGenerated(page, 'page');
             const all = await details(page);
@@ -299,10 +299,25 @@ test.describe('native Page details lifecycle', () => {
             const first = all.first();
             const summary = first.locator(':scope > summary');
             const content = first.locator(':scope > .sticky-sidebar-content');
-            await expect(first).toHaveAttribute('tabindex', '-1');
+            await expect(first).not.toHaveAttribute('tabindex');
+            await expect(first.locator('..')).toHaveAttribute('tabindex', '-1');
             if (width <= 768) await expect(summary).toBeVisible();
             else await expect(summary).toBeHidden();
             await expect(summary).toHaveJSProperty('tabIndex', 0);
+            await expect(first).toHaveJSProperty('open', width > 768);
+            if (width <= 768) await summary.scrollIntoViewIfNeeded();
+            await page.screenshot({path: testInfo.outputPath(`issue56-fresh-${width}.png`)});
+            if (width <= 768) {
+                await expect(content).toBeHidden();
+                expect(await content.locator('a').first().evaluate(element =>
+                    element.checkVisibility({checkVisibilityCSS: true}))).toBe(false);
+                await summary.focus();
+                await page.keyboard.press('Tab');
+                expect(await content.evaluate(element => element.contains(document.activeElement))).toBe(false);
+                await summary.focus();
+                await summary.click();
+                await expect(first).toHaveJSProperty('open', true);
+            }
             await expect(content).toBeVisible();
             const firstLink = content.locator('a[href], button, input').first();
             await firstLink.scrollIntoViewIfNeeded();
@@ -324,6 +339,32 @@ test.describe('native Page details lifecycle', () => {
         });
     }
 
+    test('desktop-first opening does not replace fresh mobile defaults or later native preferences', async ({page}) => {
+        await page.setViewportSize({width: 1440, height: 900});
+        await loadGenerated(page, 'page');
+        const all = await details(page);
+        const first = all.first();
+        const second = all.nth(1);
+        await expect(first).toHaveJSProperty('open', true);
+        await expect(second).toHaveJSProperty('open', true);
+        await page.setViewportSize({width: 768, height: 844});
+        await waitForOpen(first, false);
+        await waitForOpen(second, false);
+        await first.locator(':scope > summary').click();
+        await expect(first).toHaveJSProperty('open', true);
+        await page.setViewportSize({width: 769, height: 900});
+        await waitForOpen(first, true);
+        await waitForOpen(second, true);
+        await page.setViewportSize({width: 390, height: 844});
+        await waitForOpen(first, true);
+        await waitForOpen(second, false);
+        await first.locator(':scope > summary').click();
+        await page.setViewportSize({width: 1440, height: 900});
+        await waitForOpen(first, true);
+        await page.setViewportSize({width: 390, height: 844});
+        await waitForOpen(first, false);
+    });
+
     test('desktop opens every generated Page while each mobile preference round-trips independently', async ({page}) => {
         await page.setViewportSize({width: 390, height: 844});
         await loadGenerated(page, 'page');
@@ -331,8 +372,9 @@ test.describe('native Page details lifecycle', () => {
         expect(await all.count()).toBeGreaterThanOrEqual(3);
         const first = all.nth(0);
         const second = all.nth(1);
-        await first.locator(':scope > summary').click();
         await expect(first).toHaveJSProperty('open', false);
+        await expect(second).toHaveJSProperty('open', false);
+        await second.locator(':scope > summary').click();
         await expect(second).toHaveJSProperty('open', true);
         await page.setViewportSize({width: 1440, height: 900});
         await waitForOpen(first, true);
@@ -355,7 +397,6 @@ test.describe('native Page details lifecycle', () => {
             await loadGenerated(page, 'page');
             const first = (await details(page)).first();
             const summary = first.locator(':scope > summary');
-            await summary.click();
             await expect(first).toHaveJSProperty('open', false);
             await summary.focus();
             await page.keyboard.press(key);
@@ -405,6 +446,28 @@ test.describe('native Page details lifecycle', () => {
         await waitForOpen(first, false);
     });
 
+    test('desktop-inserted fresh Page nodes open without inheriting another identity mobile preference', async ({page}) => {
+        await page.setViewportSize({width: 1440, height: 900});
+        await loadGenerated(page, 'page');
+        const markup = await page.evaluate(source => new DOMParser().parseFromString(source, 'text/html')
+            .getElementById('first-page').outerHTML, generated.page);
+        await page.locator('body').evaluate(body => body.insertAdjacentHTML('beforeend', '<div id="desktop-page-host"></div>'));
+        const host = page.locator('#desktop-page-host');
+        const inserted = host.locator('details.sticky-sidebar-mobile-collapse');
+        for (let round = 0; round < 3; round++) {
+            await host.evaluate((element, html) => element.innerHTML = html, markup);
+            await waitForOpen(inserted, true);
+            await expect(inserted.locator(':scope > summary')).toBeHidden();
+            await page.setViewportSize({width: 390, height: 844});
+            await waitForOpen(inserted, false);
+            await expect(inserted.locator(':scope > .sticky-sidebar-content')).toBeHidden();
+            await inserted.locator(':scope > summary').click();
+            await waitForOpen(inserted, true);
+            await page.setViewportSize({width: 1440, height: 900});
+            await waitForOpen(inserted, true);
+        }
+    });
+
     test('new and replaced generated Page nodes initialize independently', async ({page}) => {
         await page.setViewportSize({width: 390, height: 844});
         await loadGenerated(page, 'page');
@@ -413,11 +476,13 @@ test.describe('native Page details lifecycle', () => {
         const host = page.locator('#phase13-page-host');
         await host.evaluate((element, html) => element.insertAdjacentHTML('beforeend', html), markup);
         const added = host.locator('.page-content.with-sticky-sidebar details').first();
-        await expect(added).toHaveJSProperty('open', true);
-        await added.locator(':scope > summary').click();
         await expect(added).toHaveJSProperty('open', false);
+        await added.locator(':scope > summary').click();
+        await expect(added).toHaveJSProperty('open', true);
         await host.evaluate((element, html) => element.innerHTML = html, markup);
         const replacement = host.locator('.page-content.with-sticky-sidebar details').first();
+        await expect(replacement).toHaveJSProperty('open', false);
+        await replacement.locator(':scope > summary').click();
         await expect(replacement).toHaveJSProperty('open', true);
         await replacement.locator(':scope > summary').click();
         await page.setViewportSize({width: 1440, height: 900});
@@ -430,6 +495,8 @@ test.describe('native Page details lifecycle', () => {
         await page.setViewportSize({width: 390, height: 844});
         await loadGenerated(page, 'page');
         const first = page.locator('#first-page details.sticky-sidebar-mobile-collapse');
+        await first.locator(':scope > summary').click();
+        await expect(first).toHaveJSProperty('open', true);
         await first.locator(':scope > summary').click();
         await expect(first).toHaveJSProperty('open', false);
         await page.locator('body').evaluate(body => body.insertAdjacentHTML('beforeend', '<div id="phase13-reparent-host"></div>'));
@@ -459,6 +526,8 @@ test.describe('native Page details lifecycle', () => {
         await nested.evaluate(element => element.open = true);
         const outer = nested.locator('xpath=ancestor::details[contains(@class,"sticky-sidebar-mobile-collapse")]').first();
         await outer.locator(':scope > summary').click();
+        await expect(outer).toHaveJSProperty('open', true);
+        await outer.locator(':scope > summary').click();
         await page.setViewportSize({width: 1440, height: 900});
         await waitForOpen(outer, true);
         await expect(nested).toHaveJSProperty('open', true);
@@ -467,22 +536,24 @@ test.describe('native Page details lifecycle', () => {
         await expect(nested).toHaveJSProperty('open', true);
     });
 
-    test('empty Page fallback and programmatic details root are usable without creating a sequential stop', async ({page}) => {
+    test('empty Page aside fallback is programmatically usable without creating a sequential stop', async ({page}) => {
         await page.setViewportSize({width: 390, height: 844});
         await loadGenerated(page, 'page');
         const emptyRoot = page.locator('#empty-page');
         await expect(emptyRoot).toHaveCount(1);
         const empty = emptyRoot.locator('.sticky-sidebar-mobile-collapse');
-        await expect(empty).toHaveAttribute('tabindex', '-1');
-        await empty.locator('summary').click();
+        await expect(empty).not.toHaveAttribute('tabindex');
+        await expect(empty.locator('..')).toHaveAttribute('tabindex', '-1');
         await expect(empty).toHaveJSProperty('open', false);
         await empty.locator('summary').focus();
         await page.keyboard.press('Enter');
         await expect(empty).toHaveJSProperty('open', true);
-        await empty.evaluate(element => element.focus({preventScroll: true}));
-        await expect(empty).toBeFocused();
+        const fallback = empty.locator('..');
+        await fallback.evaluate(element => element.focus({preventScroll: true}));
+        await expect(fallback).toBeFocused();
         await page.keyboard.press('Tab');
-        await expect(empty).not.toBeFocused();
+        await expect(empty.locator('summary')).toBeFocused();
+        await expect(fallback).not.toBeFocused();
     });
 
     test('native Page works with no JavaScript and focused summary recovers closed content', async ({page}) => {
@@ -491,14 +562,12 @@ test.describe('native Page details lifecycle', () => {
             await loadGenerated(page, 'page', {javascript: false});
             const first = (await details(page)).first();
             const summary = first.locator(':scope > summary');
-            if (width > 768) await first.evaluate(element => { element.open = false; });
+            await expect(first).toHaveJSProperty('open', false);
             await expect(summary).toBeVisible();
             await summary.focus();
-            if (width > 768) {
-                await page.keyboard.press('Enter');
-                await expect(first).toHaveJSProperty('open', true);
-                await expect(summary).toBeVisible(); // Focused open summary retains native recovery keys.
-            }
+            await page.keyboard.press('Enter');
+            await expect(first).toHaveJSProperty('open', true);
+            await expect(summary).toBeVisible(); // Focused open summary retains native recovery keys.
             await page.keyboard.press('Enter');
             await expect(first).toHaveJSProperty('open', false);
             await expect(first.locator('.sticky-sidebar-content')).toBeHidden();

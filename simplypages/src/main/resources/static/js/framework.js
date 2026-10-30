@@ -335,7 +335,10 @@ const revealAccordionHeader = (function() {
                 const controls = Array.from(parts.content.querySelectorAll(
                     'a[href], area[href], button, input, select, textarea, iframe, summary, [tabindex], [contenteditable="true"]'
                 )).filter(target => target.tabIndex >= 0 && usable(target));
-                targets = [...(original !== parts.summary && usable(original) ? [original] : []), ...controls, details];
+                // A negative tabindex on details also removes its native summary from Tab order.
+                // Keep the generated fallback on the ordinary aside; explicit caller details attributes win.
+                const fallback = details.hasAttribute('tabindex') ? details : parts.aside;
+                targets = [...(original !== parts.summary && usable(original) ? [original] : []), ...controls, fallback];
             }
         }
         const expectedOpen = details.open;

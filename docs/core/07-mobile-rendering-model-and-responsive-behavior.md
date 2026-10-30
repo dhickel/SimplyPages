@@ -39,18 +39,20 @@ When you use `Row`/`Column`:
 
 When you use `Page.withStickySidebar(...)`:
 
-- One native `details`/first `summary` disclosure starts open; mobile uses stacked layout.
+- One native `details`/first `summary` disclosure starts closed; mobile uses stacked layout. Fresh mobile disclosures remain closed until opened.
 - Framework JS keeps desktop (769px and above) natively open and restores each element's remembered
   observable native/application open preference through 768px. Desktop closes update that preference
   before reopening; ordinary nested details are untouched.
 - New/replacement elements initialize from their own native state. Reinserted/reparented elements
   retain preference; detached elements receive no responsive writes or focus transfer.
 - A closing disclosure with contained focus transfers to its usable summary. Desktop transfers a
-  focused summary to usable content or the generated `tabindex="-1"` details fallback, without
-  overwriting later caller tabindex or application focus. Covered/background Pages do not take focus
+  focused summary to usable content or the generated `tabindex="-1"` aside fallback. If the
+  caller supplied a details `tabindex`, JS uses the details as fallback instead; it does not overwrite
+  caller attributes or application focus. Covered/background Pages do not take focus
   or scroll away from the top modal.
-- Without JS, a closed desktop summary remains available, and an open summary remains displayed while
-  itself focused for native keyboard recovery. Visibility follows native open state, not forced boxes.
+- Without JS, the disclosure starts closed at every width and the native summary is keyboard-operable.
+  An open desktop summary remains displayed while itself focused for native keyboard recovery.
+  Visibility follows native open state, not forced boxes.
 - This Page lifecycle is separate from ShellBuilder's off-canvas drawer. Check both presentations in
   the application; custom policies remain application-owned.
 

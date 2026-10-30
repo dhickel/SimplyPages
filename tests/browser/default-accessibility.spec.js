@@ -402,6 +402,13 @@ test('generated Page summary in Modal participates in forward/reverse traversal 
     await expect(summary).toHaveJSProperty('tabIndex', 0);
     expect(await summary.getAttribute('tabindex')).toBeNull();
     await expect(summary).toBeFocused(); // Initial body focus includes native summary.
+    await expect(details).toHaveJSProperty('open', false);
+    await page.keyboard.press('Tab');
+    await expect(save).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(summary).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(details).toHaveJSProperty('open', true);
     await close.focus();
     await page.keyboard.press('Tab');
     await expect(summary).toBeFocused();
@@ -455,6 +462,10 @@ for (const visibilityAPI of [true, false]) {
         await page.setViewportSize({width: 390, height: 844});
         if (!visibilityAPI) await page.addInitScript(() => {Element.prototype.checkVisibility = undefined;});
         const {details, summary, close, save, link} = await nativePageModal(page);
+        await expect(details).toHaveJSProperty('open', false);
+        await summary.focus();
+        await summary.press('Enter');
+        await expect(details).toHaveJSProperty('open', true);
         await details.locator('.sticky-sidebar-content').evaluate(element => element.insertAdjacentHTML('beforeend', `
             <details id="inner-details"><summary id="inner-summary">Inner disclosure</summary>
                 <a id="inner-link" href="#inner">Inner link</a>
@@ -733,7 +744,6 @@ test('generated Page native details reopens on desktop and remembers each mobile
     await fixture(page);
     const details = page.locator('.sticky-sidebar-mobile-collapse');
     const summary = details.locator('summary');
-    await summary.click();
     await expect(details).toHaveJSProperty('open', false);
     await expect(page.getByRole('link', {name: 'Details link'})).toHaveCount(0);
     await page.setViewportSize({width: 1440, height: 900});

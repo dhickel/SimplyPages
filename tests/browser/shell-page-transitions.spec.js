@@ -183,6 +183,8 @@ test('application open changes pending at a responsive media callback are draine
     await resize(page, 390);
     await host(page);
     const details = disclosure(page);
+    await summary(details).click();
+    await expect(details).toHaveJSProperty('open', true);
     await resize(page, 1440);
     await expect(details).toHaveJSProperty('open', true);
     await resize(page, 390);
@@ -190,14 +192,17 @@ test('application open changes pending at a responsive media callback are draine
 });
 
 for (const target of ['first-page', 'empty-page']) {
-    test(`desktop removal of focused ${target} summary transfers to content/root with native geometry`, async ({page}) => {
+    test(`desktop removal of focused ${target} summary transfers to content/aside with native geometry`, async ({page}) => {
         await resize(page, 390);
         await host(page);
         const details = disclosure(page, target);
         await summary(details).focus();
         await summary(details).press('Space');
+        await expect(details).toHaveJSProperty('open', true);
+        await summary(details).press('Space');
+        await expect(details).toHaveJSProperty('open', false);
         await resize(page, 1440);
-        const focus = target === 'empty-page' ? details : page.locator('#first-page-link');
+        const focus = target === 'empty-page' ? details.locator('..') : page.locator('#first-page-link');
         if (target === 'empty-page') {
             await expect(focus).toBeFocused();
             expect(await focus.evaluate(element => element.checkVisibility({checkVisibilityCSS: true}))).toBe(true);
@@ -207,29 +212,40 @@ for (const target of ['first-page', 'empty-page']) {
             expect(parseFloat(ring.width)).toBeGreaterThan(0);
         } else await nativeVisibleHit(focus);
         await expect(summary(details)).toBeHidden();
-        await expect(details).toHaveAttribute('tabindex', '-1');
-        await page.keyboard.press('Tab');
-        await expect(details).not.toBeFocused();
+        await expect(details).not.toHaveAttribute('tabindex');
+        await expect(details.locator('..')).toHaveAttribute('tabindex', '-1');
+        if (target === 'empty-page') {
+            await resize(page, 390);
+            await expect(focus).toBeFocused();
+            await page.keyboard.press('Tab');
+            await nativeVisibleHit(summary(details));
+            await expect(details).toHaveJSProperty('open', false);
+        } else {
+            await page.keyboard.press('Tab');
+            await expect(details.locator('..')).not.toBeFocused();
+        }
     });
 }
 
-for (const mutation of ['positive', 'remove', 'same-value', 'invalid']) {
-    test(`later caller ${mutation} tabindex survives empty-root responsive focus fallback`, async ({page}) => {
+for (const fallbackOwner of ['details', 'aside']) for (const mutation of ['positive', 'remove', 'same-value', 'invalid']) {
+    test(`later caller ${fallbackOwner} ${mutation} tabindex survives empty-sidebar responsive focus fallback`, async ({page}) => {
         await resize(page, 390);
         await host(page);
         const details = disclosure(page, 'empty-page');
-        await details.evaluate((element, mutation) => {
+        const callerTarget = fallbackOwner === 'details' ? details : details.locator('..');
+        await callerTarget.evaluate((element, mutation) => {
             if (mutation === 'remove') element.removeAttribute('tabindex');
             else element.setAttribute('tabindex', mutation === 'positive' ? '4' : mutation === 'invalid' ? 'invalid' : '-1');
         }, mutation);
-        const original = await details.getAttribute('tabindex');
+        const original = await callerTarget.getAttribute('tabindex');
         await summary(details).focus();
         await resize(page, 1440);
-        expect(await details.getAttribute('tabindex')).toBe(original);
-        if (mutation === 'positive' || mutation === 'same-value') await expect(details).toBeFocused();
+        expect(await callerTarget.getAttribute('tabindex')).toBe(original);
+        if (mutation === 'positive' || mutation === 'same-value') await expect(callerTarget).toBeFocused();
+        else if (fallbackOwner === 'details' && mutation === 'remove') await expect(details.locator('..')).toBeFocused();
         else await expect(summary(details)).toBeFocused(); // Failed native fallback keeps recoverable summary; no borrowing.
         await resize(page, 390);
-        expect(await details.getAttribute('tabindex')).toBe(original);
+        expect(await callerTarget.getAttribute('tabindex')).toBe(original);
     });
 }
 
@@ -238,7 +254,11 @@ for (const close of ['property', 'attribute']) {
         await resize(page, 390);
         await host(page);
         const details = disclosure(page);
+        await summary(details).focus();
+        await summary(details).press('Enter');
+        await expect(details).toHaveJSProperty('open', true);
         await page.locator('#first-page-link').focus();
+        await expect(page.locator('#first-page-link')).toBeFocused();
         await details.evaluate((element, close) => close === 'property' ? element.open = false : element.removeAttribute('open'), close);
         await nativeVisibleHit(summary(details));
         expect(await page.locator('#first-page-link').evaluate(element => element.checkVisibility({checkVisibilityCSS: true}))).toBe(false);
@@ -271,7 +291,10 @@ test('a deliberate content blur after an observable native close is not mistaken
     await resize(page, 390);
     await host(page);
     const details = disclosure(page);
+    await summary(details).click();
+    await expect(details).toHaveJSProperty('open', true);
     await page.locator('#first-page-link').focus();
+    await expect(page.locator('#first-page-link')).toBeFocused();
     await details.evaluate(element => {
         const link = element.querySelector('a');
         element.open = false;
@@ -347,6 +370,9 @@ test('target-only open observation is bounded, idempotent and preserves detached
     await host(page);
     const details = disclosure(page);
     await summary(details).click();
+    await expect(details).toHaveJSProperty('open', true);
+    await summary(details).click();
+    await expect(details).toHaveJSProperty('open', false);
     await details.evaluate(element => {
         window.retainedPage = element.closest('.page-content');
         window.retainedDetails = element;
@@ -376,6 +402,9 @@ test('same detached disclosure retains observable caller preference on reinsert,
     await host(page);
     const details = disclosure(page);
     await summary(details).click();
+    await expect(details).toHaveJSProperty('open', true);
+    await summary(details).click();
+    await expect(details).toHaveJSProperty('open', false);
     await details.evaluate(element => {
         window.detachedPage = element.closest('.page-content');
         window.detachedDisclosure = element;
@@ -407,6 +436,8 @@ for (const placement of ['sibling', 'nested']) {
         const pageId = placement === 'nested' ? 'nested-modal-page' : 'stacked-page';
         const top = page.locator(`#${topId} > .modal-container`);
         const details = disclosure(page, pageId);
+        await summary(details).click();
+        await expect(details).toHaveJSProperty('open', true);
         await summary(details).focus();
         await page.evaluate(() => {
             document.querySelector('#first-page details.sticky-sidebar-mobile-collapse').open = false;
@@ -452,7 +483,7 @@ test('a Page focus callback creating a pending covering Modal does not reveal th
         .toBe(await page.evaluate(() => coveredScroll));
 });
 
-test('empty generated Page in the top Modal uses its fixed root fallback and keeps Tab inside without background scrolling', async ({page}) => {
+test('empty generated Page in the top Modal uses its aside fallback and keeps Tab inside without background scrolling', async ({page}) => {
     await resize(page, 390);
     await host(page);
     await page.evaluate(() => { document.body.style.minHeight = '3000px'; scrollTo(0, 250); });
@@ -466,9 +497,9 @@ test('empty generated Page in the top Modal uses its fixed root fallback and kee
     const details = disclosure(page, 'modal-empty-page');
     await summary(details).focus();
     await resize(page, 1440);
-    await expect(details).toBeFocused();
-    await expect(details).toHaveAttribute('tabindex', '-1');
-    expect(await details.evaluate(element => element.checkVisibility({checkVisibilityCSS: true}))).toBe(true);
+    await nativeVisibleHit(details.locator('..'));
+    await expect(details).not.toHaveAttribute('tabindex');
+    await expect(details.locator('..')).toHaveAttribute('tabindex', '-1');
     await page.keyboard.press('Tab');
     await expect(page.locator('#phase13-stacked-modal .modal-close')).toBeFocused();
     expect(await page.evaluate(() => ({x: scrollX, y: scrollY}))).toEqual(background);
@@ -502,51 +533,130 @@ test('real HTMX OOB Page replacement initializes new native state and does not s
         await page.evaluate(() => htmx.ajax('GET', '/phase13-oob-response', {target: '#phase13-fragment-host', swap: 'outerHTML'}));
         await settle(page);
         await expect(page.locator('#oob-page')).toHaveCount(1);
-        await expect(disclosure(page, 'oob-page')).toHaveJSProperty('open', true);
+        await expect(disclosure(page, 'oob-page')).toHaveJSProperty('open', false);
         await expect(page.locator('#application')).toBeFocused();
+        await disclosure(page, 'oob-page').evaluate(element => { element.open = true; });
+        await expect(disclosure(page, 'oob-page')).toHaveJSProperty('open', true);
+        await resize(page, 1440);
+        await resize(page, 390);
+        await expect(disclosure(page, 'oob-page')).toHaveJSProperty('open', true);
         await disclosure(page, 'oob-page').evaluate(element => { element.open = false; });
         await resize(page, 1440);
         await resize(page, 390);
         await expect(disclosure(page, 'oob-page')).toHaveJSProperty('open', false);
         await expect(page.locator('#application')).toBeFocused();
+        // The next response replaces an explicitly open old identity with fresh closed markup.
+        await disclosure(page, 'oob-page').evaluate(element => { element.open = true; });
+        await expect(disclosure(page, 'oob-page')).toHaveJSProperty('open', true);
     }
 });
 
-test('disabled-JavaScript native Page close on mobile recovers on desktop with Enter/Space and visible focused summary', async ({browser}) => {
-    const context = await browser.newContext({javaScriptEnabled: false, hasTouch: true,
-        baseURL: 'http://127.0.0.1:18080', viewport: {width: 390, height: 844}});
-    try {
-        const page = await context.newPage();
-        await page.route('**/phase13-nojs', route => route.fulfill({contentType: 'text/html', body:
-            '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/css/framework.css"></head><body>'
-            + generated('page-details') + '</body></html>'}));
-        await page.goto('/phase13-nojs');
-        const details = disclosure(page);
-        await summary(details).tap();
-        await expect(details).toHaveJSProperty('open', false);
-        await page.setViewportSize({width: 1440, height: 900});
-        await expect(summary(details)).toBeVisible();
-        await summary(details).focus();
-        await summary(details).press('Enter');
-        await expect(details).toHaveJSProperty('open', true);
-        await expect(summary(details)).toBeFocused();
-        await expect(summary(details)).toBeVisible();
-        await summary(details).press('Space');
-        await expect(details).toHaveJSProperty('open', false);
-        await summary(details).press('Space');
-        await expect(details).toHaveJSProperty('open', true);
-        await page.keyboard.press('Tab');
-        await expect(page.locator('#first-page-link')).toBeFocused();
-        await expect(summary(details)).toBeHidden();
-        expect(await page.locator('#first-page-link').evaluate(element => element.checkVisibility({checkVisibilityCSS: true}))).toBe(true);
-    } finally { await context.close(); }
-});
+for (const javascript of [true, false]) for (const width of [390, 768, 769, 1440]) {
+    test(`fresh ${width}px Page has real native forward/reverse Tab navigation (JavaScript ${javascript})`, async ({browser}, testInfo) => {
+        const context = await browser.newContext({javaScriptEnabled: javascript,
+            baseURL: 'http://127.0.0.1:18080', viewport: {width, height: 900}});
+        try {
+            const page = await context.newPage();
+            const errors = [];
+            page.on('pageerror', error => errors.push(error.message));
+            await page.route('**/issue56-native-tab', route => route.fulfill({contentType: 'text/html', body:
+                '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'
+                + '<link rel="stylesheet" href="/css/framework.css">'
+                + (javascript ? '<script defer src="/js/framework.js"></script>' : '')
+                + '</head><body><button id="before">Before Page</button>' + generated('page-details')
+                + '<button id="after">After Page</button></body></html>'}));
+            await page.goto('/issue56-native-tab');
+            if (javascript) await settle(page);
+            const details = disclosure(page);
+            const closed = !javascript || width <= 768;
+            await expect(details).toHaveJSProperty('open', !closed);
+            await expect(details).not.toHaveAttribute('tabindex');
+            await expect(summary(details)).not.toHaveAttribute('tabindex');
+            await page.locator('#before').focus(); // Only seed focus; every disclosure entry is native Tab.
+            await page.keyboard.press('Tab');
+            if (closed) {
+                await nativeVisibleHit(summary(details));
+                expect(await page.locator('#first-page-link').evaluate(element =>
+                    element.checkVisibility({checkVisibilityCSS: true}))).toBe(false);
+                await page.screenshot({path: testInfo.outputPath(`issue56-native-${width}-js-${javascript}.png`)});
+                await page.keyboard.press('Tab');
+                await expect(summary(disclosure(page, 'empty-page'))).toBeFocused();
+                await page.keyboard.press('Tab');
+                await expect(summary(disclosure(page, 'second-page'))).toBeFocused();
+                await page.keyboard.press('Tab');
+                await expect(page.locator('#after')).toBeFocused();
+                for (const id of ['second-page', 'empty-page', 'first-page']) {
+                    await page.keyboard.press('Shift+Tab');
+                    await expect(summary(disclosure(page, id))).toBeFocused();
+                }
+                await page.keyboard.press('Shift+Tab');
+                await expect(page.locator('#before')).toBeFocused();
+                await page.keyboard.press('Tab');
+                await page.keyboard.press('Enter');
+                await expect(details).toHaveJSProperty('open', true);
+                await page.keyboard.press('Tab');
+                await nativeVisibleHit(page.locator('#first-page-link'));
+                if (width <= 768) {
+                    await page.keyboard.press('Shift+Tab');
+                    await expect(summary(details)).toBeFocused();
+                    await page.keyboard.press('Space');
+                    await expect(details).toHaveJSProperty('open', false);
+                    await page.keyboard.press('Tab');
+                    await expect(summary(disclosure(page, 'empty-page'))).toBeFocused();
+                }
+            } else {
+                await nativeVisibleHit(page.locator('#first-page-link'));
+                await page.keyboard.press('Shift+Tab');
+                await expect(page.locator('#before')).toBeFocused();
+                await page.screenshot({path: testInfo.outputPath(`issue56-native-${width}-js-${javascript}.png`)});
+            }
+            expect(errors).toEqual([]);
+        } finally { await context.close(); }
+    });
+}
+
+for (const initialWidth of [390, 1440]) {
+    test(`disabled-JavaScript ${initialWidth}px fresh Page stays natively recoverable on desktop with Enter/Space`, async ({browser}) => {
+        const context = await browser.newContext({javaScriptEnabled: false, hasTouch: true,
+            baseURL: 'http://127.0.0.1:18080', viewport: {width: initialWidth, height: 900}});
+        try {
+            const page = await context.newPage();
+            await page.route('**/phase13-nojs', route => route.fulfill({contentType: 'text/html', body:
+                '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/css/framework.css"></head><body>'
+                + generated('page-details') + '</body></html>'}));
+            await page.goto('/phase13-nojs');
+            const details = disclosure(page);
+            await expect(details).toHaveJSProperty('open', false);
+            await summary(details).tap();
+            await expect(details).toHaveJSProperty('open', true);
+            await summary(details).tap();
+            await expect(details).toHaveJSProperty('open', false);
+            await page.setViewportSize({width: 1440, height: 900});
+            await expect(summary(details)).toBeVisible();
+            await summary(details).focus();
+            await summary(details).press('Enter');
+            await expect(details).toHaveJSProperty('open', true);
+            await expect(summary(details)).toBeFocused();
+            await expect(summary(details)).toBeVisible();
+            await summary(details).press('Space');
+            await expect(details).toHaveJSProperty('open', false);
+            await summary(details).press('Space');
+            await expect(details).toHaveJSProperty('open', true);
+            await page.keyboard.press('Tab');
+            await expect(page.locator('#first-page-link')).toBeFocused();
+            await expect(summary(details)).toBeHidden();
+            expect(await page.locator('#first-page-link').evaluate(element => element.checkVisibility({checkVisibilityCSS: true}))).toBe(true);
+        } finally { await context.close(); }
+    });
+}
 
 for (const callerWrite of [false, true]) {
     test(`Page native fallback coexists with Alert borrowed opener lifecycle (caller write ${callerWrite})`, async ({page}) => {
         await resize(page, 390);
         await host(page);
         const details = disclosure(page);
+        await summary(details).click();
+        await expect(details).toHaveJSProperty('open', true);
         const content = details.locator(':scope > .sticky-sidebar-content');
         await content.evaluate((content, html) => {
             const alert = new DOMParser().parseFromString(html, 'text/html').getElementById('phase13-modal-alert');
@@ -557,7 +667,8 @@ for (const callerWrite of [false, true]) {
         await close.click();
         await expect(content).toBeFocused();
         await expect(content).toHaveAttribute('tabindex', '-1');
-        await expect(details).toHaveAttribute('tabindex', '-1');
+        await expect(details).not.toHaveAttribute('tabindex');
+        await expect(details.locator('..')).toHaveAttribute('tabindex', '-1');
         await modal(page, 'phase13-stacked-modal');
         await expect(content).not.toHaveAttribute('tabindex');
         if (callerWrite) await content.evaluate(element => element.setAttribute('tabindex', '-1'));
@@ -567,6 +678,7 @@ for (const callerWrite of [false, true]) {
         await page.locator('#application').focus();
         if (callerWrite) await expect(content).toHaveAttribute('tabindex', '-1');
         else await expect(content).not.toHaveAttribute('tabindex');
-        await expect(details).toHaveAttribute('tabindex', '-1');
+        await expect(details).not.toHaveAttribute('tabindex');
+        await expect(details.locator('..')).toHaveAttribute('tabindex', '-1');
     });
 }
