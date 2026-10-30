@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
@@ -22,7 +21,7 @@ class ChatDemoIntegrationTest {
     private MockMvc mvc;
     @BeforeEach void freshState() {
         service = new ChatDemoService();
-        mvc = MockMvcBuilders.standaloneSetup(new ChatDemoController(service, new ChatDemoPage())).build();
+        mvc = new io.mindspice.demo.SandboxTestSupport().chat(new ChatDemoController(service, new ChatDemoPage())).build();
     }
     @AfterEach void cleanup() { service.close(); }
 
@@ -86,7 +85,7 @@ class ChatDemoIntegrationTest {
             for (String value : new String[]{null, "", " ", "unknown"}) {
                 var request = action.equals("messages") ? post("/chat/" + action).param("message", "attempt") : get("/chat/" + action);
                 if (value != null) request.param("conversationId", value);
-                var result = mvc.perform(request).andExpect(status().is(value == null || value.isBlank() ? 400 : 404))
+                var result = mvc.perform(request).andExpect(status().is(action.equals("messages") ? 403 : value == null || value.isBlank() ? 400 : 404))
                     .andExpect(header().string("Cache-Control", "no-store")).andReturn();
                 assertNull(result.getRequest().getSession(false));
                 assertFalse(result.getRequest().isAsyncStarted());

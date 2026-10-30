@@ -7,6 +7,7 @@ import ch.qos.logback.core.read.ListAppender;
 import io.mindspice.demo.DemoPrivateConfiguration;
 import io.mindspice.demo.chat.ChatDemoService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSessionEvent;
 import jakarta.servlet.http.HttpSessionListener;
 import org.apache.catalina.Context;
 import org.apache.catalina.Session;
@@ -34,6 +35,7 @@ import org.springframework.mock.env.MockEnvironment;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
@@ -46,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /** Real Boot precedence and real Tomcat destruction, with no non-loopback listener or test endpoint. */
 class DemoPrivateConfigurationTest {
-    private static final String PRIVATE_WARNING = "PRIVATE NON-DURABLE DEMO";
+    private static final String PRIVATE_WARNING = "TEMPORARY SITE SANDBOXES";
     private static final String EXPOSURE_WARNING = "NON-LOOPBACK PRIVATE DEMO BIND OVERRIDE";
 
     @Test
@@ -63,9 +65,9 @@ class DemoPrivateConfigurationTest {
                 assertNull(context.getEnvironment().getProperty("server.port"), "The demo must not impose a port property");
                 warnings.assertPrivateOnly();
                 assertTrue(warnings.messages().getFirst().contains("NOT authentication"));
-                assertTrue(warnings.messages().getFirst().contains("NO CSRF"));
+                assertTrue(warnings.messages().getFirst().contains("Site-local origin/CSRF checks"));
                 assertTrue(warnings.messages().getFirst().contains("rate protection"));
-                assertTrue(warnings.messages().getFirst().contains("shared editing sandbox"));
+                assertTrue(warnings.messages().getFirst().contains("session ownership"));
                 assertTrue(warnings.messages().getFirst().contains("Flags/modes/approval are simulations"));
             }
         }
@@ -192,6 +194,25 @@ class DemoPrivateConfigurationTest {
                 assertFalse(first instanceof org.springframework.mock.web.MockHttpSession);
                 String firstId = service.initialize(first, false).conversationId();
                 String secondId = service.initialize(second, false).conversationId();
+                var sandboxes = context.getBean(io.mindspice.demo.SandboxRegistry.class);
+                admitSandbox(sandboxes, first);
+                Object secondPending = acquireSandbox(sandboxes, second, true, false);
+                Object firstReset = acquireSandbox(sandboxes, first, false, true);
+                AtomicInteger destructionAdmissionChecks = new AtomicInteger();
+                List<Object> listeners = new ArrayList<>(List.of(servlet.getApplicationLifecycleListeners()));
+                // Tomcat invokes destruction listeners in reverse order, before marking the session invalid.
+                listeners.add(0, new HttpSessionListener() {
+                    @Override public void sessionDestroyed(HttpSessionEvent event) {
+                        event.getSession().getCreationTime();
+                        InvocationTargetException denied = assertThrows(InvocationTargetException.class,
+                            () -> acquireSandbox(sandboxes, event.getSession(), true, true));
+                        var failure = assertInstanceOf(org.springframework.web.server.ResponseStatusException.class, denied.getCause());
+                        assertEquals(404, failure.getStatusCode().value());
+                        destructionAdmissionChecks.incrementAndGet();
+                    }
+                });
+                servlet.setApplicationLifecycleListeners(listeners.toArray());
+                assertEquals(2, sandboxCount(sandboxes));
                 completions.add(installTransport(service.stream(first, firstId)));
                 completions.add(installTransport(service.stream(first, firstId)));
                 completions.add(installTransport(service.stream(second, secondId)));
@@ -199,7 +220,9 @@ class DemoPrivateConfigurationTest {
                 assertEquals(3, count(service, "streamCount"));
                 // Genuine StandardSession.invalidate(), not a direct service/listener invocation or logout endpoint.
                 first.invalidate();
+                releaseSandbox(sandboxes, first, firstReset, false);
                 assertFalse(firstManaged.isValid());
+                assertEquals(1, sandboxCount(sandboxes));
                 assertEquals(1, count(service, "conversationCount"));
                 assertEquals(1, count(service, "streamCount"));
                 assertEquals(1, completions.get(0).get());
@@ -208,11 +231,14 @@ class DemoPrivateConfigurationTest {
                 assertEquals(secondId, service.history(second, secondId).conversationId());
                 assertEquals(1, service.history(second, secondId).messages().size());
                 second.invalidate();
+                releaseSandbox(sandboxes, second, secondPending, true);
                 assertFalse(secondManaged.isValid());
+                assertEquals(0, sandboxCount(sandboxes));
                 assertEquals(0, count(service, "conversationCount"));
                 assertEquals(0, count(service, "streamCount"));
                 assertEquals(1, completions.get(2).get());
                 assertEquals(0, servlet.getManager().getActiveSessions());
+                assertEquals(2, destructionAdmissionChecks.get());
             }
             assertEquals(0, count(service, "conversationCount"));
             assertEquals(0, count(service, "streamCount"));
@@ -238,6 +264,30 @@ class DemoPrivateConfigurationTest {
         // Logging has initialized by this event; warnings are emitted at the subsequent ApplicationReadyEvent.
         application.addListeners((org.springframework.context.ApplicationListener<ApplicationStartedEvent>) event -> warnings.attach());
         return application;
+    }
+
+    private static void admitSandbox(io.mindspice.demo.SandboxRegistry registry, HttpSession session) throws Exception {
+        releaseSandbox(registry, session, acquireSandbox(registry, session, true, false), true);
+    }
+
+    private static Object acquireSandbox(io.mindspice.demo.SandboxRegistry registry, HttpSession session,
+                                         boolean initialize, boolean reset) throws Exception {
+        var acquire = io.mindspice.demo.SandboxRegistry.class.getDeclaredMethod("acquire", HttpSession.class, boolean.class, boolean.class);
+        acquire.setAccessible(true);
+        return acquire.invoke(registry, session, initialize, reset);
+    }
+
+    private static void releaseSandbox(io.mindspice.demo.SandboxRegistry registry, HttpSession session,
+                                       Object entry, boolean successful) throws Exception {
+        var release = io.mindspice.demo.SandboxRegistry.class.getDeclaredMethod("release", entry.getClass(), HttpSession.class, boolean.class);
+        release.setAccessible(true);
+        release.invoke(registry, entry, session, successful);
+    }
+
+    private static int sandboxCount(io.mindspice.demo.SandboxRegistry registry) throws Exception {
+        var field = io.mindspice.demo.SandboxRegistry.class.getDeclaredField("entries");
+        field.setAccessible(true);
+        return ((Map<?, ?>) field.get(registry)).size();
     }
 
     private static int count(ChatDemoService service, String name) throws Exception {
@@ -269,7 +319,7 @@ class DemoPrivateConfigurationTest {
 
     @Configuration(proxyBeanMethods = false)
     @EnableAutoConfiguration
-    @Import({DemoPrivateConfiguration.class, io.mindspice.demo.ChatDemoController.class,
+    @Import({DemoPrivateConfiguration.class, io.mindspice.demo.SandboxRegistry.class, io.mindspice.demo.ChatDemoController.class,
         io.mindspice.demo.pages.ChatDemoPage.class})
     static class PrivateTestApplication {
         @Bean ChatDemoService chatDemoService() { return new ChatDemoService(); }

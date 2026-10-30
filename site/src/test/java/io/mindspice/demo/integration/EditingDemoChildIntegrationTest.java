@@ -13,7 +13,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.lang.reflect.Field;
 import java.net.URI;
@@ -32,7 +31,7 @@ class EditingDemoChildIntegrationTest {
     @BeforeEach
     void freshState() throws Exception {
         controller = new EditingDemoController();
-        mvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mvc = new io.mindspice.demo.SandboxTestSupport().standalone(controller).build();
         var find = EditingDemoController.class.getDeclaredMethod("findModule", String.class);
         find.setAccessible(true);
         module = find.invoke(controller, "module-9");

@@ -26,8 +26,18 @@ class ForumDemoIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
     private ForumDemoService forumService;
+
+    @Autowired
+    private org.springframework.web.context.WebApplicationContext context;
+    private io.mindspice.demo.SandboxTestSupport visitor;
+
+    @org.junit.jupiter.api.BeforeEach
+    void isolatedVisitor() {
+        visitor = new io.mindspice.demo.SandboxTestSupport();
+        forumService = visitor.forum();
+        mockMvc = visitor.web(context).build();
+    }
 
     @Test
     @DisplayName("Forum page should render in full shell with demo sections")
@@ -348,9 +358,9 @@ class ForumDemoIntegrationTest {
     }
 
     @Test
-    @DisplayName("Owner can edit; non-owner delete should be forbidden")
+    @DisplayName("Owner can edit; foreign visitor is isolated and local non-owner persona delete is forbidden")
     void ownerEditAndNonOwnerDeleteAuthorization() throws Exception {
-        MockHttpSession ownerSession = new MockHttpSession();
+        MockHttpSession ownerSession = visitor.session;
         MockHttpSession otherSession = new MockHttpSession();
 
         mockMvc.perform(post("/forum/viewer")
@@ -397,7 +407,13 @@ class ForumDemoIntegrationTest {
             .orElseThrow();
 
         mockMvc.perform(post("/forum/topics/{topicId}/delete", createdTopic.id())
-                .session(otherSession)
+                .session(otherSession))
+            .andExpect(status().isNotFound());
+        mockMvc.perform(post("/forum/viewer").session(ownerSession).param("userId", "user-other")
+                .param("displayName", "Other").param("role", "user"))
+            .andExpect(status().isOk());
+        mockMvc.perform(post("/forum/topics/{topicId}/delete", createdTopic.id())
+                .session(ownerSession)
                 .header("HX-Request", "true")
                 .param("scope", "cat-feedback")
                 .param("topic", createdTopic.id())
@@ -408,6 +424,9 @@ class ForumDemoIntegrationTest {
             .andExpect(status().isForbidden())
             .andExpect(content().string(containsString("not allowed")));
 
+        mockMvc.perform(post("/forum/viewer").session(ownerSession).param("userId", "user-owner")
+                .param("displayName", "Owner").param("role", "user"))
+            .andExpect(status().isOk());
         mockMvc.perform(post("/forum/topics/{topicId}/update", createdTopic.id())
                 .session(ownerSession)
                 .header("HX-Request", "true")
@@ -424,9 +443,9 @@ class ForumDemoIntegrationTest {
     }
 
     @Test
-    @DisplayName("Moderator can delete topic owned by another viewer")
+    @DisplayName("Local simulated moderator can delete topic owned by another persona")
     void moderatorCanDeleteTopic() throws Exception {
-        MockHttpSession ownerSession = new MockHttpSession();
+        MockHttpSession ownerSession = visitor.session;
         MockHttpSession modSession = new MockHttpSession();
 
         mockMvc.perform(post("/forum/viewer")
@@ -472,7 +491,12 @@ class ForumDemoIntegrationTest {
             .orElseThrow();
 
         mockMvc.perform(post("/forum/topics/{topicId}/delete", createdTopic.id())
-                .session(modSession)
+                .session(modSession)).andExpect(status().isNotFound());
+        mockMvc.perform(post("/forum/viewer").session(ownerSession).param("displayName", "Moderator")
+                .param("userId", "user-mod").param("role", "moderator"))
+            .andExpect(status().isOk());
+        mockMvc.perform(post("/forum/topics/{topicId}/delete", createdTopic.id())
+                .session(ownerSession)
                 .header("HX-Request", "true")
                 .param("scope", "cat-guides")
                 .param("topic", createdTopic.id())

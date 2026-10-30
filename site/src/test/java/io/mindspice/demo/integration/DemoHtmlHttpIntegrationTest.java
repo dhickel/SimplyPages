@@ -17,7 +17,6 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -64,7 +63,7 @@ class DemoHtmlHttpIntegrationTest {
 
     @BeforeEach
     void isolatedVarySeed() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(context).addFilters(new SeedVaryFilter()).build();
+        mockMvc = new io.mindspice.demo.SandboxTestSupport().web(context).addFilters(new SeedVaryFilter()).build();
     }
 
     @Test
@@ -544,7 +543,7 @@ class DemoHtmlHttpIntegrationTest {
     }
 
     private static MockMvc isolatedEditingMvc(EditingDemoController controller) {
-        return MockMvcBuilders.standaloneSetup(controller)
+        return new io.mindspice.demo.SandboxTestSupport().standalone(controller)
             .addFilters(new SeedVaryFilter())
             .build();
     }

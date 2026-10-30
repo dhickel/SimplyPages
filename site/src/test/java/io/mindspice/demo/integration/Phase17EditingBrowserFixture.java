@@ -6,7 +6,6 @@ import io.mindspice.demo.EditingDemoController;
 import io.mindspice.simplypages.editing.EditMode;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.web.server.context.WebServerInitializedEvent;
 
 import java.lang.reflect.Field;
 import java.net.InetAddress;
@@ -15,7 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Test-scope launcher: arranges only the existing seeded LIST before the listener starts. */
 public final class Phase17EditingBrowserFixture {
@@ -34,29 +32,28 @@ public final class Phase17EditingBrowserFixture {
         try (ServerSocket probe = new ServerSocket(port, 1, InetAddress.getByName("127.0.0.1"))) {
             // Refuse a busy port; never attach to another process.
         }
-        AtomicBoolean arranged = new AtomicBoolean();
+        var arranged = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<Object, Boolean>());
+        var lastState = new java.util.concurrent.atomic.AtomicReference<EditingDemoController>();
         SpringApplication application = new SpringApplication(DemoApplication.class);
         application.addInitializers(context -> context.addBeanFactoryPostProcessor(factory ->
                 factory.addBeanPostProcessor(new BeanPostProcessor() {
                     @Override
                     public Object postProcessAfterInitialization(Object bean, String name) {
-                        if (bean instanceof EditingDemoController controller) {
-                            if (!arranged.compareAndSet(false, true)) throw new IllegalStateException("Duplicate controller");
-                            arrange(controller, content, canEdit, canDelete, mode);
+                        if (name.equals("scopedTarget.editingDemoController") && bean instanceof EditingDemoController controller) {
+                            synchronized (arranged) {
+                                try {
+                                    Object pages = field(controller, "pages").get(controller);
+                                    if (arranged.add(pages)) arrange(controller, content, canEdit, canDelete, mode);
+                                    lastState.set(controller);
+                                } catch (ReflectiveOperationException failure) {
+                                    throw new IllegalStateException(failure);
+                                }
+                            }
                         }
                         return bean;
                     }
                 })));
-        application.addListeners(event -> {
-            if (event instanceof WebServerInitializedEvent && !arranged.get()) {
-                throw new IllegalStateException("Listener started before seed arrangement");
-            }
-        });
         var context = application.run("--server.address=127.0.0.1", "--server.port=" + port);
-        if (!arranged.get()) {
-            context.close();
-            throw new IllegalStateException("Production controller not arranged");
-        }
         // Parent pipe EOF also closes Spring if the test worker is terminated unexpectedly.
         Thread parent = new Thread(() -> {
             try {
@@ -66,7 +63,7 @@ public final class Phase17EditingBrowserFixture {
             } finally {
                 try {
                     System.out.println("PHASE17_FIXTURE_STATE " + new ObjectMapper().writeValueAsString(
-                            seedState(context.getBean(EditingDemoController.class))));
+                            seedState(java.util.Objects.requireNonNull(lastState.get(), "No visitor opened editing"))));
                     System.out.flush();
                 } catch (Exception failure) {
                     failure.printStackTrace(System.err);

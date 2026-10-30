@@ -3,7 +3,8 @@ package io.mindspice.demo.forum;
 import io.mindspice.simplypages.components.forum.categories.ForumCategoryData;
 import io.mindspice.simplypages.components.forum.comments.ForumCommentData;
 import io.mindspice.simplypages.components.forum.topics.ForumTopicData;
-import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,9 +22,13 @@ import java.util.Optional;
 /**
  * In-memory forum backend used by the demo module.
  */
-@Service
 public class ForumDemoService {
 
+    private static final int MAX_TOPICS = 128;
+    private static final int MAX_COMMENTS = 512;
+    private static final int MAX_TITLE = 256;
+    private static final int MAX_BODY = 16384;
+    private static final int MAX_VIEWER_FIELD = 128;
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("MMM d, yyyy HH:mm", Locale.US);
 
     private final Object lock = new Object();
@@ -174,8 +179,12 @@ public class ForumDemoService {
 
             String normalizedTitle = normalizeRequired(title);
             String normalizedBody = normalizeRequired(body);
-            if (normalizedTitle == null || normalizedBody == null) {
+            if (normalizedTitle == null || normalizedBody == null || title.length() > MAX_TITLE
+                || body.length() > MAX_BODY || !validViewer(viewer)) {
                 return Optional.empty();
+            }
+            if (topicsById.size() >= MAX_TOPICS) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Forum topic capacity reached");
             }
 
             String topicId = String.format("topic-%04d", topicSequence++);
@@ -203,8 +212,11 @@ public class ForumDemoService {
             }
 
             String normalizedBody = normalizeRequired(body);
-            if (normalizedBody == null) {
+            if (normalizedBody == null || body.length() > MAX_BODY || !validViewer(viewer)) {
                 return Optional.empty();
+            }
+            if (commentsById.size() >= MAX_COMMENTS) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Forum comment capacity reached");
             }
 
             int depth = 0;
@@ -269,7 +281,8 @@ public class ForumDemoService {
 
             String normalizedTitle = normalizeRequired(title);
             String normalizedBody = normalizeRequired(body);
-            if (normalizedTitle == null || normalizedBody == null) {
+            if (normalizedTitle == null || normalizedBody == null || title.length() > MAX_TITLE
+                || body.length() > MAX_BODY) {
                 return Optional.empty();
             }
 
@@ -288,7 +301,7 @@ public class ForumDemoService {
             }
 
             String normalizedBody = normalizeRequired(body);
-            if (normalizedBody == null) {
+            if (normalizedBody == null || body.length() > MAX_BODY) {
                 return Optional.empty();
             }
 
@@ -443,6 +456,10 @@ public class ForumDemoService {
             comment.likes,
             replies
         );
+    }
+
+    private boolean validViewer(ForumViewer viewer) {
+        return viewer.userId().length() <= MAX_VIEWER_FIELD && viewer.displayName().length() <= MAX_VIEWER_FIELD;
     }
 
     private boolean isOwnerOrModerator(String ownerId, ForumViewer viewer) {

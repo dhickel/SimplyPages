@@ -27,7 +27,10 @@ import io.mindspice.simplypages.modules.ContentModule;
 import io.mindspice.simplypages.modules.SimpleListModule;
 import io.mindspice.simplypages.components.ListItem;
 import io.mindspice.simplypages.modules.EditableModule;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.context.annotation.RequestScope;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.NumberUtils;
@@ -51,6 +54,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * - Permission flags for modules and rows
  */
 @Controller
+@RequestScope
 @RequestMapping(value = "/editing-demo", produces = "text/html;charset=UTF-8")
 public class EditingDemoController {
 
@@ -119,13 +123,26 @@ public class EditingDemoController {
     }
 
     // All state access and rendered snapshots share this monitor; HTTP writes follow return.
-    private final Object stateLock = new Object();
-    private final Map<String, PageData> pages = new ConcurrentHashMap<>();
-    private final Map<String, List<PendingEdit>> pendingEdits = new ConcurrentHashMap<>();
-    private final AtomicInteger idCounter = new AtomicInteger(100);
+    private final Object stateLock;
+    private final Map<String, PageData> pages;
+    private final Map<String, List<PendingEdit>> pendingEdits;
+    private final AtomicInteger idCounter;
 
     public EditingDemoController() {
+        stateLock = new Object();
+        pages = new ConcurrentHashMap<>();
+        pendingEdits = new ConcurrentHashMap<>();
+        idCounter = new AtomicInteger(100);
         initializeDemoData();
+    }
+
+    @Autowired
+    public EditingDemoController(HttpServletRequest request) {
+        EditingDemoController state = SandboxRegistry.current(request).editing;
+        stateLock = state.stateLock;
+        pages = state.pages;
+        pendingEdits = state.pendingEdits;
+        idCounter = state.idCounter;
     }
 
     private void initializeDemoData() {
@@ -433,6 +450,9 @@ public class EditingDemoController {
             return Alert.danger("Insertion position is outside the current page.").render();
         }
 
+        if (pageData.rows.size() >= 64) {
+            return stateError(response, 409, "Maximum 64 rows per sandbox.");
+        }
         String rowId = "row-" + idCounter.incrementAndGet();
         DemoRow newRow = new DemoRow(rowId, index + 1);
         pageData.rows.add(index + 1, newRow);
@@ -807,6 +827,9 @@ public class EditingDemoController {
 
     private void storeChildContent(DemoModule module, List<String> candidate, EditMode mode) {
         String content = String.join(",", candidate);
+        if (content.length() > 5000) {
+            throw new ChildFailure(400, "List content may contain at most 5000 UTF-16 units.");
+        }
         if (!visibleItems(content).equals(candidate)) {
             throw new ChildFailure(400, "This change would lose a retained empty item in CSV storage. Edit that item first.");
         }
@@ -920,7 +943,7 @@ public class EditingDemoController {
             changes.put("content", safeText(formData.get("content")));
         }
         if (formData.containsKey("width")) {
-            changes.put("width", formData.get("width"));
+            changes.put("width", safeText(formData.get("width")));
         }
         changes.put("useMarkdown", String.valueOf(formData.containsKey("useMarkdown")));
         return changes;

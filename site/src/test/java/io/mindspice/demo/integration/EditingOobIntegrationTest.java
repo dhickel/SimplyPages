@@ -24,6 +24,14 @@ class EditingOobIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private org.springframework.web.context.WebApplicationContext context;
+
+    @org.junit.jupiter.api.BeforeEach
+    void visitor() {
+        mockMvc = new io.mindspice.demo.SandboxTestSupport().web(context).build();
+    }
+
     @Test
     @DisplayName("Demos shell should render consolidated sidebar and top nav")
     void demosShellRendersConsolidatedNavigation() throws Exception {

@@ -26,8 +26,11 @@ import io.mindspice.simplypages.components.forms.TextInput;
 import io.mindspice.simplypages.core.Component;
 import io.mindspice.simplypages.core.HtmlTag;
 import io.mindspice.simplypages.layout.Page;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.context.annotation.RequestScope;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,12 +51,13 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Controller
+@RequestScope
 @RequestMapping("/forum")
 public class ForumDemoController {
 
-    private static final String SESSION_VIEWER_ID = "forum.viewer.id";
-    private static final String SESSION_VIEWER_NAME = "forum.viewer.name";
-    private static final String SESSION_VIEWER_MODERATOR = "forum.viewer.moderator";
+    static final String SESSION_VIEWER_ID = "forum.viewer.id";
+    static final String SESSION_VIEWER_NAME = "forum.viewer.name";
+    static final String SESSION_VIEWER_MODERATOR = "forum.viewer.moderator";
 
     private static final int DEFAULT_TOPICS_PER_PAGE = 8;
     private static final int DEFAULT_COMMENTS_PER_PAGE = 8;
@@ -67,6 +71,11 @@ public class ForumDemoController {
 
     public ForumDemoController(ForumDemoService forumService) {
         this.forumService = forumService;
+    }
+
+    @Autowired
+    public ForumDemoController(HttpServletRequest request) {
+        this.forumService = SandboxRegistry.current(request).forum;
     }
 
     @GetMapping(produces = MediaType.TEXT_HTML_VALUE)
@@ -133,11 +142,17 @@ public class ForumDemoController {
         addHxVary(response);
         String name = safeTrim(params.get("displayName"));
         String userId = safeTrim(params.get("userId"));
+        if ((name != null && name.length() > 128) || (userId != null && userId.length() > 128)) {
+            response.setStatus(400);
+            return renderForumMain(parseState(params, null, null), resolveViewer(session), null, null,
+                "Viewer values must be at most 128 UTF-16 units.", FlashType.WARNING);
+        }
         if (name == null) {
             name = "Demo User";
         }
         if (userId == null) {
-            userId = "user-" + slugify(name);
+            String generated = "user-" + slugify(name);
+            userId = generated.substring(0, Math.min(128, generated.length()));
         }
 
         boolean moderator = "moderator".equalsIgnoreCase(params.get("role")) || params.containsKey("moderator");

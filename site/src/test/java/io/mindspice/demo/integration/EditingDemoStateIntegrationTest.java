@@ -10,7 +10,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
@@ -445,7 +444,7 @@ class EditingDemoStateIntegrationTest {
                 "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|editable-module-[0-9]+");
         final EditingDemoController controller = new EditingDemoController();
         final Object lock = get(controller, "stateLock");
-        final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
+        final MockMvc mvc = new io.mindspice.demo.SandboxTestSupport().standalone(controller).build();
 
         Response call(MockHttpServletRequestBuilder request, int status) throws Exception {
             Response response = perform(request);

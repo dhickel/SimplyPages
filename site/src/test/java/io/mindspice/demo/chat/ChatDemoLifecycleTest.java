@@ -272,7 +272,7 @@ class ChatDemoLifecycleTest {
     void ownedExpiryHasTruthfulHttp410WithoutImplicitAllocationAndExplicitNewUsesGeneratedMarkup() throws Exception {
         MutableClock clock = new MutableClock();
         try (ChatDemoService service = service(clock)) {
-            var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(
+            var mvc = new io.mindspice.demo.SandboxTestSupport().chat(
                 new io.mindspice.demo.ChatDemoController(service, new io.mindspice.demo.pages.ChatDemoPage())).build();
             MockHttpSession session = new MockHttpSession();
             mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/chat").session(session))
@@ -391,7 +391,7 @@ class ChatDemoLifecycleTest {
         try (ChatDemoService service = service(new MutableClock())) {
             List<MockHttpSession> sessions = sessions(32);
             List<String> ids = sessions.stream().map(session -> service.initialize(session, false).conversationId()).toList();
-            var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(
+            var mvc = new io.mindspice.demo.SandboxTestSupport().chat(
                 new io.mindspice.demo.ChatDemoController(service, new io.mindspice.demo.pages.ChatDemoPage())).build();
             Transport first = new Transport(service, service.stream(sessions.getFirst(), ids.getFirst()), false);
             for (int i = 0; i < 32; i++) {
