@@ -140,6 +140,22 @@ In SimplyPages code:
 
 Use inline style sparingly for runtime-calculated values.
 
+## Button Visibility and Contrast
+
+The framework's `.btn` rule hides buttons with ordinary `hidden` using `display: none`,
+so they are not painted or included in sequential keyboard navigation under the default
+styles. It deliberately excludes `hidden="until-found"` (case-insensitive), leaving that
+state to browser behavior rather than forcing `display: none`. Caller CSS or inline styles
+can override the default display rule; check visibility and keyboard behavior when customizing
+it. Hiding a control is not authorization.
+
+The default secondary button uses white text over the `--sp-button-secondary-bg` gradient,
+with a separate `--sp-button-secondary-bg-hover` gradient. The default Add Module secondary
+control's normal text is intended to meet 4.5:1 contrast across the gradient. If you override
+these tokens, text color, or button styles, check contrast across the resulting gradients and
+states and preserve visible focus. This targeted default is not a certification of accessibility
+for the whole framework or an application.
+
 ## Should You Edit `framework.css` Directly?
 
 Default answer: no.

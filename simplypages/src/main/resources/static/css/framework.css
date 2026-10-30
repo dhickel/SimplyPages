@@ -195,7 +195,7 @@
     --sp-form-control-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.54);
     --sp-button-primary-bg: linear-gradient(180deg, #476be2 0%, #3157d1 100%);
     --sp-button-primary-bg-hover: linear-gradient(180deg, #3d62da 0%, #284ec4 100%);
-    --sp-button-secondary-bg: linear-gradient(180deg, #5d74bc 0%, #4a5ea3 100%);
+    --sp-button-secondary-bg: linear-gradient(180deg, #5b72ba 0%, #4a5ea3 100%);
     --sp-button-secondary-bg-hover: linear-gradient(180deg, #546ab2 0%, #425394 100%);
 
     /* Home landing accents */
@@ -522,6 +522,10 @@ p { margin-bottom: 1rem; }
     transition: all var(--sp-transition-fast);
     text-decoration: none;
     text-align: center;
+}
+
+.btn:where([hidden]:not([hidden="until-found" i])) {
+    display: none;
 }
 
 .btn:hover {
@@ -3818,10 +3822,13 @@ img {
 
 .add-module-section .btn {
     background-color: var(--sp-theme-border-default);
-    color: var(--sp-theme-text-muted);
     border: 2px dashed var(--sp-theme-border-strong);
     padding: 12px 24px;
     font-weight: 500;
+}
+
+.add-module-section .btn:not(:where(.btn-secondary)) {
+    color: var(--sp-theme-text-muted);
 }
 
 .add-module-section .btn:hover {

@@ -120,14 +120,9 @@ Known open issues:
 - [#78: TextArea leading newline](https://github.com/dhickel/SimplyPages/issues/78):
   native HTML parsing consumes an initial LF. The private editing demo compensates; the
   primitive remains unfixed.
-- [#80: Button visibility](https://github.com/dhickel/SimplyPages/issues/80): default Button
-  CSS can override ordinary `hidden` visibility and leave the control in Tab navigation.
-  Hiding a control is never authorization.
 - [#81: Private chat shutdown warning](https://github.com/dhickel/SimplyPages/issues/81):
   a recycled-response destroy warning can occur after SIGTERM. Processes exit; no leak
   has been proven. This is not evidence of a general framework chat crash.
-- [#83: Add Module contrast](https://github.com/dhickel/SimplyPages/issues/83): the secondary
-  control's normal-text contrast is below 4.5:1; the operation works.
 - [#84: Documentation completeness](https://github.com/dhickel/SimplyPages/issues/84):
   remaining API catalog, missing-Javadoc, and executable-example coverage are follow-up
   work, not complete today. The 100-warning display cap is not a count of documentation debt.
