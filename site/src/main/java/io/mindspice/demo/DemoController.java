@@ -29,12 +29,20 @@ public class DemoController {
     @ResponseBody public String directory(HttpServletRequest request, HttpServletResponse response) {
         String path = request.getRequestURI();
         String category = path.endsWith("modules") ? "Modules" : path.endsWith("builders") ? "Builders" : null;
-        String title = category == null ? "Working examples, from primitive to page." : category;
-        String content = SiteShell.intro(title, "Browse actual SimplyPages output, matching Java, documentation and exact API references.")
-            + (category == null ? new Paragraph().withChild(Link.create("/demos/recovery", "Expired sandbox or admission error? Open explicit recovery →")).render() : "")
-            + SiteCatalog.directory(category) + (category == null ? FeatureExamples.directory()
-                + "<details class=\"sp-site-source-details\"><summary>Supporting contracts, grouped by working feature</summary>"
-                + FeatureCatalog.directory() + "</details>" : "");
+        if ("Builders".equals(category)) return page("Shells & builders", "/demos/builders/composition",
+            SiteCatalog.render("/demos/builders/composition"), request, response);
+        String title = category == null ? "Small pieces. Complete interfaces." : category;
+        Div collections = new Div();
+        if (category == null) collections.withChild(Header.H2("Start with the building blocks"))
+            .withChild(DemoNavigation.cards("Components"));
+        collections.withChild(Header.H2("Compose something useful"))
+            .withChild(DemoNavigation.cards("Composed modules"));
+        if (category == null) collections.withChild(Header.H2("Follow a working feature"))
+            .withChild(DemoNavigation.cards("Working features"));
+        String content = SiteShell.intro(title, "Choose a demo family, explore real output, then take the Java composition with you.")
+            + collections.render()
+            + "<details class=\"sp-site-source-details sp-site-symbol-index\"><summary>Looking for a specific type? Open the complete symbol index</summary>"
+            + SiteCatalog.directory(category) + (category == null ? FeatureCatalog.directory() : "") + "</details>";
         return page(title, path, content, request, response);
     }
 
@@ -51,7 +59,8 @@ public class DemoController {
             response.setStatus(404);
             content = SiteShell.intro("Example not found", "This is not a catalog destination. Choose a working example from the demo directory.");
         }
-        return page(FeatureExamples.title(slug), path, content, request, response);
+        DemoNavigation.Category category = DemoNavigation.current(path);
+        return page(category == null ? FeatureExamples.title(slug) : category.title(), path, content, request, response);
     }
 
     @GetMapping(value = "/demos/recovery", produces = MediaType.TEXT_HTML_VALUE)
@@ -123,12 +132,15 @@ public class DemoController {
 
     @GetMapping(value = {"/api", "/javadocs-view"}, produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody public String api(HttpServletRequest request, HttpServletResponse response) {
-        Div content = new Div().withChild(Header.H1("Java API"))
+        Div content = new Div().withClass("sp-site-api").withChild(new Paragraph("THE NATIVE REFERENCE").withClass("sp-site-eyebrow"))
+            .withChild(Header.H1("Java API"))
             .withChild(new Paragraph("The generated reference is the native Javadoc document, with package navigation, inherited members, search and local supporting assets."))
             .withChild(Link.create("/javadocs/index.html", "Open the complete Java API →").withClass("sp-site-primary"))
             .withChild(Header.H2("Start with a package"));
+        Div packages = new Div().withClass("sp-site-api-packages");
         for (String pkg : new String[]{"core", "components", "layout", "modules", "builders", "editing", "components/content", "components/forum", "components/chat"})
-            content.withChild(new Div().withChild(Link.create("/javadocs/io/mindspice/simplypages/" + pkg + "/package-summary.html", pkg.replace('/', '.'))));
+            packages.withChild(Link.create("/javadocs/io/mindspice/simplypages/" + pkg + "/package-summary.html", pkg.replace('/', '.') + " →"));
+        content.withChild(packages);
         content.withChild(Link.create("/docs/reference/README.md", "Read the guided reference"));
         return page("Java API", "/api", content.render(), request, response);
     }

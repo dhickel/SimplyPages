@@ -47,6 +47,49 @@ class SiteCatalogTest {
         }
     }
 
+    @Test void purposeLedCollectionsPreserveEveryOriginalSpecimenAndUniqueTargets() {
+        Set<String> covered = new HashSet<>();
+        for (var category : DemoNavigation.categories()) {
+            if (category.members().isEmpty()) continue;
+            var doc = Jsoup.parse(SiteCatalog.render(category.route()));
+            assertEquals(1, doc.select("h1").size(), category.route());
+            Set<String> ids = new HashSet<>();
+            doc.select("[id]").forEach(element -> assertTrue(ids.add(element.id()), category.route() + " duplicate " + element.id()));
+            for (var example : DemoNavigation.examples(category)) {
+                assertTrue(covered.add(example.symbol().getName()));
+                var original = Jsoup.parse(SiteCatalog.render(example.route())).getElementById(example.id());
+                assertEquals(normalizeGeneratedIds(original.outerHtml()), normalizeGeneratedIds(doc.getElementById(example.id()).outerHtml()), example.destination());
+            }
+        }
+        assertEquals(23, covered.size(), "17 ordinary modules and all six builders share five cohesive pages");
+    }
+
+    private String normalizeGeneratedIds(String html) {
+        var ids = new LinkedHashMap<String, String>();
+        return Pattern.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}").matcher(html)
+            .replaceAll(match -> ids.computeIfAbsent(match.group(), key -> "generated-" + ids.size()));
+    }
+
+    @Test void homeIsABoundedShowcaseAndDemoNavigationExposesCurrentFamilyAndSubsections() {
+        var home = Jsoup.parse(new HomePage().render());
+        assertEquals(6, home.select(".sp-site-category-card").size());
+        assertEquals(3, home.select(".sp-site-workflow-card").size());
+        assertTrue(home.select(".sp-site-directory, [data-catalog-symbol]").isEmpty());
+        assertTrue(home.select(".sp-site-home-example .content-module").size() > 0);
+        for (var category : DemoNavigation.categories()) {
+            var shell = Jsoup.parse(SiteShell.render(category.title(), category.route(), "Content"));
+            assertEquals("/demos", shell.selectFirst(".sp-site-nav [aria-current]").attr("href"));
+            assertEquals(category.route(), shell.selectFirst(".sp-site-demo-sidebar [aria-current]").attr("href"));
+            assertEquals(1, shell.select(".sp-site-demo-sidebar details > summary").size());
+            assertTrue(shell.select(".sp-site-demo-sidebar a[hx-get]").isEmpty(), "Chat and all categories use document navigation");
+            assertEquals(18, shell.select(".sp-site-nav-group > a").size(), "Navigate families, not all 141 symbols");
+        }
+        var old = Jsoup.parse(SiteShell.render("Content", "/demos/modules/content", SiteCatalog.render("/demos/modules/content")));
+        assertEquals("/demos/modules/reading", old.selectFirst(".sp-site-demo-sidebar [aria-current]").attr("href"));
+        assertNotNull(old.selectFirst(".sp-site-nav-sections a[href='/demos/modules/reading#contentmodule']"));
+        assertTrue(Jsoup.parse(SiteShell.render("Home", "/", home.outerHtml())).select(".sp-site-demo-sidebar").isEmpty());
+    }
+
     @Test void presentationPreservesNativeDraftBytesAndUsesOneLiteralTokenPerPostForm() {
         String draft = "<textarea name=\"text\">\n\nA &lt; B\n</textarea>";
         String decorated = SiteTokenPresentation.decorate("<form hx-post=\"/editing-demo/save/module9\">" + draft + "</form><button hx-delete=\"/editing-demo/delete/module9\">Delete</button>", "token-123");

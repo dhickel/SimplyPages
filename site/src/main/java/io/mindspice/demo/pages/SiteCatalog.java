@@ -148,12 +148,15 @@ public final class SiteCatalog {
 
     public static String render(String route) { return render(route, "ada"); }
     public static String render(String route, String persona) {
-        List<Example> selected = EXAMPLES.stream().filter(e -> e.route().equals(route)).toList();
+        DemoNavigation.Category collection = DemoNavigation.current(route);
+        boolean grouped = collection != null && collection.route().equals(route) && !collection.members().isEmpty();
+        List<Example> selected = grouped ? DemoNavigation.examples(collection)
+            : EXAMPLES.stream().filter(e -> e.route().equals(route)).toList();
         if (selected.isEmpty()) return null;
-        String title = selected.size() == 1 ? selected.getFirst().symbol().getSimpleName() : selected.getFirst().category();
-        String intro = (selected.getFirst().symbol() == HeroModule.class || selected.getFirst().symbol() == BannerBuilder.class)
+        String title = grouped ? collection.title() : selected.size() == 1 ? selected.getFirst().symbol().getSimpleName() : selected.getFirst().category();
+        String intro = selected.stream().anyMatch(e -> e.symbol() == HeroModule.class || e.symbol() == BannerBuilder.class)
             ? new Div().withClass("sp-site-intro").withChild(Link.create("/demos", "Demos /"))
-                .withChild(new Paragraph(title + " · the specimen supplies this page's H1"))
+                .withChild(new Paragraph(title).withClass("sp-site-collection-title"))
                 .withChild(new Paragraph("Working framework components, paired with the Java that composes them.")).render()
             : SiteShell.intro(title, "Working framework components, paired with the Java that composes them.");
         Div root = new Div().withChild(new RawHtml(intro));

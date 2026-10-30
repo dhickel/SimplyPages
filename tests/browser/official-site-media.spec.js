@@ -29,7 +29,9 @@ test('site chrome contrast and 200 percent CSS zoom remain usable', async ({page
         };
         return ['.sp-site-nav a','.sp-site-eyebrow','.sp-site-lede','.sp-site-primary'].map(selector => {
             const element = document.querySelector(selector), css = getComputedStyle(element);
-            const bg = selector === '.sp-site-primary' ? css.backgroundColor : getComputedStyle(document.body).backgroundColor;
+            let surface = element;
+            while (surface.parentElement && ['rgba(0, 0, 0, 0)', 'transparent'].includes(getComputedStyle(surface).backgroundColor)) surface = surface.parentElement;
+            const bg = getComputedStyle(surface).backgroundColor;
             const values = [lum(css.color),lum(bg)].sort((a,b) => b-a);
             return (values[0]+.05)/(values[1]+.05);
         });

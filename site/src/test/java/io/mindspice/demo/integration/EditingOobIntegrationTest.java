@@ -46,7 +46,8 @@ class EditingOobIntegrationTest {
             .andExpect(content().string(containsString("Text &amp; structure")))
             .andExpect(content().string(containsString("Display &amp; data")))
             .andExpect(content().string(containsString("Modules")))
-            .andExpect(content().string(containsString("HTMX fragments &amp; forms")))
+            .andExpect(content().string(containsString("href=\"/demos/features/htmx\"")))
+            .andExpect(content().string(containsString("HTMX &amp; fragments")))
             .andExpect(content().string(containsString("ChatModule")));
     }
 

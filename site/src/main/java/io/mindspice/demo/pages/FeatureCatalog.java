@@ -51,8 +51,13 @@ public final class FeatureCatalog {
         return root.withChild(links).render();
     }
     public static String directory() {
-        Div root = new Div().withClass("sp-site-directory-group").withChild(Header.H2("Supporting contracts in context"));
-        CONTRACTS.forEach(e -> root.withChild(Link.create(e.destination(), e.name())));
+        Div root = new Div().withClass("sp-site-directory");
+        CONTRACTS.stream().map(Contract::feature).distinct().forEach(feature -> {
+            Div group = new Div().withClass("sp-site-directory-group").withChild(Header.H2(FeatureExamples.title(feature)));
+            CONTRACTS.stream().filter(e -> e.feature().equals(feature))
+                .forEach(e -> group.withChild(Link.create(e.destination(), e.name())));
+            root.withChild(group);
+        });
         return root.render();
     }
 }
