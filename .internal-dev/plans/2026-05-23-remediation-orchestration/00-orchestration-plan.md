@@ -76,7 +76,7 @@ Minimum per-domain validation:
   - `./mvnw -pl demo test`
   - local `./mvnw -pl demo spring-boot:run` on an available port
   - Playwright checks for edited demo flows
-  - live deploy/browser validation before finalizing code fixes when required by root `AGENTS.md`
+  - local packaged-process and browser validation for changed behavior as required by root `AGENTS.md`
 
 - Docs/process domains:
   - link/path spot checks for changed docs

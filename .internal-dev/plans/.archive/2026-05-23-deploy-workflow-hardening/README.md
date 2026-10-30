@@ -1,5 +1,7 @@
 # Deploy Workflow Hardening Plan
 
+> Superseded: the former deployment was retired by user instruction on 2026-10-30. This archived plan is historical and must not be executed.
+
 ## Context
 
 The current `./deploy.sh host 192.168.1.113 host` workflow builds the project locally and then

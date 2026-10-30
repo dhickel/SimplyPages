@@ -114,11 +114,8 @@ Package-specific operational rules live in package-level `AGENTS.md` files.
 - Always implement tests for new features in the same workstream; do not defer test coverage.
 - Prioritize regression coverage for rendering, escaping, lifecycle, editing flow, and layout behavior
 - Demo changes should not replace framework tests
-- For bug investigations, use the test/deploy/live-verify loop by default:
-  1) run relevant automated tests,
-  2) deploy to the live host,
-  3) verify behavior on the live site before deep-diving into local-only debugging.
-- For UI bug reports, explicitly validate both behavior and visual alignment/layout in the live browser before classifying the issue as framework-level.
+- For bug investigations, run relevant local automated tests and reproduce the issue against a freshly packaged local process when applicable; verify the fix with focused regression coverage.
+- For UI bug reports, validate both behavior and visual alignment/layout in a local browser before classifying the issue as framework-level.
 
 ## Build and Test Commands
 
@@ -143,15 +140,10 @@ cd simplypages && ../mvnw test
 cd demo && ../mvnw spring-boot:run
 ```
 
-## Live Deploy and Test
-- Agents are authorized to deploy and validate changes against the live host for debugging and verification.
-- Use this command for live testing deployments:
-```bash
-./deploy.sh host 192.168.1.113 host
-```
-- Canonical live URL: `http://192.168.1.113:8080` (assume this is the primary deployment target unless explicitly told otherwise).
-- After a feature improvement or bug fix is finalized, always deploy to the live host and verify behavior.
-- After deployment, verify behavior on the live site before finalizing fixes.
+## Local Process and Browser Validation
+- For feature improvements and bug fixes, run relevant local automated tests and verify applicable runtime behavior against a freshly packaged local process before finalizing.
+- For browser-facing changes, use the existing browser harness with fresh artifacts and verify both behavior and visual alignment/layout as relevant.
+- Do not deploy to or verify against a live host.
 
 ## Documentation Structure
 - `docs/README.md` is the Diátaxis landing page and the default `/docs` entry point.
