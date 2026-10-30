@@ -4,11 +4,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -56,6 +60,33 @@ class SnapshotAssertTest {
 
         assertThrows(AssertionError.class,
             () -> SnapshotAssert.assertMatches("group/mismatch", "<div><p>New</p></div>"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("semanticChanges")
+    void testSemanticChangesFailWithoutUpdating(String expected, String actual) throws IOException {
+        System.setProperty("simplypages.snapshotRootDir", tempDir.toString());
+        System.clearProperty("updateSnapshots");
+        Path snapshotPath = tempDir.resolve("group/semantic.snap.html");
+        Files.createDirectories(snapshotPath.getParent());
+        Files.writeString(snapshotPath, HtmlNormalizer.normalize(expected), StandardCharsets.UTF_8);
+
+        assertThrows(AssertionError.class,
+            () -> SnapshotAssert.assertMatches("group/semantic", actual));
+    }
+
+    private static Stream<Arguments> semanticChanges() {
+        return Stream.of(
+            Arguments.of("<div>Main</div>", "<div> Main </div>"),
+            Arguments.of("<p>Hello world</p>", "<p>Hello  world</p>"),
+            Arguments.of("<p>Hello <em>world</em></p>", "<p>Hello<em>world</em></p>"),
+            Arguments.of("<pre>first\n second</pre>", "<pre>first second</pre>"),
+            Arguments.of("<textarea> draft </textarea>", "<textarea>draft</textarea>"),
+            Arguments.of("<script>let value = 'a  b';</script>", "<script>let value = 'a b';</script>"),
+            Arguments.of("<style>.a { color: red; }</style>", "<style>.a { color: blue; }</style>"),
+            Arguments.of("<a href=\"/safe\">Open</a>", "<a href=\"/other\">Open</a>"),
+            Arguments.of("<p><em>Text</em></p>", "<p><strong>Text</strong></p>")
+        );
     }
 
     @Test
