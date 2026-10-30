@@ -79,7 +79,7 @@ public class ChatDemoService implements AutoCloseable {
                 if (previousState != null) removeConversation(previousState, endings, "ended");
                 String id = "conv-" + UUID.randomUUID();
                 Conversation state = new Conversation(id, owner, clock.millis());
-                addMessage(state, "assistant", "Welcome. Send a message to smoke test chat rendering + SSE refresh.", "Demo Agent");
+                addMessage(state, "assistant", "Welcome to your temporary conversation. Send a message to try server-rendered chat and finite SSE updates.", "Demo Agent");
                 session.setAttribute(SESSION_CONVERSATION, id);
                 conversations.put(id, state);
                 return snapshot(state);

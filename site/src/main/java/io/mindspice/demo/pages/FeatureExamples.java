@@ -68,6 +68,29 @@ public final class FeatureExamples {
                     // The application adds CSRF fields and headers to forms before HTTP output.
                     """,
                     "core/Template", "/docs/core/03-template-rendercontext-slotkey-reference.md"));
+                root.withChild(example("module-entries", "Module structure & slot entries",
+                    "A module builds its structure once. Live entries are escaped at render time; compiled entries accept only application-trusted rendered HTML. Both contexts reuse the same compiled module.",
+                    new RawHtml(moduleEntries()),
+                    """
+                    public static String moduleEntries() {
+                        SlotKey<String> value = SlotKey.of("module.value");
+                        io.mindspice.simplypages.core.Module module = new io.mindspice.simplypages.core.Module("section") {
+                            protected void buildContent() {
+                                withChild(new Paragraph().withChild(Slot.of(value)));
+                            }
+                        };
+                        Template template = module.compile();
+                        RenderContext live = RenderContext.builder().with(value, "Live <text>").build();
+                        RenderContext compiled = RenderContext.builder().build()
+                            .putCompiled(value, new HtmlTag("strong").withInnerText("Trusted compiled text").render());
+                        SlotEntry liveEntry = live.getEntries().get(value);
+                        SlotEntry compiledEntry = compiled.getEntries().get(value);
+                        return new Div().withChild(new Paragraph(liveEntry.getClass().getSimpleName()))
+                            .withChild(new RawHtml(template.render(live)))
+                            .withChild(new Paragraph(compiledEntry.getClass().getSimpleName()))
+                            .withChild(new RawHtml(template.render(compiled))).render();
+                    }
+                    """, "core/SlotEntry", "/docs/core/03-template-rendercontext-slotkey-reference.md"));
                 SlotKey<String> bound = SlotKey.of("bound");
                 Template view = new Paragraph().withChild(Slot.of(bound)).compile();
                 root.withChild(example("bound-context", "TemplateComponent: a bound context",
@@ -113,7 +136,7 @@ public final class FeatureExamples {
                     new Div().withChild(new Paragraph(rejectedUrl())).withChild(new Paragraph(rejectedStyle())),
                     """
                     public static String rejectedUrl() {
-                        try { Link.create("javascript:alert(1)", "Unsafe"); return "URL accepted"; }
+                        try { SafeUrl.validateHref("javascript:alert(1)"); return "URL accepted"; }
                         catch (IllegalArgumentException rejected) { return "Rejected javascript: link: " + rejected.getMessage(); }
                     }
                     public static String rejectedStyle() {
@@ -124,7 +147,7 @@ public final class FeatureExamples {
                         return new Div().withChild(new Paragraph(rejectedUrl())).withChild(new Paragraph(rejectedStyle())).render();
                     }
                     """,
-                    "components/navigation/Link", "/docs/security/01-security-boundaries-and-safe-rendering.md"));
+                    "core/SafeUrl", "/docs/security/01-security-boundaries-and-safe-rendering.md"));
                 Style style = Style.create().padding("1rem").color("#245C48");
                 HtmlTag styled = new Div().withInnerText("Application-owned style values");
                 styled.withAttribute("style", style.getStyleString());
@@ -147,6 +170,24 @@ public final class FeatureExamples {
     public static String card(String title, String body) {
         return CARD.render(RenderContext.builder().with(TITLE, title).with(BODY, body).build());
     }
+    private static String moduleEntries() {
+        SlotKey<String> value = SlotKey.of("module.value");
+        io.mindspice.simplypages.core.Module module = new io.mindspice.simplypages.core.Module("section") {
+            protected void buildContent() {
+                withChild(new Paragraph().withChild(Slot.of(value)));
+            }
+        };
+        Template template = module.compile();
+        RenderContext live = RenderContext.builder().with(value, "Live <text>").build();
+        RenderContext compiled = RenderContext.builder().build()
+            .putCompiled(value, new HtmlTag("strong").withInnerText("Trusted compiled text").render());
+        SlotEntry liveEntry = live.getEntries().get(value);
+        SlotEntry compiledEntry = compiled.getEntries().get(value);
+        return new Div().withChild(new Paragraph(liveEntry.getClass().getSimpleName()))
+            .withChild(new RawHtml(template.render(live)))
+            .withChild(new Paragraph(compiledEntry.getClass().getSimpleName()))
+            .withChild(new RawHtml(template.render(compiled))).render();
+    }
     private static Template liveDelegate() {
         Component live = context -> new Paragraph(context.get(TITLE).orElse("")).render(context);
         return live.compile();
@@ -157,7 +198,7 @@ public final class FeatureExamples {
             .withChild(Header.H3("Safe Markdown")).withChild(new Markdown(value)).render();
     }
     private static String rejectedUrl() {
-        try { Link.create("javascript:alert(1)", "Unsafe"); return "URL accepted"; }
+        try { SafeUrl.validateHref("javascript:alert(1)"); return "URL accepted"; }
         catch (IllegalArgumentException rejected) { return "Rejected javascript: link: " + rejected.getMessage(); }
     }
     private static String rejectedStyle() {
@@ -452,10 +493,7 @@ public final class FeatureExamples {
                     ChatTranscriptRenderer<ChatMessageView, Void> renderer =
                         ChatTranscriptRenderer.<ChatMessageView, Void>builder()
                             .withEmptyStateText("No messages yet. Start by sending one below.")
-                            .withBodyTextResolver((message, context) -> "assistant".equals(message.role())
-                                && message.body().equals("Welcome. Send a message to smoke test chat rendering + SSE refresh.")
-                                    ? "Welcome to your temporary conversation. Send a message to try server-rendered chat and finite SSE updates."
-                                    : message.body()).build();
+                            .withBodyTextResolver((message, context) -> message.body()).build();
                     Component transcript = new HtmlTag("div").withId("chat-history")
                         .withAttribute("data-chat-conversation-id", conversationId)
                         .withChild(Alert.warning("Temporary, non-published chat. Session ownership is not authentication. Same-origin and CSRF checks are enforced. Only the welcome and latest 25 complete exchanges are retained."))

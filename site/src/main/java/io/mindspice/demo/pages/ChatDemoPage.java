@@ -23,10 +23,7 @@ public class ChatDemoPage {
     private final ChatTranscriptRenderer<ChatDemoService.ChatMessageView, Void> transcriptRenderer =
         ChatTranscriptRenderer.<ChatDemoService.ChatMessageView, Void>builder()
             .withEmptyStateText("No messages yet. Start by sending one below.")
-            .withBodyTextResolver((message, context) -> "assistant".equals(message.role())
-                && message.body().equals("Welcome. Send a message to smoke test chat rendering + SSE refresh.")
-                    ? "Welcome to your temporary conversation. Send a message to try server-rendered chat and finite SSE updates."
-                    : message.body())
+            .withBodyTextResolver((message, context) -> message.body())
             .build();
 
     public String renderMain(String conversationId, List<ChatDemoService.ChatMessageView> history, String flashText, boolean warning) {

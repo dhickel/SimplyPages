@@ -10,8 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,7 +24,6 @@ public class DocumentationService {
     public static final String DEFAULT_DOC_PATH = "README.md";
     private static final String CLASSPATH_DOCS_ROOT = "static/docs/";
     private static final String CLASSPATH_DOCS_SCAN_PATTERN = "classpath*:static/docs/**/*.md";
-    private static final List<Path> FILESYSTEM_DOCS_ROOTS = List.of(Path.of("docs"), Path.of("../docs"));
     private static final String MISSING_NAV_MESSAGE = "Documentation navigation unavailable: no markdown files were discovered under static/docs.";
 
     private final PathMatchingResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver();
@@ -171,19 +168,7 @@ public class DocumentationService {
             }
 
         } catch (IOException e) {
-            // fall through and try filesystem fallback
-        }
-
-        for (Path docsRoot : FILESYSTEM_DOCS_ROOTS) {
-            Path normalizedRoot = docsRoot.normalize();
-            Path fallbackPath = normalizedRoot.resolve(lookupPath).normalize();
-            if (fallbackPath.startsWith(normalizedRoot) && Files.exists(fallbackPath)) {
-                try {
-                    return Files.readString(fallbackPath, StandardCharsets.UTF_8);
-                } catch (IOException ignored) {
-                    return null;
-                }
-            }
+            // Unreadable packaged documentation is unavailable.
         }
         return null;
     }
@@ -199,11 +184,7 @@ public class DocumentationService {
             Resource[] resources = resourceResolver.getResources(CLASSPATH_DOCS_SCAN_PATTERN);
             addClasspathResources(resources, sections);
         } catch (IOException ignored) {
-            // Continue with filesystem fallback.
-        }
-
-        if (sections.isEmpty()) {
-            addFilesystemResources(sections);
+            // Leave navigation unavailable when packaged resources cannot be read.
         }
 
         cachedDocsStructure = sections;
@@ -219,27 +200,6 @@ public class DocumentationService {
                 }
             } catch (IOException ignored) {
                 // Skip unreadable resource and continue.
-            }
-        }
-    }
-
-    private void addFilesystemResources(Map<String, List<String>> sections) {
-        for (Path docsRoot : FILESYSTEM_DOCS_ROOTS) {
-            Path normalizedRoot = docsRoot.normalize();
-            if (!Files.isDirectory(normalizedRoot)) {
-                continue;
-            }
-
-            try (var stream = Files.walk(normalizedRoot)) {
-                stream.filter(Files::isRegularFile)
-                    .filter(path -> path.toString().endsWith(".md"))
-                    .forEach(path -> {
-                        String relativePath = normalizedRoot.relativize(path).toString().replace('\\', '/');
-                        sections.computeIfAbsent(toSectionName(relativePath), key -> new ArrayList<>()).add(relativePath);
-                    });
-                return;
-            } catch (IOException ignored) {
-                // Try the next root.
             }
         }
     }

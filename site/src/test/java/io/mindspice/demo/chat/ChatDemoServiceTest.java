@@ -26,6 +26,9 @@ class ChatDemoServiceTest {
                 }
             }
             assertEquals(1, initial.messages().size());
+            assertEquals("Welcome to your temporary conversation. Send a message to try server-rendered chat and finite SSE updates.",
+                initial.messages().getFirst().body());
+            assertEquals(initial.messages().getFirst(), service.history(session, initial.conversationId()).messages().getFirst());
             assertThrows(UnsupportedOperationException.class, () -> initial.messages().clear());
             var retained = service.history(session, initial.conversationId());
             assertEquals("Message 5", retained.messages().get(1).body());

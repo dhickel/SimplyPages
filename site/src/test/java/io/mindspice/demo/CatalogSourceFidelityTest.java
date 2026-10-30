@@ -111,8 +111,16 @@ class CatalogSourceFidelityTest {
         String typed = templates.selectFirst("#typed-slots .code-block code").wholeText();
         String safe = safety.selectFirst("#escaping .code-block code").wholeText();
         String rejected = safety.selectFirst("#url-style-safety .code-block code").wholeText();
-        Class<?> helpers = compile("FeatureListings", IMPORTS + "public class FeatureListings {" + typed + safe + rejected + "}");
+        String entries = templates.selectFirst("#module-entries .code-block code").wholeText();
+        Class<?> helpers = compile("FeatureListings", IMPORTS + "public class FeatureListings {" + typed + safe + rejected + entries + "}");
+        var entryPreview = templates.selectFirst("#module-entries [data-example-preview]");
+        assertTrue(entryPreview.text().contains("LiveEntry"));
+        assertTrue(entryPreview.text().contains("CompiledEntry"));
+        assertTrue(entryPreview.html().contains("Live &lt;text&gt;"));
+        assertTrue(entryPreview.text().contains("Trusted compiled text"));
+        assertTrue(rejected.contains("SafeUrl.validateHref"));
         for (var item : List.of(Map.entry(templates.getElementById("typed-slots"), "typedPreview"),
+            Map.entry(templates.getElementById("module-entries"), "moduleEntries"),
             Map.entry(safety.getElementById("escaping"), "safetyPreview"), Map.entry(safety.getElementById("url-style-safety"), "rejectedPreview"))) {
             assertEquals(normalize(item.getKey().selectFirst("[data-example-preview]").html()),
                 normalize((String) helpers.getMethod(item.getValue()).invoke(null)), item.getValue());

@@ -15,11 +15,12 @@ public final class FeatureCatalog {
     private static final List<Contract> CONTRACTS = new ArrayList<>();
     static {
         group("core", "templates", "typed-slots", "core/03-template-rendercontext-slotkey-reference.md",
-            "Component HtmlTag Module Slot SlotKey RenderContext Template SlotEntry");
+            "Component HtmlTag Slot SlotKey RenderContext Template");
+        group("core", "templates", "module-entries", "core/03-template-rendercontext-slotkey-reference.md", "Module SlotEntry");
         group("core", "editing", "edit-form-builder", "core/03-template-rendercontext-slotkey-reference.md", "SlotKeyMap TypedValue");
         group("core", "templates", "bound-context", "core/03-template-rendercontext-slotkey-reference.md", "TemplateComponent");
-        group("core", "safe-rendering", "url-style-safety", "security/01-security-boundaries-and-safe-rendering.md", "Attribute SafeUrl");
-        group("core", "safe-rendering", "style-composition", "core/05-css-defaults-overrides-and-structure.md", "Style CssClassNames");
+        group("core", "safe-rendering", "url-style-safety", "security/01-security-boundaries-and-safe-rendering.md", "SafeUrl");
+        group("core", "safe-rendering", "style-composition", "core/05-css-defaults-overrides-and-structure.md", "Attribute Style CssClassNames");
         group("editing", "editing", "editablepage", "reference/editing-api-reference.md", "EditablePage EditableRow");
         group("editing", "editing", "live-editing-contracts", "reference/editing-api-reference.md", "Editable EditableChild EditMode EditModalBuilder");
         group("editing", "editing", "edit-form-builder", "reference/editing-api-reference.md", "EditFormBuilder FormFieldHelper ValidationResult");
