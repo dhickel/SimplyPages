@@ -10,13 +10,13 @@ runnable example, see [your first page](../tutorials/first-page.md).
 
 Add SimplyPages to your `pom.xml`:
 
-Current release: `1.0.1`.
+Current release: `1.2`.
 
 ```xml
 <dependency>
   <groupId>io.mindspice</groupId>
   <artifactId>simplypages</artifactId>
-  <version>1.1.1</version>
+  <version>1.2</version>
 </dependency>
 ```
 

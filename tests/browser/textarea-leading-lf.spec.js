@@ -7,7 +7,7 @@ const {test, expect} = require('playwright/test');
 
 const root = path.resolve(__dirname, '../..');
 const fixtureRoot = path.join(root, 'simplypages/target/textarea-browser-fixtures');
-const libraryJar = path.join(root, 'simplypages/target/simplypages-1.1.1.jar');
+const libraryJar = path.join(root, 'simplypages/target/simplypages-1.2.jar');
 const demoJar = path.join(root, 'demo/target/simplypages-demo.jar');
 const unpack = (jar, entry) => execFileSync('unzip', ['-p', jar, entry], {maxBuffer: 32 * 1024 * 1024});
 const sha256 = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
@@ -36,7 +36,7 @@ test.beforeAll(async ({request}) => {
                 expect(sha256(unpack(libraryJar, relative.slice('target/classes/'.length))), relative).toBe(hash);
             }
         }
-        expect(unpack(demoJar, 'BOOT-INF/lib/simplypages-1.1.1.jar').equals(fs.readFileSync(libraryJar))).toBe(true);
+        expect(unpack(demoJar, 'BOOT-INF/lib/simplypages-1.2.jar').equals(fs.readFileSync(libraryJar))).toBe(true);
         const assets = {};
         for (const url of ['/css/framework.css', '/webjars/htmx.org/dist/htmx.min.js']) {
             const response = await request.get(url);

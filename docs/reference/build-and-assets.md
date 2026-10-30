@@ -1,10 +1,10 @@
 # Build requirements and assets
 
-These values describe this checkout, version `1.1.1`.
+These values describe this checkout, version `1.2`.
 
 | Item | Value |
 | --- | --- |
-| Library coordinates | `io.mindspice:simplypages:1.1.1` |
+| Library coordinates | `io.mindspice:simplypages:1.2` |
 | Library compilation and runtime | JDK 25 |
 | Demo compiler target | Java 21 bytecode; runtime remains JDK 25 |
 | Build entry point | Official Maven Wrapper 3.3.4, `only-script`; checksum-pinned Maven 3.10.0 via `./mvnw` |
@@ -87,7 +87,7 @@ are unchanged. Exact JSON representability is broader than legal browser HTTP-he
 
 ## Build outputs
 
-- Library JAR: `simplypages/target/simplypages-1.1.1.jar`
+- Library JAR: `simplypages/target/simplypages-1.2.jar`
 - Executable demo JAR: `demo/target/simplypages-demo.jar`
 - Generated API docs: `simplypages/target/reports/apidocs/`
 - Packaged guide source: `demo/target/classes/static/docs/`
@@ -110,7 +110,7 @@ publication is not assumed; install the library locally or use your team's artif
 
 ## Beta status, known issues, and support
 
-Version `1.1.1` is a controlled-beta checkout for local installation, not a new public
+Version `1.2` is a controlled-beta checkout for local installation, not a new public
 publication or an unqualified production-readiness claim. The support baseline is Java 25
 and local Chromium checks at desktop and mobile viewports. Mobile viewports do not certify
 physical devices. Other browsers, native Windows, and remote CI remain unverified.

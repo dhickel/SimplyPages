@@ -11,7 +11,7 @@ use the same validation rules.
 
 ## Prerequisites
 
-- SimplyPages **1.1.1** installed locally, Spring MVC, and JDK 25 at runtime.
+- SimplyPages **1.2** installed locally, Spring MVC, and JDK 25 at runtime.
   Complete the [learning path](../getting-started/README.md) through
   [serving pages and fragments](serve-pages-and-fragments.md) first.
 - A component-scanned package; the example fits the demo learning package below.

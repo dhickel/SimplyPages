@@ -13,7 +13,7 @@
 
     <groupId>io.mindspice</groupId>
     <artifactId>simplypages-demo</artifactId>
-    <version>1.1.1</version>
+    <version>1.2</version>
     <name>SimplyPages Demo</name>
     <description>Demo application for SimplyPages</description>
 
@@ -30,7 +30,7 @@
         <dependency>
             <groupId>io.mindspice</groupId>
             <artifactId>simplypages</artifactId>
-            <version>1.1.1</version>
+            <version>1.2</version>
         </dependency>
 
         <!-- Spring Boot Starter for web applications -->

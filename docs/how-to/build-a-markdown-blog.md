@@ -7,7 +7,7 @@ article pages, and HTMX navigation that also works as ordinary links.
 
 ## Prerequisites
 
-- A working Spring MVC application running on JDK 25 with SimplyPages **1.1.1**
+- A working Spring MVC application running on JDK 25 with SimplyPages **1.2**
   installed locally; follow [Getting started](../getting-started/README.md) and
   [serve pages and fragments](serve-pages-and-fragments.md) first.
 - Framework CSS, framework JavaScript, and the HTMX WebJar available through Spring's

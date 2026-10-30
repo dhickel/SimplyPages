@@ -41,8 +41,8 @@ with zipfile.ZipFile(jar) as archive:
     }, 'Stale production class set'
     for n in classes:
         assert archive.read(n) == (demo_classes/n.removeprefix('BOOT-INF/classes/')).read_bytes(), n
-    library = archive.read('BOOT-INF/lib/simplypages-1.1.1.jar')
-    assert library == (root/'simplypages/target/simplypages-1.1.1.jar').read_bytes(), 'Stale nested library'
+    library = archive.read('BOOT-INF/lib/simplypages-1.2.jar')
+    assert library == (root/'simplypages/target/simplypages-1.2.jar').read_bytes(), 'Stale nested library'
     with zipfile.ZipFile(io.BytesIO(library)) as nested:
         library_classes = root/'simplypages/target/classes'
         packaged_classes = {n for n in nested.namelist() if n.endswith('.class')}

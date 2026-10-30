@@ -17,7 +17,7 @@ java -version
 
 Use **JDK 25** for both build and runtime. The checksum-pinned Maven wrapper is
 the supported repository build entry point; it installs
-`io.mindspice:simplypages:1.1.1` into your local Maven repository. Do not assume
+`io.mindspice:simplypages:1.2` into your local Maven repository. Do not assume
 that this version is published to a public Maven repository.
 
 The library emits Java 25 bytecode. The repository demo uses Spring Boot **4.1.1**
@@ -91,6 +91,6 @@ These topic URLs remain available for their longer explanations and examples:
 For a bounded working edit controller with explicit security prerequisites, use
 [Build user-editable pages](../how-to/build-user-editable-pages.md).
 The [historical 1.0.1 migration notes](../operations/04-migrating-to-1.0.1.md) do not
-change the current checkout's `1.1.1` version or JDK 25 requirement.
+change the current checkout's `1.2` version or JDK 25 requirement.
 
 [Documentation home](../README.md) · [Tutorials](../tutorials/README.md) · [How-to guides](../how-to/README.md)

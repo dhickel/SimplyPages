@@ -12,7 +12,7 @@ export links, or other controls without handlers.
 ## Prerequisites
 
 - A component-scanned Spring MVC application running on JDK 25 with SimplyPages
-  **1.1.1** installed locally. Start with the [learning path](../getting-started/README.md),
+  **1.2** installed locally. Start with the [learning path](../getting-started/README.md),
   then [serve pages and fragments](serve-pages-and-fragments.md).
 - Spring static-resource handling for `/css/framework.css`, `/js/framework.js`,
   and `/webjars/htmx.org/dist/htmx.min.js`. `ShellBuilder` links these assets;

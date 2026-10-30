@@ -13,7 +13,7 @@ java -version
 ```
 
 The Java version should be 25. Maven should finish with `BUILD SUCCESS` and install version
-`1.1.1` in your local Maven repository.
+`1.2` in your local Maven repository.
 
 ## Create an example project
 
@@ -35,7 +35,7 @@ Create an empty directory outside the SimplyPages checkout. Add this `pom.xml`:
     <dependency>
       <groupId>io.mindspice</groupId>
       <artifactId>simplypages</artifactId>
-      <version>1.1.1</version>
+      <version>1.2</version>
     </dependency>
   </dependencies>
   <build><plugins><plugin>
