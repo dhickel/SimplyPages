@@ -1,5 +1,6 @@
 package io.mindspice.demo;
 
+import io.mindspice.demo.pages.DemoNavigation;
 import io.mindspice.simplypages.builders.ShellBuilder;
 import io.mindspice.simplypages.components.*;
 import io.mindspice.simplypages.components.navigation.Link;
@@ -25,10 +26,16 @@ public final class SiteShell {
             .withChild(new Paragraph("SimplyPages · Java-first server-rendered interfaces."))
             .withChild(Link.create("/docs/security/01-security-boundaries-and-safe-rendering.md", "Security boundaries"))
             .withChild(Link.create("/docs/reference/build-and-assets.md", "Build & support"));
+        Div body = new Div().withClass("sp-site-content").withChild(new RawHtml(content)).withChild(footer);
+        boolean demos = path.equals("/demos") || path.startsWith("/demos/");
         ShellBuilder shell = ShellBuilder.create().withPageTitle(title + " | SimplyPages")
             .withTopNav(chrome).withContentTargetClass("sp-site-main")
-            .withContentWrapper(target -> ((HtmlTag) target).withAttribute("tabindex", "-1"))
-            .withContent(new Div().withClass("sp-site-content").withChild(new RawHtml(content)).withChild(footer))
+            .withContentWrapper(target -> {
+                ((HtmlTag) target).withAttribute("tabindex", "-1");
+                return demos ? new Div().withClass("sp-site-demo-layout")
+                    .withChild(DemoNavigation.sidebar(path)).withChild(target) : target;
+            })
+            .withContent(body)
             .addCustomCss("/css/site.css").addCustomJs("/js/site.js")
             .addCustomJs("/js/editing-demo.js");
         for (String script : scripts) shell.addCustomJs(script);

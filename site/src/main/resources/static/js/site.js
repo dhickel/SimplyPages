@@ -13,7 +13,61 @@
         const disclosure = document.querySelector('.sp-site-docs-sidebar details');
         if (disclosure) disclosure.open = !matchMedia('(max-width:640px)').matches;
     }
-    document.addEventListener('DOMContentLoaded', () => { documentationState(); mobileDocs(); });
+    function demoNavigation() {
+        const disclosure = document.querySelector('.sp-site-demo-disclosure');
+        if (!disclosure) return;
+        const summary = disclosure.querySelector('summary');
+        const mobile = matchMedia('(max-width:900px)');
+        let mobileOpen = false;
+        const observer = new MutationObserver(() => {
+            mobileOpen = disclosure.open;
+            layout();
+        });
+        observer.observe(disclosure, {attributes:true, attributeFilter:['open']});
+        function layout() {
+            // Native toggle events are delayed/coalesced. Capture pending native changes
+            // before resizing, and exclude our synchronous presentation writes.
+            if (observer.takeRecords().length) mobileOpen = disclosure.open;
+            const open = !mobile.matches || mobileOpen;
+            if (!open && disclosure.contains(document.activeElement)) summary.focus();
+            if (disclosure.open !== open) {
+                disclosure.open = open;
+                observer.takeRecords();
+            }
+        }
+        disclosure.addEventListener('keydown', event => {
+            if (event.key !== 'Escape' || !mobile.matches || !disclosure.open) return;
+            event.preventDefault();
+            summary.focus();
+            mobileOpen = false;
+            disclosure.open = false;
+        });
+        disclosure.addEventListener('click', event => {
+            const link = event.target.closest('a[href]');
+            if (!link || !mobile.matches || link.pathname !== location.pathname || !link.hash) return;
+            const target = document.getElementById(link.hash.slice(1));
+            if (!target) return;
+            mobileOpen = false;
+            disclosure.open = false;
+            // Native anchors still own navigation; return keyboard focus to their section.
+            const borrowedFocus = !target.hasAttribute('tabindex');
+            if (borrowedFocus) target.setAttribute('tabindex', '-1');
+            target.focus({preventScroll:true});
+            if (borrowedFocus) target.addEventListener('blur', () => {
+                if (target.getAttribute('tabindex') === '-1') target.removeAttribute('tabindex');
+            }, {once:true});
+        });
+        mobile.addEventListener('change', layout);
+        layout();
+        if (!mobile.matches) {
+            const rail = disclosure.parentElement;
+            const active = disclosure.querySelector('[aria-current]');
+            if (active && active.getBoundingClientRect().bottom > rail.getBoundingClientRect().bottom) {
+                rail.scrollTop += active.getBoundingClientRect().top - rail.getBoundingClientRect().top - 48;
+            }
+        }
+    }
+    document.addEventListener('DOMContentLoaded', () => { documentationState(); mobileDocs(); demoNavigation(); });
     document.addEventListener('htmx:afterSettle', documentationState);
     document.addEventListener('htmx:pushedIntoHistory', documentationState);
     document.addEventListener('submit', async event => {

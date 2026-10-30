@@ -31,6 +31,21 @@ class OfficialSiteIntegrationTest {
                 assertNotNull(doc.getElementById(example.id()), example.destination());
         }
     }
+    @Test void groupedCollectionsHaveRealRoutesCurrentNavigationAndProtectedFragmentForms() throws Exception {
+        for (var category : DemoNavigation.categories()) {
+            if (category.members().isEmpty()) continue;
+            var result = mvc.perform(get(category.route())).andExpect(status().isOk()).andReturn();
+            var doc = Jsoup.parse(result.getResponse().getContentAsString());
+            assertEquals(category.route(), doc.selectFirst(".sp-site-demo-sidebar [aria-current]").attr("href"));
+            for (var example : DemoNavigation.examples(category)) assertNotNull(doc.getElementById(example.id()));
+            for (var form : doc.select("form[method=POST]"))
+                assertEquals(1, form.select("input[name=_csrf]").size(), category.route());
+            var fragment = Jsoup.parse(mvc.perform(get(category.route()).header("HX-Request", "true"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+            assertTrue(fragment.select(".sp-site-demo-sidebar, .sp-site-nav").isEmpty());
+            assertEquals(doc.select("[data-catalog-symbol]").size(), fragment.select("[data-catalog-symbol]").size());
+        }
+    }
     @Test void allSixBuildersHaveIsolatedCompleteLocalPreviews() throws Exception {
         for (String slug : new String[]{"shell", "shell-template", "banner", "top-nav", "side-nav", "account-bar"}) {
             String html = mvc.perform(get("/demos/builders/preview/" + slug))

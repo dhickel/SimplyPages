@@ -12,42 +12,56 @@ public class HomePage implements DemoPage {
     @Override public String render() {
         Div root = new Div().withClass("sp-site-home");
         root.withChild(new Div().withClass("sp-site-hero")
-            .withChild(new Paragraph("JAVA-FIRST · SERVER-RENDERED · COMPOSABLE").withClass("sp-site-eyebrow"))
-            .withChild(Header.H1("Your application is Java.\nYour interface can be, too."))
-            .withChild(new Paragraph("Build data-heavy interfaces with Java components, typed request data, and HTML. Add HTMX where an interaction needs it, not a frontend framework around everything.").withClass("sp-site-lede"))
-            .withChild(new Div().withClass("sp-site-actions")
-                .withChild(Link.create("/demos", "Explore working demos →").withClass("sp-site-primary"))
-                .withChild(Link.create("/docs/tutorials/first-page.md", "Build your first page"))
-                .withChild(Link.create("/api", "Java API"))));
+            .withChild(new Div().withClass("sp-site-hero-copy")
+                .withChild(new Paragraph("JAVA-FIRST / SERVER-RENDERED").withClass("sp-site-eyebrow"))
+                .withChild(Header.H1("Your application is Java.\nYour interface can be, too."))
+                .withChild(new Paragraph("Compose a useful interface. Keep the moving parts on the server. Build with Java components, typed request data and just enough HTMX.").withClass("sp-site-lede"))
+                .withChild(new Div().withClass("sp-site-actions")
+                    .withChild(Link.create("/demos", "Explore working demos →").withClass("sp-site-primary"))
+                    .withChild(Link.create("/docs/tutorials/first-page.md", "Build your first page"))))
+            .withChild(new HtmlTag("section").withClass("sp-site-hero-note")
+                .withChild(new Paragraph("THE SHORT VERSION").withClass("sp-site-eyebrow"))
+                .withChild(Header.H2("Less frontend machinery.\nMore application."))
+                .withChild(new Div().withClass("sp-site-flow")
+                    .withChild(new Paragraph("01").withChild(new HtmlTag("strong").withInnerText("Compose in Java")))
+                    .withChild(new Paragraph("02").withChild(new HtmlTag("strong").withInnerText("Render real HTML")))
+                    .withChild(new Paragraph("03").withChild(new HtmlTag("strong").withInnerText("Update a fragment"))))
+                .withChild(new Paragraph("No frontend framework required. No external assets on this site."))));
         root.withChild(new HtmlTag("section").withClass("sp-site-home-example")
+            .withChild(new Paragraph("FROM COMPOSITION TO OUTPUT").withClass("sp-site-eyebrow"))
             .withChild(Header.H2("Java in. A real interface out."))
             .withChild(new Div().withClass("sp-site-example-grid")
                 .withChild(Code.block(EXAMPLE).withLanguage("java").withTitle("Compose.java"))
                 .withChild(new Div().withClass("sp-site-preview").withChild(ContentModule.create()
-                    .withTitle("A quieter frontend").withContent("Compose **Java components**. Render HTML.")))));
-        root.withChild(new Div().withClass("sp-site-principles")
-            .withChild(principle("01 / Compose", "Small components. Useful modules.", "Compose primitives into sections, forms, tables and complete pages. Layout stays explicit in rows and columns."))
-            .withChild(principle("02 / Render", "Structure once. Values per request.", "Use SlotKey, RenderContext and compiled templates to separate reusable structure from request-time data."))
-            .withChild(principle("03 / Interact", "Return HTML, not another application.", "Target a fragment with HTMX. Keep validation, permission checks and state ownership on the server.")));
-        root.withChild(Header.H2("Read the code. Try the result."))
-            .withChild(new Paragraph("Every catalog entry links to a live example, its Java composition, documentation and generated API."))
-            .withChild(new RawHtml(SiteCatalog.directory(null)));
-        root.withChild(Header.H2("Real workflows, in your own sandbox."))
-            .withChild(new Div().withClass("sp-site-actions")
-                .withChild(Link.create("/demos/features/editing", "Editing & proposals →"))
-                .withChild(Link.create("/demos/features/forum", "Forum & tagged content →"))
-                .withChild(Link.create("/demos/features/chat", "Chat & finite SSE →")))
-            .withChild(new Paragraph("Temporary browser-session examples, not published collaboration. Simulated roles are not authentication. The site enforces same-origin and CSRF checks; applications still own their identity, authorization, storage and resource policies."));
-        root.withChild(Header.H2("A direct path from first page to reference."))
-            .withChild(new Div().withClass("sp-site-actions")
-                .withChild(Link.create("/docs/tutorials/README.md", "Tutorials"))
-                .withChild(Link.create("/docs/how-to/README.md", "How-to guides"))
-                .withChild(Link.create("/docs/reference/README.md", "Reference"))
-                .withChild(Link.create("/docs/explanation/README.md", "Explanation")));
+                    .withTitle("A quieter frontend").withContent("Compose **Java components**. Render HTML."))))
+            .withChild(Link.create("/demos/modules/reading#contentmodule", "Explore content compositions →")));
+        root.withChild(new HtmlTag("section").withClass("sp-site-home-section")
+            .withChild(new Paragraph("A TOOLBOX, NOT A WALL OF CLASS NAMES").withClass("sp-site-eyebrow"))
+            .withChild(Header.H2("Find the pieces for your next page."))
+            .withChild(new Paragraph("Browse by purpose. Each family brings working output, Java composition and exact API references together."))
+            .withChild(DemoNavigation.cards("Components")));
+        root.withChild(new HtmlTag("section").withClass("sp-site-home-section sp-site-workflows")
+            .withChild(new Paragraph("GO BEYOND THE COMPONENT").withClass("sp-site-eyebrow"))
+            .withChild(Header.H2("Real workflows. Your own sandbox."))
+            .withChild(new Div().withClass("sp-site-workflow-grid")
+                .withChild(workflow("01 / EDIT", "Draft. Review. Approve.", "Edit nested content, validate a draft and try an approval flow.", "editing"))
+                .withChild(workflow("02 / DISCUSS", "Give a conversation structure.", "Explore topics, comments, categories and tagged content.", "forum"))
+                .withChild(workflow("03 / CONNECT", "Keep the conversation moving.", "Try live chat with a finite stream and explicit recovery.", "chat")))
+            .withChild(new Paragraph("Temporary browser-session examples, not published collaboration. Simulated roles are not authentication. Same-origin and CSRF checks protect this site; applications own their identity, authorization, storage and resource policies.").withClass("sp-site-workflow-note")));
+        root.withChild(new HtmlTag("section").withClass("sp-site-learning")
+            .withChild(new Div().withChild(new Paragraph("BUILD WITH UNDERSTANDING").withClass("sp-site-eyebrow"))
+                .withChild(Header.H2("From your first page\nto the finer details.")))
+            .withChild(new Div().withClass("sp-site-learning-links")
+                .withChild(Link.create("/docs/tutorials/README.md", "01  Learn by building →"))
+                .withChild(Link.create("/docs/how-to/README.md", "02  Solve a specific task →"))
+                .withChild(Link.create("/docs/explanation/README.md", "03  Understand the design →"))
+                .withChild(Link.create("/api", "04  Go straight to the Java API →"))));
         return root.render();
     }
-    private Div principle(String label, String title, String body) {
-        return new Div().withChild(new Paragraph(label).withClass("sp-site-eyebrow"))
-            .withChild(Header.H2(title)).withChild(new Paragraph(body));
+    private HtmlTag workflow(String label, String title, String body, String slug) {
+        return Link.create("/demos/features/" + slug, "").withClass("sp-site-workflow-card")
+            .withChild(new Paragraph(label).withClass("sp-site-eyebrow"))
+            .withChild(Header.H3(title)).withChild(new Paragraph(body))
+            .withChild(new HtmlTag("span").withClass("sp-site-card-action").withInnerText("Try the workflow →"));
     }
 }
