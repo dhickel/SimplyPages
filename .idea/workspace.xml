@@ -4,7 +4,75 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7458035e-2a44-4ace-b3c3-43ca67179f0a" name="Changes" comment="" />
+    <list default="true" id="7458035e-2a44-4ace-b3c3-43ca67179f0a" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/demo/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/DemoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/DemoController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/DocumentationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/DocumentationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/pages/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/pages/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/pages/DocsPage.java" beforeDir="false" afterPath="$PROJECT_DIR$/demo/src/main/java/io/mindspice/demo/pages/DocsPage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/INDEX.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/INDEX.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/core/03-template-rendercontext-slotkey-reference.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/core/03-template-rendercontext-slotkey-reference.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/core/04-rendering-pipeline-high-and-low-level.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/core/04-rendering-pipeline-high-and-low-level.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/getting-started/01-installation-and-first-static-page.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/getting-started/01-installation-and-first-static-page.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/getting-started/03-editing-system-first-implementation.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/getting-started/03-editing-system-first-implementation.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/operations/01-performance-threading-and-cache-lifecycles.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/operations/01-performance-threading-and-cache-lifecycles.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/patterns/04-editing-workflows-owner-user-approval.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/patterns/04-editing-workflows-owner-user-approval.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/reference/components-and-modules-catalog.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/reference/components-and-modules-catalog.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/reference/content-helper-api-reference.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/reference/content-helper-api-reference.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/security/01-security-boundaries-and-safe-rendering.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/security/01-security-boundaries-and-safe-rendering.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/ShellTemplate.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/builders/ShellTemplate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/Blockquote.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/Blockquote.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/Code.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/Code.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/Divider.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/Divider.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/ListItem.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/ListItem.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/Paragraph.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/Paragraph.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/content/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/content/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/content/ContentRouteIndex.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/content/ContentRouteIndex.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/content/ContentSectionConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/content/ContentSectionConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/content/StaticContentSite.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/content/StaticContentSite.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/display/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/display/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/display/Modal.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/display/Modal.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/display/ProgressBar.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/display/ProgressBar.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/display/Spinner.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/display/Spinner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/forms/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/forms/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/forms/Checkbox.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/forms/Checkbox.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/forms/RadioGroup.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/forms/RadioGroup.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/media/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/media/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/media/Audio.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/media/Audio.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/media/Video.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/components/media/Video.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/core/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/core/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/core/Attribute.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/core/Attribute.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/core/HtmlTag.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/core/HtmlTag.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/core/Module.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/core/Module.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/core/Slot.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/core/Slot.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/core/Template.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/core/Template.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/editing/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/editing/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/editing/EditableRow.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/editing/EditableRow.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/editing/FormFieldHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/editing/FormFieldHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/layout/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/layout/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/layout/Column.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/layout/Column.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/modules/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/modules/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/modules/AccordionModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/modules/AccordionModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/modules/TabsModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/main/java/io/mindspice/simplypages/modules/TabsModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/BlockquoteTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/BlockquoteTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/DividerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/DividerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/ListItemTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/ListItemTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/ModalTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/ModalTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/ProgressBarTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/display/ProgressBarTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/CheckboxTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/CheckboxTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/RadioGroupTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/forms/RadioGroupTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/media/AudioTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/media/AudioTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/media/VideoTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/components/media/VideoTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/editing/EditableRowTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/editing/EditableRowTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/editing/FormFieldHelperTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/editing/FormFieldHelperTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/modules/AdditionalModulesTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/simplypages/src/test/java/io/mindspice/simplypages/modules/AdditionalModulesTest.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -32,31 +100,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;JUnit.simplypages in simplypages.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;1227&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;1226&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;Spring Boot.DemoApplication.executor&quot;: &quot;Coverage&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/hickelpickle/Code/Java/cannasite/java-html-framework/simplypages/src/test&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.statistic.project.settings&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "JUnit.simplypages in simplypages.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "1227",
+    "RequestMappingsPanelWidth1": "1226",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "Spring Boot.DemoApplication.executor": "Coverage",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/home/dhickel/Code/Java/SimplyPages",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "reference.settings.project.statistic.project.settings",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/demo/src/main/resources" />
@@ -93,8 +163,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.23892.409" />
-        <option value="bundled-js-predefined-d6986cc7102b-e03c56caf84a-JavaScript-IU-252.23892.409" />
+        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.26222.65" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.26222.65" />
       </set>
     </attachedChunks>
   </component>
