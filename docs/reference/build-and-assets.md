@@ -118,8 +118,11 @@ physical devices. Other browsers, native Windows, and remote CI remain unverifie
 Known open issues:
 
 - [#81: Private chat shutdown warning](https://github.com/dhickel/SimplyPages/issues/81):
-  a recycled-response destroy warning can occur after SIGTERM. Processes exit; no leak
-  has been proven. This is not evidence of a general framework chat crash.
+  the demo now catches `IllegalStateException` during terminal emitter completion to address
+  the recycled-response destroy warning. That warning was absent in two packaged SIGTERM
+  reproductions with 64 streams. The 30-second graceful shutdown timeout and async timeout
+  warnings remained, so these checks do not establish that all shutdown issues are resolved.
+  No leak has been proven; this is not evidence of a general framework chat crash.
 - [#84: Documentation completeness](https://github.com/dhickel/SimplyPages/issues/84):
   remaining API catalog, missing-Javadoc, and executable-example coverage are follow-up
   work, not complete today. The 100-warning display cap is not a count of documentation debt.

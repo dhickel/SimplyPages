@@ -532,6 +532,70 @@ class ChatDemoLifecycleTest {
         }
     }
 
+    enum Ending { SHUTDOWN, STREAM_EXPIRY, IDLE_EXPIRY, SESSION_DESTROYED, REPLACEMENT }
+
+    @ParameterizedTest
+    @EnumSource(Ending.class)
+    void recycledResponseCannotAbortTerminalCleanupOrRemainingRecipients(Ending ending) throws Exception {
+        MutableClock clock = new MutableClock();
+        try (ChatDemoService service = service(clock)) {
+            MockHttpSession departedSession = new MockHttpSession();
+            MockHttpSession healthySession = new MockHttpSession();
+            String departedId = service.initialize(departedSession, false).conversationId();
+            String healthyId = service.initialize(healthySession, false).conversationId();
+            FlushingTransport departed = new FlushingTransport(service, service.stream(departedSession, departedId));
+            FlushingTransport healthy = new FlushingTransport(service, service.stream(healthySession, healthyId));
+            departed.recycleAfterFlushes = departed.flushes.size();
+            assertDoesNotThrow(() -> {
+                switch (ending) {
+                    case SHUTDOWN -> service.close();
+                    case STREAM_EXPIRY -> { clock.advance(STREAM); service.sweep(); }
+                    case IDLE_EXPIRY -> { clock.advance(IDLE); service.sweep(); }
+                    case SESSION_DESTROYED -> service.sessionDestroyed(departedSession.getId());
+                    case REPLACEMENT -> service.initialize(departedSession, true);
+                }
+            });
+            assertEquals(2, departed.recycledFlushes, "Both terminal send and completion encounter the recycled facade");
+            boolean allEnded = ending == Ending.SHUTDOWN || ending == Ending.STREAM_EXPIRY || ending == Ending.IDLE_EXPIRY;
+            assertEquals(allEnded ? 0 : 1, service.streamCount());
+            if (!allEnded) {
+                assertFalse(healthy.result.hasResult());
+                service.appendExchange(healthySession, healthyId, "still active", "Name");
+                assertTrue(healthy.output().contains("id:3"));
+            }
+            service.close();
+            assertTrue(healthy.result.hasResult());
+            assertNull(healthy.result.getResult());
+            assertTrue(healthy.output().contains("chat-ended"));
+            assertEquals(0, service.streamCount());
+            assertEquals(0, service.conversationCount());
+            assertTrue(service.cleanupStopped());
+            service.close();
+            assertEquals(2, departed.recycledFlushes, "Detached recycled responses must not be retried");
+        }
+    }
+
+    @Test
+    void responseRecycledOnlyAtCompletionStillAllowsRemainingShutdownRecipients() throws Exception {
+        try (ChatDemoService service = service(new MutableClock())) {
+            MockHttpSession first = new MockHttpSession();
+            MockHttpSession second = new MockHttpSession();
+            String firstId = service.initialize(first, false).conversationId();
+            String secondId = service.initialize(second, false).conversationId();
+            FlushingTransport recycled = new FlushingTransport(service, service.stream(first, firstId));
+            FlushingTransport healthy = new FlushingTransport(service, service.stream(second, secondId));
+            recycled.recycleAfterFlushes = recycled.flushes.size() + 3;
+            assertDoesNotThrow(service::close);
+            assertEquals(1, recycled.recycledFlushes);
+            assertTrue(recycled.output().contains("event:chat-ended\ndata:ended\n\n"));
+            assertTrue(healthy.result.hasResult());
+            assertNull(healthy.result.getResult());
+            assertTrue(healthy.output().contains("chat-ended"));
+            assertEquals(0, service.streamCount());
+            assertEquals(0, service.conversationCount());
+        }
+    }
+
     @Test
     void streamAdmissionCapturesItsInitialCursorAtomicallyWithConcurrentExchange() throws Exception {
         try (ChatDemoService service = service(new MutableClock())) {
@@ -802,12 +866,20 @@ class ChatDemoLifecycleTest {
         private int flushed;
         boolean disconnected;
         int disconnectedFlushes;
+        int recycleAfterFlushes = Integer.MAX_VALUE;
+        int recycledFlushes;
 
         FlushingTransport(ChatDemoService service, SseEmitter emitter) throws Exception {
             Object serviceLock = field(service, "lock");
+            var recycled = new org.apache.catalina.connector.ResponseFacade(new org.apache.catalina.connector.Response(new org.apache.coyote.Response()));
+            recycled.clear();
             var servlet = new jakarta.servlet.http.HttpServletResponseWrapper(response) {
                 @Override public void flushBuffer() throws IOException {
                     assertFalse(Thread.holdsLock(serviceLock), "Network flushes must be outside the service monitor");
+                    if (flushes.size() >= recycleAfterFlushes) {
+                        recycledFlushes++;
+                        recycled.flushBuffer();
+                    }
                     // A FIN can allow one write before the socket reports the reset on the next flush.
                     if (disconnected && ++disconnectedFlushes >= 2) throw new IOException("Departed socket reset");
                     String content = response.getContentAsString();

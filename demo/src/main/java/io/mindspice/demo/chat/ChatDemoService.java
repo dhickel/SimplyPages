@@ -240,7 +240,10 @@ public class ChatDemoService implements AutoCloseable {
         for (End end : endings) {
             try { sendEvent(end.reg, SseEmitter.event().name("chat-ended").data(end.reason)); }
             catch (IOException | IllegalStateException ignored) { /* Disconnected recipients still release their slot. */ }
-            finally { end.reg.emitter.complete(); }
+            finally {
+                try { end.reg.emitter.complete(); }
+                catch (IllegalStateException ignored) { /* Completion also flushes a potentially recycled response. */ }
+            }
         }
     }
 
