@@ -59,8 +59,13 @@ SimplyPages is an active internal Java-first SSR framework for building data-hea
 - Template sharing requires retained custom delegates to be safe to share
 - Prefer slot-driven rendering for request-time dynamic content over mutating built module structure
 
+### Official Site Contract
+- `site` is the official project website module, with demonstrations at `/demos`, packaged documentation at `/docs`, and a Java API entry at `/api` linking to native Javadocs. Validate changes locally as specified below.
+- Editing, forum, and chat use bounded temporary session-owned state with server-side ownership and same-origin/CSRF protection; browser token and form wiring is implemented. Simulated roles are not authentication, and the site is not a production security example.
+- `./build-site.sh` creates a local executable artifact with tests skipped and verifies packaged documentation/API inventories and bytes. `./deploy.sh` only forwards without arguments to that local build; it never deploys remotely.
+
 ### Shell and Client Ownership
-- The library bundles unmodified HTMX 2.0.11 through WebJars; the Boot 4.1.1 demo uses BOM-managed locator-lite for the versionless URL.
+- The library bundles unmodified HTMX 2.0.11 through WebJars; the Boot 4.1.1 site uses BOM-managed locator-lite for the versionless URL.
 - Full/template shells that include HTMX privately initialize legacy selfRequestsOnly=false, GET-only URL parameters (DELETE body), and smooth-scroll defaults at the top of existing framework JS, before deferred custom JS. Explicit upstream host meta and custom-script/ready overrides win. The private head marker is not public configuration; no insertion/settle reapplication.
 - withHtmx(false), body fragments, and unmarked/manual hosts do not select compatibility defaults. Hosts load assets once and explicitly configure desired upstream policy. Compatibility is not destination/CORS/CSRF/authorization enforcement.
 - The Form-source configRequest hook repairs only missing Object.prototype-collision headers from an own literal exactly-one-string-pair attribute. Preserve event-stage own entries/case aliases/null/accessors/nonextensible maps/cancellation and later overrides. No generic inherited/evaluated/options parser, Form runtime/JSON change, header rewrite, token verification, or alternate transport. See the asset reference for upstream pre-event ajax-options limits.
@@ -83,7 +88,7 @@ SimplyPages is an active internal Java-first SSR framework for building data-hea
 - `modules`: high-level composed feature modules
 - `editing`: editing contracts, helpers, auth wrappers, validation and edit flow utilities
 - `builders`: shell and navigation builders for app scaffolding
-- `demo`: framework usage examples and integration demonstrations
+- `site`: official project website and framework demonstrations; Java packages retain `io.mindspice.demo`
 
 Package-specific operational rules live in package-level `AGENTS.md` files.
 
@@ -99,7 +104,7 @@ Package-specific operational rules live in package-level `AGENTS.md` files.
 - Keep fluent APIs consistent (`create()` factories, chaining methods, typed returns)
 - Keep module/component responsibilities clear: components are primitives, modules are compositions
 - Keep docs and tests aligned with behavior-changing code
-- For visual fixes affecting default framework components, update `simplypages/src/main/resources/static/css/framework.css` instead of demo-local styling.
+- For visual fixes affecting default framework components, update `simplypages/src/main/resources/static/css/framework.css` instead of site-local styling.
 
 ### Security Responsibility Split
 - Framework responsibilities:
@@ -113,14 +118,14 @@ Package-specific operational rules live in package-level `AGENTS.md` files.
 - Any behavior/API change requires targeted tests in the matching package test suite
 - Always implement tests for new features in the same workstream; do not defer test coverage.
 - Prioritize regression coverage for rendering, escaping, lifecycle, editing flow, and layout behavior
-- Demo changes should not replace framework tests
+- Site changes should not replace framework tests
 - For bug investigations, run relevant local automated tests and reproduce the issue against a freshly packaged local process when applicable; verify the fix with focused regression coverage.
 - For UI bug reports, validate both behavior and visual alignment/layout in a local browser before classifying the issue as framework-level.
 
 ## Build and Test Commands
 
 - Use the official Maven Wrapper 3.3.4 (`only-script`), pinned to Maven 3.10.0 with a distribution checksum. Reactor and independent module POMs enforce JDK 25 and Maven `[3.10.0,4)`.
-- Library output is Java 25 bytecode; demo output is Java 21 bytecode but still requires Java 25 at runtime.
+- Library output is Java 25 bytecode; site output is Java 21 bytecode but still requires Java 25 at runtime.
 - Keep pinned plugins, output timestamps, source/Javadoc attachments, and fatal structural Javadoc lint (`all,-missing`). Missing prose remains tracked documentation debt, not a completeness guarantee.
 - Browser checks use the existing `tests/browser` harness after a fresh Maven package including tests/fixtures, then `npm ci` and pinned Playwright/Chromium. See `docs/how-to/build-test-and-document.md`; do not substitute stale artifacts.
 - The controlled-beta support/known-issues record is `docs/reference/build-and-assets.md#beta-status-known-issues-and-support`. Do not infer remote CI, continuous security, coverage gates, publication, or production readiness from local checks.
@@ -131,13 +136,14 @@ Package-specific operational rules live in package-level `AGENTS.md` files.
 ./mvnw clean verify
 ./mvnw test
 ./mvnw -pl simplypages test
-./mvnw -pl demo spring-boot:run
+./build-site.sh
+java -jar site/target/simplypages-site.jar
 ```
 
 ### Module-Scoped
 ```bash
 cd simplypages && ../mvnw test
-cd demo && ../mvnw spring-boot:run
+cd site && ../mvnw spring-boot:run
 ```
 
 ## Local Process and Browser Validation
@@ -151,12 +157,12 @@ cd demo && ../mvnw spring-boot:run
 - `docs/reference/`: API/build contracts; `docs/explanation/`: design and integration reasoning.
 - Keep existing topic-based URLs stable and link new pages from their section and `docs/INDEX.md`.
 - Documentation tests validate local links/anchors, guide discoverability, and complete Java examples.
-- JDK 25 is required; retain library Java 25 bytecode and the demo's Java 21 bytecode target. Dependency migration does not authorize API/bridge or target changes.
+- JDK 25 is required; retain library Java 25 bytecode and the site's Java 21 bytecode target. Dependency migration does not authorize API/bridge or target changes.
 
 ## Documentation TOC (Terse)
 - Full index: `docs/INDEX.md`
 - Learning path: `docs/getting-started/README.md` → `docs/tutorials/first-page.md` → `docs/tutorials/dynamic-page.md` → `docs/how-to/serve-pages-and-fragments.md`; current examples use locally installed 1.2 and JDK 25.
-- Task guides: `docs/how-to/build-a-markdown-blog.md`, `docs/how-to/build-a-forum.md`, `docs/how-to/build-user-editable-pages.md`, `docs/how-to/add-chat.md`, `docs/how-to/build-a-dashboard.md`, `docs/how-to/handle-form-submissions.md`. Keep application identity/CSRF/storage/transport prerequisites explicit; these listings are not installed demo routes.
+- Task guides: `docs/how-to/build-a-markdown-blog.md`, `docs/how-to/build-a-forum.md`, `docs/how-to/build-user-editable-pages.md`, `docs/how-to/add-chat.md`, `docs/how-to/build-a-dashboard.md`, `docs/how-to/handle-form-submissions.md`. Keep application identity/CSRF/storage/transport prerequisites explicit; these listings are application recipes, not installed sandbox routes.
 - Diátaxis entry points: `docs/tutorials/README.md`, `docs/how-to/README.md`, `docs/reference/README.md`, `docs/explanation/README.md`.
 - Fundamentals: `docs/fundamentals/01-web-and-htmx-primer.md`, `docs/fundamentals/02-simplypages-mental-model.md`, `docs/fundamentals/03-css-fundamentals.md`
 - Getting started: `docs/getting-started/README.md`, `docs/getting-started/01-installation-and-first-static-page.md`, `docs/getting-started/02-dynamic-pages-with-slotkey-rendercontext.md`, `docs/getting-started/03-editing-system-first-implementation.md`

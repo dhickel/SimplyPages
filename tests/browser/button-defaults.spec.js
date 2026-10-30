@@ -3,13 +3,21 @@ const path = require('node:path');
 const {test, expect} = require('playwright/test');
 const fixture = path.resolve(__dirname, '../../simplypages/target/button-browser-fixture.html');
 
-async function generatedButtons(page) {
-    const html = fs.readFileSync(fixture, 'utf8');
+async function generatedButtons(page, html = fs.readFileSync(fixture, 'utf8')) {
     await page.route('**/button-fixture', route => route.fulfill({contentType: 'text/html', body:
         `<!doctype html><html><head><meta charset="UTF-8"><link rel="stylesheet" href="/css/framework.css">
         <style>.host-override {display:inline-block}</style></head><body>${html}
         <button id="native-until-found" hidden="until-found">Native until found</button></body></html>`}));
     await page.goto('/button-fixture');
+}
+
+async function generatedSecondary(page, mode) {
+    const html = fs.readFileSync(path.resolve(__dirname,
+        '../../simplypages/target/phase18-rendering-browser-fixture.html'), 'utf8');
+    const buttons = [...html.matchAll(/<div class="add-module-section">(<button\b[^>]*>.*?<\/button>)/g)];
+    expect(buttons).toHaveLength(2); // Actual direct and compiled EditableRow output.
+    await generatedButtons(page, `<div class="add-module-section">${buttons[mode === 'direct' ? 0 : 1][1]}</div>`);
+    return page.locator('.btn-secondary');
 }
 
 async function tabTo(page, target) {
@@ -28,16 +36,18 @@ async function paints(button) {
         const lum = c => c.slice(0, 3).map(x => x / 255)
             .map(x => x <= .04045 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4)
             .reduce((v, x, i) => v + x * [0.2126, 0.7152, 0.0722][i], 0);
-        const fg = rgb(s.color)[0], stops = rgb(s.backgroundImage);
+        const fg = rgb(s.color)[0];
+        const stops = rgb(s.backgroundImage === 'none' ? s.backgroundColor : s.backgroundImage);
         const contrast = c => (Math.max(lum(fg), lum(c)) + .05) / (Math.min(lum(fg), lum(c)) + .05);
         const rect = element.getBoundingClientRect();
         const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
-        return {color: s.color, image: s.backgroundImage, foreground: fg, stops, opacity: s.opacity,
+        return {color: s.color, image: s.backgroundImage, background: s.backgroundColor,
+            foreground: fg, stops, opacity: s.opacity,
             fontSize: s.fontSize, fontWeight: s.fontWeight, outline: s.outlineStyle,
             outlineWidth: s.outlineWidth, outlineColor: s.outlineColor,
             focusVisible: element.matches(':focus-visible'), ratios: stops.map(contrast),
-            minimum: Math.min(...Array.from({length: 1025}, (_, i) => contrast(stops[0].map((v, channel) =>
-                v + (stops[1][channel] - v) * i / 1024)))),
+            minimum: stops.length === 1 ? contrast(stops[0]) : Math.min(...Array.from({length: 1025}, (_, i) =>
+                contrast(stops[0].map((v, channel) => v + (stops[1][channel] - v) * i / 1024)))),
             rect: {x: rect.x, y: rect.y, width: rect.width, height: rect.height},
             viewport: {width: innerWidth, height: innerHeight},
             hit: hit === element || element.contains(hit),
@@ -45,8 +55,8 @@ async function paints(button) {
     });
 }
 
-function readable(paint) {
-    expect(paint.stops).toHaveLength(2);
+function readable(paint, stopCount = 2) {
+    expect(paint.stops).toHaveLength(stopCount);
     expect(paint.stops.every(c => c[3] === 1)).toBe(true);
     expect(paint.foreground[3]).toBe(1);
     expect(paint.opacity).toBe('1');
@@ -130,7 +140,9 @@ for (const width of [390, 1440]) {
         await tabTo(page, button);
         await expect(button).toBeFocused();
         const normal = await paints(button);
-        readable(normal);
+        readable(normal, 1);
+        expect(normal.image).toBe('none');
+        expect(normal.background).toBe('rgb(98, 103, 94)');
         expect(normal.focusVisible).toBe(true);
         expect(normal.outline).not.toBe('none');
         expect(parseFloat(normal.outlineWidth)).toBeGreaterThan(0);
@@ -144,9 +156,10 @@ for (const width of [390, 1440]) {
         await page.screenshot({path: screenshot});
         await testInfo.attach('native-focus', {path: screenshot, contentType: 'image/png'});
         await button.hover();
-        await expect.poll(async () => (await paints(button)).stops[0].slice(0, 3)).toEqual([84, 106, 178]);
+        await expect.poll(async () => (await paints(button)).background).toBe('rgb(53, 58, 51)');
         const hover = await paints(button);
-        readable(hover);
+        readable(hover, 1);
+        expect(hover.image).toBe('none');
         const output = testInfo.outputPath(`button-paints-${width}.json`);
         fs.writeFileSync(output, JSON.stringify({normal, hover}, null, 2));
         await testInfo.attach('computed-paints', {path: output, contentType: 'application/json'});
@@ -161,17 +174,41 @@ for (const width of [390, 1440]) {
     });
 }
 
-test('secondary Add Module retains ordinary host class and token paint overrides', async ({page}) => {
-    await page.goto('/editing-demo');
-    const button = page.locator('.add-module-section .btn-secondary').first();
-    await page.mouse.move(0, 0);
-    await page.addStyleTag({content: ':root {--sp-button-secondary-bg: linear-gradient(rgb(20, 30, 40), rgb(30, 40, 50))}'});
-    await expect(button).toHaveCSS('background-image', 'linear-gradient(rgb(20, 30, 40), rgb(30, 40, 50))');
-    await page.addStyleTag({content: '.host-paint {color: rgb(200, 210, 220); background-image: linear-gradient(rgb(40, 50, 60), rgb(50, 60, 70))}'});
-    await button.evaluate(element => element.classList.add('host-paint'));
-    await expect(button).toHaveCSS('color', 'rgb(200, 210, 220)');
-    await expect(button).toHaveCSS('background-image', 'linear-gradient(rgb(40, 50, 60), rgb(50, 60, 70))');
-    await button.evaluate(element => { element.style.background = 'rgb(40, 50, 60)'; });
-    await expect(button).toHaveCSS('background-color', 'rgb(40, 50, 60)');
-    await expect(button).toHaveCSS('background-image', 'none');
-});
+for (const mode of ['direct', 'compiled']) {
+    for (const width of [390, 1440]) {
+        test(`generated ${mode} secondary Add Module default gradient contrast and native focus at ${width}`, async ({page}) => {
+            await page.setViewportSize({width, height: 900});
+            const button = await generatedSecondary(page, mode);
+            await page.mouse.move(0, 0);
+            await tabTo(page, button);
+            await expect(button).toBeFocused();
+            const normal = await paints(button);
+            readable(normal);
+            expect(normal.stops).toEqual([[91, 114, 186, 1], [74, 94, 163, 1]]);
+            expect(normal.focusVisible).toBe(true);
+            expect(normal.outline).not.toBe('none');
+            expect(parseFloat(normal.outlineWidth)).toBeGreaterThan(0);
+            expect(normal.hit).toBe(true);
+            expect(normal.unclipped).toBe(true);
+            await button.hover();
+            await expect.poll(async () => (await paints(button)).stops[0].slice(0, 3)).toEqual([84, 106, 178]);
+            const hover = await paints(button);
+            readable(hover);
+            expect(hover.stops).toEqual([[84, 106, 178, 1], [66, 83, 148, 1]]);
+        });
+    }
+
+    test(`generated ${mode} secondary Add Module retains ordinary host class and token paint overrides`, async ({page}) => {
+        const button = await generatedSecondary(page, mode);
+        await page.mouse.move(0, 0);
+        await page.addStyleTag({content: ':root {--sp-button-secondary-bg: linear-gradient(rgb(20, 30, 40), rgb(30, 40, 50))}'});
+        await expect(button).toHaveCSS('background-image', 'linear-gradient(rgb(20, 30, 40), rgb(30, 40, 50))');
+        await page.addStyleTag({content: '.host-paint {color: rgb(200, 210, 220); background-image: linear-gradient(rgb(40, 50, 60), rgb(50, 60, 70))}'});
+        await button.evaluate(element => element.classList.add('host-paint'));
+        await expect(button).toHaveCSS('color', 'rgb(200, 210, 220)');
+        await expect(button).toHaveCSS('background-image', 'linear-gradient(rgb(40, 50, 60), rgb(50, 60, 70))');
+        await button.evaluate(element => { element.style.background = 'rgb(40, 50, 60)'; });
+        await expect(button).toHaveCSS('background-color', 'rgb(40, 50, 60)');
+        await expect(button).toHaveCSS('background-image', 'none');
+    });
+}

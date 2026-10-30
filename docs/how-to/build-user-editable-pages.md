@@ -13,7 +13,7 @@ This deliberately does not implement deletion, row insertion, or an approval que
 - SimplyPages **1.2** installed locally, JDK 25 at runtime, and Spring MVC.
   Complete the [learning path](../getting-started/README.md) through
   [serving pages and fragments](serve-pages-and-fragments.md) first.
-- A component-scanned application package. The example uses the demo's
+- A component-scanned application package. The example uses the site's retained
   `io.mindspice.demo.learning` package and otherwise imports only public framework APIs.
 - An application identity provider that supplies a genuine authenticated `Principal`.
   Provision an identity named `operations-owner`, or change the seeded resource owner
@@ -33,10 +33,10 @@ have last-writer-wins behavior. A durable application should load, authorize, va
 and persist within its own transaction, adding a version check if needed.
 
 Save `EditableBriefingController.java` beneath your application's component-scan
-root. In the repository demo the source path would be
-`demo/src/main/java/io/mindspice/demo/learning/EditableBriefingController.java`.
-For a separate application, change the package consistently; do not treat the
-private demo's selectable editing modes as an identity provider.
+root. In the repository site the source path would be
+`site/src/main/java/io/mindspice/demo/learning/EditableBriefingController.java`.
+This recipe is not an installed sandbox route. For a separate application, change the package
+consistently; do not treat selectable demonstration modes as an identity provider.
 
 ```java
 package io.mindspice.demo.learning;

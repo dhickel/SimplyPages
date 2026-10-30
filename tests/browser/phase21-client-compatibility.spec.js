@@ -8,7 +8,7 @@ const {test, expect} = require('playwright/test');
 const root = path.resolve(__dirname, '../..');
 const fixtures = path.join(root, 'simplypages/target/phase21-client-browser-fixtures');
 const library = path.join(root, 'simplypages/target/simplypages-1.2.jar');
-const executable = path.join(root, 'demo/target/simplypages-demo.jar');
+const executable = path.join(root, 'site/target/simplypages-site.jar');
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const unpack = (jar, entry) => execFileSync('unzip', ['-p', jar, entry], {maxBuffer: 32 * 1024 * 1024});
 const names = ['X-CSRF-TOKEN', 'hasOwnProperty', 'constructor', 'toString', '__proto__', 'HASOWNPROPERTY',

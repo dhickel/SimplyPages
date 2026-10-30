@@ -6,29 +6,29 @@ These values describe this checkout, version `1.2`.
 | --- | --- |
 | Library coordinates | `io.mindspice:simplypages:1.2` |
 | Library compilation and runtime | JDK 25 |
-| Demo compiler target | Java 21 bytecode; runtime remains JDK 25 |
+| Site compiler target | Java 21 bytecode; runtime remains JDK 25 |
 | Build entry point | Official Maven Wrapper 3.3.4, `only-script`; checksum-pinned Maven 3.10.0 via `./mvnw` |
 | Library module | `simplypages` |
-| Demo module | `demo`, Spring Boot 4.1.1 / Spring MVC 7.0.9 / Servlet 6.1 |
+| Site module | `site` (`simplypages-site`), Spring Boot 4.1.1 / Spring MVC 7.0.9 / Servlet 6.1 |
 | Framework CSS | `/css/framework.css` |
 | Framework JavaScript | `/js/framework.js` |
 | Default HTMX URL | `/webjars/htmx.org/dist/htmx.min.js` |
 | Bundled HTMX version | 2.0.11, unmodified `org.webjars.npm:htmx.org` WebJar |
-| Demo WebJars locator | `org.webjars:webjars-locator-lite`, Boot-managed 1.1.4 |
+| Site WebJars locator | `org.webjars:webjars-locator-lite`, Boot-managed 1.1.4 |
 | Documentation browser | `/docs` |
-| Generated Javadocs | `/javadocs/index.html` |
+| Java API entry | `/api`, linking to native Javadocs at `/javadocs/index.html` |
 
 `ShellBuilder` emits framework CSS before custom CSS and deferred scripts in this order:
 HTMX when enabled, framework JavaScript, custom JavaScript. Serving these URLs is the host
-application's responsibility. The demo supplies Spring static-resource handling and a
-lite WebJars locator for the versionless HTMX URL. The demo uses Boot's `spring-boot-starter-webmvc`
+application's responsibility. The site supplies Spring static-resource handling and a
+lite WebJars locator for the versionless HTMX URL. The site uses Boot's `spring-boot-starter-webmvc`
 and test-scoped `spring-boot-starter-webmvc-test`; it does not require legacy locator-core or
 Jackson 2 databind. The library remains independent of Spring.
 
-The private demo overrides Boot's dependency properties with `jackson-bom.version=3.1.7`
+The site overrides Boot's dependency properties with `jackson-bom.version=3.1.7`
 and `tomcat.version=11.0.27`; Jackson annotations remain 2.21. These use the parent POM's
 property mechanism, not an unmodified, vendor-tested Boot dependency set. They do not
-establish future support or security certification for the demo or consumer applications.
+establish future support or security certification for the site or consumer applications.
 
 `Page` renders content/layout without a complete HTML document. `ShellBuilder.build()` and
 `ShellTemplate.render(...)` return complete documents. `ShellBuilder.buildBody()` returns
@@ -88,21 +88,25 @@ are unchanged. Exact JSON representability is broader than legal browser HTTP-he
 ## Build outputs
 
 - Library JAR: `simplypages/target/simplypages-1.2.jar`
-- Executable demo JAR: `demo/target/simplypages-demo.jar`
+- Executable site JAR: `site/target/simplypages-site.jar`
 - Generated API docs: `simplypages/target/reports/apidocs/`
-- Packaged guide source: `demo/target/classes/static/docs/`
-- Packaged API docs: `demo/target/classes/static/javadocs/`
+- Packaged guide source: `site/target/classes/static/docs/`
+- Packaged API docs: `site/target/classes/static/javadocs/`
 
 The reactor and each independent module POM enforce JDK 25 and Maven `[3.10.0,4)`. The library
-emits Java 25 class files (major version 69); the demo emits Java 21 class files but cannot
+emits Java 25 class files (major version 69); the site emits Java 21 class files but cannot
 run on Java 21 because it loads that library. Use the wrapper rather than a system Maven.
 
 The POMs pin build plugins and output timestamps. The library attaches source and Javadoc
 JARs at package time. Javadoc uses `all,-missing` with warnings fatal: structural lint is
 required, but missing API prose is not a build failure or evidence of complete documentation.
 
-The demo build checks that generated Javadocs are present. Use a reactor build such as
-`./mvnw clean install` before running the demo independently. `./mvnw clean verify` runs the
+The site build checks that generated Javadocs are present. `./build-site.sh` runs a clean
+reactor package with tests skipped and uses Python 3 to verify the exact docs and Javadoc
+inventories and bytes in the executable JAR. Python is not required to run that portable JAR;
+skipped tests do not produce the fixtures required by the browser harness. Run it locally with `java -jar site/target/simplypages-site.jar`.
+`./deploy.sh` accepts no arguments and forwards to the local build; it never deploys remotely.
+Use a reactor build such as `./mvnw clean install` before running the site independently. `./mvnw clean verify` runs the
 Maven verification lifecycle; browser tests are a separate command in the
 [build guide](../how-to/build-test-and-document.md). There is no automatic coverage,
 SBOM, continuous security, or remote CI acceptance gate claimed here. Public artifact
@@ -118,7 +122,7 @@ physical devices. Other browsers, native Windows, and remote CI remain unverifie
 Known open issues:
 
 - [#81: Private chat shutdown warning](https://github.com/dhickel/SimplyPages/issues/81):
-  the demo now catches `IllegalStateException` during terminal emitter completion to address
+  the site currently catches `IllegalStateException` during terminal emitter completion to address
   the recycled-response destroy warning. That warning was absent in two packaged SIGTERM
   reproductions with 64 streams. The 30-second graceful shutdown timeout and async timeout
   warnings remained, so these checks do not establish that all shutdown issues are resolved.
@@ -127,8 +131,11 @@ Known open issues:
   remaining API catalog, missing-Javadoc, and executable-example coverage are follow-up
   work, not complete today. The 100-warning display cap is not a count of documentation debt.
 
-The demo defaults to loopback and uses shared, non-durable simulations. It supplies no
-production authentication, CSRF protection, rate protection, or production guarantees.
+The site defaults to loopback. Editing and forum use temporary session-owned sandboxes;
+chat owns a separate session conversation. The site implements same-origin/CSRF checks and
+browser token/form wiring. These examples provide no production authentication, durable storage, rate protection, or
+production guarantees. `/demos/recovery` provides an explicit editing/forum reset; chat uses
+its own Start New control. Neither recovery path automatically replays an action.
 Hosts own HTTP security, authorization, persistence, and request policy; the HTMX defaults
 and bounded Form-header repair above do not provide those controls. Report reproducible
 problems through the linked GitHub issues without including credentials or private data.

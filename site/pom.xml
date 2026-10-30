@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.1</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+
+    <groupId>io.mindspice</groupId>
+    <artifactId>simplypages-site</artifactId>
+    <version>1.2</version>
+    <name>SimplyPages Site</name>
+    <description>Demo application for SimplyPages</description>
+
+    <properties>
+        <!-- Retain Java 21 demo bytecode; the library requires a JDK 25 runtime. -->
+        <java.version>21</java.version>
+        <project.build.outputTimestamp>1792167126</project.build.outputTimestamp>
+        <jackson-bom.version>3.1.7</jackson-bom.version>
+        <tomcat.version>11.0.27</tomcat.version>
+    </properties>
+
+    <dependencies>
+        <!-- SimplyPages Framework Dependency -->
+        <dependency>
+            <groupId>io.mindspice</groupId>
+            <artifactId>simplypages</artifactId>
+            <version>1.2</version>
+        </dependency>
+
+        <!-- Spring Boot Starter for web applications -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+
+        <!-- WebJars Locator for version-less WebJar paths (needed for serving HTMX from webjar) -->
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>webjars-locator-lite</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Starter for testing -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.23.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>simplypages-site</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.6.3</version>
+                <executions><execution><id>build-tool-contract</id><goals><goal>enforce</goal></goals>
+                    <configuration><rules>
+                        <requireJavaVersion><version>[25,26)</version></requireJavaVersion>
+                        <requireMavenVersion><version>[3.10.0,4)</version></requireMavenVersion>
+                    </rules></configuration>
+                </execution></executions>
+            </plugin>
+            <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-clean-plugin</artifactId><version>3.5.0</version></plugin>
+            <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.5.1</version></plugin>
+            <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-install-plugin</artifactId><version>3.2.0</version></plugin>
+            <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-dependency-plugin</artifactId><version>3.11.0</version></plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.14.1</version>
+                <configuration>
+                    <release>${java.version}</release>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-docs</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/classes/static/docs</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../docs</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-javadocs</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/classes/static/javadocs</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../simplypages/target/reports/apidocs</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>verify-no-local-framework-css</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <available file="${project.basedir}/framework.css"
+                                           property="local.framework.css.present"/>
+                                <fail if="local.framework.css.present">
+                                    Remove ${project.basedir}/framework.css. Demo must consume /css/framework.css from simplypages artifact.
+                                </fail>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>verify-javadocs-copied</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <available file="${project.build.directory}/classes/static/javadocs/index.html"
+                                           property="javadocs.index.present"/>
+                                <fail unless="javadocs.index.present">
+                                    Missing Javadocs at ${project.build.directory}/classes/static/javadocs/index.html.
+                                    Ensure the simplypages module generated Javadocs and the demo copy-javadocs execution ran.
+                                </fail>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

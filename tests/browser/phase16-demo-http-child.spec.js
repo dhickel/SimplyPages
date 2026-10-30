@@ -32,7 +32,7 @@ async function listenerCount(page) {
     } finally { await session.detach(); }
 }
 
-function opener(page, id) { return page.locator(`[hx-get^="/editing-demo/edit/${id}?"]`); }
+function opener(page, id) { return page.locator(`#page-content .module-edit-btn[hx-get^="/editing-demo/edit/${id}?"]`); }
 function childEdit(page, id, index = 0) { return page.locator(`[hx-get^="/editing-demo/edit-child/${id}/item-${index}?"]`); }
 function childDelete(page, id, index = 0) { return page.locator(`[hx-delete^="/editing-demo/delete-child/${id}/item-${index}?"]`); }
 
@@ -82,7 +82,7 @@ async function focusedVisible(control) {
 async function geometry(page) {
     return page.getByRole('dialog').evaluate(dialog => {
         const rect = dialog.getBoundingClientRect();
-        const input = dialog.querySelector('input, textarea');
+        const input = dialog.querySelector('input:not([type="hidden"]), textarea');
         const box = input && input.getBoundingClientRect();
         return {
             withinViewport: rect.left >= -1 && rect.right <= innerWidth + 1 && rect.top >= -1 && rect.bottom <= innerHeight + 1,
@@ -457,7 +457,7 @@ test('phase16 native USER proposal replaces property/child proposals from live, 
         await clickResponse(page, opener(page, id), `/edit/${id}`);
         await expect(page.getByRole('button', {name: 'Delete Module', exact: true})).toHaveCount(0);
         await expect(page.locator('select[name=width]')).toHaveValue('12');
-        await expect(page.locator('input[name=title]')).toHaveValue('Nested Editing Demo');
+        await expect(page.getByRole('dialog').locator('input[name=title]')).toHaveValue('Nested Editing Demo');
         expect((await request.delete(`/editing-demo/delete/${id}`)).status()).toBe(403);
         await expect(page.locator(`#${id} li`)).toHaveText(['Alpha', 'Approved child', 'Gamma']);
         await uniqueHosts(page);
@@ -507,7 +507,7 @@ test('phase16 native errors remain default for unmarked, foreign-target and serv
         await expect(page.locator('.htmx-added, .htmx-settling, .htmx-request')).toHaveCount(0);
         for (const [url, target, status] of [
             ['/editing-demo/not-a-route', '#edit-modal-container', 404],
-            [`/editing-demo/edit-child/${id}/item-999`, '#dynamic-card-preview', 404],
+            [`/editing-demo/edit-child/${id}/item-999`, '#template-result', 404],
             ['/error', '#edit-modal-container', 500]
         ]) {
             let requests = 0;
@@ -640,7 +640,7 @@ test('phase16 native USER DELETE stages live-based replacement and approval pres
         await expect(page.getByRole('button', {name: 'Delete Module', exact: true})).toHaveCount(0);
         await expect(page.locator(`[hx-get^="/editing-demo/edit-child/${id}/"]`)).toHaveCount(0);
         await expect(page.locator('select[name=width]')).toHaveValue('12');
-        await expect(page.locator('input[name=title]')).toHaveValue('Nested Editing Demo');
+        await expect(page.getByRole('dialog').locator('input[name=title]')).toHaveValue('Nested Editing Demo');
         expect((await request.delete(`/editing-demo/delete/${id}`)).status()).toBe(403);
         await expect(page.locator(`#${id}`)).toContainText('No items yet.');
         expect(await fixture.stop()).toEqual({present: true, kind: 'LIST', title: 'Nested Editing Demo',

@@ -23,7 +23,7 @@ with zipfile.ZipFile(jar) as archive:
     entries = archive.namelist()
     assert not any('Phase17EditingBrowserFixture' in n for n in entries), 'Fixture shipped in product'
     # Reproducible JAR timestamps do not track compilation or resource copying.
-    for module in ('demo', 'simplypages'):
+    for module in ('site', 'simplypages'):
         for folder in ('src/main/java', 'src/main/resources'):
             source = root/module/folder
             for p in source.rglob('*'):
@@ -34,8 +34,11 @@ with zipfile.ZipFile(jar) as archive:
                     if folder == 'src/main/resources':
                         assert output.read_bytes() == p.read_bytes(), 'Stale compiled resource: '+str(p)
     classes = [n for n in entries if n.startswith('BOOT-INF/classes/') and n.endswith('.class')]
-    assert len(classes) == 61, 'Unexpected production class set'
-    demo_classes = root/'demo/target/classes'
+    expected_top_levels = {p.relative_to(root/'site/src/main/java').with_suffix('.class').as_posix()
+        for p in (root/'site/src/main/java').rglob('*.java')}
+    actual_top_levels = {n.removeprefix('BOOT-INF/classes/') for n in classes if '$' not in n}
+    assert actual_top_levels == expected_top_levels, 'Unexpected production top-level source/class set'
+    demo_classes = root/'site/target/classes'
     assert {n.removeprefix('BOOT-INF/classes/') for n in classes} == {
         p.relative_to(demo_classes).as_posix() for p in demo_classes.rglob('*.class')
     }, 'Stale production class set'
@@ -56,10 +59,10 @@ with zipfile.ZipFile(jar) as archive:
             if p.is_file():
                 n = p.relative_to(library_resources).as_posix()
                 assert nested.read(n) == p.read_bytes(), n
-    resources = list((root/'demo/src/main/resources').rglob('*'))
+    resources = list((root/'site/src/main/resources').rglob('*'))
     for p in resources:
         if p.is_file():
-            n = 'BOOT-INF/classes/'+str(p.relative_to(root/'demo/src/main/resources'))
+            n = 'BOOT-INF/classes/'+str(p.relative_to(root/'site/src/main/resources'))
             assert archive.read(n) == p.read_bytes(), n
     selected = [n for n in entries if not n.endswith('/') and (n.startswith('BOOT-INF/classes/') or n.startswith('BOOT-INF/lib/'))]
     for n in selected:
@@ -73,8 +76,8 @@ with zipfile.ZipFile(jar) as archive:
 `, jar, directory, root], {encoding: 'utf8'});
     if (result.status !== 0) throw new Error(`Package fidelity refused fixture startup:\n${result.stdout}\n${result.stderr}`);
     const proof = JSON.parse(result.stdout);
-    const source = path.join(root, 'demo/src/test/java', classDirectory, 'Phase17EditingBrowserFixture.java');
-    const compiled = path.join(root, 'demo/target/test-classes', classDirectory);
+    const source = path.join(root, 'site/src/test/java', classDirectory, 'Phase17EditingBrowserFixture.java');
+    const compiled = path.join(root, 'site/target/test-classes', classDirectory);
     const names = fs.readdirSync(compiled).filter(name => /^Phase17EditingBrowserFixture(?:\$.*)?\.class$/.test(name));
     if (!names.includes('Phase17EditingBrowserFixture.class')) throw new Error('Run Maven test-compile before browser fixtures');
     const onlyFixture = path.join(directory, 'fixture-only', classDirectory);
@@ -106,7 +109,7 @@ async function freePort(workerIndex) {
     throw new Error('No free owned fixture port; refusing existing servers');
 }
 
-async function launch(options, testInfo) {
+async function launch(options, testInfo, browserContext) {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'phase17-senior117-fixture-'));
     const token = crypto.randomBytes(16).toString('hex');
     const evidence = `/tmp/phase17-senior117-fixture-${token}`;
@@ -144,7 +147,7 @@ async function launch(options, testInfo) {
         return proof.seedAtShutdown;
     }
     try {
-        const jar = path.resolve(process.env.PHASE17_DEMO_JAR || path.join(root, 'demo/target/simplypages-demo.jar'));
+        const jar = path.resolve(process.env.PHASE17_DEMO_JAR || path.join(root, 'site/target/simplypages-site.jar'));
         proof = {...proof, ...unpack(jar, directory)};
         const port = await freePort(testInfo.workerIndex);
         proof.port = port;
@@ -176,7 +179,15 @@ async function launch(options, testInfo) {
         }
         if (!ready) throw new Error(`Owned fixture startup timed out: ${evidence}.log`);
         request = await apiRequest.newContext({baseURL});
-        expect((await request.get('/editing-demo')).status()).toBe(200);
+        const initial = await request.get('/editing-demo');
+        expect(initial.status()).toBe(200);
+        const csrf = initial.headers()['x-sandbox-csrf'];
+        expect(csrf).toBeTruthy();
+        const state = await request.storageState();
+        await browserContext.addCookies(state.cookies);
+        await request.dispose();
+        request = await apiRequest.newContext({baseURL, storageState:state,
+            extraHTTPHeaders:{Origin:baseURL, 'X-Sandbox-CSRF':csrf}});
         proof.readinessOwnedToken = true;
         console.log(JSON.stringify({fixture: testInfo.title, jarSHA: proof.jarSHA, port, evidence}));
         return {id: 'module-9', request, baseURL, stop};
@@ -188,11 +199,11 @@ async function launch(options, testInfo) {
 }
 
 const test = base.extend({
-    editingFixture: async ({}, use, testInfo) => {
+    editingFixture: async ({context}, use, testInfo) => {
         const owned = [];
         try {
             await use(async (options = {}) => {
-                const fixture = await launch(options, testInfo);
+                const fixture = await launch(options, testInfo, context);
                 owned.push(fixture);
                 return fixture;
             });

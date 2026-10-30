@@ -14,7 +14,7 @@ use the same validation rules.
 - SimplyPages **1.2** installed locally, Spring MVC, and JDK 25 at runtime.
   Complete the [learning path](../getting-started/README.md) through
   [serving pages and fragments](serve-pages-and-fragments.md) first.
-- A component-scanned package; the example fits the demo learning package below.
+- A component-scanned package; the example uses the retained site learning package below.
 - Application authentication that supplies a real `Principal` for GET and POST.
 - Existing application CSRF middleware. For this example, its integration contract
   is: expose the current token as servlet request attribute `appCsrfToken`, accept
@@ -34,10 +34,10 @@ below: a local part, `@`, and a dotted domain. This is an application input rule
 an assertion of mailbox existence or a complete international email parser.
 
 Save `ContactPreviewController.java` beneath your application's component-scan
-root. In the repository demo the source path would be
-`demo/src/main/java/io/mindspice/demo/learning/ContactPreviewController.java`.
-Change the package consistently for a separate application. The private demo
-itself does not supply the authentication/CSRF prerequisites above.
+root. In the repository site the source path would be
+`site/src/main/java/io/mindspice/demo/learning/ContactPreviewController.java`.
+Change the package consistently for a separate application. This recipe is not an installed
+sandbox route, and the current site does not supply the authentication/CSRF prerequisites above.
 
 ```java
 package io.mindspice.demo.learning;

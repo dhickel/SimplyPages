@@ -1,0 +1,111 @@
+package io.mindspice.demo.pages;
+
+import io.mindspice.demo.chat.ChatDemoService;
+import io.mindspice.simplypages.components.Div;
+import io.mindspice.simplypages.components.Header;
+import io.mindspice.simplypages.components.Markdown;
+import io.mindspice.simplypages.components.chat.ChatTranscriptRenderer;
+import io.mindspice.simplypages.components.chat.ChatTransportMode;
+import io.mindspice.simplypages.components.chat.ChatUiConfig;
+import io.mindspice.simplypages.components.display.Alert;
+import io.mindspice.simplypages.components.forms.Button;
+import io.mindspice.simplypages.components.forms.Form;
+import io.mindspice.simplypages.components.forms.TextInput;
+import io.mindspice.simplypages.core.HtmlTag;
+import io.mindspice.simplypages.modules.ChatModule;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+public class ChatDemoPage {
+
+    private final ChatTranscriptRenderer<ChatDemoService.ChatMessageView, Void> transcriptRenderer =
+        ChatTranscriptRenderer.<ChatDemoService.ChatMessageView, Void>builder()
+            .withEmptyStateText("No messages yet. Start by sending one below.")
+            .withBodyTextResolver((message, context) -> message.body())
+            .build();
+
+    public String renderMain(String conversationId, List<ChatDemoService.ChatMessageView> history, String flashText, boolean warning) {
+        ChatModule module = ChatModule.create()
+            .withModuleId("chat-module")
+            .withTitle("ChatModule")
+            .withDescription("A real transcript and composer with application-owned session history and finite SSE.")
+            .withTranscript(buildTranscript(conversationId, history))
+            .withComposer(buildComposer(conversationId))
+            .withUiConfig(new ChatUiConfig(
+                conversationId,
+                ChatTransportMode.SSE,
+                "/chat/history",
+                "/chat/stream",
+                "#chat-history",
+                "outerHTML",
+                null
+            ));
+
+        Div main = new Div().withId("chat-main").withAttribute("data-chat-expired", String.valueOf(warning))
+            .withChild(Header.H1("Chat Demo"))
+            .withChild(new Markdown("""
+                ## Notes
+                - Temporary browser-session sandbox, not published. Session ownership is not authentication.
+                - Same-origin and CSRF checks are enforced. No rate-protection or production-readiness guarantee.
+                - History retains the welcome plus the latest 25 complete exchanges (51 entries).
+                - Messages allow at most 4096 UTF-16 units before trimming; this is not a raw HTTP limit.
+                - Chat expires after 30 idle minutes. Streams end after 5 minutes; Resume is explicit.
+                - At most 32 chats, two streams per session and 64 streams in this process. Expired resources are reclaimed; valid chats are never evicted for admission.
+                """));
+
+        if (flashText != null && !flashText.isBlank()) {
+            main.withChild(warning ? Alert.warning(flashText) : Alert.success(flashText));
+        }
+
+        Div connection = new Div().withId("chat-connection").withAttribute("role", "status")
+            .withChild(Alert.info("Connecting to a finite private stream.").withId("chat-connection-message"))
+            .withChild(Button.create("Resume").withId("chat-resume").withAttribute("type", "button")
+                .withAttribute("hidden", "hidden").withAttribute("style", "display: none"))
+            .withChild(Button.create("Start New").withId("chat-new").withAttribute("type", "button"));
+        main.withChild(connection).withChild(new Div().withId("chatmodule").withChild(module))
+            .withChild(new io.mindspice.simplypages.components.RawHtml(FeatureExamples.chatReference()))
+            .withChild(new io.mindspice.simplypages.components.RawHtml(FeatureCatalog.references("chat")));
+        return main.render();
+    }
+
+    public String renderTranscript(String conversationId, List<ChatDemoService.ChatMessageView> history) {
+        return buildTranscript(conversationId, history).render();
+    }
+
+    private HtmlTag buildTranscript(String conversationId, List<ChatDemoService.ChatMessageView> history) {
+        return new HtmlTag("div")
+            .withId("chat-history")
+            .withAttribute("data-chat-conversation-id", conversationId)
+            .withChild(Alert.warning("Temporary, non-published chat. Session ownership is not authentication. Same-origin and CSRF checks are enforced. Only the welcome and latest 25 complete exchanges are retained."))
+            .withChild(transcriptRenderer.render(history, null));
+    }
+
+    private Form buildComposer(String conversationId) {
+        TextInput messageInput = TextInput.create("message")
+            .withPlaceholder("Type a message")
+            .required();
+        messageInput.withAttribute("maxlength", "4096");
+        messageInput.withAttribute("autocomplete", "off");
+        messageInput.withAttribute("autocorrect", "off");
+        messageInput.withAttribute("autocapitalize", "off");
+        messageInput.withAttribute("spellcheck", "false");
+
+        Form form = Form.create()
+            .withId("chat-composer")
+            .withHxPost("/chat/messages")
+            .withHxTarget("#chat-history")
+            .withHxSwap("outerHTML")
+            .addField("Message", messageInput);
+        form.withAttribute("autocomplete", "off");
+
+        form.withChild(new HtmlTag("input", true)
+            .withAttribute("type", "hidden")
+            .withAttribute("name", "conversationId")
+            .withAttribute("value", conversationId));
+
+        form.withChild(Button.submit("Send"));
+        return form;
+    }
+}

@@ -165,7 +165,7 @@ Run targeted tests after each migration group, then run the full suite before re
 
 ```bash
 ./mvnw -pl simplypages test
-./mvnw -pl demo -am test
+./mvnw -pl site -am test
 ./mvnw clean install
 ```
 

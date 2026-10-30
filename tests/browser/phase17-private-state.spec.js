@@ -1,4 +1,5 @@
 const {test, expect} = require('playwright/test');
+const {sandboxRequest} = require('./sandbox-request');
 
 test.describe.configure({mode: 'serial'});
 
@@ -60,11 +61,22 @@ test('separate native contexts cannot read, post or open foreign streams; APIs n
                 const response = await request(`/chat/${action}`, action === 'messages'
                     ? {form: {...(bad === undefined ? {} : {conversationId: bad}), message: 'foreign attempt'}}
                     : {params: bad === undefined ? {} : {conversationId: bad}});
-                expect(response.status()).toBe(bad === undefined || !bad.trim() ? 400 : 404);
+                expect(response.status()).toBe(action === 'messages' ? 403 : bad === undefined || !bad.trim() ? 400 : 404);
                 expect(response.headers()['cache-control']).toBe('no-store');
                 expect(response.headers()['set-cookie']).toBeUndefined();
                 expect(await response.text()).not.toContain('Welcome.');
             }
+        }
+        // With its own valid origin/token, the peer reaches the original ownership/input checks.
+        const peerToken = (await (await peer.request.get('/sandbox/token')).json()).token;
+        for (const bad of [undefined, '', ' ', owned, 'unknown', ` ${owned}`, `${owned} `]) {
+            const response = await peer.request.post('/chat/messages', {
+                headers:{Origin:'http://127.0.0.1:18080','X-Sandbox-CSRF':peerToken},
+                form:{...(bad === undefined ? {} : {conversationId:bad}), message:'foreign attempt'}
+            });
+            expect(response.status()).toBe(bad === undefined || !bad.trim() ? 400 : 404);
+            expect(response.headers()['cache-control']).toBe('no-store');
+            expect(response.headers()['set-cookie']).toBeUndefined();
         }
         const foreignPage = await peer.newPage();
         await foreignPage.goto('/home');
@@ -107,18 +119,19 @@ test('native bounded message validation, astral boundaries and latest whole-pair
     await page.goto('/chat');
     await open(page);
     const owned = await id(page);
+    const protectedRequest = await sandboxRequest(page, '/chat');
     await expect(page.getByRole('textbox', {name: 'Message', exact: true})).toHaveAttribute('maxlength', '4096');
     for (const message of ['a'.repeat(4095), '😀'.repeat(2048), 'a'.repeat(4096)]) {
-        const response = await page.request.post('/chat/messages', {form: {conversationId: owned, message}});
+        const response = await protectedRequest.post('/chat/messages', {form: {conversationId: owned, message}});
         expect(response.status()).toBe(200);
     }
     for (const message of ['a'.repeat(4097), ' ' + 'a'.repeat(4096), '😀'.repeat(2048) + ' ']) {
-        const response = await page.request.post('/chat/messages', {form: {conversationId: owned, message}});
+        const response = await protectedRequest.post('/chat/messages', {form: {conversationId: owned, message}});
         expect(response.status()).toBe(400);
         expect(await response.text()).toContain('before trimming');
     }
     for (let i = 0; i < 28; i++) {
-        const response = await page.request.post('/chat/messages', {form: {conversationId: owned, message: `Retained ${i}`}});
+        const response = await protectedRequest.post('/chat/messages', {form: {conversationId: owned, message: `Retained ${i}`}});
         expect(response.status()).toBe(200);
     }
     await expect(page.locator('#chat-history')).toContainText('Received: Retained 27');
@@ -224,8 +237,9 @@ async function editClick(page, selector, suffix, status = 200) {
     expect((await response).status()).toBe(status);
 }
 for (const width of [1440, 390]) for (const host of ['direct', 'fragment']) {
-    test(`private seeded LIST native ${host} ${width}: LF/wire/error/focus/OOB/URI/proposals survive immutable kind`, async ({page, request}) => {
+    test(`private seeded LIST native ${host} ${width}: LF/wire/error/focus/OOB/URI/proposals survive immutable kind`, async ({page}) => {
         test.setTimeout(120000);
+        const request = await sandboxRequest(page);
         const errors = [], intentional = [];
         page.on('pageerror', error => errors.push(error.message));
         page.on('console', message => { if (message.type() === 'error') intentional.push(message.text()); });
@@ -240,9 +254,9 @@ for (const width of [1440, 390]) for (const host of ['direct', 'fragment']) {
         try {
             await page.goto(host === 'direct' ? '/editing-demo' : '/demos/htmx-editing');
             if (host === 'fragment') await page.getByRole('button', {name: 'Load editing demo fragment', exact: true}).click();
-            await expect(page.locator('#page-content')).toContainText('Private shared, non-durable sandbox.');
+            await expect(page.locator('#page-content')).toContainText('Temporary browser-session sandbox, not published.');
             await expect(page.locator('script[src="/js/editing-demo.js"]')).toHaveCount(1);
-            const parent = '[hx-get^="/editing-demo/edit/module-9?"]';
+            const parent = '#page-content .module-edit-btn[hx-get^="/editing-demo/edit/module-9?"]';
             const child = '[hx-get^="/editing-demo/edit-child/module-9/item-0?"]';
             const openChild = async () => {
                 await editClick(page, parent, '/edit/module-9');

@@ -2,17 +2,22 @@
 
 From the repository root, use JDK 25 and the repository's official Maven Wrapper 3.3.4
 (`only-script`, checksum-pinned Maven 3.10.0). Both module POMs enforce the tool versions,
-even when built independently. The library targets Java 25; the demo's Java 21 bytecode
+even when built independently. The library targets Java 25; the site's Java 21 bytecode
 still requires a Java 25 runtime.
 
-To install locally and run the private, loopback demo:
+To package and run the site locally:
 
 ```bash
-./mvnw clean install
-./mvnw -pl demo spring-boot:run
+./build-site.sh
+java -jar site/target/simplypages-site.jar
 ```
 
-Open [the local demo](http://localhost:8080/), [documentation](http://localhost:8080/docs),
+The script requires Python 3 for its packaged-resource verification. It runs a clean reactor
+package with tests skipped, then checks the exact packaged documentation and generated API
+inventories and bytes. Python is not required for library Maven builds or to run the JAR. `./deploy.sh` accepts no arguments
+and forwards to this local build; it does not deploy remotely.
+
+Open [the local site](http://localhost:8080/), [documentation](http://localhost:8080/docs),
 and [Javadocs](http://localhost:8080/javadocs/index.html).
 
 ## Run relevant tests
@@ -21,14 +26,14 @@ and [Javadocs](http://localhost:8080/javadocs/index.html).
 ./mvnw clean verify
 ./mvnw test
 ./mvnw -pl simplypages -Dtest=TemplateTest,ReviewRegressionTest test
-./mvnw -pl demo -am -Dtest=DocumentationIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false test
+./mvnw -pl site -am -Dtest=DocumentationIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false test
 ```
 
-The reactor builds the library before the demo, generates Javadocs, and copies documentation
-into the demo resources. Run a reactor build after changing shared code or docs; a demo-only
+The reactor builds the library before the site, generates Javadocs, and copies documentation
+into the site resources. Run a reactor build after changing shared code or docs; a site-only
 run can otherwise consume an older installed library or older generated documentation.
 
-## Run browser regressions against the packaged demo
+## Run browser regressions against the packaged site
 
 ```bash
 ./mvnw clean package
@@ -44,7 +49,7 @@ locked browser-test dependencies; Node/npm and Chromium are test tools, not libr
 requirements.
 
 The harness pins Playwright 1.62.0 and uses Chromium with real framework assets, Java-rendered
-fixtures, modal snapshots, and actual `/editing-demo` HTMX requests. Its main demo runs on
+fixtures, modal snapshots, and actual `/editing-demo` HTMX requests. Its main site process runs on
 `127.0.0.1:18080`; some tests start additional owned loopback fixtures. It stops its own
 processes and does not reuse or stop an existing service. Keep the required ports free.
 Rebuild after changing Java, framework assets, or docs so checks cannot validate a stale JAR
@@ -62,7 +67,7 @@ Choose the document type by its purpose:
 
 Link new pages from their section README and `docs/INDEX.md`. Use relative Markdown links,
 keep headings descriptive, and preserve old paths when reorganizing material. Verify both
-repository links and the rendered `/docs` routes. The demo normalizes document links and
+repository links and the rendered `/docs` routes. The site normalizes document links and
 adds heading anchors; navigation uses `outerHTML` to retain one content target.
 
 `DocumentationIntegrityTest` checks local documentation destinations and anchors;

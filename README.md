@@ -29,7 +29,7 @@ It is built for practical web apps: admin portals, internal tools, content-heavy
 This checkout is a **controlled beta**, not an unqualified production-ready release.
 The baseline is Java 25 with local Chromium desktop/mobile-viewport checks; other browsers,
 Windows, and remote CI are unverified. Review the [known issues and support boundaries](docs/reference/build-and-assets.md#beta-status-known-issues-and-support)
-before adopting it. The private demo is a loopback sandbox, not a production security example.
+before adopting it. The current site examples are not a production security example.
 
 ## Install
 
@@ -50,10 +50,10 @@ using the dependency; public Maven publication is not assumed.
 
 - Build tool: use the checked-in Maven wrapper (`./mvnw`).
 - Framework module: Java 25 release target.
-- Demo module: Java 21 release target, built in this repo with a Java 25 JDK.
+- Site module: Java 21 release target, built in this repo with a Java 25 JDK.
 - Full reactor builds should run on JDK 25 so the framework module can compile.
-- Runtime: JDK 25 for both library consumers and the Spring Boot 4.1.1 demo,
-  even though the demo emits Java 21 bytecode.
+- Runtime: JDK 25 for both library consumers and the Spring Boot 4.1.1 site,
+  even though the site emits Java 21 bytecode.
 
 ## Quickstart path
 
@@ -71,7 +71,7 @@ using the dependency; public Maven publication is not assumed.
 The sketches below illustrate the rendering model; the linked task guides contain
 complete controllers and state their application security/storage prerequisites.
 SimplyPages does not install authentication, CSRF verification, persistence, or
-transport servers. The repository demo remains a private, nondurable sandbox.
+transport servers. The site's current examples are nondurable; application recipes are not installed sandbox routes.
 
 ## 1) Static Page (Build Once, Serve Fast)
 
@@ -246,7 +246,18 @@ Start at the [documentation home](docs/README.md), organized by reader need:
 - [Explanation](docs/explanation/README.md): rendering, reuse, security, and integration.
 
 The [complete index](docs/INDEX.md) includes the existing topic-based guides.
-The running demo serves these pages at `/docs` and generated API docs at `/javadocs/index.html`.
+The official site groups working examples at `/demos`: components, layout, modules,
+builders, and feature integrations. Its explicit source-checked catalog covers 141 public
+types: 49 components/layout types, 19 modules, 6 builders, and 67 supporting contracts.
+These counts describe the catalog scope, not a quality or production-readiness metric.
+The running site serves bundled guides at `/docs`; `/api` links to the native generated
+Javadocs at `/javadocs/index.html`.
+
+Editing and forum use temporary, session-owned sandboxes; chat has its own session-owned
+conversation. The site implements same-origin and CSRF checks and browser token wiring.
+Simulated roles are not authentication. State is not durable, and the site provides no rate protection or production
+security guarantee. If a sandbox expires, `/demos/recovery` offers an explicit editing/forum
+reset; chat uses its own Start New control. Actions are not automatically replayed.
 
 ## Build and Test
 
@@ -255,11 +266,16 @@ The running demo serves these pages at `/docs` and generated API docs at `/javad
 ./mvnw clean verify
 ./mvnw test
 ./mvnw -pl simplypages test
-./mvnw -pl demo spring-boot:run
+./build-site.sh
+java -jar site/target/simplypages-site.jar
 ```
 
-Use the checksum-pinned Maven wrapper with JDK 25 for both modules. The demo targets Java 21
-bytecode but requires Java 25 at runtime because it loads the library. See the
+Use the checksum-pinned Maven wrapper with JDK 25 for both modules. The site targets Java 21
+bytecode but requires Java 25 at runtime because it loads the library. `build-site.sh` skips tests,
+cleans and packages the reactor, then uses Python 3 to verify packaged docs and API resource
+inventories and bytes. Python is not required to run the portable JAR. Because skipped tests do
+not produce browser fixtures, run the fixture-producing tests before browser checks.
+`deploy.sh` is a local-only, no-argument forwarding wrapper; it does not deploy remotely. See the
 [build and browser-test guide](docs/how-to/build-test-and-document.md) for fresh-package requirements.
 
 ## Docs TOC

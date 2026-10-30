@@ -44,5 +44,5 @@ tests/browser/test-results/
 tests/browser/playwright-report/
 
 # Generated demo documentation (copied during Maven build)
-demo/src/main/resources/static/docs/
-demo/src/main/resources/static/javadocs/
+site/src/main/resources/static/docs/
+site/src/main/resources/static/javadocs/

@@ -17,7 +17,7 @@
 
     <modules>
         <module>simplypages</module>
-        <module>demo</module>
+        <module>site</module>
     </modules>
 
     <build>

@@ -227,7 +227,7 @@ Use `ForumActionProvider<SOURCE, CTX>` for item actions.
 
 ## Demo Pipeline Reference (`/forum`)
 
-The demo module includes a full in-memory pipeline wired with these endpoints:
+The site module includes a full in-memory demo pipeline wired with these endpoints:
 
 - `GET /forum` full page render (no sidebar shell)
 - `GET /forum/topics` topic fragment refresh + pagination

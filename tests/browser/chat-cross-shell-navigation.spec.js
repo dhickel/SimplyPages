@@ -76,7 +76,7 @@ async function expectChatIdle(page) {
 }
 
 async function openChatFromDemos(page) {
-    await page.goto('/demos');
+    await page.goto('/demos/builders/preview/shell');
     const chatLink = page.locator('#main-sidebar a.sidenav-item[href="/chat"]');
     await expect(chatLink).toHaveCount(1);
     await expect(chatLink).toHaveAttribute('hx-get', '/chat');
@@ -120,7 +120,8 @@ async function expectLatestHistory(page) {
 
 async function publishExternalMessage(page, message) {
     const conversationId = await page.locator('[data-sp-chat="true"]').getAttribute('data-sp-chat-conversation-id');
-    const response = await page.request.post('/chat/messages', {form: {conversationId, message}});
+    const token = (await (await page.request.get('/sandbox/token')).json()).token;
+    const response = await page.request.post('/chat/messages', {headers:{Origin:'http://127.0.0.1:18080', 'X-Sandbox-CSRF':token}, form: {conversationId, message}});
     expect(response.status()).toBe(200);
     expect(await response.text()).toContain(`Received: ${message}`);
 }
@@ -203,7 +204,7 @@ test('mobile Demos sidebar is inert until its actual toggle opens it before Chat
     const state = {};
     await installChatInstrumentation(page, state);
     await page.setViewportSize({width: 390, height: 844});
-    await page.goto('/demos');
+    await page.goto('/demos/builders/preview/shell');
 
     const sidebar = page.locator('#main-sidebar');
     const toggle = page.locator('.mobile-sidebar-toggle[aria-controls="main-sidebar"]');

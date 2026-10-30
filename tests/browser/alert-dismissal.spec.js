@@ -561,11 +561,15 @@ test('real HTMX OOB replacement inserts actual Java Alerts across repeated dismi
 });
 
 test('packaged display demo keeps its existing non-dismissible Alerts unchanged', async ({page}, testInfo) => {
-    // This baseline has no demo call to Alert.dismissible(); do not invent or retrofit one.
-    await page.goto('/demos/display-data');
-    await expect(page.locator('.alert')).toHaveCount(4);
+    // The canonical catalog preview retains all four non-dismissible severity specimens.
+    await page.goto('/demos/components/display-data');
+    const preview = page.locator('#alert .sp-site-preview');
+    await expect(preview.locator('.alert')).toHaveCount(4);
     await expect(page.locator('.alert-close')).toHaveCount(0);
-    expect(await page.locator('.alert').evaluateAll(alerts => alerts.map(alert => ({
+    for (const severity of ['info', 'success', 'warning', 'danger']) {
+        await expect(preview.locator(`.alert-${severity}`)).toBeVisible();
+    }
+    expect(await preview.locator('.alert').evaluateAll(alerts => alerts.map(alert => ({
         role: alert.getAttribute('role'), live: alert.getAttribute('aria-live'), hidden: alert.hidden
     })))).toEqual(Array(4).fill({role: null, live: null, hidden: false}));
     await evidence(page, testInfo, 'packaged-display-demo', {url: page.url(), dismissible: 0}, true);

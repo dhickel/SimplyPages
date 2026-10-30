@@ -216,8 +216,9 @@ mutate the generated component trees per visitor.
 Mount/copy that directory into your deployment and set its permissions explicitly.
 It is not a classpath lookup. If you package articles inside a JAR, your application
 must materialize them into a real directory before calling the generator; see
-`demo/src/main/java/io/mindspice/demo/BlogContentService.java` for an example.
-That demo class and `BlogController` are source references, not library dependencies.
+`site/src/main/java/io/mindspice/demo/BlogContentService.java` for an example.
+That site class and `BlogController` are source references, not library dependencies. This
+application recipe is not an installed sandbox route.
 
 Review warnings in trusted application logs after each generation. Missing
 content directories can produce an empty index with a warning; malformed dates,
