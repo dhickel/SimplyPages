@@ -56,6 +56,8 @@ body:has(.sp-site-chrome) .content-wrapper { padding:0; width:100%; min-width:0;
 .sp-site-main p { max-width:70ch; }
 .sp-site-main :is(.form-input,.form-textarea,.form-select) { border-color:#7A8075; }
 .sp-site-main :is(.btn,.form-input,.form-select) { min-height:44px; }
+.sp-site-main .add-module-section .btn-secondary { background:var(--sp-button-secondary-bg); }
+.sp-site-main .add-module-section .btn-secondary:hover { background:var(--sp-button-secondary-bg-hover); }
 .sp-site-main :is(.checkbox-label,.radio-option) { min-height:44px; display:flex; align-items:center; }
 /* Host branding of standard module surfaces, without changing library defaults. */
 .sp-site-main :is(.content-module,.form-module,.data-module,.gallery-module,.simple-list-module,.card-module,.list-module,.table-module,.rich-content-module) { background:#FFFFFF; box-shadow:none; border-radius:6px; }

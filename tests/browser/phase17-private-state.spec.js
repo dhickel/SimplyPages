@@ -256,7 +256,7 @@ for (const width of [1440, 390]) for (const host of ['direct', 'fragment']) {
             if (host === 'fragment') await page.getByRole('button', {name: 'Load editing demo fragment', exact: true}).click();
             await expect(page.locator('#page-content')).toContainText('Temporary browser-session sandbox, not published.');
             await expect(page.locator('script[src="/js/editing-demo.js"]')).toHaveCount(1);
-            const parent = '[hx-get^="/editing-demo/edit/module-9?"]';
+            const parent = '#page-content .module-edit-btn[hx-get^="/editing-demo/edit/module-9?"]';
             const child = '[hx-get^="/editing-demo/edit-child/module-9/item-0?"]';
             const openChild = async () => {
                 await editClick(page, parent, '/edit/module-9');
