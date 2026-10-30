@@ -32,6 +32,12 @@ Owns the Spring Boot official project site and framework demonstrations. Source 
 - Hardcoding outdated versions/paths.
 - Coupling demo controllers too tightly to transient test data.
 
+## Site navigation and presentation
+
+Keep the shared top navigation and the card-led home with forest, teal and ochre accents. Demo pages have a grouped sticky left rail on desktop and a native disclosure at widths of 900px or less. The mobile script closes it initially, supports Escape and focus restoration, and closes it for same-page subsection navigation; without JavaScript, native disclosure and ordinary links remain usable. Expose the current category and its subsection anchors. Navigation uses document links, not HTMX swaps, so chat initializes its script and SSE in the current document; this is not a framework bootstrap change.
+
+Grouped destinations are `/demos/modules/{reading,insights,interaction,storytelling}` and `/demos/builders/composition`. Existing individual example routes and anchors remain valid; editable and chat module aliases retain their feature redirects. Preserve all 141 catalog types, including 19 modules and 6 builders, and source-fidelity coverage. Site presentation does not change security, sandbox state or public library APIs.
+
 ## HTML and nested-list behavior
 
 Editing, forum, and chat use bounded temporary session-owned state with server-enforced ownership and same-origin/CSRF protection. Browser token and form wiring is implemented; validate changes against fresh local artifacts. Simulated roles are not authentication. Preserve the following input and interaction guarantees.

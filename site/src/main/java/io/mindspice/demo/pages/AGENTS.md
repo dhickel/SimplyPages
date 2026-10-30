@@ -31,6 +31,12 @@ Owns official site page composition classes used by site controllers; the Java p
 - Overly complex page classes that hide framework concepts.
 - Mixing unrelated concerns in one demo page.
 
+## Site composition and demo discovery
+
+Keep the homepage card-led, with representative rendered output rather than an exhaustive symbol list. Retain the shared top navigation and grouped demo rail: a sticky left rail on desktop, a native disclosure at 900px and below, an accessible current category and links to its subsections. JavaScript handles mobile collapse, Escape and focus restoration; native links remain usable without it. Use ordinary document navigation, including for chat, so its script and SSE initialize in the current document rather than relying on HTMX bootstrap.
+
+Group related module examples at `/demos/modules/{reading,insights,interaction,storytelling}` and builders at `/demos/builders/composition`; retain individual example URLs and anchors. Preserve the source-checked 141-type catalog, including 19 modules and 6 builders, with real previews and relevant source, API and documentation links. Site-owned forest, teal and ochre styling must not obscure the colors of framework specimens.
+
 ## Chat and sandbox composition
 
 Editing, forum, and chat use bounded temporary session-owned state with server-enforced ownership and same-origin/CSRF protection, including browser token and form wiring. Validate changes against fresh local artifacts. Disclose non-durable state, expiry, limits and the absence of rate protection; distinguish simulated roles and session ownership from authentication. Do not claim production readiness.

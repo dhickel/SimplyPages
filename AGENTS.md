@@ -61,6 +61,7 @@ SimplyPages is an active internal Java-first SSR framework for building data-hea
 
 ### Official Site Contract
 - `site` is the official project website module, with demonstrations at `/demos`, packaged documentation at `/docs`, and a Java API entry at `/api` linking to native Javadocs. Validate changes locally as specified below.
+- The site retains its shared top navigation and uses forest, teal and ochre accents with a card-led home. Demo pages use a grouped sticky left rail on desktop and a native disclosure at 900px and below; ordinary document links preserve chat's current-document bootstrap and SSE. Keep individual example URLs and anchors, catalog coverage and source fidelity intact.
 - Editing, forum, and chat use bounded temporary session-owned state with server-side ownership and same-origin/CSRF protection; browser token and form wiring is implemented. Simulated roles are not authentication, and the site is not a production security example.
 - `./build-site.sh` creates a local executable artifact with tests skipped and verifies packaged documentation/API inventories and bytes. `./deploy.sh` only forwards without arguments to that local build; it never deploys remotely.
 
