@@ -38,6 +38,10 @@ Keep the shared top navigation and the card-led home with forest, teal and ochre
 
 Grouped destinations are `/demos/modules/{reading,insights,interaction,storytelling}` and `/demos/builders/composition`. Existing individual example routes and anchors remain valid; editable and chat module aliases retain their feature redirects. Preserve all 141 catalog types, including 19 modules and 6 builders, and source-fidelity coverage. Site presentation does not change security, sandbox state or public library APIs.
 
+## Site snippet highlighting
+
+The shared site shell loads the local Highlight.js 11.12.0 browser common bundle before `site.js`; the site owns this optional presentation, not the library's `Code` API. Preserve server escaping and exact snippet text and newlines. Enrich only explicitly labeled `pre code` with a recognized bundled grammar or alias, initially and on `htmx:load`, including a code node supplied as the fragment root. Processing must be idempotent and must not reinterpret existing child markup. Unknown, unlabelled, text and Mermaid blocks remain readable plain text, as do all snippets without JavaScript; Mermaid is not rendered as a diagram. Keep assets local and retain the bundled BSD 3-Clause license and upstream attribution in the build-and-assets reference.
+
 ## HTML and nested-list behavior
 
 Editing, forum, and chat use bounded temporary session-owned state with server-enforced ownership and same-origin/CSRF protection. Browser token and form wiring is implemented; validate changes against fresh local artifacts. Simulated roles are not authentication. Preserve the following input and interaction guarantees.

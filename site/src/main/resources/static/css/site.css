@@ -92,6 +92,13 @@ body:has(.sp-site-demo-layout) > .main-container { max-width:1480px; }
 .sp-site-preview .hero-title { color:var(--sp-hero-text-color); }
 .sp-site-preview .hero-subtitle { color:var(--sp-hero-subtitle-color); }
 .sp-site-example-grid pre, .sp-site-source-details pre { margin:0; max-width:100%; overflow-x:auto; background:#202720; color:#F1F3EB; border-radius:8px; padding:24px; font:14px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace; white-space:pre; }
+.sp-site-main pre code.hljs { color:#F1F3EB; }
+.sp-site-main pre code.hljs :is(.hljs-comment,.hljs-quote) { color:#A6B5A8; }
+.sp-site-main pre code.hljs :is(.hljs-keyword,.hljs-selector-tag,.hljs-literal,.hljs-section,.hljs-meta) { color:#EBCB83; }
+.sp-site-main pre code.hljs :is(.hljs-string,.hljs-regexp,.hljs-addition,.hljs-bullet) { color:#A7D5AD; }
+.sp-site-main pre code.hljs :is(.hljs-title,.hljs-built_in,.hljs-type,.hljs-selector-class,.hljs-selector-id) { color:#80CBC4; }
+.sp-site-main pre code.hljs :is(.hljs-number,.hljs-symbol,.hljs-deletion,.hljs-link) { color:#E8AA91; }
+.sp-site-main pre code.hljs :is(.hljs-attr,.hljs-attribute,.hljs-variable,.hljs-template-variable,.hljs-name) { color:#BCD4EC; }
 .sp-site-example-grid .code-block { min-width:0; max-width:100%; }
 .sp-site-example-grid .code-title { background:#EEEAE2; color:var(--sp-site-ink); }
 .sp-site-directory { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:32px; margin:32px 0 56px; }

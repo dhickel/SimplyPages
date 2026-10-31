@@ -1,4 +1,19 @@
 (() => {
+    function highlightCode(root) {
+        const highlighter = window.hljs;
+        if (!highlighter || typeof highlighter.highlightElement !== 'function' || typeof highlighter.getLanguage !== 'function') return;
+        const selector = '.sp-site-main pre code';
+        function highlight(code) {
+            if (code.dataset.highlighted || code.children.length) return;
+            const classes = code.className + ' ' + code.parentElement.className;
+            if (/\bno-?highlight\b/i.test(classes)) return;
+            const language = classes.match(/\blang(?:uage)?-([\w-]+)\b/i)?.[1];
+            if (!language || /^(text|plain|plaintext|txt|none|mermaid)$/i.test(language) || !highlighter.getLanguage(language)) return;
+            highlighter.highlightElement(code);
+        }
+        if (root.matches?.(selector)) highlight(root);
+        root.querySelectorAll(selector).forEach(highlight);
+    }
     function documentationState() {
         const article = document.getElementById('docs-content');
         if (!article) return;
@@ -67,7 +82,8 @@
             }
         }
     }
-    document.addEventListener('DOMContentLoaded', () => { documentationState(); mobileDocs(); demoNavigation(); });
+    document.addEventListener('DOMContentLoaded', () => { documentationState(); mobileDocs(); demoNavigation(); highlightCode(document); });
+    document.addEventListener('htmx:load', event => highlightCode(event.detail.elt));
     document.addEventListener('htmx:afterSettle', documentationState);
     document.addEventListener('htmx:pushedIntoHistory', documentationState);
     document.addEventListener('submit', async event => {

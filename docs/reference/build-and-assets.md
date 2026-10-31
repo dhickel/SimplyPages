@@ -25,6 +25,19 @@ lite WebJars locator for the versionless HTMX URL. The site uses Boot's `spring-
 and test-scoped `spring-boot-starter-webmvc-test`; it does not require legacy locator-core or
 Jackson 2 databind. The library remains independent of Spring.
 
+The official site locally serves the Highlight.js 11.12.0 browser common bundle at
+`/vendor/highlightjs/11.12.0/highlight.min.js` for optional, progressive snippet highlighting.
+Its BSD 3-Clause license and copyright notice are packaged at
+`/vendor/highlightjs/11.12.0/LICENSE` (`site/src/main/resources/static/vendor/highlightjs/11.12.0/LICENSE`
+in the checkout). The upstream source is the npm package
+[`@highlightjs/cdn-assets` 11.12.0 tarball](https://registry.npmjs.org/@highlightjs/cdn-assets/-/cdn-assets-11.12.0.tgz);
+this is provenance, not a runtime CDN. The asset adds no Maven or npm production dependency.
+The site's private script enriches explicitly labeled code in the initial document and HTMX-loaded
+fragments when the bundled grammar recognizes the language or alias. Unknown, unlabelled, text and
+Mermaid blocks remain plain text; there is no diagram renderer. Server-escaped text remains readable
+without JavaScript. This is site presentation, not a library API or an automatic asset promise for
+consumer applications.
+
 The site overrides Boot's dependency properties with `jackson-bom.version=3.1.7`
 and `tomcat.version=11.0.27`; Jackson annotations remain 2.21. These use the parent POM's
 property mechanism, not an unmodified, vendor-tested Boot dependency set. They do not
