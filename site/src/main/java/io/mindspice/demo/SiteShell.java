@@ -36,7 +36,8 @@ public final class SiteShell {
                     .withChild(DemoNavigation.sidebar(path)).withChild(target) : target;
             })
             .withContent(body)
-            .addCustomCss("/css/site.css").addCustomJs("/js/site.js")
+            .addCustomCss("/css/site.css")
+            .addCustomJs("/vendor/highlightjs/11.12.0/highlight.min.js").addCustomJs("/js/site.js")
             .addCustomJs("/js/editing-demo.js");
         for (String script : scripts) shell.addCustomJs(script);
         return shell.build();
