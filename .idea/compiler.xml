@@ -14,7 +14,7 @@
       <module name="java-html-framework" target="1.5" />
       <module name="jhf" target="17" />
       <module name="jhf-demo" target="17" />
-      <module name="simplypages-demo.main" target="25" />
+      <module name="simplypages-demo.main" target="21" />
       <module name="simplypages-demo.test" target="21" />
     </bytecodeTargetLevel>
   </component>

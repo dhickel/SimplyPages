@@ -13,12 +13,12 @@
 
     <groupId>io.mindspice</groupId>
     <artifactId>simplypages-site</artifactId>
-    <version>1.2</version>
+    <version>1.2.1</version>
     <name>SimplyPages Site</name>
     <description>Demo application for SimplyPages</description>
 
     <properties>
-        <!-- Retain Java 21 demo bytecode; the library requires a JDK 25 runtime. -->
+        <!-- Both modules target Java 21 and require Java 21 or newer. -->
         <java.version>21</java.version>
         <project.build.outputTimestamp>1792167126</project.build.outputTimestamp>
         <jackson-bom.version>3.1.7</jackson-bom.version>
@@ -30,7 +30,7 @@
         <dependency>
             <groupId>io.mindspice</groupId>
             <artifactId>simplypages</artifactId>
-            <version>1.2</version>
+            <version>1.2.1</version>
         </dependency>
 
         <!-- Spring Boot Starter for web applications -->
@@ -68,7 +68,7 @@
                 <version>3.6.3</version>
                 <executions><execution><id>build-tool-contract</id><goals><goal>enforce</goal></goals>
                     <configuration><rules>
-                        <requireJavaVersion><version>[25,26)</version></requireJavaVersion>
+                        <requireJavaVersion><version>[21,)</version></requireJavaVersion>
                         <requireMavenVersion><version>[3.10.0,4)</version></requireMavenVersion>
                     </rules></configuration>
                 </execution></executions>
