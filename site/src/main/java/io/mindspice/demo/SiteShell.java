@@ -12,7 +12,7 @@ public final class SiteShell {
 
     public static String render(String title, String path, String content, String... scripts) {
         HtmlTag nav = new HtmlTag("nav").withClass("sp-site-nav").withAttribute("aria-label", "Main navigation");
-        String[][] links = {{"SimplyPages", "/"}, {"Demos", "/demos"}, {"Documentation", "/docs"}, {"Java API", "/api"}};
+        String[][] links = {{"SimplyPages", "/"}, {"Demos", "/demos"}, {"Documentation", "/docs"}, {"Java API", "/api"}, {"GitHub", "https://github.com/dhickel/SimplyPages"}};
         for (String[] link : links) {
             Link item = Link.create(link[1], link[0]);
             if (path.equals(link[1]) || (!link[1].equals("/") && path.startsWith(link[1] + "/")))
