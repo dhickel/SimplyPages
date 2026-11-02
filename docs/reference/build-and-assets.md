@@ -1,12 +1,12 @@
 # Build requirements and assets
 
-These values describe this checkout, version `1.2`.
+These values describe this checkout, version `1.2.1`.
 
 | Item | Value |
 | --- | --- |
-| Library coordinates | `io.mindspice:simplypages:1.2` |
-| Library compilation and runtime | JDK 25 |
-| Site compiler target | Java 21 bytecode; runtime remains JDK 25 |
+| Library coordinates | `io.mindspice:simplypages:1.2.1` |
+| Build and runtime minimum | JDK 21 for library and site |
+| Compiler target | Java 21 bytecode for library and site |
 | Build entry point | Official Maven Wrapper 3.3.4, `only-script`; checksum-pinned Maven 3.10.0 via `./mvnw` |
 | Library module | `simplypages` |
 | Site module | `site` (`simplypages-site`), Spring Boot 4.1.1 / Spring MVC 7.0.9 / Servlet 6.1 |
@@ -100,15 +100,15 @@ are unchanged. Exact JSON representability is broader than legal browser HTTP-he
 
 ## Build outputs
 
-- Library JAR: `simplypages/target/simplypages-1.2.jar`
+- Library JAR: `simplypages/target/simplypages-1.2.1.jar`
 - Executable site JAR: `site/target/simplypages-site.jar`
 - Generated API docs: `simplypages/target/reports/apidocs/`
 - Packaged guide source: `site/target/classes/static/docs/`
 - Packaged API docs: `site/target/classes/static/javadocs/`
 
-The reactor and each independent module POM enforce JDK 25 and Maven `[3.10.0,4)`. The library
-emits Java 25 class files (major version 69); the site emits Java 21 class files but cannot
-run on Java 21 because it loads that library. Use the wrapper rather than a system Maven.
+The reactor and each independent module POM enforce JDK `[21,)` and Maven `[3.10.0,4)`.
+Both modules target Java 21 class files (major version 65), including when built with a later JDK.
+Use the wrapper rather than a system Maven.
 
 The POMs pin build plugins and output timestamps. The library attaches source and Javadoc
 JARs at package time. Javadoc uses `all,-missing` with warnings fatal: structural lint is
@@ -123,12 +123,14 @@ Use a reactor build such as `./mvnw clean install` before running the site indep
 Maven verification lifecycle; browser tests are a separate command in the
 [build guide](../how-to/build-test-and-document.md). There is no automatic coverage,
 SBOM, continuous security, or remote CI acceptance gate claimed here. Public artifact
-publication is not assumed; install the library locally or use your team's artifact repository.
+publication to Maven Central is not part of this release. Install the library locally or use
+your team's artifact repository. GitHub release `v1.2.1` provides the library JAR, sources,
+Javadocs, and POM; it does not deploy the website.
 
 ## Beta status, known issues, and support
 
-Version `1.2` is a controlled-beta checkout for local installation, not a new public
-publication or an unqualified production-readiness claim. The support baseline is Java 25
+Version `1.2.1` is a controlled beta, not an unqualified production-readiness claim.
+The support baseline is Java 21 or later
 and local Chromium checks at desktop and mobile viewports. Mobile viewports do not certify
 physical devices. Other browsers, native Windows, and remote CI remain unverified.
 
@@ -153,7 +155,7 @@ Hosts own HTTP security, authorization, persistence, and request policy; the HTM
 and bounded Form-header repair above do not provide those controls. Report reproducible
 problems through the linked GitHub issues without including credentials or private data.
 
-Licensing, deployment approval, and publication are outside this beta closeout; this status
-section does not grant rights, certify a deployment, or assert that unrun checks passed.
+Licensing, remote website deployment, and Maven Central publication are outside this release;
+this status section does not grant rights, certify a deployment, or assert that unrun checks passed.
 
 [Build and documentation tasks](../how-to/build-test-and-document.md) · [All reference](README.md)

@@ -5,7 +5,7 @@
 
     <groupId>io.mindspice</groupId>
     <artifactId>simplypages-parent</artifactId>
-    <version>1.2</version>
+    <version>1.2.1</version>
     <packaging>pom</packaging>
 
     <name>SimplyPages Parent</name>
@@ -32,7 +32,7 @@
                         <goals><goal>enforce</goal></goals>
                         <configuration>
                             <rules>
-                                <requireJavaVersion><version>[25,26)</version></requireJavaVersion>
+                                <requireJavaVersion><version>[21,)</version></requireJavaVersion>
                                 <requireMavenVersion><version>[3.10.0,4)</version></requireMavenVersion>
                             </rules>
                         </configuration>

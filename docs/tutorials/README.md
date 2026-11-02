@@ -2,8 +2,8 @@
 
 Follow these lessons in order. Each produces observable HTML and includes complete Java source.
 For clone/local-build instructions and runtime requirements, start at
-[Getting started](../getting-started/README.md). Both lessons use SimplyPages **1.2**
-from your local Maven repository and **JDK 25**; they do not assume public publication.
+[Getting started](../getting-started/README.md). Both lessons use SimplyPages **1.2.1**
+from your local Maven repository and **JDK 21 or later**; they do not assume Maven Central publication.
 
 1. [Render your first page](first-page.md): install SimplyPages, create a tiny Maven application,
    compose a page, and inspect its output.

@@ -4,27 +4,27 @@
 
 ## Dependency
 
-Use JDK 25 to build and run SimplyPages. From the repository root, first run
+Use JDK 21 or later to build and run SimplyPages. From the repository root, first run
 `./mvnw -pl simplypages install` to install this beta version locally. For a complete
 runnable example, see [your first page](../tutorials/first-page.md).
 
 Add SimplyPages to your `pom.xml`:
 
-Current release: `1.2`.
+Current release: `1.2.1`.
 
 ```xml
 <dependency>
   <groupId>io.mindspice</groupId>
   <artifactId>simplypages</artifactId>
-  <version>1.2</version>
+  <version>1.2.1</version>
 </dependency>
 ```
 
 ## Toolchain
 
 - Use the repository Maven wrapper (`./mvnw`) for local builds.
-- The framework module compiles with Java 25.
-- The site module targets Java 21, but full reactor builds should run on JDK 25.
+- Both framework and site target Java 21 bytecode.
+- Build the reactor and run either module with JDK 21 or later.
 
 ## First Static Page
 

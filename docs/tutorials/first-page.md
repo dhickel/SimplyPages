@@ -1,7 +1,7 @@
 # Render your first page
 
 You will compose a page in Java and print its HTML. You need a checkout of SimplyPages,
-JDK 25, and Maven available as `mvn` for the separate example project.
+JDK 21 or later, and Maven available as `mvn` for the separate example project.
 
 ## Install the library
 
@@ -12,8 +12,8 @@ java -version
 ./mvnw -pl simplypages install
 ```
 
-The Java version should be 25. Maven should finish with `BUILD SUCCESS` and install version
-`1.2` in your local Maven repository.
+The Java version should be 21 or later. Maven should finish with `BUILD SUCCESS` and install version
+`1.2.1` in your local Maven repository.
 
 ## Create an example project
 
@@ -28,14 +28,14 @@ Create an empty directory outside the SimplyPages checkout. Add this `pom.xml`:
   <artifactId>first-page</artifactId>
   <version>1.0-SNAPSHOT</version>
   <properties>
-    <maven.compiler.release>25</maven.compiler.release>
+    <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <dependencies>
     <dependency>
       <groupId>io.mindspice</groupId>
       <artifactId>simplypages</artifactId>
-      <version>1.2</version>
+      <version>1.2.1</version>
     </dependency>
   </dependencies>
   <build><plugins><plugin>

@@ -1,9 +1,9 @@
 # Build, test, and browse the documentation
 
-From the repository root, use JDK 25 and the repository's official Maven Wrapper 3.3.4
-(`only-script`, checksum-pinned Maven 3.10.0). Both module POMs enforce the tool versions,
-even when built independently. The library targets Java 25; the site's Java 21 bytecode
-still requires a Java 25 runtime.
+From the repository root, use JDK 21 or later and the repository's official Maven Wrapper 3.3.4
+(`only-script`, checksum-pinned Maven 3.10.0). The reactor and both module POMs enforce the
+tool versions, even when built independently. Both modules target Java 21 bytecode and require
+Java 21 or later at runtime.
 
 To package and run the site locally:
 

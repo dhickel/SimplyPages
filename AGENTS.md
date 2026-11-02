@@ -125,8 +125,8 @@ Package-specific operational rules live in package-level `AGENTS.md` files.
 
 ## Build and Test Commands
 
-- Use the official Maven Wrapper 3.3.4 (`only-script`), pinned to Maven 3.10.0 with a distribution checksum. Reactor and independent module POMs enforce JDK 25 and Maven `[3.10.0,4)`.
-- Library output is Java 25 bytecode; site output is Java 21 bytecode but still requires Java 25 at runtime.
+- Use the official Maven Wrapper 3.3.4 (`only-script`), pinned to Maven 3.10.0 with a distribution checksum. Reactor and independent module POMs enforce JDK `[21,)` and Maven `[3.10.0,4)`.
+- Both library and site target Java 21 bytecode and require Java 21 or later at runtime.
 - Keep pinned plugins, output timestamps, source/Javadoc attachments, and fatal structural Javadoc lint (`all,-missing`). Missing prose remains tracked documentation debt, not a completeness guarantee.
 - Browser checks use the existing `tests/browser` harness after a fresh Maven package including tests/fixtures, then `npm ci` and pinned Playwright/Chromium. See `docs/how-to/build-test-and-document.md`; do not substitute stale artifacts.
 - The controlled-beta support/known-issues record is `docs/reference/build-and-assets.md#beta-status-known-issues-and-support`. Do not infer remote CI, continuous security, coverage gates, publication, or production readiness from local checks.
@@ -158,11 +158,11 @@ cd site && ../mvnw spring-boot:run
 - `docs/reference/`: API/build contracts; `docs/explanation/`: design and integration reasoning.
 - Keep existing topic-based URLs stable and link new pages from their section and `docs/INDEX.md`.
 - Documentation tests validate local links/anchors, guide discoverability, and complete Java examples.
-- JDK 25 is required; retain library Java 25 bytecode and the site's Java 21 bytecode target. Dependency migration does not authorize API/bridge or target changes.
+- JDK 21 or later is required; retain the Java 21 bytecode target for both library and site. Dependency migration does not authorize API/bridge or target changes.
 
 ## Documentation TOC (Terse)
 - Full index: `docs/INDEX.md`
-- Learning path: `docs/getting-started/README.md` → `docs/tutorials/first-page.md` → `docs/tutorials/dynamic-page.md` → `docs/how-to/serve-pages-and-fragments.md`; current examples use locally installed 1.2 and JDK 25.
+- Learning path: `docs/getting-started/README.md` → `docs/tutorials/first-page.md` → `docs/tutorials/dynamic-page.md` → `docs/how-to/serve-pages-and-fragments.md`; current examples use locally installed 1.2.1 and JDK 21 or later.
 - Task guides: `docs/how-to/build-a-markdown-blog.md`, `docs/how-to/build-a-forum.md`, `docs/how-to/build-user-editable-pages.md`, `docs/how-to/add-chat.md`, `docs/how-to/build-a-dashboard.md`, `docs/how-to/handle-form-submissions.md`. Keep application identity/CSRF/storage/transport prerequisites explicit; these listings are application recipes, not installed sandbox routes.
 - Diátaxis entry points: `docs/tutorials/README.md`, `docs/how-to/README.md`, `docs/reference/README.md`, `docs/explanation/README.md`.
 - Fundamentals: `docs/fundamentals/01-web-and-htmx-primer.md`, `docs/fundamentals/02-simplypages-mental-model.md`, `docs/fundamentals/03-css-fundamentals.md`
