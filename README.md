@@ -27,33 +27,31 @@ It is built for practical web apps: admin portals, internal tools, content-heavy
 ## Beta status
 
 This checkout is a **controlled beta**, not an unqualified production-ready release.
-The baseline is Java 25 with local Chromium desktop/mobile-viewport checks; other browsers,
+The baseline is Java 21 or later, with local Chromium desktop/mobile-viewport checks; other browsers,
 Windows, and remote CI are unverified. Review the [known issues and support boundaries](docs/reference/build-and-assets.md#beta-status-known-issues-and-support)
 before adopting it. The current site examples are not a production security example.
 
 ## Install
 
-Current release: `1.2`.
+Current release: `1.2.1`.
 
-Use JDK 25. Install this checkout locally with `./mvnw -pl simplypages install` before
-using the dependency; public Maven publication is not assumed.
+Use JDK 21 or later. Install this checkout locally with `./mvnw -pl simplypages install` before
+using the dependency. The GitHub release `v1.2.1` provides the library JAR, sources, Javadocs,
+and POM; the release is not published to Maven Central.
 
 ```xml
 <dependency>
   <groupId>io.mindspice</groupId>
   <artifactId>simplypages</artifactId>
-  <version>1.2</version>
+  <version>1.2.1</version>
 </dependency>
 ```
 
 ## Requirements
 
 - Build tool: use the checked-in Maven wrapper (`./mvnw`).
-- Framework module: Java 25 release target.
-- Site module: Java 21 release target, built in this repo with a Java 25 JDK.
-- Full reactor builds should run on JDK 25 so the framework module can compile.
-- Runtime: JDK 25 for both library consumers and the Spring Boot 4.1.1 site,
-  even though the site emits Java 21 bytecode.
+- Build and runtime: JDK 21 or later for both library consumers and the Spring Boot 4.1.1 site.
+- Framework and site modules both target Java 21 bytecode, even when built with a later JDK.
 
 ## Quickstart path
 
@@ -270,8 +268,8 @@ reset; chat uses its own Start New control. Actions are not automatically replay
 java -jar site/target/simplypages-site.jar
 ```
 
-Use the checksum-pinned Maven wrapper with JDK 25 for both modules. The site targets Java 21
-bytecode but requires Java 25 at runtime because it loads the library. `build-site.sh` skips tests,
+Use the checksum-pinned Maven wrapper with JDK 21 or later for both modules, which target Java 21
+bytecode. `build-site.sh` skips tests,
 cleans and packages the reactor, then uses Python 3 to verify packaged docs and API resource
 inventories and bytes. Python is not required to run the portable JAR. Because skipped tests do
 not produce browser fixtures, run the fixture-producing tests before browser checks.

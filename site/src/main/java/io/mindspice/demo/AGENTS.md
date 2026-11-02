@@ -80,7 +80,7 @@ The current site defaults to `server.address=127.0.0.1`; disclose temporary, non
 ## Dependencies
 - Depends on `simplypages` published module APIs.
 - Demo integration uses Boot 4.1.1, Spring MVC 7.0.9, Servlet 6.1, modular webmvc/webmvc-test starters, and Boot-managed webjars-locator-lite 1.1.4 for versionless unmodified HTMX 2.0.11. The site uses parent-property overrides `jackson-bom.version=3.1.7` and `tomcat.version=11.0.27`; Jackson annotations remain 2.21. This is not an unmodified vendor-tested Boot dependency set or a security/support certification. Do not retain locator-core/ClassGraph or add Jackson 2 databind fallback; the test launcher uses Jackson 3. Production servlet listener/filter registration imports retain their existing packages.
-- Keep JDK 25 runtime/library bytecode and Java 21 site bytecode. Use the checksum-pinned Maven wrapper; this module independently enforces the tool versions. Preserve the relevant editing/session/SSE behavior while replacing shared state; the separate terminal-completion fix does not resolve all shutdown timeout warnings.
+- Require JDK 21 or later at runtime and keep Java 21 bytecode for both library and site. Use the checksum-pinned Maven wrapper; this module independently enforces the tool versions. Preserve the relevant editing/session/SSE behavior while replacing shared state; the separate terminal-completion fix does not resolve all shutdown timeout warnings.
 - Full/template shell-owned legacy client defaults precede deferred custom JS; explicit upstream meta/custom overrides win. Body/manual/disabled hosts own configuration. The bounded framework Form-header hook is compatibility, not demo endpoint security or CSRF verification.
 - No dependency from framework modules back to demo.
 
@@ -91,7 +91,7 @@ See root `AGENTS.md` for global standards.
 
 ## Documentation TOC (Terse)
 - Full index: `docs/INDEX.md`
-- Learning path: `docs/getting-started/README.md` → `docs/tutorials/first-page.md` → `docs/tutorials/dynamic-page.md` → `docs/how-to/serve-pages-and-fragments.md`; use locally installed 1.2 and JDK 25, including the Boot 4.1.1 site runtime.
+- Learning path: `docs/getting-started/README.md` → `docs/tutorials/first-page.md` → `docs/tutorials/dynamic-page.md` → `docs/how-to/serve-pages-and-fragments.md`; use locally installed 1.2.1 and JDK 21 or later, including the Boot 4.1.1 site runtime.
 - Task guides: `docs/how-to/build-a-markdown-blog.md`, `docs/how-to/build-a-forum.md`, `docs/how-to/build-user-editable-pages.md`, `docs/how-to/add-chat.md`, `docs/how-to/build-a-dashboard.md`, `docs/how-to/handle-form-submissions.md`. Listings are application recipes, not installed sandbox routes; they require their own authenticated editing/form security prerequisites.
 - Diátaxis entry points: `docs/tutorials/README.md`, `docs/how-to/README.md`, `docs/reference/README.md`, `docs/explanation/README.md`.
 - Fundamentals: `docs/fundamentals/01-web-and-htmx-primer.md`, `docs/fundamentals/02-simplypages-mental-model.md`, `docs/fundamentals/03-css-fundamentals.md`

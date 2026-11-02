@@ -17,7 +17,7 @@ solving tasks with how-to guides, looking up reference facts, and understanding 
 
 1. [Getting started](getting-started/README.md): clone/local build and host requirements.
 2. [First page](tutorials/first-page.md), then [dynamic page](tutorials/dynamic-page.md):
-   two complete Java programs with a local `1.2` dependency.
+   two complete Java programs with a local `1.2.1` dependency.
 3. [Serve full pages and HTMX fragments](how-to/serve-pages-and-fragments.md): add
    a real HTTP host, assets, and correct response targets.
 4. Choose a task below. The guides extend your existing application; they are not
@@ -38,10 +38,10 @@ its prerequisites and whether its example state is local or nondurable.
 
 ## Requirements and version
 
-The checkout builds `io.mindspice:simplypages:1.2`. Use **JDK 25** to build and run it.
-Install the library locally with `./mvnw -pl simplypages install`; publication to a public Maven
-repository is not assumed. The Spring Boot 4.1.1 site emits Java 21 bytecode,
-but still needs JDK 25 to load the library.
+The checkout builds `io.mindspice:simplypages:1.2.1`. Use **JDK 21 or later** to build and run it.
+Install the library locally with `./mvnw -pl simplypages install`. GitHub release `v1.2.1`
+provides the library artifacts; they are not published to Maven Central. The library and
+Spring Boot 4.1.1 site both target Java 21 bytecode.
 
 This is a controlled beta. Read the [known issues and support boundaries](reference/build-and-assets.md#beta-status-known-issues-and-support)
 for open defects, the local Chromium baseline, and current site limitations before adoption.

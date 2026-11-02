@@ -1,6 +1,6 @@
 # Serve full pages and HTMX fragments
 
-Use this pattern inside an existing Spring MVC application running on JDK 25 with the
+Use this pattern inside an existing Spring MVC application running on JDK 21 or later with the
 SimplyPages dependency installed. Spring is an application integration choice; the core
 library does not require it.
 
