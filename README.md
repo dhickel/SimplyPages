@@ -6,15 +6,47 @@ It is built for practical web apps: admin portals, internal tools, content-heavy
 
 ## Table of Contents
 
-1. [Why Use It](#why-use-it)
-2. [Install](#install)
-3. [Static Page (Build Once, Serve Fast)](#1-static-page-build-once-serve-fast)
-4. [Dynamic Page (Template + SlotKey + RenderContext)](#2-dynamic-page-template--slotkey--rendercontext)
-5. [Editable Module Flow (Minimal)](#3-editable-module-flow-minimal)
-6. [Custom Components and Modules (Scaffolding)](#4-custom-components-and-modules-scaffolding)
-7. [Documentation](#documentation)
-8. [Build and Test](#build-and-test)
-9. [Docs TOC](#docs-toc)
+1. [Install with JitPack](#install-with-jitpack)
+2. [Why Use It](#why-use-it)
+3. [Install](#install)
+4. [Static Page (Build Once, Serve Fast)](#1-static-page-build-once-serve-fast)
+5. [Dynamic Page (Template + SlotKey + RenderContext)](#2-dynamic-page-template--slotkey--rendercontext)
+6. [Editable Module Flow (Minimal)](#3-editable-module-flow-minimal)
+7. [Custom Components and Modules (Scaffolding)](#4-custom-components-and-modules-scaffolding)
+8. [Documentation](#documentation)
+9. [Build and Test](#build-and-test)
+10. [Docs TOC](#docs-toc)
+
+## Install with JitPack
+
+Use JDK 21 or later. Add the JitPack repository and library dependency to your Maven POM:
+
+```xml
+<repositories>
+  <repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+  </repository>
+</repositories>
+
+<dependencies>
+  <dependency>
+    <groupId>com.github.dhickel.SimplyPages</groupId>
+    <artifactId>simplypages</artifactId>
+    <version>v1.2.1</version>
+  </dependency>
+</dependencies>
+```
+
+`SimplyPages` is the repository and `simplypages` is its library module. This dependency
+imports the library without the Spring Boot site. Avoid the aggregate dependency
+`com.github.dhickel:SimplyPages:v1.2.1`, which pulls all modules. JitPack requires no
+clone or local install; its coordinates differ from the [local installation](#install)
+coordinates `io.mindspice:simplypages:1.2.1`.
+
+The first on-demand resolution may wait for a build. Check the
+[JitPack build](https://jitpack.io/#dhickel/SimplyPages/v1.2.1) or see JitPack's
+[multi-module project documentation](https://docs.jitpack.io/building/#multi-module-projects).
 
 ## Why Use It
 
@@ -35,8 +67,8 @@ before adopting it. The current site examples are not a production security exam
 
 Current release: `1.2.1`.
 
-Use JDK 21 or later. Install this checkout locally with `./mvnw -pl simplypages install` before
-using the dependency. The GitHub release `v1.2.1` provides the library JAR, sources, Javadocs,
+For a local build, use JDK 21 or later and install this checkout with
+`./mvnw -pl simplypages install` before using the dependency. The GitHub release `v1.2.1` provides the library JAR, sources, Javadocs,
 and POM; the release is not published to Maven Central.
 
 ```xml
